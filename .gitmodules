@@ -1,0 +1,3 @@
+[submodule "streamcorpus"]
+	path = streamcorpus
+	url = git@github.com:trec-kba/streamcorpus.git
