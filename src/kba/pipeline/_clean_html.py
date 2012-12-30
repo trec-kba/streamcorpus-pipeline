@@ -78,11 +78,12 @@ def clean_html(stream_item):
     a kba.pipeline "transform" function that generates clean_html when
     possible
     '''
-    try:
-        _clean_html = make_clean_html(stream_item.body.raw)
-        stream_item.body.clean_html = _clean_html
-    except Exception, exc:
-        ## logger?
-        pass
+    if stream_item.body and stream_item.body.raw:
+        try:
+            _clean_html = make_clean_html(stream_item.body.raw)
+            stream_item.body.clean_html = _clean_html
+        except Exception, exc:
+            ## logger?
+            pass
 
     return stream_item

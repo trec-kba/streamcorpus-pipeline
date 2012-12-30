@@ -23,7 +23,7 @@ invisible = re.compile(
     ## ignore case
     re.I)
 
-def clean_visible(html):
+def make_clean_visible(html):
     '''
     Takes an HTML-like binary string as input and returns a binary
     string of the same length with all tags replaced by whitespace.
@@ -56,7 +56,17 @@ def clean_visible(html):
 
     return text
 
+def clean_visible(stream_item):
+    '''
+    Transform that creates stream_item.body.clean_visible
+    '''
+    if stream_item.body:
+        if stream_item.body.clean_html:
+            stream_item.body.clean_visible = \
+                make_clean_visible(stream_item.body.clean_html)
+    ## done
+    return stream_item
 
 if __name__ == '__main__':
-    print clean_visible(open('sample-input.html').read())
+    print make_clean_visible(open('sample-input.html').read())
 

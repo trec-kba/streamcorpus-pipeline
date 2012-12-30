@@ -8,6 +8,10 @@ build_js:
 	cd streamcorpus && make install
 	python src/js_thriftify.py data/john-smith/original data/john-smith/john-smith.sc
 
-clean: clean_js
+clean: 
 
-build: clean build_js
+
+install: clean
+	python setup.py build
+	python setup.py install
+
