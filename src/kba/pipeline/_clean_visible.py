@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 '''
-strip_tags maintains byte position of all visible text in an HTML (or
+clean_visible maintains byte position of all visible text in an HTML (or
 XML) document and removes all of parts that are not visible in a web
 browser.  This allows taggers to operate on the visible-only text and
 any standoff annotation can refer to the original byte positions.
@@ -23,7 +23,7 @@ invisible = re.compile(
     ## ignore case
     re.I)
 
-def strip_tags(html):
+def clean_visible(html):
     '''
     Takes an HTML-like binary string as input and returns a binary
     string of the same length with all tags replaced by whitespace.
@@ -58,5 +58,5 @@ def strip_tags(html):
 
 
 if __name__ == '__main__':
-    print strip_tags(open('sample-input.html').read())
+    print clean_visible(open('sample-input.html').read())
 
