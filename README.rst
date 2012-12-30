@@ -18,5 +18,12 @@ trec-kba-data/import_wlc.py, which is run in Condor by
 run_import_wlc.{sh,submit}
 
 
+kaba.pipeline
+-------------
 
+The kba.pipeline python module contains tools for processing
+streamcorpus.StreamItems stored in Chunks.  It includes transform
+functions for getting clean_html, clean_visible text, creating labels
+from hyperlinks to particular sites (e.g. Wikipedia), and taggers like
+LingPipe and Stanford CoreNLP, that make Tokens and Sentences.
 
