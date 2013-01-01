@@ -56,17 +56,16 @@ def make_clean_visible(html):
 
     return text
 
-def clean_visible(stream_item):
+def clean_visible(config):
     '''
-    Transform that creates stream_item.body.clean_visible
+    returns a kba.pipeline "transform" function that attempts to
+    generate stream_item.body.clean_visible from body.clean_html
     '''
-    if stream_item.body:
-        if stream_item.body.clean_html:
+    ## make a closure around config
+    def _make_clean_visible(stream_item):
+        if stream_item.body and stream_item.body.clean_html:
             stream_item.body.clean_visible = \
                 make_clean_visible(stream_item.body.clean_html)
-    ## done
-    return stream_item
+        return stream_item
 
-if __name__ == '__main__':
-    print make_clean_visible(open('sample-input.html').read())
-
+    return _make_clean_visible
