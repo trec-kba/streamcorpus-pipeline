@@ -15,7 +15,8 @@ import lxml.html.clean
 import lxml.html.soupparser
 from BeautifulSoup import UnicodeDammit
 
-from ._logging import log_full_file
+if __name__ != '__main__':
+    from ._logging import log_full_file
 
 encoding_re = re.compile(
     '''(?P<start_xml>([^<]|\n)*?\<\?xml[^>]*)''' + \
@@ -44,7 +45,7 @@ def make_traceback_log(all_exc):
         traceback_log += '\n\nexc #%d\n%s' % (num, traceback.format_exc(exc))
     return traceback_log
 
-def make_clean_html(raw, stream_item=None):
+def make_clean_html(raw, stream_item=None, log_dir=None):
     '''
     Treat 'raw' as though it is HTML, even if we have no idea what it
     really is, and attempt to get a properly formatted HTML document
@@ -97,10 +98,10 @@ def make_clean_html(raw, stream_item=None):
 
                 ## hack in a logging step here so we can manually inspect
                 ## this fallback stage.
-                if stream_item:
+                if log_dir and stream_item:
                     stream_item.body.clean_html = fixed_html.encode('utf8')
                     stream_item.body.cleaner_log = make_traceback_log(all_exc)
-                    log_full_file(stream_item, 'fallback-UnicodeDammit')
+                    log_full_file(stream_item, 'fallback-UnicodeDammit', log_dir)
 
             except Exception, exc:
                 ## UnicodeDammit failed
@@ -120,10 +121,10 @@ def make_clean_html(raw, stream_item=None):
 
                 ## hack in a logging step here so we can manually inspect
                 ## this fallback stage.
-                if stream_item:
+                if log_dir and stream_item:
                     stream_item.body.clean_html = fixed_html.encode('utf8')
                     stream_item.body.cleaner_log = make_traceback_log(all_exc)
-                    log_full_file(stream_item, 'fallback-soupparser')
+                    log_full_file(stream_item, 'fallback-soupparser', log_dir)
             except Exception, exc:
                 ## soupparser failed
                 all_exc.append(exc)
@@ -187,13 +188,18 @@ def clean_html(config):
     '''
     ## make a closure around config
     def _make_clean_html(stream_item):
-        if stream_item.body and stream_item.body.raw:
-            if len(stream_item.body.raw) <= 5:
-                stream_item.body.raw = None
-            else:
-                stream_item.body.clean_html = make_clean_html(
-                    stream_item.body.raw, 
-                    stream_item=stream_item)
+        if stream_item.body and stream_item.body.raw \
+                and stream_item.body.media_type == 'text/html':
+
+            stream_item.body.clean_html = make_clean_html(
+                stream_item.body.raw, 
+                stream_item=stream_item,
+                log_dir=config['clean_html']['logs'])
+
         return stream_item
 
     return _make_clean_html
+
+if __name__ == '__main__':
+    open('nytimes-index-clean.html', 'wb').write(
+        make_clean_html(open('nytimes-index.html').read()))
