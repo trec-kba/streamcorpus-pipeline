@@ -7,43 +7,170 @@ This software is released under an MIT/X11 open source license.
 
 Copyright 2012 Diffeo, Inc.
 '''
-import lxml.html
-from streamcorpus import Offset, Label, Annotator
-from xml.etree.ElementTree import XMLParser, TreeBuilder
+from streamcorpus import Offset, Label, LabelSet, Annotator, OffsetType
+
+import re
+
+'''
+import lxml
+from lxml.etree import XMLParser, TreeBuilder, iterparse, tostring, fromstring
 
 class MyTreeBuilder(TreeBuilder):
 
     def start(self, tag, attrs):
-        print("&lt;%s>" % tag)
+        print("<%s %r>" % (tag, dict(attrs)))
         return TreeBuilder.start(self, tag, attrs)
 
     def data(self, data):
         print(repr(data))
-        TreeBuilder.data(self, data)
+        return TreeBuilder.data(self, data)
 
     def end(self, tag):
         return TreeBuilder.end(self, tag)
 
-def hyperlinks(clean_html):
-    '''
-    Generate tuple(label, anchor_offset) instances from clean_html
-    '''
-    # ElementTree.fromstring()
-    parser = XMLParser(target=MyTreeBuilder())
-    parser.feed(clean_html)
-    root = parser.close() # return an ordinary Element
+text = """<xml>
+The captial of <place pid="1">South Africa</place> is <place    attr="5 234" >Pretoria</place>.
+</xml>"""
 
+# ElementTree.fromstring()
+#parser = XMLParser(target=MyTreeBuilder())
+#parser.feed(text)
+#root = parser.close() # return an ordinary Element
 
-def make_hyperlink_labels(clean_html):
+clean_text = tostring(fromstring(text))
+print clean_text
+import json
+from cStringIO import StringIO
+context = iterparse(StringIO(text), events=('start', 'end'))
+idx = 0
+for action, elem in context:
+    #print("%s: %s" % (action, elem.tag))
+    idx += len('<%s%s>' % (elem.tag, json.dumps(elem.attrs)))
+    print idx
+    print dir(elem)
+    #print help(elem)
+    print elem.text
+    #print(tostring(elem))
+'''
+
+class hyperlink_labels(object):
     '''
     Finds hyperlinks in clean_html and generate a
     streamcorpus.LabelSet treating the author as the Annotator
     '''
+    def __init__(self, config):
+        self.config = config
+    
+    def state_machine_href_anchors(self, clean_html):
+        '''
+        This state-machine-based href/anchor finder does not handle
+        HTML tags inside of anchor tags...
+        '''
+        ## init state machine
+        in_tag = False
 
-    pass
+        ## iterate over all chars in clean_html
+        idx = 0
+        href = None
+        first = None
+        length = 0
+        while idx < len(clean_html):
+            ch = clean_html[idx]
+            print ch
+            if in_tag:
+                if ch == '>':
+                    in_tag = False
+                    if href:
+                        ## read ahead through the anchor text
+                        first = idx + 1
+                        while ch != '<':
+                            length += 1
+                            idx += 1
+                            ch = clean_html[idx]
+                        ## now yield all the data
+                        yield href, first, length - 1
+                        ## reset state machine
+                        self.in_anchor = False
+                        href = None
+                        first = None
+                        length = 0
+                        ## assert that this is all valid HTML
+                        close_tag = clean_html[idx:idx+4].lower()
+                        assert close_tag == '</a>', \
+                            map(repr, [clean_html[idx-200:idx], 
+                                       clean_html[idx:idx+4]])
 
-def hyperlink_labels(stream_item):
-    return stream_item
+            elif ch == '<':
+                in_tag = True
+                if clean_html[idx + 1] in ['a', 'A']:
+                    ## read ahead until we find an href or exit the tag
+                    trailing_four = list(clean_html[idx+2:idx+6])
+                    idx += 6
+                    while ch != '>':
+                        idx += 1
+                        ch = clean_html[idx]
+                        trailing_four.append(ch)
+                        trailing_four.pop(0)
+                        if ''.join(trailing_four).lower() == 'href':
+                            ## read the href
+                            open_quote = clean_html[idx+1:idx+3]
+                            assert open_quote == '="', repr(open_quote)
+                            idx += 2
+                            href = ''
+                            while ch != '"':
+                                idx += 1
+                                ch = clean_html[idx]
+                                href += ch
+                            ## chop off the quote
+                            href = href[:-1]
+                            break
+                    if ch == '>':
+                        ## did not break out early
+                        in_tag = False
+                        assert href is None, href
+
+            idx += 1
+
+    def href_anchors(self, clean_html):
+        anchors_re = re.compile('''(?P<before>(.|\n)*?)(?P<ahref>\<a.*?href="(?P<href>[^"]*)"(.|\n)*?\>)(?P<anchor>(.|\n)*?)(?P<after>\<\/a\>)''', re.I)
+        idx = 0
+        for m in anchors_re.finditer(clean_html):
+            idx += len(m.group('before'))
+            href = m.group('href')
+            idx += len(m.group('ahref'))
+            first = idx
+            length = len(m.group('anchor'))
+            idx += length + len(m.group('after'))
+            yield href, first, length
+
+    def make_label_set(self, clean_html):
+        annotator = Annotator()
+        annotator.annotator_id = 'author'
+
+        labels = []
+        for href, first, length in self.href_anchors(clean_html):
+            if self.href_filter(href):
+                label = Label()
+                label.target_id = href
+                label.offset = Offset(
+                    type=OffsetType.BYTES, 
+                    first=first, length=length, 
+                    content_form=clean_html)
+                labels.append(label)
+
+        return LabelSet(annotator=annotator, labels=labels)
+
+    def __call__(self, stream_item):
+        ## 
+        if stream_item.body and stream_item.body.clean_html:
+            labelset = self.make_label_set(stream_item.body.clean_html)
+            stream_item.body.labelsets['author'] = labelset
+        return stream_item
 
 if __name__ == '__main__':
-    hyperlinks('')
+    from streamcorpus import StreamItem, ContentItem
+    stream_item = StreamItem()
+    stream_item.body = ContentItem()
+    stream_item.body.clean_html = open('nytimes-index-clean.html').read()
+    print hyperlink_labels({})(stream_item)
+    
