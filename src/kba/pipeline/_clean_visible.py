@@ -10,6 +10,7 @@ This software is released under an MIT/X11 open source license.
 Copyright 2012 Diffeo, Inc.
 '''
 
+import itertools
 import re
 ## regex to identify all XML-like tags, including SCRIPT and STYLE tags
 invisible = re.compile(
@@ -23,7 +24,7 @@ invisible = re.compile(
     ## ignore case
     re.I)
 
-def make_clean_visible(html):
+def re_based_make_clean_visible(html):
     '''
     Takes an HTML-like binary string as input and returns a binary
     string of the same length with all tags replaced by whitespace.
@@ -38,6 +39,8 @@ def make_clean_visible(html):
     so taggers operating on this text must cope with such symbols.
     Converting them to some other character would change their byte
     length, even if equivalent from a character perspective.
+
+    This is regex based, which can occassionally just hang...
     '''
     text = ''
     for m in invisible.finditer(html):
@@ -56,6 +59,40 @@ def make_clean_visible(html):
 
     return text
 
+def make_clean_visible(html):
+    '''
+    Takes an HTML-like binary string as input and returns a binary
+    string of the same length with all tags replaced by whitespace.
+
+    This does not detect comments, style, script, link.  It also does
+    do anything with HTML-escaped characters.  All of these are
+    handled by the clean_html pre-cursor step.
+
+    Pre-existing whitespace of any kind (newlines, tabs) is converted
+    to single spaces ' ', which has the same byte length (and
+    character length).
+
+    This is a simple state machine iterator without regexes
+    '''
+    class non_tag_chars(object):
+        def __init__(self):
+            self.in_tag = False
+
+        def __call__(self, ch):
+            if self.in_tag:
+                if ch == '>':
+                    self.in_tag = False
+                return ' '
+
+            elif ch == '<':
+                self.in_tag = True
+                return ' '
+
+            else:
+                return ch
+    
+    return ''.join( itertools.imap(non_tag_chars(), html) )
+
 def clean_visible(config):
     '''
     returns a kba.pipeline "transform" function that attempts to
@@ -69,3 +106,15 @@ def clean_visible(config):
         return stream_item
 
     return _make_clean_visible
+
+if __name__ == '__main__':
+    ## a few simple tests
+    html = open('nytimes-index.html').read()
+    vis1 = re_based_make_clean_visible(html)
+
+    clean_html = open('nytimes-index-clean.html').read()
+    vis1 = re_based_make_clean_visible(clean_html)
+    vis2 = make_clean_visible(clean_html)
+
+    assert vis1 == vis2, vis2
+
