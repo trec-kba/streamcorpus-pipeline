@@ -12,6 +12,7 @@ Copyright 2012 Diffeo, Inc.
 import os
 import re
 import sys
+#import gevent
 import traceback
 import itertools
 import streamcorpus
@@ -90,12 +91,16 @@ class Pipeline(object):
                 ## make no output
                 o_chunk = DummyChunk()
 
-            #elif self.config['output_type'] == 'inplace':
+            elif self.config['output_type'] == 'inplace':
                 ## replace the input chunks with the newly created
-                ## chunks
+                o_path = '_' + i_path
+                o_chunk = streamcorpus.Chunk(path=o_path, mode='wb')
 
             i_chunk = streamcorpus.Chunk(path=i_path, mode='rb')
             self._run(i_chunk, o_chunk)
+
+            if self.config['output_type'] == 'inplace':
+                os.rename(o_path, i_path)
 
     def _run(self, i_chunk, o_chunk):
 
@@ -103,6 +108,18 @@ class Pipeline(object):
         for si in i_chunk:
             ## operate each transform on this one StreamItem
             for transform in self._transforms:
+                #timer = gevent.Timeout.start_new(1)
+                #thread = gevent.spawn(transform, si)
+                #try:
+                #    si = thread.get(timeout=timer)
+                ### The approach above to timeouts did not work,
+                ### because when the re module hangs in a thread, it
+                ### never yields to the greenlet hub.  The only robust
+                ### way to implement timeouts is with child processes,
+                ### possibly via multiprocessing.  Another benefit of
+                ### child processes is armoring against segfaulting in
+                ### various libraries.  This probably means that each
+                ### transform should implement its own timeouts.
                 try:
                     si = transform(si)
                 except Exception, exc:
@@ -111,10 +128,13 @@ class Pipeline(object):
                     print traceback.format_exc(exc)
                     print 'moving on'
 
-                    ## hack in a logging step here so we can manually inspect
-                    ## this fallback stage.
-                    si.body.cleaner_log = traceback.format_exc(exc)
-                    log_full_file(si, 'fallback-givingup')
+                    if self.config['embedded_logs']:
+                        si.body.logs.append( traceback.format_exc(exc) )
+
+                    if self.config['log_dir']:
+                        log_full_file(si, 'fallback-givingup', self.config['log_dir'])
+
+            sys.stdout.flush()
 
             ## put the StreamItem into the output
             o_chunk.add(si)
