@@ -69,45 +69,64 @@ class Pipeline(object):
 
         ## a list of transforms that take StreamItem instances as
         ## input and emit modified StreamItem instances
-        self._transforms = [_import_transform(name, config) 
-                            for name in config['transforms']]
+        self._incremental_transforms = [
+            _import_transform(name, config) 
+            for name in config['incremental_transforms']]
 
-    def run(self, chunks=[], chunk_paths=[]):
-        '''
-        Operate the pipeline on chunks
-        '''
-        for chunk in chunks:
-            self._run(chunk)
+        ## a list of transforms that take a chunk path as input and
+        ## return a path to a new chunk
+        self._batch_transforms = [
+            _import_transform(name, config) 
+            for name in config['batch_transforms']]
 
+    def run(self, chunk_paths):
+        '''
+        Operate the pipeline on chunks loaded from chunk_paths
+        '''
         for i_path in chunk_paths:
             i_path = i_path.strip()
             if self.config['output_type'] == 'samedir':
                 assert i_path[-3:] == '.sc', repr(i_path[-3:])
                 o_path = i_path[:-3] + '-%s.sc' % self.config['output_name']
-                print 'creating %s' % o_path
-                o_chunk = streamcorpus.Chunk(path=o_path, mode='wb')
+                #print 'creating %s' % o_path
 
             elif self.config['output_type'] == 'None':
                 ## make no output
+                o_path = None
                 o_chunk = DummyChunk()
 
             elif self.config['output_type'] == 'inplace':
                 ## replace the input chunks with the newly created
-                o_path = '_' + i_path
-                o_chunk = streamcorpus.Chunk(path=o_path, mode='wb')
+                o_path = i_path
 
+            if o_path:
+                ## for samedir or inplace, write the o_chunk to a
+                ## temporary path called 't_path'
+                t_path = o_path + '_'
+                o_chunk = streamcorpus.Chunk(path=t_path, mode='wb')
+
+            ## load the input chunk and execute the transforms
             i_chunk = streamcorpus.Chunk(path=i_path, mode='rb')
-            self._run(i_chunk, o_chunk)
 
-            if self.config['output_type'] == 'inplace':
-                os.rename(o_path, i_path)
+            ## incremental transforms create a new chunk
+            self._run_incremental_transforms(i_chunk, o_chunk)
 
-    def _run(self, i_chunk, o_chunk):
+            ## batch transforms act on whole chunks inplace
+            self._run_batch_transforms(t_path)
 
-        ## iterate over docs from chunks in the queue
+            ## if generating an output, do atomic rename
+            if o_path:
+                os.rename(t_path, o_path)
+
+    def _run_batch_transforms(self, chunk_path):
+        for transform in self._batch_transforms:
+            transform(chunk_path)
+
+    def _run_incremental_transforms(self, i_chunk, o_chunk):
+        ## iterate over docs from a chunk
         for si in i_chunk:
             ## operate each transform on this one StreamItem
-            for transform in self._transforms:
+            for transform in self._incremental_transforms:
                 #timer = gevent.Timeout.start_new(1)
                 #thread = gevent.spawn(transform, si)
                 #try:
