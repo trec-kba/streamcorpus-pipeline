@@ -105,7 +105,7 @@ def guess_media_type(config):
     '''
     ## make a closure around config
     def _guess_media_type(stream_item):
-        if stream_item.body.media_type:
+        if stream_item.body and stream_item.body.media_type:
             ## don't change it
             return stream_item
 
