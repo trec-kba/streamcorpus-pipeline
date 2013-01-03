@@ -59,7 +59,7 @@ def re_based_make_clean_visible(html):
 
     return text
 
-def make_clean_visible(html):
+def make_clean_visible(html, tag_replacement_char=' '):
     '''
     Takes an HTML-like binary string as input and returns a binary
     string of the same length with all tags replaced by whitespace.
@@ -82,11 +82,11 @@ def make_clean_visible(html):
             if self.in_tag:
                 if ch == '>':
                     self.in_tag = False
-                return ' '
+                return tag_replacement_char
 
             elif ch == '<':
                 self.in_tag = True
-                return ' '
+                return tag_replacement_char
 
             else:
                 return ch
