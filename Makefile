@@ -9,7 +9,7 @@ build_js:
 	python src/js_thriftify.py data/john-smith/original data/john-smith/john-smith.sc
 
 clean: 
-
+	rm -rf build dist src/kba.pipeline.egg-info
 
 install: clean
 	python setup.py build
