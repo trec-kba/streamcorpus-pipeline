@@ -100,7 +100,7 @@ def make_clean_html(raw, stream_item=None, log_dir=None):
                 ## this fallback stage.
                 if log_dir and stream_item:
                     stream_item.body.clean_html = fixed_html.encode('utf8')
-                    stream_item.body.cleaner_log = make_traceback_log(all_exc)
+                    stream_item.body.logs.append( make_traceback_log(all_exc) )
                     log_full_file(stream_item, 'fallback-UnicodeDammit', log_dir)
 
             except Exception, exc:
@@ -123,7 +123,7 @@ def make_clean_html(raw, stream_item=None, log_dir=None):
                 ## this fallback stage.
                 if log_dir and stream_item:
                     stream_item.body.clean_html = fixed_html.encode('utf8')
-                    stream_item.body.cleaner_log = make_traceback_log(all_exc)
+                    stream_item.body.logs.append( make_traceback_log(all_exc) )
                     log_full_file(stream_item, 'fallback-soupparser', log_dir)
             except Exception, exc:
                 ## soupparser failed
@@ -171,12 +171,12 @@ def make_clean_html(raw, stream_item=None, log_dir=None):
     ## now get the really sanitized HTML
     _clean_html = cleaner.clean_html(fixed_html)
 
-    ## generate pretty HTML in unicode
+    ## generate pretty HTML in utf-8
     _clean_html = lxml.html.tostring(
         lxml.html.document_fromstring(_clean_html), 
         method='html', encoding='utf-8',
         pretty_print=True, 
-        include_meta_content_type=True
+        #include_meta_content_type=True
         )
 
     return _clean_html
@@ -194,7 +194,7 @@ def clean_html(config):
             stream_item.body.clean_html = make_clean_html(
                 stream_item.body.raw, 
                 stream_item=stream_item,
-                log_dir=config['clean_html']['logs'])
+                log_dir=config['clean_html']['log_dir'])
 
         return stream_item
 
