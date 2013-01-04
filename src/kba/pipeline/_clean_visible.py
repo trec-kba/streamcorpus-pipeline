@@ -82,7 +82,10 @@ def make_clean_visible(html, tag_replacement_char=' '):
             if self.in_tag:
                 if ch == '>':
                     self.in_tag = False
-                return tag_replacement_char
+                if ch == '\n':
+                    return '\n'
+                else:
+                    return tag_replacement_char
 
             elif ch == '<':
                 self.in_tag = True
