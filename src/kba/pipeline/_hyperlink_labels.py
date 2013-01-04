@@ -44,7 +44,7 @@ class hyperlink_labels(object):
                 if substring in domain:
                     return True            
 
-    def href_anchors(self, clean_html):
+    def href_anchors(self):
         '''
         simple, regex-based extractor of anchor tags, so we can
         compute byte offsets for anchor texts and associate them with
@@ -52,16 +52,37 @@ class hyperlink_labels(object):
         
         Generates tuple(href_string, first_byte, byte_length)
         '''
-        anchors_re = re.compile('''(?P<before>(.|\n)*?)(?P<ahref>\<a.*?href="(?P<href>[^"]*)"(.|\n)*?\>)(?P<anchor>(.|\n)*?)(?P<after>\<\/a\>)''', re.I)
+        anchors_re = re.compile('''(?P<before>(.|\n)*?)(?P<ahref>\<a(.|\n)*?href="(?P<href>[^"]*)"(.|\n)*?\>)(?P<anchor>(.|\n)*?)(?P<after>\<\/a\>)''', re.I)
         idx = 0
-        for m in anchors_re.finditer(clean_html):
-            idx += len(m.group('before'))
+        new_clean_html = ''
+        for m in anchors_re.finditer(self.clean_html):
+            before = m.group('before')
             href = m.group('href')
-            idx += len(m.group('ahref'))
+            ahref = m.group('ahref')
+
+            ## construct a text containing bytes up to the anchor text
+            ## PLUS ONE NEWLINE
+            pre_anchor_increment = before + ahref
+
+            ## increment the index to get line number for the anchor
+            idx += len( pre_anchor_increment.splitlines() )
             first = idx
-            length = len(m.group('anchor'))
-            idx += length + len(m.group('after'))
-            yield href, first, length
+
+            ## usually this will be one, but it could be more than
+            ## that when an anchor text contains newlines
+            length = len(m.group('anchor').split('\n'))
+
+            ## construct a replacement clean_html with these newlines
+            ## inserted
+            new_clean_html += pre_anchor_increment + '\n' + m.group('anchor') + '\n' + m.group('after')
+
+            ## update the index for the next loop
+            idx += length - 1 + len( m.group('after').splitlines(True) )
+
+            yield href, first, length, m.group('anchor')
+
+        ## replace clean_html with our new one that has newlines inserted
+        self.clean_html = new_clean_html
 
     def make_label_set(self, clean_html, clean_visible=None):
         '''
@@ -71,19 +92,28 @@ class hyperlink_labels(object):
         annotator.annotator_id = 'author'
 
         labels = []
-        for href, first, length in self.href_anchors(clean_html):
+        ## make clean_html accessible as a class property so we can 
+        self.clean_html = clean_html
+        for href, first, length, value in self.href_anchors():
             if self.href_filter(href):
+                '''
                 if clean_visible:
-                    if not make_clean_visible(clean_html[first:first+length]) == clean_visible[first:first+length]:
+                    _check_html = self.clean_html.splitlines()[first-10:10+first+length]
+                    _check_visi =   clean_visible.splitlines()[first:first+length]
+                    if not make_clean_visible(_check_html) == _check_visi:
+                        print len(self.clean_html.splitlines())
+                        print len(clean_visible.splitlines())
+
                         print href
-                        print '\t html: %r' % clean_html[first:first+length]
-                        print '\t visi: %r' % clean_visible[first:first+length]
+                        print '\t html: %r' % _check_html
+                        print '\t visi: %r' % _check_visi
+                '''
                 label = Label()
                 label.target_id = href
-                label.offset = Offset(
-                    type=OffsetType.BYTES, 
+                label.offsets[OffsetType.LINES] = Offset(
+                    type=OffsetType.LINES, 
                     first=first, length=length, 
-                    value=clean_visible[first:first+length],
+                    value=value,
                     ## the string name of the content field, not the
                     ## content itself :-)
                     content_form='clean_html')
@@ -102,6 +132,11 @@ class hyperlink_labels(object):
             labelset = self.make_label_set(stream_item.body.clean_html,
                                            stream_item.body.clean_visible)
             if labelset:
+                ## if we got labels, then we must replace clean_html
+                ## with a new one that has newlines inserted
+                stream_item.body.clean_html = self.clean_html
+
+                ## add also add the new labelset
                 stream_item.body.labelsets.append( labelset )
         return stream_item
 
