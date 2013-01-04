@@ -8,6 +8,7 @@ Copyright 2012 Diffeo, Inc.
 '''
 import re
 import os
+import string
 import traceback
 import streamcorpus
 import lxml.html
@@ -178,6 +179,9 @@ def make_clean_html(raw, stream_item=None, log_dir=None):
         pretty_print=True, 
         #include_meta_content_type=True
         )
+
+    ## remove any ^M characters
+    _clean_html = string.replace( _clean_html, '\r', '' )
 
     return _clean_html
 
