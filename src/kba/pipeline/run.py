@@ -1,6 +1,10 @@
 #!/usr/bin/python
 '''
-Operates a pipeline based on a configuration file
+See help(Pipeline) for details on configuring a Pipeline.
+
+This software is released under an MIT/X11 open source license.
+
+Copyright 2012 Diffeo, Inc.
 '''
 import os
 import sys
@@ -9,7 +13,9 @@ from . import Pipeline
 if __name__ == '__main__':
     import yaml
     import argparse
-    parser = argparse.ArgumentParser()
+    parser = argparse.ArgumentParser(
+        description=Pipeline.__doc__,
+        usage='python -m kba.pipeline.run config.yaml')
     parser.add_argument('config', metavar='config.yaml', 
                         help='configuration parameters for a pipeline run')
     args = parser.parse_args()
