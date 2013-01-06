@@ -100,7 +100,7 @@ class Pipeline(object):
             i_chunk = self._extractor(i_str)
 
             ## make a temporary chunk at a temporary path
-            t_path = os.path.join(self.config['tmp_dir'], str(uuid.uuid1()))
+            t_path = os.path.join(self.config['tmp_dir'], 'tmp-file-%s' % str(uuid.uuid1()))
             t_chunk = streamcorpus.Chunk(path=t_path, mode='wb')
 
             ## incremental transforms populate the temporary chunk
