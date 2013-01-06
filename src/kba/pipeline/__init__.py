@@ -10,9 +10,5 @@ This software is released under an MIT/X11 open source license.
 
 Copyright 2012 Diffeo, Inc.
 '''
-__all__ = ['Pipeline', 'clean_html', 'clean_visible', 'hyperlink_labels', 'lingpipe']
+__all__ = ['Pipeline']
 from ._pipeline import Pipeline
-from ._clean_html import clean_html
-from ._clean_visible import clean_visible
-from ._hyperlink_labels import hyperlink_labels
-from ._lingpipe import lingpipe

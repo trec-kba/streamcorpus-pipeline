@@ -12,16 +12,11 @@ Copyright 2012 Diffeo, Inc.
 import os
 import re
 import sys
+import uuid
 #import gevent
 import traceback
 import itertools
 import streamcorpus
-
-class DummyChunk(object):
-    def add(self, stream_item):
-        pass
-    def close(self):
-        pass
 
 from ._logging import log_full_file
 
@@ -29,22 +24,25 @@ from ._logging import log_full_file
 ## from strings to the particular things that we expect to see as
 ## transform functions.  When we want to expose this for user-defined
 ## transforms, we'll figure out a better interface.
-from ._transforms import Transforms
+from ._stages import Stages
 
-def _import_transform(name, config):
+def _init_stage(name, config):
     '''
-    :param name: string name of a transform in Transforms
+    :param name: string name of a stage in Stages
 
-    :param config: config dict passed into each tranform constructor
+    :param config: config dict passed into the stage constructor
 
-    :returns callable: that takes a StreamItem as input and returns a
-    StreamItem.
+    :returns callable: one of four possible types:
+
+       1) extractors: take byte strings as input and emit StreamItems
+
+       2) incremental transforms: take StreamItem and emit StreamItem
+       
+       3) batch transforms: take Chunk and emit Chunk
+
+       4) loaders: take Chunk and push it somewhere
     '''
-    assert name.startswith('kba.pipeline.'), \
-        'currently only supports transforms in kba.pipeline.*, not %s' % name
-    name = name.split('.')[2]
-
-    trans = Transforms[name](config)
+    stage = Stages[name](config)
 
     ## Note that fromlist must be specified here to cause __import__()
     ## to return the right-most component of name, which in our case
@@ -53,7 +51,7 @@ def _import_transform(name, config):
     ## http://stackoverflow.com/questions/2724260/why-does-pythons-import-require-fromlist
     #trans = __import__('clean_html', fromlist=['kba.pipeline'])
 
-    return trans
+    return stage
 
 class Pipeline(object):
     '''    
@@ -67,62 +65,63 @@ class Pipeline(object):
         config = config['kba.pipeline']
         self.config = config
 
+        ## load the one extractor
+        self._extractor = _init_stage(config['extractor'], config)
+
         ## a list of transforms that take StreamItem instances as
         ## input and emit modified StreamItem instances
         self._incremental_transforms = [
-            _import_transform(name, config) 
+            _init_stage(name, config) 
             for name in config['incremental_transforms']]
 
         ## a list of transforms that take a chunk path as input and
         ## return a path to a new chunk
         self._batch_transforms = [
-            _import_transform(name, config) 
+            _init_stage(name, config) 
             for name in config['batch_transforms']]
 
-    def run(self, chunk_paths):
+        ## a list of transforms that take a chunk path as input and
+        ## return a path to a new chunk
+        self._loaders  = [
+            _init_stage(name, config) 
+            for name in config['loaders']]
+
+    def run(self, input_strings):
         '''
         Operate the pipeline on chunks loaded from chunk_paths
         '''
-        for i_path in chunk_paths:
-            i_path = i_path.strip()
-            if self.config['output_type'] == 'samedir':
-                assert i_path[-3:] == '.sc', repr(i_path[-3:])
-                o_path = i_path[:-3] + '-%s.sc' % self.config['output_name']
-                #print 'creating %s' % o_path
+        first_stream_item_num = 0
+        self.next_stream_item_num = 0
+        for i_str in input_strings:
+            if i_str.endswith('\n'):
+                i_str = i_str[:-1]
 
-            elif self.config['output_type'] == 'None':
-                ## make no output
-                o_path = None
-                o_chunk = DummyChunk()
+            ## the extractor returns an generator of StreamItems
+            i_chunk = self._extractor(i_str)
 
-            elif self.config['output_type'] == 'inplace':
-                ## replace the input chunks with the newly created
-                o_path = i_path
+            ## make a temporary chunk at a temporary path
+            t_path = os.path.join(self.config['tmp_dir'], str(uuid.uuid1()))
+            t_chunk = streamcorpus.Chunk(path=t_path, mode='wb')
 
-            if o_path:
-                ## for samedir or inplace, write the o_chunk to a
-                ## temporary path called 't_path'
-                t_path = o_path + '_'
-                o_chunk = streamcorpus.Chunk(path=t_path, mode='wb')
+            ## incremental transforms populate the temporary chunk
+            self._run_incremental_transforms(i_chunk, t_chunk)
 
-            ## load the input chunk and execute the transforms
-            i_chunk = streamcorpus.Chunk(path=i_path, mode='rb')
-
-            ## incremental transforms create a new chunk
-            self._run_incremental_transforms(i_chunk, o_chunk)
-
-            ## batch transforms act on whole chunks inplace
+            ## batch transforms act on the whole chunk in-place
             self._run_batch_transforms(t_path)
 
-            ## if generating an output, do atomic rename
-            if o_path:
-                os.rename(t_path, o_path)
+            ## loaders put the chunk somewhere, or could delete it
+            for loader in self._loaders:
+                loader(t_path, first_stream_item_num, i_str)
+            
+            ## increment the first_stream_item_num to the next one in
+            ## the stream
+            first_stream_item_num += self.next_stream_item_num
 
     def _run_batch_transforms(self, chunk_path):
         for transform in self._batch_transforms:
             transform(chunk_path)
 
-    def _run_incremental_transforms(self, i_chunk, o_chunk):
+    def _run_incremental_transforms(self, i_chunk, t_chunk):
         ## iterate over docs from a chunk
         for si in i_chunk:
             ## operate each transform on this one StreamItem
@@ -156,5 +155,9 @@ class Pipeline(object):
             sys.stdout.flush()
 
             ## put the StreamItem into the output
-            o_chunk.add(si)
-        o_chunk.close()
+            t_chunk.add(si)
+
+            ## track position in the stream
+            self.next_stream_item_num += 1
+
+        t_chunk.close()

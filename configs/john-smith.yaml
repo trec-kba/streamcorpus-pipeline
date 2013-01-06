@@ -1,0 +1,47 @@
+# YAML kba.pipeline config for generating clean_visible and then
+## operating lingpipe
+
+kba.pipeline:
+  ## pipeline expects strings over stdin, which are typically paths to
+  ## streamcorpus.Chunk files.  They can also be some other kind of
+  ## opaque byte strings delimited by newlines that your particular
+  ## 'loader' is expecting.
+
+  ## put logs inside each chunk file
+  embedded_logs: true
+
+  ## the main pipeline log_dir can trigger similar log chunk
+  log_dir: data/john-smith/
+
+  ## tmp_dir, some extractors and loaders require this dir to be in
+  ## the same file system as their output.  This is also where the
+  ## batch_transforms operate.
+  tmp_dir: data/john-smith/
+
+  ## generator of StreamItems
+  extractor: john_smith
+
+  ## hyperlink_labels must run after clean_html and before
+  ## clean_visible in order for the newlines that it inserted to get
+  ## into the clean_visible that lingpipe will operate on.
+  incremental_transforms: []  #[guess_media_type, clean_html, hyperlink_labels, clean_visible]
+  batch_transforms: []  #[lingpipe]
+
+  loaders: [to_local_chunks]
+
+  to_local_storage:
+    #output_type: inplace
+    output_type: otherdir
+    output_path: data/john-smith/
+    output_name: john-smith
+
+  clean_html:
+    ## save chunks just for manual forensics
+    log_dir: /data/trec-kba/data/wlc-streamcorpus-logs
+
+  hyperlink_labels:
+    require_abs_url: true
+    domain_substrings: ['wikipedia.org']
+
+  lingpipe:
+    pipeline_root: /data/trec-kba/users/jrf/

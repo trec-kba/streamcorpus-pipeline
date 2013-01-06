@@ -14,9 +14,12 @@ if __name__ == '__main__':
                         help='configuration parameters for a pipeline run')
     args = parser.parse_args()
 
+    if not args.config.startswith('/'):
+        args.config = os.path.join(os.getcwd(), args.config)
+
     assert os.path.exists(args.config), '%s does not exist' % args.config
     config = yaml.load(open(args.config))
 
     pipeline = Pipeline(config)
-    pipeline.run(chunk_paths=sys.stdin)
+    pipeline.run(input_strings=sys.stdin)
 

@@ -1,12 +1,9 @@
 
 clean_js:
-	rm -f data/john-smith/john-smith.sc
+	rm -f data/john-smith/john-smith-0.sc
 
-build_js:
-	git submodule init
-	git submodule update
-	cd streamcorpus && make install
-	python src/js_thriftify.py data/john-smith/original data/john-smith/john-smith.sc
+john-smith: clean_js clean install
+	echo data/john-smith/original | python -m kba.pipeline.run configs/john-smith.yaml
 
 clean: 
 	rm -rf build dist src/kba.pipeline.egg-info
