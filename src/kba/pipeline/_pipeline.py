@@ -65,6 +65,13 @@ class Pipeline(object):
         config = config['kba.pipeline']
         self.config = config
 
+        ## resolve the tmp dir and make sure it exists
+        if not config['tmp_dir'].startswith('/'):
+            config['tmp_dir'] = os.path.join(os.getcwd(), config['tmp_dir'])
+
+        if not os.path.exists(config['tmp_dir']):
+            os.makedirs(config['tmp_dir'])
+
         ## load the one extractor
         self._extractor = _init_stage(config['extractor'], config)
 
