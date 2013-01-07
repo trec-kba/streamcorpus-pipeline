@@ -72,15 +72,16 @@ def generate_john_smith_chunk(path_to_original):
             ## The authors also annotated the corpus
             anno = streamcorpus.Annotator()
             anno.annotator_id = 'bagga-and-baldwin'
-            anno.annotation_time = creation_time
+            anno.annotation_time = stream_item.stream_time
 
             ## build a Label for the doc-level label:
             rating = streamcorpus.Rating()
+            rating.annotator = anno
             rating.target_id = str(label_id) # must be string
             rating.mentions = True
 
             ## put this one label in the array of labels
-            stream_item.ratings = [rating]
+            stream_item.ratings.append( rating )
 
             ## provide this stream_item to the pipeline
             yield stream_item
