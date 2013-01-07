@@ -16,7 +16,7 @@ kba.pipeline:
   ## tmp_dir, some extractors and loaders require this dir to be in
   ## the same file system as their output.  This is also where the
   ## batch_transforms operate.
-  tmp_dir: data/john-smith/
+  tmp_dir: tmp
 
   ## generator of StreamItems
   extractor: john_smith
@@ -24,24 +24,13 @@ kba.pipeline:
   ## hyperlink_labels must run after clean_html and before
   ## clean_visible in order for the newlines that it inserted to get
   ## into the clean_visible that lingpipe will operate on.
-  incremental_transforms: []  #[guess_media_type, clean_html, hyperlink_labels, clean_visible]
-  batch_transforms: []  #[lingpipe]
+  incremental_transforms: []
+  batch_transforms: []
 
   loaders: [to_local_chunks]
 
-  to_local_storage:
+  to_local_chunks:
     #output_type: inplace
     output_type: otherdir
     output_path: data/john-smith/
     output_name: john-smith
-
-  clean_html:
-    ## save chunks just for manual forensics
-    log_dir: /data/trec-kba/data/wlc-streamcorpus-logs
-
-  hyperlink_labels:
-    require_abs_url: true
-    domain_substrings: ['wikipedia.org']
-
-  lingpipe:
-    pipeline_root: /data/trec-kba/users/jrf/
