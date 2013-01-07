@@ -12,14 +12,14 @@ import streamcorpus
 
 class from_local_chunks(object):
     def __init__(self, config):
-        self.config = config['from_local_storage']
+        self.config = config['from_local_chunks']
 
     def __call__(self, i_str):
         return streamcorpus.Chunk(path=i_str, mode='rb')
 
 class to_local_chunks(object):
     def __init__(self, config):
-        self.config = config['to_local_storage']
+        self.config = config['to_local_chunks']
 
     def __call__(self, t_path, first_stream_item_num, i_str):
         o_type = self.config['output_type']
