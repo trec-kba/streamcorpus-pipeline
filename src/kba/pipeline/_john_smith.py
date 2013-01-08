@@ -64,7 +64,16 @@ def generate_john_smith_chunk(path_to_original):
 
             ## build a ContentItem for the body
             body = streamcorpus.ContentItem()
-            body.clean_visible = open(os.path.join(dir_path, fname)).read()
+            raw_string = open(os.path.join(dir_path, fname)).read()
+            ## We know that this is already clean and has nothing
+            ## tricky in it, because we manually cleansed it.  To
+            ## illustrate how we stick all strings into thrift, we
+            ## convert this to unicode (which introduces no changes)
+            ## and then encode it as utf-8, which also introduces no
+            ## changes.  Thrift stores strings as 8-bit character
+            ## strings.
+            # http://www.mail-archive.com/thrift-user@incubator.apache.org/msg00210.html
+            body.clean_visible = unicode(raw_string).encode('utf8')
 
             ## attach the content_item to the stream_item
             stream_item.body = body
