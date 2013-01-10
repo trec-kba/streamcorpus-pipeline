@@ -14,6 +14,7 @@ clean:
 	rm -rf build dist src/kba.pipeline.egg-info
 
 install: clean
+	python setup.py clean --all
 	python setup.py build
 	python setup.py install
 

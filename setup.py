@@ -71,6 +71,8 @@ setup(
         'streamcorpus',
         'pyyaml',
         'nltk',
+        'lxml',
+        'BeautifulSoup',
     ],
     # include_package_data = True,
     package_data = {
