@@ -38,7 +38,7 @@ kba.pipeline:
     output_name: john-smith-tagged-by-lingpipe-test
 
   lingpipe:
-    pipeline_root: .
+    pipeline_root: ../third/
     ## convert doc-level labels into token-level labels by requiring
     ## particular substrings appear in the strings of a coref chain
     align_labels_by: names_in_chains
