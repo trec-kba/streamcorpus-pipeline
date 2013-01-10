@@ -1,6 +1,11 @@
 
 clean_js:
-	rm -f data/john-smith/john-smith-0.sc
+	## to make real tests, we need to dump a non-time-sensitive
+	## extract from these Chunk files and compare it to a stored
+	## copy of what is expected.
+	git checkout -- data/john-smith/john-smith-tagged-by-lingpipe-0.sc
+	rm -f data/john-smith/john-smith-tagged-by-lingpipe-test-0.sc
+	rm -rf tmp
 
 john-smith: clean_js clean install
 	echo data/john-smith/original | python -m kba.pipeline.run configs/john-smith.yaml
@@ -10,7 +15,7 @@ john-smith: clean_js clean install
 	## figure out how to make tests from this
 	##diff data/john-smith/john-smith-tagged-by-lingpipe-0.sc  data/john-smith/john-smith-tagged-by-lingpipe-test-0.sc
 
-clean: 
+clean: clean_js
 	rm -rf build dist src/kba.pipeline.egg-info
 
 install: clean
