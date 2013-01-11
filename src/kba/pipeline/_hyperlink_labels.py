@@ -32,15 +32,15 @@ class hyperlink_labels(object):
         :param: href string
         :returns bool:
         '''
-        if self.config['hyperlink_labels']['require_abs_url']:
+        if self.config['require_abs_url']:
             if not href.lower().startswith('http'):
                 return False
-        if self.config['hyperlink_labels']['domain_substrings']:
+        if self.config['domain_substrings']:
             parts = href.split('/')
             if len(parts) < 3:
                 return False
             domain = parts[2].lower()
-            for substring in self.config['hyperlink_labels']['domain_substrings']:
+            for substring in self.config['domain_substrings']:
                 if substring in domain:
                     return True            
 

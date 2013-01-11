@@ -19,45 +19,13 @@ import itertools
 import streamcorpus
 
 from ._logging import log_full_file
-
-## Rather than mess with __import__(), let's just define a mapping
-## from strings to the particular things that we expect to see as
-## transform functions.  When we want to expose this for user-defined
-## transforms, we'll figure out a better interface.
-from ._stages import Stages
-
-def _init_stage(name, config):
-    '''
-    :param name: string name of a stage in Stages
-
-    :param config: config dict passed into the stage constructor
-
-    :returns callable: one of four possible types:
-
-       1) extractors: take byte strings as input and emit StreamItems
-
-       2) incremental transforms: take StreamItem and emit StreamItem
-       
-       3) batch transforms: take Chunk and emit Chunk
-
-       4) loaders: take Chunk and push it somewhere
-    '''
-    stage = Stages[name](config)
-
-    ## Note that fromlist must be specified here to cause __import__()
-    ## to return the right-most component of name, which in our case
-    ## must be a function.  The contents of fromlist is not
-    ## considered; it just cannot be empty:
-    ## http://stackoverflow.com/questions/2724260/why-does-pythons-import-require-fromlist
-    #trans = __import__('clean_html', fromlist=['kba.pipeline'])
-
-    return stage
+from ._stages import _init_stage
 
 class Pipeline(object):
     '''    
-    configurable pipeline for transforming StreamItem instances in
-    streamcorpus.Chunk files into new Chunk files.  Requires a
-    configuration dict, which is loaded from a yaml file.
+    configurable pipeline for extracting data into StreamItem
+    instances, transforming them, and creating streamcorpus.Chunk
+    files.  Requires a config dict, which is loaded from a yaml file.
     '''
     def __init__(self, config):
         assert 'kba.pipeline' in config, \
@@ -73,24 +41,27 @@ class Pipeline(object):
             os.makedirs(config['tmp_dir'])
 
         ## load the one extractor
-        self._extractor = _init_stage(config['extractor'], config)
+        extractor_name = config['extractor']
+        self._extractor = _init_stage(
+            extractor_name,
+            config.get(extractor_name, {}))
 
         ## a list of transforms that take StreamItem instances as
         ## input and emit modified StreamItem instances
         self._incremental_transforms = [
-            _init_stage(name, config) 
+            _init_stage(name, config.get(name, {}))
             for name in config['incremental_transforms']]
 
         ## a list of transforms that take a chunk path as input and
         ## return a path to a new chunk
         self._batch_transforms = [
-            _init_stage(name, config) 
+            _init_stage(name, config.get(name, {}))
             for name in config['batch_transforms']]
 
         ## a list of transforms that take a chunk path as input and
         ## return a path to a new chunk
         self._loaders  = [
-            _init_stage(name, config) 
+            _init_stage(name, config.get(name, {}))
             for name in config['loaders']]
 
     def run(self, input_strings):
