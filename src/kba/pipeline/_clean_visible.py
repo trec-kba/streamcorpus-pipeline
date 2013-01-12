@@ -110,6 +110,36 @@ def clean_visible(config):
 
     return _make_clean_visible
 
+
+def make_clean_visible_file(i_chunk, clean_visible_path):
+    '''make a temp file of clean_visible text'''
+    _clean = open(clean_visible_path, 'wb')
+    for idx, si in enumerate(i_chunk):
+        if si.stream_id is None:
+            print('si.stream_id is None... ignoring')
+            continue
+        _clean.write('<FILENAME docid="%s">' % si.stream_id)
+        if si.body and si.body.clean_visible:
+            ## this is already in utf-8
+            _clean.write(si.body.clean_visible)
+        _clean.write('</FILENAME>\n')
+    _clean.close()
+    ## replace this with log.info()
+    print clean_visible_path
+
+    '''
+    ## hack to capture html for inspection
+    _html = open(clean_visible_path + '-html', 'wb')
+    for idx, si in enumerate(i_chunk):
+        _html.write('<FILENAME docid="%s">' % si.stream_id)
+        if si.body and si.body.clean_html:
+            _html.write(si.body.clean_html)
+        _html.write('</FILENAME>\n')
+    _html.close()
+    ## replace this with log.info()
+    print clean_visible_path + '-html'
+    '''
+
 if __name__ == '__main__':
     ## a few simple tests
     html = open('nytimes-index.html').read()
