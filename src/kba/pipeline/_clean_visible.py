@@ -10,8 +10,10 @@ This software is released under an MIT/X11 open source license.
 Copyright 2012 Diffeo, Inc.
 '''
 
-import itertools
 import re
+import string
+import itertools
+
 ## regex to identify all XML-like tags, including SCRIPT and STYLE tags
 invisible = re.compile(
     ## capture the visible text before the invisible part
@@ -139,6 +141,24 @@ def make_clean_visible_file(i_chunk, clean_visible_path):
     ## replace this with log.info()
     print clean_visible_path + '-html'
     '''
+## used in 'cleanse' below
+whitespace = re.compile('''(\s|\n)+''', re.UNICODE)
+strip_punctuation = {ord(c): u' ' for c in string.punctuation}
+
+def cleanse(span):
+    '''Convert a unicode string into a lowercase string with no
+punctuation and only spaces for whitespace.
+
+:param span: string
+    '''
+    assert isinstance(span, unicode), \
+        'got non-unicode string %r' % span
+    ## lowercase, strip punctuation, and shrink all whitespace
+    span = span.lower()
+    span = span.translate(strip_punctuation)
+    span = whitespace.sub(' ', span)
+    ## trim any leading or trailing whitespace
+    return span.strip()
 
 if __name__ == '__main__':
     ## a few simple tests
