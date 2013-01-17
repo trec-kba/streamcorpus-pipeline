@@ -190,7 +190,7 @@ the output path to create.
             pipeline_root=self.config['pipeline_root'],
             clean_visible_path=clean_visible_path,
             ner_xml_path=ner_xml_path)
-        #print cmd
+        print cmd
         start_time = time.time()
         gpg_child = subprocess.Popen(cmd, stderr=subprocess.PIPE, shell=True)
         s_out, errors = gpg_child.communicate()
@@ -216,7 +216,7 @@ the output path to create.
             stream_item = input_iter.next()
 
             ## get stream_id out of the XML
-            stream_id = ner_dom.attributes.get('docid').value
+            stream_id = ner_dom.attributes.get('stream_id').value
             if stream_item.stream_id is None:
                 assert stream_id is None, 'out of sync: None != %r' % stream_id
                 print('si.stream_id is None... ignoring')
