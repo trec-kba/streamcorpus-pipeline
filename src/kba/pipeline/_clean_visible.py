@@ -13,6 +13,7 @@ Copyright 2012 Diffeo, Inc.
 import re
 import string
 import itertools
+import lxml.etree
 
 ## regex to identify all XML-like tags, including SCRIPT and STYLE tags
 invisible = re.compile(
@@ -116,15 +117,23 @@ def clean_visible(config):
 def make_clean_visible_file(i_chunk, clean_visible_path):
     '''make a temp file of clean_visible text'''
     _clean = open(clean_visible_path, 'wb')
+    _clean.write('<?xml version="1.0" encoding="UTF-8"?>')
+    _clean.write('<root>')
     for idx, si in enumerate(i_chunk):
         if si.stream_id is None:
-            print('si.stream_id is None... ignoring')
-            continue
-        _clean.write('<FILENAME docid="%s">' % si.stream_id)
+            ## create the FILENAME element anyway, so the ordering
+            ## remains the same as the i_chunk and can be aligned.
+            stream_id = ''
+        else:
+            stream_id = si.stream_id
+        doc = lxml.etree.Element("FILENAME", stream_id=stream_id)
         if si.body and si.body.clean_visible:
             ## this is already in utf-8
-            _clean.write(si.body.clean_visible)
-        _clean.write('</FILENAME>\n')
+            doc.text = si.body.clean_visible
+        else:
+            doc.text = ''
+        _clean.write(lxml.etree.tostring(doc, encoding='UTF-8'))
+    _clean.write('</root>')
     _clean.close()
     ## replace this with log.info()
     print clean_visible_path
