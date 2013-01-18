@@ -8,7 +8,7 @@ clean_js:
 	rm -f data/john-smith/john-smith-tagged-by-lingpipe-test-0.sc
 	rm -rf tmp
 
-john-smith: clean_js clean install
+john-smith: clean_js clean dev-all
 	echo data/john-smith/original | python -m kba.pipeline.run configs/john-smith.yaml
 	echo data/john-smith/original | python -m kba.pipeline.run configs/john-smith-lingpipe.yaml
 	echo data/john-smith/john-smith-0.sc | python -m kba.pipeline.run configs/john-smith-lingpipe-from-chunk.yaml
