@@ -51,7 +51,9 @@ def generate_john_smith_chunk(path_to_original):
     for label_id in range(35):
 
         dir_path = os.path.join(path_to_original, str(label_id))
-        for fname in os.listdir(dir_path):
+        fnames = os.listdir(dir_path)
+        fnames.sort()
+        for fname in fnames:
 
             stream_item = streamcorpus.make_stream_item(
                 creation_time, 
