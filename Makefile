@@ -27,10 +27,34 @@ clean: clean_js
 lxml:
 	## this should be done by cloudinit/puppet or something along
 	## those lines
-	sudo apt-get -y install libxml2-dev libxslt-dev  
+	#sudo apt-get -y install libxml2-dev libxslt-dev  
 
-install: clean lxml
+update_modules:
+	## get the other submodules:  bigtree, kba-corpus, and third
+	git submodule init
+
+	## This clones the repositories and checks out the commits
+	## specified by the superproject.
+	git submodule update
+
+	## This pulls in the HEAD of each of the submodules.  Maybe
+	## should commit and tag a release here instead of checking
+	## out master and pulling from HEAD.
+	git submodule foreach git pull origin master
+
+        ## To protect against the possibility that someone jumps into
+        ## one of these dirs to make a change and does it not on any
+        ## branch, for now we switch to master.  Perhaps we should
+        ## split this into a dev-mode target and a release-mode
+        ## target, where the latter clones readonly repos?
+	git submodule foreach git checkout master
+
+install-deps: update_modules
+	cd streamcorpus && make install
+
+install-kba: clean lxml
 	python setup.py clean --all
 	python setup.py build
 	python setup.py install
 
+dev-all: install-deps install-kba
