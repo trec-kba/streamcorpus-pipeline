@@ -75,26 +75,26 @@ class Pipeline(object):
             if i_str.endswith('\n'):
                 i_str = i_str[:-1]
 
-            ## the extractor returns an generator of StreamItems
-            i_chunk = self._extractor(i_str)
+            ## the extractor generates generators of StreamItems
+            for i_chunk in self._extractor(i_str):
 
-            ## make a temporary chunk at a temporary path
-            t_path = os.path.join(self.config['tmp_dir'], 'tmp-file-%s' % str(uuid.uuid1()))
-            t_chunk = streamcorpus.Chunk(path=t_path, mode='wb')
+                ## make a temporary chunk at a temporary path
+                t_path = os.path.join(self.config['tmp_dir'], 'tmp-file-%s' % str(uuid.uuid1()))
+                t_chunk = streamcorpus.Chunk(path=t_path, mode='wb')
 
-            ## incremental transforms populate the temporary chunk
-            self._run_incremental_transforms(i_chunk, t_chunk)
+                ## incremental transforms populate the temporary chunk
+                self._run_incremental_transforms(i_chunk, t_chunk)
 
-            ## batch transforms act on the whole chunk in-place
-            self._run_batch_transforms(t_path)
+                ## batch transforms act on the whole chunk in-place
+                self._run_batch_transforms(t_path)
 
-            ## loaders put the chunk somewhere, or could delete it
-            for loader in self._loaders:
-                loader(t_path, first_stream_item_num, i_str)
-            
-            ## increment the first_stream_item_num to the next one in
-            ## the stream
-            first_stream_item_num += self.next_stream_item_num
+                ## loaders put the chunk somewhere, or could delete it
+                for loader in self._loaders:
+                    loader(t_path, first_stream_item_num, i_str)
+
+                ## increment the first_stream_item_num to the next one in
+                ## the stream
+                first_stream_item_num += self.next_stream_item_num
 
     def _run_batch_transforms(self, chunk_path):
         for transform in self._batch_transforms:

@@ -15,7 +15,7 @@ class from_local_chunks(object):
         self.config = config
 
     def __call__(self, i_str):
-        return streamcorpus.Chunk(path=i_str, mode='rb')
+        yield streamcorpus.Chunk(path=i_str, mode='rb')
 
 class to_local_chunks(object):
     def __init__(self, config):

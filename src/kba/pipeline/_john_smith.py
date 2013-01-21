@@ -33,13 +33,14 @@ def john_smith(config):
     streamcorpus.Chunk file containing the John Smith corpus.
     '''
     def _john_smith(path_to_original):
-        return generate_john_smith_chunk(path_to_original)
+        yield generate_john_smith_chunk(path_to_original)
     
     return _john_smith
 
 def generate_john_smith_chunk(path_to_original):
     '''
-    
+    This _looks_ like a Chunk only in that it generates StreamItem
+    instances when iterated upon.
     '''
     ## assume JS corpus was created at one moment at the end of 1998
     creation_time = '1998-12-31T23:59:59.999999Z'
