@@ -11,8 +11,10 @@ Copyright 2012 Diffeo, Inc.
 '''
 
 import re
+import sys
 import string
 import itertools
+import traceback
 import lxml.etree
 
 ## regex to identify all XML-like tags, including SCRIPT and STYLE tags
@@ -128,8 +130,19 @@ def make_clean_visible_file(i_chunk, clean_visible_path):
             stream_id = si.stream_id
         doc = lxml.etree.Element("FILENAME", stream_id=stream_id)
         if si.body and si.body.clean_visible:
-            ## this is already in utf-8
-            doc.text = si.body.clean_visible
+            try:
+                ## is UTF-8, and etree wants .text to be unicode
+                doc.text = si.body.clean_visible.decode('utf8')
+            except Exception, exc:
+                ## this should never ever fail, because if it does,
+                ## then it means that clean_visible (or more likely
+                ## clean_html) is not what it is supposed to be.
+                ## Therefore, do not take it lightly:
+                print traceback.format_exc(exc)
+                print 'failed on stream_id=%s to follow:' % si.stream_id
+                print repr(si.body.clean_visible)
+                print 'above was stream_id=%s' % si.stream_id
+                sys.exit(str(exc))
         else:
             doc.text = ''
         _clean.write(lxml.etree.tostring(doc, encoding='UTF-8'))
