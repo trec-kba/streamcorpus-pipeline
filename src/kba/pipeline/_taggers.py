@@ -6,6 +6,7 @@ This software is released under an MIT/X11 open source license.
 
 Copyright 2012 Diffeo, Inc.
 '''
+import gc
 import os
 import time
 import itertools
@@ -170,12 +171,18 @@ class TaggerBatchTransform(object):
         i_chunk = Chunk(path=chunk_path, mode='rb')
         make_clean_visible_file(i_chunk, clean_visible_path)
 
+        ## make sure holding nothing that consumes memory
+        i_chunk = None
+
         ## generate an output file from the tagger
         self.make_ner_file(clean_visible_path, ner_xml_path)
 
         ## make a new output chunk at a temporary path
         tmp_chunk_path     = chunk_path + '_'
         o_chunk = Chunk(path=tmp_chunk_path, mode='wb')
+
+        ## re-open i_chunk
+        i_chunk = Chunk(path=chunk_path, mode='rb')
 
         ## fuse the output file with i_chunk to make o_chunk
         self.align_chunk_with_ner(ner_xml_path, i_chunk, o_chunk)
@@ -205,9 +212,11 @@ the output path to create.
             ner_xml_path=ner_xml_path)
         print cmd
         start_time = time.time()
-        gpg_child = subprocess.Popen(cmd, stderr=subprocess.PIPE, shell=True)
-        s_out, errors = gpg_child.communicate()
-        assert gpg_child.returncode == 0 and 'Exception' not in errors, errors
+        ## make sure we are using as little memory as possible
+        gc.collect()
+        _child = subprocess.Popen(cmd, stderr=subprocess.PIPE, shell=True)
+        s_out, errors = _child.communicate()
+        assert _child.returncode == 0 and 'Exception' not in errors, errors
         elapsed = time.time() - start_time
         return elapsed
         #print '%.1f sec --> %.1f StreamItems/second' % (elapsed, rate)
