@@ -18,6 +18,7 @@ from BeautifulSoup import UnicodeDammit
 
 if __name__ != '__main__':
     from ._logging import log_full_file
+    from . import _exceptions
 
 encoding_re = re.compile(
     '''(?P<start_xml>([^<]|\n)*?\<\?xml[^>]*)''' + \
@@ -191,11 +192,15 @@ def make_clean_html(raw, stream_item=None, log_dir=None):
     really is, and attempt to get a properly formatted HTML document
     with all HTML-escaped characters converted to their unicode.
     '''
-    ## default attempt uses vanilla lxml.html
-    root = lxml.html.fromstring(raw)
-    ## if that worked, then we will be able to generate a
-    ## valid HTML string
-    fixed_html = lxml.html.tostring(root, encoding='unicode')
+    try:
+        ## default attempt uses vanilla lxml.html
+        root = lxml.html.fromstring(raw)
+        ## if that worked, then we will be able to generate a
+        ## valid HTML string
+        fixed_html = lxml.html.tostring(root, encoding='unicode')
+    except (TypeError, ParserError, UnicodeDecodeError), exc:
+        print '_clean_html.make_clean_html caught %s' % exc
+        raise _exceptions.TransformGivingUp()
 
     ## remove any ^M characters
     fixed_html = string.replace( fixed_html, '\r', ' ' )

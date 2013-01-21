@@ -20,6 +20,7 @@ import streamcorpus
 
 from ._logging import log_full_file
 from ._stages import _init_stage
+from . import _exceptions
 
 class Pipeline(object):
     '''    
@@ -118,6 +119,11 @@ class Pipeline(object):
                 ### transform should implement its own timeouts.
                 try:
                     si = transform(si)
+
+                except _exceptions.TransformGivingUp:
+                    ## do nothing
+                    pass
+
                 except Exception, exc:
                     #logger.warning
                     print 'Pipeline caught:'
