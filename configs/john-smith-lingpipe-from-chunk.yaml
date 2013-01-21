@@ -39,6 +39,7 @@ kba.pipeline:
 
   lingpipe:
     pipeline_root: ../third/
+    cleanup_tmp_files: false
     ## convert doc-level labels into token-level labels by requiring
     ## particular substrings appear in the strings of a coref chain
     align_labels_by: names_in_chains
