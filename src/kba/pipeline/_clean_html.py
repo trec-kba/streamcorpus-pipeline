@@ -33,10 +33,10 @@ def valid_XML_char_ordinal(ord_c):
         or 0x10000 <= ord_c <= 0x10FFFF
         )
 
-def drop_invalid_XML_char(possibly_invalid_string):
+def drop_invalid_XML_chars(possibly_invalid_string):
     return ''.join(
-        c for c in possibly_invalid_string 
-        if valid_XML_char_ordinal(ord(c))
+        c if valid_XML_char_ordinal(ord(c)) else ' '
+        for c in possibly_invalid_string         
         )
 
 def make_traceback_log(all_exc):
@@ -46,7 +46,7 @@ def make_traceback_log(all_exc):
         traceback_log += '\n\nexc #%d\n%s' % (num, traceback.format_exc(exc))
     return traceback_log
 
-def make_clean_html(raw, stream_item=None, log_dir=None):
+def make_clean_html_super(raw, stream_item=None, log_dir=None):
     '''
     Treat 'raw' as though it is HTML, even if we have no idea what it
     really is, and attempt to get a properly formatted HTML document
@@ -138,13 +138,13 @@ def make_clean_html(raw, stream_item=None, log_dir=None):
         elif attempt == 1:
             ## try stripping control characters from the beginning
             initial_100 = raw[:100]
-            fixed_initial_100 = drop_invalid_XML_char(initial_100)
+            fixed_initial_100 = drop_invalid_XML_chars(initial_100)
             raw = fixed_initial_100 + raw[100:]
             ## now it will loop through again
 
         elif attempt == 2:
             ## try stripping control characters from entire text
-            raw = drop_invalid_XML_char(raw)
+            raw = drop_invalid_XML_chars(raw)
             ## now it will loop through again
 
         elif attempt == 3:
@@ -185,6 +185,49 @@ def make_clean_html(raw, stream_item=None, log_dir=None):
 
     return _clean_html
 
+def make_clean_html(raw, stream_item=None, log_dir=None):
+    '''
+    Treat 'raw' as though it is HTML, even if we have no idea what it
+    really is, and attempt to get a properly formatted HTML document
+    with all HTML-escaped characters converted to their unicode.
+    '''
+    ## default attempt uses vanilla lxml.html
+    root = lxml.html.fromstring(raw)
+    ## if that worked, then we will be able to generate a
+    ## valid HTML string
+    fixed_html = lxml.html.tostring(root, encoding='unicode')
+
+    ## remove any ^M characters
+    fixed_html = string.replace( fixed_html, '\r', ' ' )
+
+    ## remove any invalid chars, such as those resulting from this
+    ## bogus HTML-escaped entity &#822050+ that reulted from someone
+    ## failing to put the ";" between "&#8220;" and "50+"
+    fixed_html = drop_invalid_XML_chars(fixed_html)
+
+    ## construct a Cleaner that removes any ``<script>`` tags,
+    ## Javascript, like an ``onclick`` attribute, comments, style
+    ## tags or attributes, ``<link>`` tags
+    cleaner = lxml.html.clean.Cleaner(
+        scripts=True, javascript=True, 
+        comments=True, 
+        ## do not remove <html> <head> <title> etc
+        page_structure=False,
+        style=True, links=True)
+
+    ## now get the really sanitized HTML
+    _clean_html = cleaner.clean_html(fixed_html)
+
+    ## generate pretty HTML in utf-8
+    _clean_html = lxml.html.tostring(
+        lxml.html.document_fromstring(_clean_html), 
+        method='html', encoding='utf-8',
+        pretty_print=True, 
+        #include_meta_content_type=True
+        )
+
+    return _clean_html
+
 def clean_html(config):
     '''
     returns a kba.pipeline "transform" function that attempts to
@@ -204,6 +247,3 @@ def clean_html(config):
 
     return _make_clean_html
 
-if __name__ == '__main__':
-    open('nytimes-index-clean.html', 'wb').write(
-        make_clean_html(open('nytimes-index.html').read()))
