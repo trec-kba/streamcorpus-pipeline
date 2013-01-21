@@ -8,13 +8,15 @@ Copyright 2012 Diffeo, Inc.
 '''
 import os
 import time
+import itertools
 import subprocess
 import exceptions
 import collections
 import streamcorpus
 import xml.dom.minidom
-from streamcorpus import Chunk, Tagging, Label
+from streamcorpus import Chunk, Tagging, Label, OffsetType
 from ._clean_visible import make_clean_visible_file, cleanse
+from sortedcollection import SortedCollection
 
 def make_chains_with_names(sentences):
     '''
@@ -105,9 +107,18 @@ def names_in_chains(stream_item, aligner_data):
     ## stream_item passed by reference, so nothing to return
 
 def line_offset_labelsets(stream_item, aligner_data):
+    ## get a set of tokens -- must have OffsetType.LINES in them.
+    sentences = stream_item.body.sentences[aligner_data['tagger_id']]
+
     ## if given a LabelSet, then make labels on tokens
     for labelset in stream_item.body.labelsets:
+        if labelset.annotator.annotator_id != aligner_data['annotator_id']:
+            continue
         for label in labelset.labels:
+
+            ## make sure to update the annotator; no check for this...?
+            label.annotator = labelset.annotator
+
             off = label.offsets[OffsetType.LINES]
             assert off.length == len(off.value.split('\n'))
             #print 'L: %d\t%r\t%r' % (off.first, off.value, 
@@ -116,6 +127,7 @@ def line_offset_labelsets(stream_item, aligner_data):
             ## These next few steps are probably the most
             ## memory intensive, because they fully
             ## instantiate all the tokens.
+
             token_collection = SortedCollection(
                 itertools.chain(*[sent.tokens for sent in sentences]),
                 key=lambda x: x.offsets[OffsetType.LINES].first
@@ -169,8 +181,9 @@ class TaggerBatchTransform(object):
         self.align_chunk_with_ner(ner_xml_path, i_chunk, o_chunk)
 
         ## clean up temp files
-        os.remove(clean_visible_path)
-        os.remove(ner_xml_path)
+        if self.config['cleanup_tmp_files']:
+            os.remove(clean_visible_path)
+            os.remove(ner_xml_path)
 
         ## atomic rename new chunk file into place
         os.rename(tmp_chunk_path, chunk_path)
