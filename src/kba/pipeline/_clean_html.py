@@ -198,7 +198,7 @@ def make_clean_html(raw, stream_item=None, log_dir=None):
         ## if that worked, then we will be able to generate a
         ## valid HTML string
         fixed_html = lxml.html.tostring(root, encoding='unicode')
-    except (TypeError, ParserError, UnicodeDecodeError), exc:
+    except (TypeError, lxml.etree.ParserError, UnicodeDecodeError), exc:
         print '_clean_html.make_clean_html caught %s' % exc
         raise _exceptions.TransformGivingUp()
 

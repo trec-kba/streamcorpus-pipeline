@@ -8,7 +8,14 @@ clean_js:
 	rm -f data/john-smith/john-smith-tagged-by-lingpipe-test-0.sc
 	rm -rf tmp
 
-john-smith: clean_js clean dev-all
+test: clean
+	## clean does not always get called!?  Must remove "build" so
+	## it does not confuse py.test
+	rm -rf build
+	py.test --genscript=runtests.py
+	python runtests.py
+
+john-smith: clean dev-all test
 	echo data/john-smith/original | python -m kba.pipeline.run configs/john-smith.yaml
 	echo data/john-smith/original | python -m kba.pipeline.run configs/john-smith-lingpipe.yaml
 	echo data/john-smith/john-smith-0.sc | python -m kba.pipeline.run configs/john-smith-lingpipe-from-chunk.yaml
@@ -19,6 +26,11 @@ john-smith: clean_js clean dev-all
 
 	diff tmp/lp-0.tsv tmp/lp-test-0.tsv
 	diff tmp/lp-0.tsv data/john-smith/john-smith-tagged-by-lingpipe-0.tsv
+
+stanford: dev-all
+	## this is so slow that there must be something wrong with our
+	## build of Stanford CoreNLP
+	echo data/john-smith/john-smith-0.sc | python -m kba.pipeline.run configs/john-smith-stanford-from-chunk.yaml
 
 clean: clean_js
 	rm -rf build dist src/kba.pipeline.egg-info

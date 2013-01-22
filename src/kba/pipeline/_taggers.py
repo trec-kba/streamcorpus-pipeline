@@ -9,6 +9,7 @@ Copyright 2012 Diffeo, Inc.
 import gc
 import os
 import time
+import traceback
 import itertools
 import subprocess
 import exceptions
@@ -214,7 +215,16 @@ the output path to create.
         start_time = time.time()
         ## make sure we are using as little memory as possible
         gc.collect()
-        _child = subprocess.Popen(cmd, stderr=subprocess.PIPE, shell=True)
+        try:
+            _child = subprocess.Popen(cmd, stderr=subprocess.PIPE, shell=True)
+        except OSError, exc:
+            print traceback.format_exc(exc)
+            from . import _memory
+            print 'VmSize: %d bytes' % _memory.memory()
+            print 'VmRSS:  %d bytes' % _memory.resident()
+            print 'VmStk:  %d bytes' % _memory.stacksize()
+            sys.exit(exc)
+
         s_out, errors = _child.communicate()
         assert _child.returncode == 0 and 'Exception' not in errors, errors
         elapsed = time.time() - start_time

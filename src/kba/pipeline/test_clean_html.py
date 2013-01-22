@@ -3,8 +3,8 @@
 from _clean_html import make_clean_html
 
 def test_make_clean_html():
-    open('nytimes-index-clean.html', 'wb').write(
-        make_clean_html(open('nytimes-index.html').read()))
+    open('data/test/nytimes-index-clean.html', 'wb').write(
+        make_clean_html(open('data/test/nytimes-index.html').read()))
 
     test_bad_html = '''
 <a href="http://birdingblogs.com/author/daleforbes">birdingblogs.com</a></div><div
