@@ -224,9 +224,11 @@ the output path to create.
             print 'VmSize: %d bytes' % _memory.memory()
             print 'VmRSS:  %d bytes' % _memory.resident()
             print 'VmStk:  %d bytes' % _memory.stacksize()
-            print 'current objects: %r' % gc.get_objects()
             print 'uncollectable garbage: %r' % gc.garbage
             print 'gc.get_count() = %r' % gc.get_count()
+            sys.stdout.flush()
+            ## this sometimes fails
+            print 'current objects: %r' % gc.get_objects()
             sys.exit(exc)
 
         s_out, errors = _child.communicate()
