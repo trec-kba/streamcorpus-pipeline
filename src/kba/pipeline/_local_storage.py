@@ -21,7 +21,7 @@ class to_local_chunks(object):
     def __init__(self, config):
         self.config = config
 
-    def __call__(self, t_path, first_stream_item_num, i_str):
+    def __call__(self, t_path, name_info, i_str):
         o_type = self.config['output_type']
         
         if o_type == 'samedir':
@@ -44,10 +44,8 @@ class to_local_chunks(object):
             if not os.path.exists(o_dir):
                 os.makedirs(o_dir)
 
-            o_path = os.path.join(
-                o_dir,
-                '%s-%d.sc' % (self.config['output_name'],
-                              first_stream_item_num))
+            o_fname = self.config['output_name'] % name_info
+            o_path = os.path.join(o_dir, o_fname + '.sc')
 
         ## do an atomic renaming    
         os.rename(t_path, o_path)

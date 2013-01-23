@@ -85,12 +85,22 @@ class Pipeline(object):
                 ## incremental transforms populate the temporary chunk
                 self._run_incremental_transforms(i_chunk, t_chunk)
 
+                ## insist that every chunk has only one source string
+                assert len(self.sources) == 1, self.sources
+
                 ## batch transforms act on the whole chunk in-place
                 self._run_batch_transforms(t_path)
 
                 ## loaders put the chunk somewhere, or could delete it
+                name_info = dict(
+                    first = first_stream_item_num,
+                    num = len(t_chunk),
+                    md5 = t_chunk.md5_hexdigest,
+                    source = self.sources.pop(),
+                    )
+
                 for loader in self._loaders:
-                    loader(t_path, first_stream_item_num, i_str)
+                    loader(t_path, name_info, i_str)
 
                 ## increment the first_stream_item_num to the next one in
                 ## the stream
@@ -102,6 +112,7 @@ class Pipeline(object):
 
     def _run_incremental_transforms(self, i_chunk, t_chunk):
         ## iterate over docs from a chunk
+        self.sources = set()
         for si in i_chunk:
             ## operate each transform on this one StreamItem
             for transform in self._incremental_transforms:
@@ -140,6 +151,8 @@ class Pipeline(object):
 
             ## put the StreamItem into the output
             t_chunk.add(si)
+
+            self.sources.add( si.source )
 
             ## track position in the stream
             self.next_stream_item_num += 1
