@@ -1,7 +1,9 @@
 
+import pytest
 
 from _clean_html import make_clean_html
 
+@pytest.mark.xfail
 def test_make_clean_html():
     open('data/test/nytimes-index-clean.html', 'wb').write(
         make_clean_html(open('data/test/nytimes-index.html').read()))
