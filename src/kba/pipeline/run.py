@@ -27,5 +27,5 @@ if __name__ == '__main__':
     config = yaml.load(open(args.config))
 
     pipeline = Pipeline(config)
-    pipeline.run(input_strings=sys.stdin)
+    pipeline.run()
 

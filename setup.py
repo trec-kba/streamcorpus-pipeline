@@ -74,6 +74,7 @@ setup(
         'lxml',
         'BeautifulSoup',
         'boto',
+        'kazoo',
     ],
     # include_package_data = True,
     package_data = {

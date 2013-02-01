@@ -18,6 +18,12 @@ kba.pipeline:
   ## batch_transforms operate.
   tmp_dir: tmp
 
+  ## task_queue specifies the strings that are passed to an extractor
+  ## to obtain a Chunk.  The strings might be paths in a file system
+  ## or some other source of data.  The task_queue might simply be
+  ## stdin, or it might be a more sophisticated shared queue.
+  task_queue: stdin
+
   ## generator of StreamItems
   extractor: from_local_chunks
 
@@ -35,7 +41,7 @@ kba.pipeline:
     #output_type: inplace
     output_type: otherdir
     output_path: data/john-smith/
-    output_name: john-smith-tagged-by-lingpipe-test
+    output_name: "john-smith-tagged-by-lingpipe-test-%(first)s"
 
   lingpipe:
     pipeline_root: ../third/

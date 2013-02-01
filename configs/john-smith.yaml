@@ -18,6 +18,12 @@ kba.pipeline:
   ## batch_transforms operate.
   tmp_dir: tmp
 
+  ## task_queue specifies the strings that are passed to an extractor
+  ## to obtain a Chunk.  The strings might be paths in a file system
+  ## or some other source of data.  The task_queue might simply be
+  ## stdin, or it might be a more sophisticated shared queue.
+  task_queue: stdin
+
   ## generator of StreamItems
   extractor: john_smith
 

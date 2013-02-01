@@ -41,6 +41,12 @@ class Pipeline(object):
         if not os.path.exists(config['tmp_dir']):
             os.makedirs(config['tmp_dir'])
 
+        ## load the one task queue
+        task_queue_name = config['task_queue']
+        self._task_queue = _init_stage(
+            task_queue_name,
+            config.get(task_queue_name, {}))
+
         ## load the one extractor
         extractor_name = config['extractor']
         self._extractor = _init_stage(
@@ -65,15 +71,19 @@ class Pipeline(object):
             _init_stage(name, config.get(name, {}))
             for name in config['loaders']]
 
-    def run(self, input_strings):
+    def run(self):
         '''
         Operate the pipeline on chunks loaded from chunk_paths
         '''
+        ## keep track of the number of StreamItems seen so far by this
+        ## particular instance of the pipeline, so it can be used in
+        ## naming output files.  This is really only useful for
+        ## single-process jobs that might be used for special corpora.
         first_stream_item_num = 0
         self.next_stream_item_num = 0
-        for i_str in input_strings:
-            if i_str.endswith('\n'):
-                i_str = i_str[:-1]
+
+        ## iterate over input strings from the specified task_queue
+        for i_str in self._task_queue:
 
             ## the extractor generates generators of StreamItems
             for i_chunk in self._extractor(i_str):
