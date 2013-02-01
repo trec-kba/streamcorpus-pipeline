@@ -13,7 +13,7 @@ test: clean
 	## it does not confuse py.test
 	rm -rf build
 	py.test --genscript=runtests.py
-	python runtests.py
+	python runtests.py -s
 
 john-smith: clean dev-all test
 	echo data/john-smith/original | python -m kba.pipeline.run configs/john-smith.yaml
