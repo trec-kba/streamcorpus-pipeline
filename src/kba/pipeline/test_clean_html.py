@@ -1,12 +1,13 @@
-
+import os
 import pytest
 
 from _clean_html import make_clean_html
 
-@pytest.mark.xfail
 def test_make_clean_html():
-    open('data/test/nytimes-index-clean.html', 'wb').write(
-        make_clean_html(open('data/test/nytimes-index.html').read()))
+    path = os.path.dirname(__file__)
+    path = os.path.join( path, '../../../data/test/' )
+    open(os.path.join(path, 'nytimes-index-clean.html'), 'wb').write(
+        make_clean_html(open(os.path.join(path, 'nytimes-index.html')).read()))
 
     test_bad_html = '''
 <a href="http://birdingblogs.com/author/daleforbes">birdingblogs.com</a></div><div
