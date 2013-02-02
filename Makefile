@@ -33,7 +33,7 @@ stanford: dev-all
 	echo data/john-smith/john-smith-0.sc | python -m kba.pipeline.run configs/john-smith-stanford-from-chunk.yaml
 
 clean: clean_js
-	rm -rf build dist src/kba.pipeline.egg-info
+	rm -rf build dist src/kba.pipeline.egg-info runtests.py
 
 .IGNORE: lxml
 lxml:
