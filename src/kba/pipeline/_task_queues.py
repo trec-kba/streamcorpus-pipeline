@@ -131,7 +131,29 @@ class ZookeeperTaskQueue(object):
         Add tasks to the queue
         '''
         hash = hashlib.md5(i_str).hexdigest()
-        self._zk.create(self._path('available_tasks', hash), i_str, makepath=True)
+        try:
+            self._zk.create(self._path('available_tasks', hash), i_str, makepath=True)
+            return 1
+        except kazoo.exceptions.NodeExistsError:
+            return 0
+
+    def __len__(self):
+        return self._len('available_tasks')
+
+    def _len(self, state):
+        try:
+            val, zstat = self._zk.get(self._path(state))
+            return zstat.children_count
+        except kazoo.exceptions.NoNodeError:
+            return 0
+
+    @property
+    def counts(self):
+        return {
+            'available_tasks': len(self),
+            'pending': self._len('pending'),
+            'completed': self._len('completed'),
+            }
 
     def set_mode(self, mode):
         '''
