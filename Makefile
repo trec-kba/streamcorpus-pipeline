@@ -27,6 +27,9 @@ john-smith: clean dev-all test
 	diff tmp/lp-0.tsv tmp/lp-test-0.tsv
 	diff tmp/lp-0.tsv data/john-smith/john-smith-tagged-by-lingpipe-0.tsv
 
+john-smith-simple: clean install-kba test
+	echo data/john-smith/original | python -m kba.pipeline.run configs/john-smith.yaml
+
 stanford: dev-all
 	## this is so slow that there must be something wrong with our
 	## build of Stanford CoreNLP
