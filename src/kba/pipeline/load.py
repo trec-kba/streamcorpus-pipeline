@@ -36,6 +36,10 @@ if __name__ == '__main__':
         help='Must be used in conjunction with --load, and causes all ' + \
             'loaded tasks to be set to "completed".')
     parser.add_argument(
+        '--list-completed', action='store_true', default=False,
+        dest='list_completed',
+        help='List all completed tasks.')
+    parser.add_argument(
         '--cleanup', action='store_true', default=False,
         help='Cleans up "available" and "pending" to match "state" of tasks.')
     parser.add_argument(
@@ -92,3 +96,6 @@ if __name__ == '__main__':
         print('Total: %d' % sum([counts[k] for k in ['available', 'pending', 'completed']]))
         print('Num Tasks: %d' % counts['tasks'])
 
+    if args.list_completed:
+        for completed in tq.completed:
+            print completed['i_str']

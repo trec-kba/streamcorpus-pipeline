@@ -253,7 +253,7 @@ class ZookeeperTaskQueue(object):
             return 0
 
     @property
-    def _completed(self):
+    def completed(self):
         for child in self._zk.get_children(self._path('tasks')):
             data, zstat = self._zk.get(self._path('tasks', child))
             data = json.loads(data)
@@ -267,8 +267,8 @@ class ZookeeperTaskQueue(object):
     @property
     def counts(self):
         num_completed = 0
-        for num_completed, data in enumerate(self._completed):
-            pass
+        for data in self.completed:
+            num_completed += 1
         return {
             'tasks': len(self),
             'available': self._len('available'),
