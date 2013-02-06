@@ -23,6 +23,7 @@ kba.pipeline:
   ## or some other source of data.  The task_queue might simply be
   ## stdin, or it might be a more sophisticated shared queue.
   task_queue: stdin
+  stdin:
 
   ## generator of StreamItems
   extractor: from_local_chunks
@@ -36,6 +37,7 @@ kba.pipeline:
   loaders: [to_local_chunks]
 
   from_local_chunks:
+    max_retries: 30
 
   to_local_chunks:
     #output_type: inplace

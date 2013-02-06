@@ -23,6 +23,7 @@ kba.pipeline:
   ## or some other source of data.  The task_queue might simply be
   ## stdin, or it might be a more sophisticated shared queue.
   task_queue: stdin
+  stdin:
 
   ## generator of StreamItems
   extractor: john_smith
