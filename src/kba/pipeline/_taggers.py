@@ -225,7 +225,7 @@ the output path to create.
             print 'VmRSS:  %d bytes' % _memory.resident()
             print 'VmStk:  %d bytes' % _memory.stacksize()
             print 'uncollectable garbage: %r' % gc.garbage
-            print 'gc.get_count() = %r' % gc.get_count()
+            print 'gc.get_count() = %r' % repr(gc.get_count())
             sys.stdout.flush()
             ## this sometimes fails
             print 'current objects: %r' % gc.get_objects()
