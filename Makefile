@@ -41,6 +41,9 @@ lxml:
 	## those lines
 	#sudo apt-get -y install libxml2-dev libxslt-dev  
 
+post-build-test:
+	echo data/john-smith/john-smith-0.sc | python -m kba.pipeline.run configs/john-smith-lingpipe-from-chunk.yaml
+
 update_modules:
 	## get the other submodules:  bigtree, kba-corpus, and third
 	git submodule init
