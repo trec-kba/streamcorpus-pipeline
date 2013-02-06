@@ -220,6 +220,7 @@ the output path to create.
             _child = subprocess.Popen(cmd, stderr=subprocess.PIPE, shell=True)
         except OSError, exc:
             print traceback.format_exc(exc)
+            print('out of memory on:\n%r\n' % (clean_visible_path, ner_xml_path))
             from . import _memory
             print 'VmSize: %d bytes' % _memory.memory()
             print 'VmRSS:  %d bytes' % _memory.resident()
@@ -229,7 +230,7 @@ the output path to create.
             sys.stdout.flush()
             ## this sometimes fails
             print 'current objects: %r' % gc.get_objects()
-            sys.exit(exc)
+            sys.exit(int(self.config['exit_code_on_out_of_memory']))
 
         s_out, errors = _child.communicate()
         assert _child.returncode == 0 and 'Exception' not in errors, errors
