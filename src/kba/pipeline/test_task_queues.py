@@ -12,14 +12,18 @@ def test_zk():
 
     test_data = set(['a', 'b', 'c', 'd'])
 
-    config['delete_all'] = True
     tq1 = _init_stage('zookeeper', config)
+    tq1.delete_all()
+
+    tq1 = _init_stage('zookeeper', config)
+
     map(tq1.push, test_data)
     tq1.set_mode(tq1.FINISH)
 
-    config.pop('delete_all')
     tq2 = _init_stage('zookeeper', config)
     received_data = set(tq2)
 
     assert received_data == test_data
         
+    assert tq2._len('available') == 0
+    assert tq2._len('pending') == 0
