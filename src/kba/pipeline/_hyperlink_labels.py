@@ -12,6 +12,13 @@ from streamcorpus import Offset, Label, LabelSet, Annotator, OffsetType
 import re
 from ._clean_visible import make_clean_visible
 
+anchors_re = re.compile('''(?P<before>(.|\n)*?)''' + \
+                        '''(?P<ahref>\<a(.|\n)*?href''' + \
+                        '''(?P<preequals>(\s|\n)*)=(?P<postequals>(\s|\n)*)''' + \
+                        '''(?P<quote>("|')?)(?P<href>[^"]*)(?P=quote)''' + \
+                        '''(?P<posthref>(.|\n)*?)\>)''' + \
+                        '''(?P<anchor>(.|\n)*?)(?P<after>\<\/a\>)''', re.I)
+
 class hyperlink_labels(object):
     '''
     Finds hyperlinks in clean_html and generate a
@@ -52,17 +59,19 @@ class hyperlink_labels(object):
         
         Generates tuple(href_string, first_byte, byte_length)
         '''
-        anchors_re = re.compile('''(?P<before>(.|\n)*?)(?P<ahref>\<a(.|\n)*?href="(?P<href>[^"]*)"(.|\n)*?\>)(?P<anchor>(.|\n)*?)(?P<after>\<\/a\>)''', re.I)
         idx = 0
         new_clean_html = ''
         for m in anchors_re.finditer(self.clean_html):
             before = m.group('before')
             href = m.group('href')
             ahref = m.group('ahref')
+            posthref = m.group('posthref')
+            preequals = m.group('preequals')
+            postequals = m.group('postequals')
 
             ## construct a text containing bytes up to the anchor text
             ## PLUS ONE NEWLINE
-            pre_anchor_increment = before + ahref
+            pre_anchor_increment = before + ahref + preequals + postequals + posthref
 
             ## increment the index to get line number for the anchor
             idx += len( pre_anchor_increment.splitlines() )
@@ -74,7 +83,8 @@ class hyperlink_labels(object):
 
             ## construct a replacement clean_html with these newlines
             ## inserted
-            new_clean_html += pre_anchor_increment + '\n' + m.group('anchor') + '\n' + m.group('after')
+            new_clean_html += pre_anchor_increment + '\n' + m.group('anchor') + '\n' \
+                + m.group('after')
 
             ## update the index for the next loop
             idx += length - 1 + len( m.group('after').splitlines(True) )
