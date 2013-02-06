@@ -1,4 +1,3 @@
-#!/usr/bin/env python
 '''
 Provides classes for loading chunk files from local storage and
 putting them out into local storage.
@@ -8,6 +7,7 @@ This software is released under an MIT/X11 open source license.
 Copyright 2012 Diffeo, Inc.
 '''
 import os
+import time
 import streamcorpus
 
 class from_local_chunks(object):
@@ -15,7 +15,16 @@ class from_local_chunks(object):
         self.config = config
 
     def __call__(self, i_str):
-        yield streamcorpus.Chunk(path=i_str, mode='rb')
+        tries = 0
+        while tries < self.config['max_retries']:
+            try:
+                chunk = streamcorpus.Chunk(path=i_str, mode='rb')
+                tries += 1
+            except IOError:
+                ## File is missing?  Assume is slow NFS, keep trying
+                time.sleep(2 ** (tries / 6))
+
+        yield chunk
 
 class to_local_chunks(object):
     def __init__(self, config):
