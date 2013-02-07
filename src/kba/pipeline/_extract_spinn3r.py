@@ -1,9 +1,18 @@
-import zlib
-import sys
-sys.path.append('/home/jrf/KBA/2013/corpus/python_proto/src/')
+'''
 
-import spinn3rApi_pb2
-import protoStream_pb2
+This software is released under an MIT/X11 open source license.
+
+Copyright 2013 Diffeo, Inc.
+'''
+import sys
+import zlib
+import json
+from streamcorpus import make_stream_item, Chunk, ContentItem
+from _spinn3r import spinn3rApi_pb2
+from _spinn3r import protoStream_pb2
+
+def log(msg):
+    print(msg)
 
 def _VarintDecoder(mask):
     '''
@@ -106,17 +115,11 @@ def delimited_messages(data):
 
 
 
-def construct_stream_item(protobuf_data, out_file_path):
+def _generate_stream_items(protobuf_data):
     '''
-    reads file paths over stdin to spinn3r protoStream files and dumps
-    .tsv files to output_path of all tweets containing any of the
-    strings in the filter_list
+    converts all of the protobuf_data spinn3r protoStream format into
+    StreamItems, which it yields as a generator
     '''
-    import json
-    from streamcorpus import Chunk, make_stream_item, ContentItem
-
-    chunk = Chunk(path=out_file_path, mode='wb')
-    
     ## iterate over entry objects and bytes from which they came
     for num, (entry, delimited_bytes) in enumerate(delimited_messages(protobuf_data)):
         #print num
@@ -142,10 +145,34 @@ def construct_stream_item(protobuf_data, out_file_path):
             pe.date_found[:-1] + '.0Z',
             pe.canonical_link.href.encode('utf8'))
 
+        if not si.stream_time:
+            print 'failed to generate stream_time from: %r' % pe.date_found
+            continue
+
+        if not si.abs_url:
+            print 'failed to generate abs_url from: %r' % pe.canonical_link.href
+            continue
+
+        if not pe.content.data:
+            continue
+
+        try:
+            raw = zlib.decompress(pe.content.data)
+            assert raw
+        except Exception, exc:
+            print('failed to get anything from decompressing pe.content.data')
+            continue
+
         si.body=ContentItem(
-            raw = zlib.decompress(pe.content.data),
+            raw = raw,
             media_type = pe.content.mime_type,
             )
+
+        ## be really sure not to emit an invalid StreamItem
+        if not si.body:
+            continue
+        if not si.body.raw:
+            continue
 
         si.other_content['extract'] = ContentItem(
             raw = zlib.decompress(pe.content_extract.data),
@@ -180,9 +207,5 @@ def construct_stream_item(protobuf_data, out_file_path):
             )
         si.source = entry.source.publisher_type
 
-        chunk.add(si)
+        yield si
 
-    chunk.close()
-
-data = sys.stdin.read()
-construct_stream_item(data, 'foo.sc')
