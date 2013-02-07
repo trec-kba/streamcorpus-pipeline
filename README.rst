@@ -43,6 +43,10 @@ which is hardcoded into these three files:
     configs/spinn3r-transform.yaml
 
 
+Then, you need these two other directories:
+
+   /data/trec-kba/keys ---- from the trec-kba-secret-keys.tar.gz that is in the Dropbox
+   /data/trec-kba/third/lingpipe-4.1.0 --- also in the dropbox
 
 
 
