@@ -77,6 +77,8 @@ setup(
         'BeautifulSoup',
         'boto',
         'kazoo',
+        'marisa-trie',
+        'jellyfish',
     ],
     # include_package_data = True,
     package_data = {
