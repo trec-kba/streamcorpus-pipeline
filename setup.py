@@ -68,6 +68,8 @@ setup(
     ],
     install_requires=[
         'thrift',
+        'protobuf',
+        'requests',
         'streamcorpus',
         'pyyaml',
         'nltk',
