@@ -105,7 +105,7 @@ class Pipeline(object):
                 name_info = dict(
                     first = first_stream_item_num,
                     num = len(t_chunk),
-                    md5 = t_chunk.md5_hexdigest,
+                    #md5 computed in the loaders
                     source = self.sources.pop(),
                     )
 

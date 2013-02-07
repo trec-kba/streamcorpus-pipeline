@@ -8,6 +8,7 @@ Copyright 2012 Diffeo, Inc.
 '''
 import os
 import time
+import hashlib
 import streamcorpus
 
 class from_local_chunks(object):
@@ -52,6 +53,12 @@ class to_local_chunks(object):
 
             if not os.path.exists(o_dir):
                 os.makedirs(o_dir)
+
+            ## must compute md5 if needed by the output_name
+            if 'md5' in self.config['output_name']:
+                _md5 = hashlib.md5()
+                map(_md5.update, open(t_path))
+                name_info['md5'] = _md5.hexdigest()
 
             o_fname = self.config['output_name'] % name_info
             o_path = os.path.join(o_dir, o_fname + '.sc')

@@ -160,12 +160,13 @@ def _generate_stream_items(protobuf_data):
             raw = zlib.decompress(pe.content.data)
             assert raw
         except Exception, exc:
-            print('failed to get anything from decompressing pe.content.data')
+            #print('failed to get anything from decompressing pe.content.data')
             try:
                 raw = zlib.decompress(entry.feed_entry.content.data)
                 assert raw
             except Exception, exc:
-                print('failed to get anything from decompressing entry.feed_entry.content.data')
+                #print('failed to get anything from decompressing entry.feed_entry.content.data')
+                print('empty entry? %r' % entry)
                 continue
 
         si.body=ContentItem(

@@ -48,8 +48,7 @@ def _retry(func):
                 print('having I/O trouble with S3: %s' % traceback.format_exc(exc))
                 tries += 1
                 if tries > self.config['tries']:
-                    log('giving up on uploading: %s' % output_path)
-                    sys.exit('giving up on uploading: %s' % output_path)
+                    sys.exit('giving up')
     return retry_func
 
 def get_bucket(config):
@@ -139,20 +138,23 @@ class to_s3_chunks(object):
         Load chunk from t_path and put it into the right place in s3
         using the output_name template from the config
         '''
-        log('to_s3_chunks: %r %r ' % (i_str, t_path))
-
         data = open(t_path).read()
         log('got %d bytes from file' % len(data))
 
+        ch = Chunk(data=data)
         date_hours = set()
-        for si in Chunk(data=data):
+        for si in ch:
             date_hours.add( si.stream_time.zulu_timestamp[:13] )
+
+        ## create the md5 property, so we can use it in the filename
+        name_info['md5'] = ch.md5_hexdigest
 
         assert len(date_hours) == 1, \
             'got a chunk with other than one data_hour! ' + \
             repr(date_hours)
 
         date_hour = list(date_hours)[0]
+        date_hour = date_hour.replace('T', '-')
                 
         if self.config['task_type'] == 'date_hour':
             expected_date_hour = i_str.strip()
@@ -162,6 +164,8 @@ class to_s3_chunks(object):
         name_info['date_hour'] = date_hour
         o_fname = self.config['output_name'] % name_info
         o_path = os.path.join(self.config['path_prefix'], o_fname + '.sc.xz.gpg')
+
+        log('to_s3_chunks: %r\nfrom: %r\n by way of %r ' % (o_path, i_str, t_path))
 
         ## compress and encrypt
         _errors, data = compress_and_encrypt(
@@ -212,6 +216,9 @@ class to_s3_chunks(object):
         errors, data = decrypt_and_uncompress(
             req.content, 
             self.config['gpg_decryption_key'], self.config['gpg_dir'])
+
+        print 'got back SIs: %d' % len( list( Chunk(data=data) ) )
+
         rec_md5 = hashlib.md5(data).hexdigest()
         if md5 == rec_md5:
             return
