@@ -35,14 +35,14 @@ def handle_unconvertible_spinn3r(config):
                 try:
                     data = data.encode('utf8', errors='ignore').decode('utf8')
                 except Exception, exc:
-                    print('failed to get utf8 from "extract": \n%r' % data)
-                    print data
+                    print('handle_unconvertible_spinn3r: extract.encode("utf8") failed:\n%r' % data)
+                    #print data
 
-                try:
-                    data = force_unicode(data)
-                except Exception, exc:
-                    print('completely failed: %r' % exc)
-                    return None
+                    try:
+                        data = force_unicode(data)
+                    except Exception, exc:
+                        print('handle_unconvertible_spinn3r: giving up: %r' % exc)
+                        return None
 
                 si.body.clean_html = data.encode('utf8')
                 si.body.clean_html = si.other_content['extract'].media_type
