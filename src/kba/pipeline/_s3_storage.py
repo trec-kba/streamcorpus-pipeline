@@ -71,6 +71,7 @@ class from_s3_chunks(object):
         Takes a date_hour string over stdin and generates chunks from
         s3://<bucket><prefix_path>/data_hour/
         '''
+        print('from_s3_chunks: %r' % i_str)
         if self.config['task_type'] == 'date_hour':
             date_hour = i_str.strip()
 
@@ -124,6 +125,10 @@ class from_s3_chunks(object):
         else:
             sys.exit('Invalid config: input_format = %r' % self.config['input_format'])
 
+def log(mesg):
+    print(mesg)
+    sys.stdout.flush()
+
 class to_s3_chunks(object):
     def __init__(self, config):
         self.config = config
@@ -134,27 +139,13 @@ class to_s3_chunks(object):
         Load chunk from t_path and put it into the right place in s3
         using the output_name template from the config
         '''
+        log('to_s3_chunks: %r %r ' % (i_str, t_path))
+
         data = open(t_path).read()
-        _errors, data = compress_and_encrypt(
-            data, self.config['gpg_encryption_key'], self.config['gpg_dir'])
-        print '\n'.join(_errors)
+        log('got %d bytes from file' % len(data))
 
         date_hours = set()
         for si in Chunk(data=data):
-            if not (si.stream_time and si.stream_item.zulu_timestamp):
-                open('/tmp/foo', 'wb').write(data)
-                print 'failed', repr(si)
-
-        for si in Chunk(path=t_path):
-            if not (si.stream_time and si.stream_item.zulu_timestamp):
-                open('/tmp/foo', 'wb').write(data)
-                print 'failed', repr(si)
-
-        print 'done'
-        sys.exit()
-
-        if True:
-            
             date_hours.add( si.stream_time.zulu_timestamp[:13] )
 
         assert len(date_hours) == 1, \
@@ -171,15 +162,28 @@ class to_s3_chunks(object):
         name_info['date_hour'] = date_hour
         o_fname = self.config['output_name'] % name_info
         o_path = os.path.join(self.config['path_prefix'], o_fname + '.sc.xz.gpg')
-        print 'o_path: ', o_path
-        print 't_path: ', t_path
 
+        ## compress and encrypt
+        _errors, data = compress_and_encrypt(
+            data, self.config['gpg_encryption_key'], self.config['gpg_dir'])
+        print '\n'.join(_errors)
+
+        log('compressed size: %d' % len(data))
         while 1:
+            start_time  = time.time()
             self.put(o_path, data)
+            elapsed = time.time() - start_time
+            if elapsed  > 0:
+                log('put %.1f bytes/second' % (len(data) / elapsed))
 
             if self.config['verify_via_http']:
                 try:
+                    start_time = time.time()
                     self.verify(o_path, name_info['md5'])
+                    elapsed = time.time() - start_time
+                    if elapsed > 0:
+                        log('verify %.1f bytes/second' % (len(data) / elapsed))
+
                     break
                 except Exception, exc:
                     print 'verify_via_http failed so retrying: %r' % exc
@@ -190,6 +194,8 @@ class to_s3_chunks(object):
                 ## not verifying, so don't attempt multiple puts
                 break
 
+        print('to_s3_chunks: %r' % i_str)
+
     @_retry
     def put(self, o_path, data):
         key = Key(self.bucket, o_path)
@@ -198,8 +204,9 @@ class to_s3_chunks(object):
 
     @_retry
     def verify(self, o_path, md5):
-        key = Key(self.bucket, o_path)
-        url = key.generate_url()
+        url = 'http://s3.amazonaws.com/%(bucket)s/%(o_path)s' % dict(
+            bucket = self.config['bucket'],
+            o_path = o_path)
         print('fetching %r' % url)
         req = requests.get(url)
         errors, data = decrypt_and_uncompress(

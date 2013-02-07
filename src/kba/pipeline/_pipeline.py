@@ -89,7 +89,7 @@ class Pipeline(object):
             for i_chunk in self._extractor(i_str):
 
                 ## make a temporary chunk at a temporary path
-                t_path = os.path.join(self.config['tmp_dir'], 'tmp-file-%s' % str(uuid.uuid1()))
+                t_path = os.path.join(self.config['tmp_dir'], 'tmp-%s' % str(uuid.uuid1()))
                 t_chunk = streamcorpus.Chunk(path=t_path, mode='wb')
 
                 ## incremental transforms populate the temporary chunk
@@ -109,6 +109,9 @@ class Pipeline(object):
                     source = self.sources.pop(),
                     )
 
+                print('loading %r' % i_str)
+                sys.stdout.flush()
+
                 for loader in self._loaders:
                     loader(t_path, name_info, i_str)
 
@@ -124,6 +127,7 @@ class Pipeline(object):
         ## iterate over docs from a chunk
         self.sources = set()
         for si in i_chunk:
+
             ## operate each transform on this one StreamItem
             for transform in self._incremental_transforms:
                 #timer = gevent.Timeout.start_new(1)
@@ -143,6 +147,7 @@ class Pipeline(object):
 
                 except _exceptions.TransformGivingUp:
                     ## do nothing
+                    print 'transform giving up on %r' % si.stream_id
                     pass
 
                 except Exception, exc:
@@ -158,6 +163,9 @@ class Pipeline(object):
                         log_full_file(si, 'fallback-givingup', self.config['log_dir'])
 
             sys.stdout.flush()
+
+            ## expect to always have a stream_time
+            assert si.stream_time, si
 
             ## put the StreamItem into the output
             t_chunk.add(si)
