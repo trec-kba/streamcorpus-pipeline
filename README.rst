@@ -43,7 +43,45 @@ which is hardcoded into these three files:
     configs/spinn3r-transform.yaml
 
 
+Then, you need these two other directories:
 
+   /data/trec-kba/keys ---- from the trec-kba-secret-keys.tar.gz that is in the Dropbox
+   /data/trec-kba/third/lingpipe-4.1.0 --- also in the dropbox
+
+As a test run this:
+
+    ## first go inside the virtualenv
+    source /data/trec-kba/installs/py27env/bin/activate
+
+    ## install all the python libraries
+    make dev-all
+
+    ## run a simple test
+    make john-smith-simple
+
+
+and if that works, then try
+    
+    make john-smith
+
+
+To try doing the real pull/push from AWS, you can put the input paths here:
+   /data/trec-kba/installs/trec-kba-data/spinn3r-transform
+   zcat spinn3r-transform-input-paths.txt.gz | split -l 150 -a 4
+   b=0; for a in `ls ?????`; do mv $a input.$b; let b=$b+1; done;
+
+and then locally as a test:
+
+   cat  /data/trec-kba/installs/trec-kba-data/spinn3r-transform/input.0 | python -m kba.pipeline.run configs/spinn3r-transform.yaml
+
+and then, after seeing that work edit the submit script to have as
+many jobs as their are input files:
+
+   condor_submit scripts/spinn3r-transform.submit
+
+There is one key problem with this, which we discussed on the phone:
+when the job dies, it starts over on the input list.  Let's discuss
+using the zookeeper "task_queue" stage.
 
 
 
