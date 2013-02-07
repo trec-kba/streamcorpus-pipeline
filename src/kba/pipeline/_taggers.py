@@ -220,7 +220,7 @@ the output path to create.
             _child = subprocess.Popen(cmd, stderr=subprocess.PIPE, shell=True)
         except OSError, exc:
             print traceback.format_exc(exc)
-            print('out of memory on:\n%r\n' % (clean_visible_path, ner_xml_path))
+            print('out of memory on:\n%r\n%r' % (clean_visible_path, ner_xml_path))
             from . import _memory
             print 'VmSize: %d bytes' % _memory.memory()
             print 'VmRSS:  %d bytes' % _memory.resident()
@@ -228,8 +228,9 @@ the output path to create.
             print 'uncollectable garbage: %r' % gc.garbage
             print 'gc.get_count() = %r' % repr(gc.get_count())
             sys.stdout.flush()
-            ## this sometimes fails
-            print 'current objects: %r' % gc.get_objects()
+            ## Do not do gc.get_objects, because it causes nltk to
+            ## load stuff that is not actually in memory yet!
+            #print 'current objects: %r' % gc.get_objects()
             sys.exit(int(self.config['exit_code_on_out_of_memory']))
 
         s_out, errors = _child.communicate()
