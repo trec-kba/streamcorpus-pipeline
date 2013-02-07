@@ -186,6 +186,23 @@ def make_clean_html_super(raw, stream_item=None, log_dir=None):
 
     return _clean_html
 
+def force_unicode(raw):
+    '''
+    Uses BeautifulSoup.UnicodeDammit to try to force to unicode, and
+    if that fails, it assumes utf8 and just ignores all errors.
+    '''
+    converted = UnicodeDammit(raw, isHTML=True)
+    if not converted.unicode:
+        converted.unicode = unicode(raw, 'utf8', errors='ignore')
+
+    encoding_m = encoding_re.match(converted.unicode)
+    if encoding_m:
+        converted.unicode = \
+            encoding_m.group('start_xml') + \
+            encoding_m.group('remainder')
+
+    return converted.unicode
+
 def make_clean_html(raw, stream_item=None, log_dir=None):
     '''
     Treat 'raw' as though it is HTML, even if we have no idea what it
