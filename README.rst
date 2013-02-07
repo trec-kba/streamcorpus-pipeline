@@ -28,7 +28,7 @@ from hyperlinks to particular sites (e.g. Wikipedia), and taggers like
 LingPipe and Stanford CoreNLP, that make Tokens and Sentences.
 
 
-python3.3
+python3.3 --- does not work with kba.pipeline
 ---------
 To create a python3 virtualenv, do this:
 
@@ -42,4 +42,22 @@ cd virtualenv-1.8.4/
 /data/trec-kba/installs/py33/bin/python3 setup.py  install
 cd ../../users/jrf/
 /data/trec-kba/installs/py33/bin/virtualenv --distribute -p /data/trec-kba/installs/py33/bin/python3 py33
+
+python2.7
+---------
+To create a python2.7 virtualenv, do this:
+
+wget http://www.python.org/ftp/python/2.7.3/Python-2.7.3.tgz
+tar xzf Python-2.7.3.tgz
+cd Python-2.7
+./configure --prefix /data/trec-kba/installs/py27
+make install
+cd ..
+wget http://pypi.python.org/packages/source/v/virtualenv/virtualenv-1.8.4.tar.gz#md5=1c7e56a7f895b2e71558f96e365ee7a7
+tar xzf virtualenv-1.8.4.tar.gz 
+cd virtualenv-1.8.4/
+/data/trec-kba/installs/py27/bin/python setup.py  install
+cd ..
+/data/trec-kba/installs/py27/bin/virtualenv --distribute -p /data/trec-kba/installs/py27/bin/python py27env
+
 
