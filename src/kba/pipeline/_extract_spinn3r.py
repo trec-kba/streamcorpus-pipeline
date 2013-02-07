@@ -166,11 +166,11 @@ def _generate_stream_items(protobuf_data):
                 assert raw
             except Exception, exc:
                 #print('failed to get anything from decompressing entry.feed_entry.content.data')
-                print('empty entry? %r' % entry)
+                #print('empty entry? %s' % entry)
                 continue
 
         si.body=ContentItem(
-            raw = raw,
+            raw = raw.decode('utf8').encode('utf8'),
             media_type = pe.content.mime_type,
             )
 
@@ -181,17 +181,19 @@ def _generate_stream_items(protobuf_data):
             continue
 
         si.other_content['extract'] = ContentItem(
-            raw = zlib.decompress(pe.content_extract.data),
+            raw = zlib.decompress(pe.content_extract.data).decode('utf8').encode('utf8'),
             media_type = pe.content_extract.mime_type,
             )
 
         si.other_content['title'] = ContentItem(
+            ## is this really in unicode already?
             raw = pe.title.encode('utf8'),
             media_type = pe.content_extract.mime_type,
             encoding = 'UTF-8',
             )
 
         si.other_content['feed_entry_title'] = ContentItem(
+            ## is this really in unicode already?
             raw = entry.feed_entry.title.encode('utf8'),
             media_type = entry.feed_entry.content.mime_type,
             encoding = 'UTF-8',
