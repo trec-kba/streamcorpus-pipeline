@@ -149,11 +149,3 @@ class hyperlink_labels(object):
                 ## add also add the new labelset
                 stream_item.body.labelsets.append( labelset )
         return stream_item
-
-if __name__ == '__main__':
-    from streamcorpus import StreamItem, ContentItem
-    stream_item = StreamItem()
-    stream_item.body = ContentItem()
-    stream_item.body.clean_html = open('nytimes-index-clean.html').read()
-    print hyperlink_labels({'hyperlink_labels':{'require_abs_url': True, 'domain_substrings': ['nytimes.com']}})(stream_item)
-    
