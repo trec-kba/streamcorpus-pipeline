@@ -263,7 +263,7 @@ def clean_html(config):
             stream_item.body.clean_html = make_clean_html(
                 stream_item.body.raw, 
                 stream_item=stream_item,
-                log_dir=config['log_dir'])
+                log_dir=config.get('log_dir', None))
 
         return stream_item
 
