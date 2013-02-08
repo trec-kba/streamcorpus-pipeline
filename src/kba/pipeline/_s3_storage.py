@@ -53,8 +53,8 @@ def _retry(func):
 
 def get_bucket(config):
     ## use special keys for accessing AWS public data sets bucket
-    aws_access_key_id = open(config['aws_access_key_id']).read()
-    aws_secret_access_key = open(config['aws_secret_access_key']).read()
+    aws_access_key_id =     open(config['aws_access_key_id_path']).read()
+    aws_secret_access_key = open(config['aws_secret_access_key_path']).read()
     conn = S3Connection(aws_access_key_id,
                         aws_secret_access_key)
     bucket = conn.get_bucket(config['bucket'])
@@ -68,7 +68,7 @@ class from_s3_chunks(object):
     def __call__(self, i_str):
         '''
         Takes a date_hour string over stdin and generates chunks from
-        s3://<bucket><prefix_path>/data_hour/
+        s3://<bucket><s3_prefix_path>/data_hour/
         '''
         print('from_s3_chunks: %r' % i_str)
         if self.config['task_type'] == 'date_hour':
@@ -90,7 +90,7 @@ class from_s3_chunks(object):
         chunks in this dir, requires fetch, decrypt, uncompress,
         deserialize:
         '''
-        prefix = os.path.join(self.config['path_prefix'], date_hour)
+        prefix = os.path.join(self.config['s3_path_prefix'], date_hour)
         return self.bucket.list(prefix=prefix)
 
     @_retry
@@ -98,7 +98,10 @@ class from_s3_chunks(object):
         fh = StringIO()
         key.get_contents_to_file(fh)
         data = fh.getvalue()
-        _errors, data = decrypt_and_uncompress(data, self.config['gpg_decryption_key'], self.config['gpg_dir'])
+        _errors, data = decrypt_and_uncompress(
+            data, 
+            self.config['gpg_decryption_key_path'], 
+            self.config['gpg_dir_path'])
         print '\n'.join(_errors)
         if self.config['input_format'] == 'streamitem' and \
                 self.config['streamcorpus_version'] == 'v0_1_0':
@@ -163,13 +166,13 @@ class to_s3_chunks(object):
 
         name_info['date_hour'] = date_hour
         o_fname = self.config['output_name'] % name_info
-        o_path = os.path.join(self.config['path_prefix'], o_fname + '.sc.xz.gpg')
+        o_path = os.path.join(self.config['s3_path_prefix'], o_fname + '.sc.xz.gpg')
 
         log('to_s3_chunks: %r\nfrom: %r\n by way of %r ' % (o_path, i_str, t_path))
 
         ## compress and encrypt
         _errors, data = compress_and_encrypt(
-            data, self.config['gpg_encryption_key'], self.config['gpg_dir'])
+            data, self.config['gpg_encryption_key_path'], self.config['gpg_dir_path'])
         print '\n'.join(_errors)
 
         log('compressed size: %d' % len(data))
@@ -215,7 +218,7 @@ class to_s3_chunks(object):
         req = requests.get(url)
         errors, data = decrypt_and_uncompress(
             req.content, 
-            self.config['gpg_decryption_key'], self.config['gpg_dir'])
+            self.config['gpg_decryption_key_path'], self.config['gpg_dir_path'])
 
         print 'got back SIs: %d' % len( list( Chunk(data=data) ) )
 

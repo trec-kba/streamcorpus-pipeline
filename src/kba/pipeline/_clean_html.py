@@ -47,7 +47,7 @@ def make_traceback_log(all_exc):
         traceback_log += '\n\nexc #%d\n%s' % (num, traceback.format_exc(exc))
     return traceback_log
 
-def make_clean_html_super(raw, stream_item=None, log_dir=None):
+def make_clean_html_super(raw, stream_item=None, log_dir_path=None):
     '''
     Treat 'raw' as though it is HTML, even if we have no idea what it
     really is, and attempt to get a properly formatted HTML document
@@ -100,10 +100,10 @@ def make_clean_html_super(raw, stream_item=None, log_dir=None):
 
                 ## hack in a logging step here so we can manually inspect
                 ## this fallback stage.
-                if log_dir and stream_item:
+                if log_dir_path and stream_item:
                     stream_item.body.clean_html = fixed_html.encode('utf8')
                     stream_item.body.logs.append( make_traceback_log(all_exc) )
-                    log_full_file(stream_item, 'fallback-UnicodeDammit', log_dir)
+                    log_full_file(stream_item, 'fallback-UnicodeDammit', log_dir_path)
 
             except Exception, exc:
                 ## UnicodeDammit failed
@@ -123,10 +123,10 @@ def make_clean_html_super(raw, stream_item=None, log_dir=None):
 
                 ## hack in a logging step here so we can manually inspect
                 ## this fallback stage.
-                if log_dir and stream_item:
+                if log_dir_path and stream_item:
                     stream_item.body.clean_html = fixed_html.encode('utf8')
                     stream_item.body.logs.append( make_traceback_log(all_exc) )
-                    log_full_file(stream_item, 'fallback-soupparser', log_dir)
+                    log_full_file(stream_item, 'fallback-soupparser', log_dir_path)
             except Exception, exc:
                 ## soupparser failed
                 all_exc.append(exc)
@@ -203,7 +203,7 @@ def force_unicode(raw):
 
     return converted.unicode
 
-def make_clean_html(raw, stream_item=None, log_dir=None):
+def make_clean_html(raw, stream_item=None, log_dir_path=None):
     '''
     Treat 'raw' as though it is HTML, even if we have no idea what it
     really is, and attempt to get a properly formatted HTML document
@@ -263,7 +263,7 @@ def clean_html(config):
             stream_item.body.clean_html = make_clean_html(
                 stream_item.body.raw, 
                 stream_item=stream_item,
-                log_dir=config.get('log_dir', None))
+                log_dir_path=config.get('log_dir_path', None))
 
         return stream_item
 

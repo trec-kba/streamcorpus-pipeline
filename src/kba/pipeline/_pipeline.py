@@ -34,12 +34,8 @@ class Pipeline(object):
         config = config['kba.pipeline']
         self.config = config
 
-        ## resolve the tmp dir and make sure it exists
-        if not config['tmp_dir'].startswith('/'):
-            config['tmp_dir'] = os.path.join(os.getcwd(), config['tmp_dir'])
-
-        if not os.path.exists(config['tmp_dir']):
-            os.makedirs(config['tmp_dir'])
+        if not os.path.exists(config['tmp_dir_path']):
+            os.makedirs(config['tmp_dir_path'])
 
         ## load the one task queue
         task_queue_name = config['task_queue']
@@ -89,7 +85,7 @@ class Pipeline(object):
             for i_chunk in self._extractor(i_str):
 
                 ## make a temporary chunk at a temporary path
-                t_path = os.path.join(self.config['tmp_dir'], 'tmp-%s' % str(uuid.uuid1()))
+                t_path = os.path.join(self.config['tmp_dir_path'], 'tmp-%s' % str(uuid.uuid1()))
                 t_chunk = streamcorpus.Chunk(path=t_path, mode='wb')
 
                 ## incremental transforms populate the temporary chunk
@@ -159,8 +155,8 @@ class Pipeline(object):
                     if self.config['embedded_logs']:
                         si.body.logs.append( traceback.format_exc(exc) )
 
-                    if self.config['log_dir']:
-                        log_full_file(si, 'fallback-givingup', self.config['log_dir'])
+                    if self.config['log_dir_path']:
+                        log_full_file(si, 'fallback-givingup', self.config['log_dir_path'])
 
             sys.stdout.flush()
 

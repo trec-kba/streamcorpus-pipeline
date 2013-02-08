@@ -2,6 +2,10 @@
 ## operating lingpipe
 
 kba.pipeline:
+  ## root path for all things that are called *_path in this file and
+  ## are not an absolute path, i.e. start with '/'
+  root_path: 
+
   ## pipeline expects strings over stdin, which are typically paths to
   ## streamcorpus.Chunk files.  They can also be some other kind of
   ## opaque byte strings delimited by newlines that your particular
@@ -10,13 +14,13 @@ kba.pipeline:
   ## put logs inside each chunk file
   embedded_logs: true
 
-  ## the main pipeline log_dir can trigger similar log chunk
-  log_dir: data/john-smith/
+  ## the main pipeline log_dir_path can trigger similar log chunk
+  log_dir_path: data/john-smith/
 
-  ## tmp_dir, some extractors and loaders require this dir to be in
+  ## tmp_dir_path, some extractors and loaders require this dir to be in
   ## the same file system as their output.  This is also where the
   ## batch_transforms operate.
-  tmp_dir: tmp
+  tmp_dir_path: tmp
 
   ## task_queue specifies the strings that are passed to an extractor
   ## to obtain a Chunk.  The strings might be paths in a file system
@@ -40,4 +44,5 @@ kba.pipeline:
     #output_type: inplace
     output_type: otherdir
     output_path: data/john-smith/
-    output_name: john-smith
+    output_name: john-smith-%(first)s
+

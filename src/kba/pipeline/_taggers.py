@@ -204,12 +204,12 @@ class TaggerBatchTransform(object):
             raise exceptions.NotImplementedError('''
 Subclasses must specify a class property "template" that provides
 command string format for running a tagger.  It should take
-%(pipeline_root)s as the path from the config file,
+%(pipeline_root_path)s as the path from the config file,
 %(clean_visible_path)s as the input XML file, and %(ner_xml_path)s as
 the output path to create.
 ''')
         cmd = self.template % dict(
-            pipeline_root=self.config['pipeline_root'],
+            pipeline_root_path=self.config['pipeline_root_path'],
             clean_visible_path=clean_visible_path,
             ner_xml_path=ner_xml_path)
         print cmd

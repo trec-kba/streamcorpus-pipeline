@@ -10,6 +10,28 @@ import os
 import sys
 from . import Pipeline
 
+def make_absolute_paths( config ):
+    root_path = config['kba.pipeline'].get('root_path', None)
+    if not root_path:
+        root_path = os.getcwd()
+
+    if not root_path.startswith('/'):
+        root_path = os.path.join( os.getcwd(), root_path )
+
+    def recursive_abs_path( sub_config, root_path ):
+        for key, val in sub_config.items():
+            if isinstance(val, basestring):
+                if key.endswith('path'):
+                    ## we have a path... is it already absolute?
+                    if not val.startswith('/'):
+                        ## make the path absolute
+                        sub_config[key] = os.path.join(root_path, val)
+
+            elif isinstance(val, dict):
+                recursive_abs_path( val, root_path )
+
+    recursive_abs_path( config, root_path )
+
 if __name__ == '__main__':
     import yaml
     import argparse
@@ -25,6 +47,8 @@ if __name__ == '__main__':
 
     assert os.path.exists(args.config), '%s does not exist' % args.config
     config = yaml.load(open(args.config))
+
+    make_absolute_paths(config)
 
     pipeline = Pipeline(config)
     pipeline.run()
