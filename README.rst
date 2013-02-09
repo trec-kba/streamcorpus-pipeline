@@ -32,6 +32,10 @@ cd ..
 /data/trec-kba/installs/py27/bin/virtualenv --distribute -p /data/trec-kba/installs/py27/bin/python py27env
 
 
+
+installation
+------------
+
 Easiest to put this entire repo at a path like
 
     /data/trec-kba/installs/trec-kba-data
@@ -82,6 +86,56 @@ many jobs as their are input files:
 There is one key problem with this, which we discussed on the phone:
 when the job dies, it starts over on the input list.  Let's discuss
 using the zookeeper "task_queue" stage.
+
+
+running on task_queue: zookeeper 
+--------------------------------
+
+To make a job run off the zookeeper task queue, make these changes:
+
+configs/spinn3r-transform.yaml:
+
+-  task_queue: stdin
++  #task_queue: stdin
++
++  task_queue: zookeeper
++  zookeeper:
++    namespace: spinn3r-transform
++    zookeeper_address: mitas-2.csail.mit.edu:2181
+ 
+
+scripts/spinn3r-transform.submit:
+
+-Input  = /data/trec-kba/spinn3r-transform/input.$(PROCESS)
++
++## disable stdin because we are using task_queue: zookeeper 
++#Input = /data/trec-kba/spinn3r-transform/input.$(PROCESS)
+
+
+Important:
+Also update the number of jobs at the end of the .submit file.
+
+
+and then  do these steps on the command line:
+
+  ## see the help text
+  python -m kba.pipeline.load configs/spinn3r-transform.yaml -h
+
+  ## load the data
+  python -m kba.pipeline.load configs/spinn3r-transform.yaml --load spinn3r-transform-input-paths.txt 
+
+  ## check the counts -- might take a bit to run, so background and come back to it
+  python -m kba.pipeline.load configs/spinn3r-transform.yaml --counts >& counts &
+
+  ## launch the jobs
+  condor_submit scripts/spinn3r-transform.submit 
+
+  ## watch the logs for the jobs
+  tail -f ../spinn3r-transform/{err,out}*
+
+
+Periodically check the --counts on the queue and see how fast it is
+going.  Do we need to turn off the lingpipe stage?
 
 
 
