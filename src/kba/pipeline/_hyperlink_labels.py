@@ -149,3 +149,8 @@ class hyperlink_labels(object):
                 ## add also add the new labelset
                 stream_item.body.labelsets.append( labelset )
         return stream_item
+
+if __name__ == '__main__':
+    clean_html = sys.stdin.read()
+    for m in anchors_re.finditer(clean_html):
+        print m.group('href'), m.group('anchor')
