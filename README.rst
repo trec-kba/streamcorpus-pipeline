@@ -91,6 +91,31 @@ using the zookeeper "task_queue" stage.
 running on task_queue: zookeeper 
 --------------------------------
 
+To use the zookeeper task queue, you must install zookeeper on a
+computer that your cluster can access.  Here is an example zookeeper
+config:
+
+# The number of milliseconds of each tick
+tickTime=10000
+# The number of ticks that the initial 
+# synchronization phase can take
+initLimit=10
+# The number of ticks that can pass between 
+# sending a request and getting an acknowledgement
+syncLimit=5
+# the directory where the snapshot is stored.
+dataDir=/var/zookeeper
+# the port at which the clients will connect
+clientPort=2181
+server.0=localhost:2888:3888
+maxClientCnxns=2000
+
+
+Note the large maxClientCnxns for running with many nodes in condor,
+and also not the 10sec tickTime, which is needed to avoid frequent
+session timeouts from condor slots that are working hard.
+
+
 To make a job run off the zookeeper task queue, make these changes:
 
 configs/spinn3r-transform.yaml:
