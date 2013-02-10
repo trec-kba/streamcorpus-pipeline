@@ -1,0 +1,61 @@
+### standard condor headers for CSAIL ###
+### BEGIN HEADER ###
+# preserve your environment variables
+GetEnv = True
+# use the plain nothing special universe
+Universe = vanilla
+# only send email if there's an error 
+Notification = Error
+# Allows you to run on different "filesystem domains" 
+#by copying the files around if needed
+should_transfer_files = IF_NEEDED
+
+#WhenToTransferOutput = ON_EXIT
+# only run on new enough debian systems that they see all NFS
+#Requirements = DebianVersion == 6.0
+#Request_memory = 1024
+#stream_output=False
+#stream_error=False
+
+next_job_start_delay=1
+
+on_exit_remove = (ExitBySignal == False) && (ExitCode == 0)
+
+## This might work, but to be certain, we set it in Executable
+#environment = LD_LIBRARY_PATH=/data/trec-kba/installs/so
+
+## $ENV(PATH) appears to not actually work as advertised, so we set
+## the path in the shell script that is the Executable
+#environment = PATH=$ENV(PATH):/bin:/usr/bin:/afs/csail/amd64_linux26/java/latest/bin
+
+### END HEADER ###
+
+### BEGIN job specific bits ###
+Executable = /data/trec-kba/trec-kba-data/scripts/run_pipeline.sh
+
+## pass the config file path as the one argument
+Arguments = /data/trec-kba/trec-kba-data/configs/kba-2012-social-json-transform.yaml
+
+# queue log (doesn't like to be on NFS due to locking needs) 
+Log = /tmp/kba.pipeline-jrf.log
+
+# initial working directory context
+initialdir = /data/trec-kba/kba-2012-social-json-transform/
+
+## What to do with stdin,stdout,stderr:
+# $(PROCESS) is replaced by the sequential run number (zero based) of
+# this submission see "queue" below
+
+## disable stdin because we are using task_queue: zookeeper 
+#Input = /data/trec-kba/kba-2012-social-json-transform/input.$(PROCESS)
+
+Error  = /data/trec-kba/kba-2012-social-json-transform/err.$(PROCESS)
+Output = /data/trec-kba/kba-2012-social-json-transform/out.$(PROCESS)
+
+# how many copies of this job to queue
+## to fully utilize available resources, make this more than you
+## expect to get:
+queue 409
+
+
+### END job  specific bits ###
