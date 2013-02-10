@@ -65,3 +65,6 @@ class to_local_chunks(object):
 
         ## do an atomic renaming    
         os.rename(t_path, o_path)
+
+        ## return the final output path
+        return o_path
