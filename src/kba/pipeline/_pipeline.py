@@ -107,13 +107,19 @@ class Pipeline(object):
 
                 print('loading %r' % i_str)
                 sys.stdout.flush()
-
+                
+                ## gather the paths as the loaders run
+                o_paths = []
                 for loader in self._loaders:
-                    loader(t_path, name_info, i_str)
+                    o_path = loader(t_path, name_info, i_str)
+                    o_paths.append( o_path )
 
                 ## increment the first_stream_item_num to the next one in
                 ## the stream
                 first_stream_item_num += self.next_stream_item_num
+
+            ## put the o_paths into the task_queue
+            self._task_queue.commit( o_paths )
 
     def _run_batch_transforms(self, chunk_path):
         for transform in self._batch_transforms:

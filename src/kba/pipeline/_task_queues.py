@@ -27,15 +27,25 @@ ch.setLevel(logging.DEBUG)
 #ch.setFormatter(formatter)
 kazoo_log.addHandler(ch)
 
-def stdin(config):
+class stdin(object):
     '''
     A task_queue-type stage that wraps sys.stdin
     '''
-    for i_str in sys.stdin:
-        ## remove trailing newlines
-        if i_str.endswith('\n'):
-            i_str = i_str[:-1]
-        yield i_str
+    def __init__(self, config):
+        self.config = config
+
+    def __iter__(self):
+        for i_str in sys.stdin:
+            ## remove trailing newlines
+            if i_str.endswith('\n'):
+                i_str = i_str[:-1]
+            yield i_str
+
+    def commit(self, result):
+        '''
+        could print (i_str --> result)
+        '''
+        pass
 
 class ZookeeperTaskQueue(object):
     '''
@@ -94,7 +104,8 @@ class ZookeeperTaskQueue(object):
         '''
         self._zk.create(
             self._path('workers', self._worker_id), 
-            ephemeral=True)
+            ephemeral=True,
+            makepath=True)
 
     def __iter__(self):
         '''
@@ -104,8 +115,9 @@ class ZookeeperTaskQueue(object):
         ## loop until get a task
         task = None
         while True:
-            ## clear the last task
-            self._clear_previous_task()
+            ## clear the last task, if it wasn't already cleared by
+            ## the caller using the iterator
+            self.commit()
 
             ## get a task
             task_key = self._random_available_task()
@@ -119,9 +131,10 @@ class ZookeeperTaskQueue(object):
                     break
 
             else:
-                ## only here to we wait
+                ## only here do we wait
                 if task_key is None:
                     time.sleep(2)
+                    continue
 
             ## attempt to win the task
             i_str = self._win_task(task_key)
@@ -131,16 +144,20 @@ class ZookeeperTaskQueue(object):
                 print('won %r' % i_str)
                 yield i_str
 
-    def _clear_previous_task(self):
+    def commit(self, result=None):
         '''
         If caller iterates past the previous task, then assume it is
         done and remove it.
         '''
+        if result is not None:
+            assert self._pending_task_key, 'commit(%r) without iterating!?' % result
+
         if self._pending_task_key:
 
             ## update the data
             self.data['state'] = 'completed'
             self.data['owner'] = None
+            self.data['result'] = result
 
             #print 'entering completion trans'
 
