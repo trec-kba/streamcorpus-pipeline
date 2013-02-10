@@ -11,7 +11,8 @@ import sys
 from . import Pipeline
 
 def make_absolute_paths( config ):
-    root_path = config['kba.pipeline'].get('root_path', None)
+    ## remove the root_path, so it does not get extended itself
+    root_path = config['kba.pipeline'].pop('root_path', None)
     if not root_path:
         root_path = os.getcwd()
 
@@ -31,6 +32,9 @@ def make_absolute_paths( config ):
                 recursive_abs_path( val, root_path )
 
     recursive_abs_path( config, root_path )
+
+    ## put the root_path back
+    config['root_path'] = root_path
 
 if __name__ == '__main__':
     import yaml
