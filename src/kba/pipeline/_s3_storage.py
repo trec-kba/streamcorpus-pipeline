@@ -168,7 +168,7 @@ class to_s3_chunks(object):
         o_fname = self.config['output_name'] % name_info
         o_path = os.path.join(self.config['s3_path_prefix'], o_fname + '.sc.xz.gpg')
 
-        log('to_s3_chunks: %r\nfrom: %r\n by way of %r ' % (o_path, i_str, t_path))
+        log('to_s3_chunks: \n\t%r\n\tfrom: %r\n\tby way of %r ' % (o_path, i_str, t_path))
 
         ## compress and encrypt
         _errors, data = compress_and_encrypt(
@@ -201,7 +201,15 @@ class to_s3_chunks(object):
                 ## not verifying, so don't attempt multiple puts
                 break
 
-        print('to_s3_chunks: %r' % i_str)
+        print('to_s3_chunks finished: %r' % i_str)
+        if self.config['cleanup_tmp_files']:
+            try:
+                os.remove( t_path )
+            except Exception, exc:
+                print('%s --> failed to remove %s' % (exc, t_path))
+
+        ## return the final output path
+        return o_path
 
     @_retry
     def put(self, o_path, data):
