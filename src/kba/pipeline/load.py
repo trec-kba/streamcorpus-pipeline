@@ -98,4 +98,4 @@ if __name__ == '__main__':
 
     if args.list_completed:
         for completed in tq.completed:
-            print completed['i_str']
+            print 'in:  %s\nout: %s' % (completed['i_str'], completed['result'])
