@@ -8,7 +8,7 @@ Copyright 2012 Diffeo, Inc.
 '''
 import os
 import sys
-from . import Pipeline
+from _pipeline import Pipeline
 
 def make_absolute_paths( config ):
     ## remove the root_path, so it does not get extended itself
