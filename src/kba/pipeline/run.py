@@ -8,6 +8,7 @@ Copyright 2012 Diffeo, Inc.
 '''
 import os
 import sys
+import logging
 from _pipeline import Pipeline
 
 def make_absolute_paths( config ):
@@ -53,6 +54,18 @@ if __name__ == '__main__':
     config = yaml.load(open(args.config))
 
     make_absolute_paths(config)
+
+    ## setup loggers
+    log_level = getattr(logging, config['kba.pipeline']['log_level'])
+    print 'using log_level=%d' % log_level
+
+    logger = logging.getLogger('kba')
+    logger.setLevel( log_level )
+
+    ch = logging.StreamHandler()
+    ch.setLevel( log_level )
+    #ch.setFormatter(formatter)
+    logger.addHandler(ch)
 
     pipeline = Pipeline(config)
     pipeline.run()

@@ -12,15 +12,19 @@ Copyright 2012 Diffeo, Inc.
 import os
 import re
 import sys
+import time
 import uuid
 #import gevent
+import logging
 import traceback
 import itertools
 import streamcorpus
 
-from ._logging import log_full_file
-from ._stages import _init_stage
-from . import _exceptions
+from _logging import log_full_file
+from _stages import _init_stage
+import _exceptions
+
+logger = logging.getLogger(__name__)
 
 class Pipeline(object):
     '''    
@@ -78,9 +82,17 @@ class Pipeline(object):
         first_stream_item_num = 0
         self.next_stream_item_num = 0
 
+        ## get a logger
+        logger = logging.getLogger('kba')
+
+        ## prepare to measure speed
+        start_processing_time = time.time()
+        num_processed = 0
+
         ## iterate over input strings from the specified task_queue
         for i_str in self._task_queue:
 
+            start_chunk_time = time.time()
             ## the extractor generates generators of StreamItems
             for i_chunk in self._extractor(i_str):
 
@@ -105,8 +117,7 @@ class Pipeline(object):
                     source = self.sources.pop(),
                     )
 
-                print('loading %r' % i_str)
-                sys.stdout.flush()
+                logger.debug('loading %r' % i_str)
                 
                 ## gather the paths as the loaders run
                 o_paths = []
@@ -121,6 +132,19 @@ class Pipeline(object):
             ## put the o_paths into the task_queue
             self._task_queue.commit( o_paths )
 
+            num_processed += 1
+
+            ## record elapsed time
+            elapsed = time.time() - start_chunk_time
+            logger.debug('%.1f seconds for %r' % (elapsed, i_str))
+
+            if num_processed % 10 == 0:
+                elapsed = time.time() - start_processing_time
+                rate = float(num_processed) / elapsed
+                logger.info('%d processed in %.1f sec --> %.1f per sec' % (
+                    num_processed, elapsed, rate))
+
+
     def _run_batch_transforms(self, chunk_path):
         for transform in self._batch_transforms:
             transform(chunk_path)
@@ -128,7 +152,15 @@ class Pipeline(object):
     def _run_incremental_transforms(self, i_chunk, t_chunk):
         ## iterate over docs from a chunk
         self.sources = set()
-        for si in i_chunk:
+        start_inc_processing = time.time()
+        for num_processed, si in enumerate(i_chunk):
+
+            if num_processed % 100 == 0:
+                elapsed = time.time() - start_inc_processing
+                if elapsed > 0:
+                    rate = float(num_processed) / elapsed
+                    logger.info('%d in %.1f --> %.1f per sec' % (
+                        num_processed, elapsed, rate))
 
             ## operate each transform on this one StreamItem
             for transform in self._incremental_transforms:
@@ -149,14 +181,11 @@ class Pipeline(object):
 
                 except _exceptions.TransformGivingUp:
                     ## do nothing
-                    print 'transform giving up on %r' % si.stream_id
+                    logger.info('transform giving up on %r' % si.stream_id)
                     pass
 
                 except Exception, exc:
-                    #logger.warning
-                    print 'Pipeline caught:'
-                    print traceback.format_exc(exc)
-                    print 'moving on'
+                    logger.critical('Pipeline trapped: %s' % traceback.format_exc(exc))
 
                     if self.config['embedded_logs']:
                         si.body.logs.append( traceback.format_exc(exc) )
@@ -164,10 +193,11 @@ class Pipeline(object):
                     if self.config['log_dir_path']:
                         log_full_file(si, 'fallback-givingup', self.config['log_dir_path'])
 
-            sys.stdout.flush()
-
             ## expect to always have a stream_time
-            assert si.stream_time, si
+            if not si.stream_time:
+                msg = 'empty stream_time: %s' % si
+                logger.critical(msg)
+                sys.exit(msg)
 
             ## put the StreamItem into the output
             t_chunk.add(si)
