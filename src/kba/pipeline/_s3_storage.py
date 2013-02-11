@@ -10,6 +10,7 @@ Copyright 2012 Diffeo, Inc.
 import os
 import sys
 import time
+import logging
 import hashlib
 import requests
 import traceback
@@ -37,6 +38,7 @@ def _retry(func):
     intermittent failures, such as AWS calls via boto, which has a
     non-back-off retry.
     '''
+    log = logging.getLogger('kba')
     def retry_func(self, *args, **kwargs):
         tries = 0
         while 1:
@@ -45,7 +47,7 @@ def _retry(func):
                 break
             except Exception, exc:
                 time.sleep(3 * tries)
-                print('having I/O trouble with S3: %s' % traceback.format_exc(exc))
+                log.info('having I/O trouble with S3: %s' % traceback.format_exc(exc))
                 tries += 1
                 if tries > self.config['tries']:
                     sys.exit('giving up')
@@ -64,18 +66,19 @@ class from_s3_chunks(object):
     def __init__(self, config):
         self.config = config
         self.bucket = get_bucket(config)
+        self.log = logging.getLogger('kba')
 
     def __call__(self, i_str):
         '''
         Takes a date_hour string over stdin and generates chunks from
         s3://<bucket><s3_prefix_path>/data_hour/
         '''
-        print('from_s3_chunks: %r' % i_str)
+        self.log.info('from_s3_chunks: %r' % i_str)
         if self.config['task_type'] == 'date_hour':
             date_hour = i_str.strip()
 
             for key in self.get_keys(date_hour):
-                print key.key
+                self.log( key.key )
                 if key.key.endswith('xz.gpg'):
                     yield self.get_chunk(key)
 
@@ -102,7 +105,7 @@ class from_s3_chunks(object):
             data, 
             self.config['gpg_decryption_key_path'], 
             self.config['gpg_dir_path'])
-        print '\n'.join(_errors)
+        self.log.info( '\n'.join(_errors) )
         if self.config['input_format'] == 'streamitem' and \
                 self.config['streamcorpus_version'] == 'v0_1_0':
             i_content_md5 = key.key.split('.')[-3]
@@ -112,7 +115,7 @@ class from_s3_chunks(object):
         f_content_md5 = hashlib.md5(data).hexdigest()
         if i_content_md5 != f_content_md5:
             msg = 'FAIL: %s --> %s' % (key.key, f_content_md5)
-            print(msg)
+            self.log.critical(msg)
             sys.exit(msg)
 
         if self.config['input_format'] == 'spinn3r':
@@ -127,14 +130,11 @@ class from_s3_chunks(object):
         else:
             sys.exit('Invalid config: input_format = %r' % self.config['input_format'])
 
-def log(mesg):
-    print(mesg)
-    sys.stdout.flush()
-
 class to_s3_chunks(object):
     def __init__(self, config):
         self.config = config
         self.bucket = get_bucket(config)
+        self.log = logging.getLogger('kba')
 
     def __call__(self, t_path, name_info, i_str):
         '''
@@ -142,7 +142,7 @@ class to_s3_chunks(object):
         using the output_name template from the config
         '''
         data = open(t_path).read()
-        log('got %d bytes from file' % len(data))
+        self.log.debug('got %d bytes from file' % len(data))
 
         ch = Chunk(data=data)
         date_hours = set()
@@ -168,20 +168,20 @@ class to_s3_chunks(object):
         o_fname = self.config['output_name'] % name_info
         o_path = os.path.join(self.config['s3_path_prefix'], o_fname + '.sc.xz.gpg')
 
-        log('to_s3_chunks: \n\t%r\n\tfrom: %r\n\tby way of %r ' % (o_path, i_str, t_path))
+        self.log.info('to_s3_chunks: \n\t%r\n\tfrom: %r\n\tby way of %r ' % (o_path, i_str, t_path))
 
         ## compress and encrypt
         _errors, data = compress_and_encrypt(
             data, self.config['gpg_encryption_key_path'], self.config['gpg_dir_path'])
-        print '\n'.join(_errors)
+        self.log.info( '\n'.join(_errors) )
 
-        log('compressed size: %d' % len(data))
+        self.log.debug('compressed size: %d' % len(data))
         while 1:
             start_time  = time.time()
             self.put(o_path, data)
             elapsed = time.time() - start_time
             if elapsed  > 0:
-                log('put %.1f bytes/second' % (len(data) / elapsed))
+                self.log.debug('put %.1f bytes/second' % (len(data) / elapsed))
 
             if self.config['verify_via_http']:
                 try:
@@ -189,11 +189,11 @@ class to_s3_chunks(object):
                     self.verify(o_path, name_info['md5'])
                     elapsed = time.time() - start_time
                     if elapsed > 0:
-                        log('verify %.1f bytes/second' % (len(data) / elapsed))
+                        self.log.debug('verify %.1f bytes/second' % (len(data) / elapsed))
 
                     break
                 except Exception, exc:
-                    print 'verify_via_http failed so retrying: %r' % exc
+                    self.log.critical( 'verify_via_http failed so retrying: %r' % exc )
                     ## keep looping if verify raises anything
                     continue
 
@@ -201,12 +201,12 @@ class to_s3_chunks(object):
                 ## not verifying, so don't attempt multiple puts
                 break
 
-        print('to_s3_chunks finished: %r' % i_str)
+        self.log.info('to_s3_chunks finished: %r' % i_str)
         if self.config['cleanup_tmp_files']:
             try:
                 os.remove( t_path )
             except Exception, exc:
-                print('%s --> failed to remove %s' % (exc, t_path))
+                self.log.info('%s --> failed to remove %s' % (exc, t_path))
 
         ## return the final output path
         return o_path
@@ -222,17 +222,17 @@ class to_s3_chunks(object):
         url = 'http://s3.amazonaws.com/%(bucket)s/%(o_path)s' % dict(
             bucket = self.config['bucket'],
             o_path = o_path)
-        print('fetching %r' % url)
+        self.log.debug('fetching %r' % url)
         req = requests.get(url)
         errors, data = decrypt_and_uncompress(
             req.content, 
             self.config['gpg_decryption_key_path'], self.config['gpg_dir_path'])
 
-        print 'got back SIs: %d' % len( list( Chunk(data=data) ) )
+        self.log.debug( 'got back SIs: %d' % len( list( Chunk(data=data) ) ))
 
         rec_md5 = hashlib.md5(data).hexdigest()
         if md5 == rec_md5:
             return
         else:
-            print errors
+            self.log.critical('\n'.join(errors))
             raise Exception('original md5 = %r != %r = received md5' % (md5, rec_md5))
