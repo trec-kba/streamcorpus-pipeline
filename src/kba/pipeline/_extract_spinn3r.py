@@ -217,3 +217,8 @@ def _generate_stream_items(protobuf_data):
 
         yield si
 
+
+if __name__ == '__main__':
+    import sys
+    from _handle_unconvertible_spinn3r import handle_unconvertible_spinn3r as hus
+    map(hus, _generate_stream_items(sys.stdin.read()))

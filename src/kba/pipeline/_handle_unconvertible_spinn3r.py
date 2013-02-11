@@ -33,7 +33,7 @@ def handle_unconvertible_spinn3r(config):
             if 'extract' in si.other_content:
                 data = si.other_content['extract'].raw
                 try:
-                    data = data.encode('utf8', errors='ignore').decode('utf8')
+                    data = data.decode('utf8').encode('utf8')
                 except Exception, exc:
                     print('handle_unconvertible_spinn3r: extract.encode("utf8") failed:\n%r' % data)
                     #print data
@@ -44,7 +44,7 @@ def handle_unconvertible_spinn3r(config):
                         print('handle_unconvertible_spinn3r: giving up: %r' % exc)
                         return None
 
-                si.body.clean_html = data.encode('utf8')
+                si.body.clean_html = data
                 si.body.clean_html = si.other_content['extract'].media_type
                 si.body.clean_html = 'UTF-8'
 
