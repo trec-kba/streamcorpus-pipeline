@@ -57,7 +57,6 @@ if __name__ == '__main__':
 
     ## setup loggers
     log_level = getattr(logging, config['kba.pipeline']['log_level'])
-    print 'using log_level=%d' % log_level
 
     logger = logging.getLogger('kba')
     logger.setLevel( log_level )
