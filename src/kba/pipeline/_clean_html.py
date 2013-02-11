@@ -17,8 +17,8 @@ import lxml.html.soupparser
 from BeautifulSoup import UnicodeDammit
 
 if __name__ != '__main__':
-    from ._logging import log_full_file
-    from . import _exceptions
+    from _logging import log_full_file
+    import _exceptions
 
 encoding_re = re.compile(
     '''(?P<start_xml>([^<]|\n)*?\<\?xml[^>]*)''' + \
