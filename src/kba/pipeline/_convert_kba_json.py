@@ -24,31 +24,6 @@ def convert_kba_json(config):
     
     return _convert_kba_json
 
-def make_content_item(ci):
-    '''
-    converts an in-memory content item generated from deserializing a
-    json content-item into a thrift ContentItem
-    '''
-    ## return empty content item if received None
-    if ci is None:
-        return ContentItem()
-
-    ## we expect everything UTF-8 already from this source
-    assert ci['encoding'] == 'UTF-8', ci['encoding']
-
-    ## convert the cleansed and ner to byte arrays, or None
-    #cleansed = ci.pop('cleansed', b'').decode('string-escape')
-    #ner      = ci.pop('ner',      b'').decode('string-escape')
-    ## construct a ContentItem and return it
-    return ContentItem(
-        clean_html = ci.pop('raw').decode('string-escape'),
-        encoding = 'UTF-8',
-        ## Let's not include these forms of the data; We will
-        ## regenerate the cleansed in a byte-offset preserving manner.
-        #cleansed = cleansed,
-        #ner = ner
-        )
-
 def generate_stream_items_from_kba_json(json_file_path):
     ## iterate over gzip'ed file of JSON lines
     data = gzip.GzipFile(fileobj=open(json_file_path, 'rb'), mode='rb').read()
@@ -82,22 +57,30 @@ def generate_stream_items_from_kba_json(json_file_path):
             bytes(doc['original_url'].encode('utf-8')) or b''
 
         ## get the three possible ContentItems
-        stream_item.body = make_content_item(doc.pop('body'))
+        body   = doc.pop('body'    {}).pop('raw', '').decode('string-escape')
+        title  = doc.pop('title',  {}).pop('raw', '').decode('string-escape')
+        anchor = doc.pop('anchor', {}).pop('raw', '').decode('string-escape')
 
-        title = doc.pop('title', None)
+        stream_item.body = ContentItem(
+            raw = b''.join(['<p>', anchor, '</p>',
+                            '<p>', title, '</p>',
+                            body])
+            media_type = 'text/html',
+            encoding = 'UTF-8',
+            )
+
         if title:
-            title = make_content_item( title )
-            ## put the title into body.clean_html
-            stream_item.body.clean_html = '<p>' + title.clean_html + \
-                ' </p>\n ' + stream_item.body.clean_html
-            stream_item.other_content['title']  = title
+            stream_item.other_content['title']  = ContentItem(
+                raw = title,
+                media_type = 'text/html',
+                encoding = 'UTF-8',
+                )
 
-        anchor = doc.pop('anchor', None)
         if anchor:
-            anchor = make_content_item( anchor )
-            ## put the anchor into body.clean_html
-            stream_item.body.clean_html = '<p>' + anchor.clean_html + \
-                ' </p>\n ' + stream_item.body.clean_html
-            stream_item.other_content['anchor'] = anchor
+            stream_item.other_content['anchor']  = ContentItem(
+                raw = anchor,
+                media_type = 'text/html',
+                encoding = 'UTF-8',
+                )
 
         yield stream_item
