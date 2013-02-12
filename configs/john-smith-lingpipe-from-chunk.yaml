@@ -14,6 +14,8 @@ kba.pipeline:
   ## put logs inside each chunk file
   embedded_logs: true
 
+  log_level: DEBUG
+
   ## the main pipeline log_dir can trigger similar log chunk
   log_dir_path: data/john-smith/
 
@@ -50,8 +52,12 @@ kba.pipeline:
     output_name: "john-smith-tagged-by-lingpipe-test-%(first)s"
 
   lingpipe:
+    exit_code_on_out_of_memory: 1
     pipeline_root_path: ../third/
+    offset_types: [BYTES, LINES]
+    offset_debugging: false
     cleanup_tmp_files: false
+
     ## convert doc-level labels into token-level labels by requiring
     ## particular substrings appear in the strings of a coref chain
     align_labels_by: names_in_chains
