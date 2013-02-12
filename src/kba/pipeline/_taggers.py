@@ -10,6 +10,7 @@ import gc
 import os
 import sys
 import time
+import logging
 import traceback
 import itertools
 import subprocess
@@ -18,8 +19,10 @@ import collections
 import streamcorpus
 import xml.dom.minidom
 from streamcorpus import Chunk, Tagging, Label, OffsetType
-from ._clean_visible import make_clean_visible_file, cleanse
+from _clean_visible import make_clean_visible_file, cleanse
 from sortedcollection import SortedCollection
+
+logger = logging.getLogger(__name__)
 
 def make_chains_with_names(sentences):
     '''
@@ -122,8 +125,53 @@ def line_offset_labelsets(stream_item, aligner_data):
             ## make sure to update the annotator; no check for this...?
             label.annotator = labelset.annotator
 
-            off = label.offsets[OffsetType.LINES]
-            assert off.length == len(off.value.split('\n'))
+            ## remove the offset from the label, because we are
+            ## putting it into the token
+            label_off = label.offsets.pop(OffsetType.LINES)
+            assert label_off.length == len(label_off.value.split('\n'))
+            #print 'L: %d\t%r\t%r' % (label_off.first, label_off.value, 
+            #    '\n'.join(hope_original.split('\n')[label_off.first:
+            #         label_off.first+label_off.length]))
+
+            ## These next few steps are probably the most
+            ## memory intensive, because they fully
+            ## instantiate all the tokens.
+            token_collection = SortedCollection(
+                itertools.chain(*[sent.tokens for sent in sentences]),
+                key=lambda tok: tok.offsets[OffsetType.LINES].first
+                )
+
+            toks = token_collection.find_range(
+                    label_off.first, label_off.first + label_off.length)
+
+            for tok in toks:
+                tok.labels.append( label )
+
+                ## only for debugging
+                if not tok.token or tok.token not in label_off.value:
+                    sys.exit('%r not in %r' % \
+                        ([(t.offsets[OffsetType.LINES].first, t.token) 
+                          for t in toks], 
+                         label_off.value))
+
+def byte_offset_labelsets(stream_item, aligner_data):
+    ## get a set of tokens -- must have OffsetType.BYTES type offsets.
+    sentences = stream_item.body.sentences[aligner_data['tagger_id']]
+
+    ## if given a LabelSet, then make labels on tokens
+    for labelset in stream_item.body.labelsets:
+        if labelset.annotator.annotator_id != aligner_data['annotator_id']:
+            continue
+        for label in labelset.labels:
+
+            ## make sure to update the annotator; no check for this...?
+            label.annotator = labelset.annotator
+
+            ## remove the offset from the label, because we are
+            ## putting it into the token
+            label_off = label.offsets.pop( OffsetType.BYTES )
+            assert off.length == len(off.value)
+            
             #print 'L: %d\t%r\t%r' % (off.first, off.value, 
             #                         '\n'.join(hope_original.split('\n')[off.first:off.first+off.length]))
 
@@ -133,24 +181,38 @@ def line_offset_labelsets(stream_item, aligner_data):
 
             token_collection = SortedCollection(
                 itertools.chain(*[sent.tokens for sent in sentences]),
-                key=lambda x: x.offsets[OffsetType.LINES].first
+                key=lambda x: x.offsets[OffsetType.BYTES].first
                 )
+
+            #print 'tc %d %r' % (len(token_collection), token_collection._keys)
+            #print 'off.first=%d, length=%d, value=%r' % (off.first, off.length, off.value)
+
             toks = token_collection.find_range(
                     off.first, off.first + off.length)
+
+            #print "find_le: ", token_collection.find_le(off.first)
+
+            toks = list(toks)
+            #print 'aligned tokens', toks
+
             for tok in toks:
                 tok.labels.append( label )
 
                 ## only for debugging
-                if not tok.token in off.value:
+                assert tok.token is not None, tok.token
+
+                if not tok.token == off.value:
                     sys.exit('%r not in %r' % \
-                        ([(t.offsets[OffsetType.LINES].first, t.token) 
+                        ([(t.offsets[OffsetType.BYTES].first, t.token) 
                           for t in toks], 
                          off.value))
+
 
 
 AlignmentStrategies = {
     'names_in_chains': names_in_chains,
     'line_offset_labelsets': line_offset_labelsets,
+    'byte_offset_labelsets': byte_offset_labelsets,
     }
 
 class TaggerBatchTransform(object):
@@ -212,7 +274,7 @@ the output path to create.
             pipeline_root_path=self.config['pipeline_root_path'],
             clean_visible_path=clean_visible_path,
             ner_xml_path=ner_xml_path)
-        print cmd
+        logger.critical( cmd )
         start_time = time.time()
         ## make sure we are using as little memory as possible
         gc.collect()
