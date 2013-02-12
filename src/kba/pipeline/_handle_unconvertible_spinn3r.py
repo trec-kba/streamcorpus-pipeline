@@ -44,9 +44,10 @@ def handle_unconvertible_spinn3r(config):
                         print('handle_unconvertible_spinn3r: giving up: %r' % exc)
                         return None
 
-                si.body.clean_html = data
-                si.body.clean_html = si.other_content['extract'].media_type
-                si.body.clean_html = 'UTF-8'
+                ## put it on raw, so we clean it up with clean_html
+                si.body.raw = data
+                si.body.media_type = si.other_content['extract'].media_type
+                si.body.encoding = 'UTF-8'
 
         ## return the si for next stage in pipeline
         return si
