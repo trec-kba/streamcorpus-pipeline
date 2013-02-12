@@ -16,6 +16,8 @@ kba.pipeline:
 
   log_level: DEBUG
 
+  output_chunk_max_count: 500
+
   ## the main pipeline log_dir_path can trigger similar log chunk
   log_dir_path: data/john-smith/
 

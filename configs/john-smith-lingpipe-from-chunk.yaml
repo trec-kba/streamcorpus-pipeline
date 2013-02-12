@@ -16,7 +16,9 @@ kba.pipeline:
 
   log_level: DEBUG
 
-  ## the main pipeline log_dir can trigger similar log chunk
+  output_chunk_max_count: 500
+
+  ## the main pipeline log_dir_path can trigger similar log chunk
   log_dir_path: data/john-smith/
 
   ## tmp_dir_path, some extractors and loaders require this dir to be in
@@ -29,7 +31,6 @@ kba.pipeline:
   ## or some other source of data.  The task_queue might simply be
   ## stdin, or it might be a more sophisticated shared queue.
   task_queue: stdin
-  stdin:
 
   ## generator of StreamItems
   extractor: from_local_chunks

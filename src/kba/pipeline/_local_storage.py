@@ -25,7 +25,7 @@ class from_local_chunks(object):
                 ## File is missing?  Assume is slow NFS, keep trying
                 time.sleep(2 ** (tries / 6))
 
-        yield chunk
+        return chunk
 
 class to_local_chunks(object):
     def __init__(self, config):

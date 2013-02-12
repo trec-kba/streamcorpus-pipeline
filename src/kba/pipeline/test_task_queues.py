@@ -1,4 +1,5 @@
 from _stages import _init_stage
+from operator import itemgetter
 
 def test_stdin():
     stdin = _init_stage('stdin', {})
@@ -21,7 +22,7 @@ def test_zk():
     tq1.set_mode(tq1.FINISH)
 
     tq2 = _init_stage('zookeeper', config)
-    received_data = set(tq2)
+    received_data = set(map(itemgetter(1), tq2))
 
     assert received_data == test_data
         

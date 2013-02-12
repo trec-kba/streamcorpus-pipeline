@@ -73,141 +73,168 @@ class Pipeline(object):
 
     def run(self):
         '''
-        Operate the pipeline on chunks loaded from chunk_paths
+        operate pipeline on chunks loaded from task_queue
         '''
-        ## keep track of the number of StreamItems seen so far by this
-        ## particular instance of the pipeline, so it can be used in
-        ## naming output files.  This is really only useful for
-        ## single-process jobs that might be used for special corpora.
-        first_stream_item_num = 0
-        self.next_stream_item_num = 0
-
-        ## get a logger
-        logger = logging.getLogger('kba')
-
-        ## prepare to measure speed
         start_processing_time = time.time()
-        num_processed = 0
 
         ## iterate over input strings from the specified task_queue
-        for i_str in self._task_queue:
+        for start_count, i_str in self._task_queue:
 
             start_chunk_time = time.time()
-            ## the extractor generates generators of StreamItems
-            for i_chunk in self._extractor(i_str):
 
-                ## make a temporary chunk at a temporary path
-                t_path = os.path.join(self.config['tmp_dir_path'], 'tmp-%s' % str(uuid.uuid1()))
-                t_chunk = streamcorpus.Chunk(path=t_path, mode='wb')
+            ## the extractor returns generators of StreamItems
+            i_chunk = self._extractor(i_str)
 
-                ## incremental transforms populate the temporary chunk
-                self._run_incremental_transforms(i_chunk, t_chunk)
+            ## t_path points to the currently in-progress temp chunk
+            t_path = None
+
+            ## loop over all docs in the chunk processing and cutting
+            ## smaller chunks if needed
+            i_chunk_iter = iter(i_chunk)
+
+            sources = set()
+            next_idx = 0
+            hit_last = False
+            while not hit_last:
+                try:
+                    si = i_chunk_iter.next()
+                    next_idx += 1
+                except StopIteration:
+                    hit_last = True
+
+                ## skip forward until we reach start_count
+                if next_idx < start_count:
+                    assert not hit_last
+                    continue
+
+                if next_idx % 100 == 0:
+                    ## indexing is zero-based, so next_idx corresponds
+                    ## to length of list of SIs processed so far
+                    elapsed = time.time() - start_chunk_time
+                    if elapsed > 0:
+                        rate = float(next_idx) / elapsed
+                        logger.info('%d in %.1f --> %.1f per sec on (partial) %s' % (
+                            next_idx - start_count, elapsed, rate, i_str))
+
+                if not t_path:
+                    ## make a temporary chunk at a temporary path
+                    t_path = os.path.join(self.config['tmp_dir_path'], 'tmp-%s' % str(uuid.uuid1()))
+                    self.t_chunk = streamcorpus.Chunk(path=t_path, mode='wb')
+
+                    ## track first_stream_item_num for naming output
+                    ## files.  Useful for partial chunks and
+                    ## single-process runs on special corpora.
+                    first_stream_item_num = next_idx - 1
+
+                ## incremental transforms populate t_chunk
+                if not hit_last: # avoid re-adding last si
+                    self._run_incremental_transforms(si)
 
                 ## insist that every chunk has only one source string
-                assert len(self.sources) == 1, self.sources
+                sources.add( si.source )
+                assert len(sources) == 1, sources
+
+                if next_idx % self.config['output_chunk_max_count'] == 0:
+                    logger.warn('reached an increment of output_chunk_max_count: %d' % next_idx)
+                    self.t_chunk.close()
+                    ## will execute steps below
+
+                elif not hit_last:
+                    ## keep looping until we hit the end of the i_chunk
+                    continue
+
+                else:
+                    assert hit_last
+                    self.t_chunk.close()
 
                 ## batch transforms act on the whole chunk in-place
                 self._run_batch_transforms(t_path)
 
-                ## loaders put the chunk somewhere, or could delete it
+                ## loaders put the chunk somewhere, and could delete it
                 name_info = dict(
                     first = first_stream_item_num,
-                    num = len(t_chunk),
-                    #md5 computed in the loaders
-                    source = self.sources.pop(),
+                    num = len(self.t_chunk),
+                    #md5 = computed in each loaders
+                    source = sources.pop(),
                     )
-
-                logger.debug('loading %r' % i_str)
                 
                 ## gather the paths as the loaders run
                 o_paths = []
                 for loader in self._loaders:
                     o_path = loader(t_path, name_info, i_str)
+                    logger.warn('loaded (%d, %d) of %r into %r' % (start_count, next_idx - 1, i_str, o_path))
                     o_paths.append( o_path )
 
-                ## increment the first_stream_item_num to the next one in
-                ## the stream
-                first_stream_item_num += self.next_stream_item_num
+                if not hit_last:
+                    ## commit the paths saved so far
+                    self._task_queue.partial_commit( start_count, next_idx, o_paths )
 
-            ## put the o_paths into the task_queue
-            self._task_queue.commit( o_paths )
+                    ## reset t_path, so we get it again
+                    t_path = None
 
-            num_processed += 1
+                    ## advance start_count for next loop
+                    start_count = next_idx
+
+                else:
+                    ## put the o_paths into the task_queue, and set
+                    ## the task to 'completed'
+                    self._task_queue.commit( next_idx, o_paths )
 
             ## record elapsed time
             elapsed = time.time() - start_chunk_time
-            logger.debug('%.1f seconds for %r' % (elapsed, i_str))
+            if elapsed > 0:
+                rate = float(next_idx) / elapsed
+                logger.info('%d in %.1f sec --> %.1f per sec on (completed) %s' % (
+                        next_idx, elapsed, rate, i_str))
 
-            if num_processed % 10 == 0:
-                elapsed = time.time() - start_processing_time
-                rate = float(num_processed) / elapsed
-                logger.info('%d processed in %.1f sec --> %.1f per sec' % (
-                    num_processed, elapsed, rate))
+            ## loop to next i_str
 
 
     def _run_batch_transforms(self, chunk_path):
         for transform in self._batch_transforms:
             transform(chunk_path)
 
-    def _run_incremental_transforms(self, i_chunk, t_chunk):
-        ## iterate over docs from a chunk
-        self.sources = set()
-        start_inc_processing = time.time()
-        for num_processed, si in enumerate(i_chunk):
+    def _run_incremental_transforms(self, si):
+        ## operate each transform on this one StreamItem
+        for transform in self._incremental_transforms:
+            #timer = gevent.Timeout.start_new(1)
+            #thread = gevent.spawn(transform, si)
+            #try:
+            #    si = thread.get(timeout=timer)
+            ### The approach above to timeouts did not work,
+            ### because when the re module hangs in a thread, it
+            ### never yields to the greenlet hub.  The only robust
+            ### way to implement timeouts is with child processes,
+            ### possibly via multiprocessing.  Another benefit of
+            ### child processes is armoring against segfaulting in
+            ### various libraries.  This probably means that each
+            ### transform should implement its own timeouts.
+            try:
+                si = transform(si)
+                if si is None:
+                    break
 
-            if num_processed % 100 == 0:
-                elapsed = time.time() - start_inc_processing
-                if elapsed > 0:
-                    rate = float(num_processed) / elapsed
-                    logger.info('%d in %.1f --> %.1f per sec' % (
-                        num_processed, elapsed, rate))
+            except _exceptions.TransformGivingUp:
+                ## do nothing
+                logger.info('transform giving up on %r' % si.stream_id)
+                pass
 
-            ## operate each transform on this one StreamItem
-            for transform in self._incremental_transforms:
-                #timer = gevent.Timeout.start_new(1)
-                #thread = gevent.spawn(transform, si)
-                #try:
-                #    si = thread.get(timeout=timer)
-                ### The approach above to timeouts did not work,
-                ### because when the re module hangs in a thread, it
-                ### never yields to the greenlet hub.  The only robust
-                ### way to implement timeouts is with child processes,
-                ### possibly via multiprocessing.  Another benefit of
-                ### child processes is armoring against segfaulting in
-                ### various libraries.  This probably means that each
-                ### transform should implement its own timeouts.
-                try:
-                    si = transform(si)
-                    if si is None:
-                        break
+            except Exception, exc:
+                logger.critical('Pipeline trapped: %s' % traceback.format_exc(exc))
 
-                except _exceptions.TransformGivingUp:
-                    ## do nothing
-                    logger.info('transform giving up on %r' % si.stream_id)
-                    pass
+                if self.config['embedded_logs']:
+                    si.body.logs.append( traceback.format_exc(exc) )
 
-                except Exception, exc:
-                    logger.critical('Pipeline trapped: %s' % traceback.format_exc(exc))
+                if self.config['log_dir_path']:
+                    log_full_file(si, 'fallback-givingup', self.config['log_dir_path'])
 
-                    if self.config['embedded_logs']:
-                        si.body.logs.append( traceback.format_exc(exc) )
+        if si is not None:
+            ## expect to always have a stream_time
+            if not si.stream_time:
+                msg = 'empty stream_time: %s' % si
+                logger.critical(msg)
+                sys.exit(msg)
 
-                    if self.config['log_dir_path']:
-                        log_full_file(si, 'fallback-givingup', self.config['log_dir_path'])
+            ## put the StreamItem into the output
+            self.t_chunk.add(si)
 
-            if si is not None:
-                ## expect to always have a stream_time
-                if not si.stream_time:
-                    msg = 'empty stream_time: %s' % si
-                    logger.critical(msg)
-                    sys.exit(msg)
-
-                ## put the StreamItem into the output
-                t_chunk.add(si)
-
-                self.sources.add( si.source )
-
-                ## track position in the stream
-                self.next_stream_item_num += 1
-
-        t_chunk.close()

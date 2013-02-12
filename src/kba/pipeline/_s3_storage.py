@@ -74,17 +74,8 @@ class from_s3_chunks(object):
         s3://<bucket><s3_prefix_path>/data_hour/
         '''
         self.log.info('from_s3_chunks: %r' % i_str)
-        if self.config['task_type'] == 'date_hour':
-            date_hour = i_str.strip()
-
-            for key in self.get_keys(date_hour):
-                self.log( key.key )
-                if key.key.endswith('xz.gpg'):
-                    yield self.get_chunk(key)
-
-        elif self.config['task_type'] == 'full_path':
-            key = Key(self.bucket, i_str.strip())
-            yield self.get_chunk(key)
+        key = Key(self.bucket, i_str.strip())
+        return self.get_chunk(key)
 
     @_retry
     def get_keys(self, date_hour):
@@ -158,11 +149,6 @@ class to_s3_chunks(object):
 
         date_hour = list(date_hours)[0]
         date_hour = date_hour.replace('T', '-')
-                
-        if self.config['task_type'] == 'date_hour':
-            expected_date_hour = i_str.strip()
-            assert date_hour == expected_date_hour, \
-                (date_hour, expected_date_hour)
 
         name_info['date_hour'] = date_hour
         o_fname = self.config['output_name'] % name_info

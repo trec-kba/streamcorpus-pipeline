@@ -20,7 +20,7 @@ def convert_kba_json(config):
     streamcorpus.Chunk file containing the John Smith corpus.
     '''
     def _convert_kba_json(path_to_original):
-        yield generate_stream_items_from_kba_json(path_to_original)
+        return generate_stream_items_from_kba_json(path_to_original)
     
     return _convert_kba_json
 
@@ -57,14 +57,14 @@ def generate_stream_items_from_kba_json(json_file_path):
             bytes(doc['original_url'].encode('utf-8')) or b''
 
         ## get the three possible ContentItems
-        body   = doc.pop('body'    {}).pop('raw', '').decode('string-escape')
+        body   = doc.pop('body',   {}).pop('raw', '').decode('string-escape')
         title  = doc.pop('title',  {}).pop('raw', '').decode('string-escape')
         anchor = doc.pop('anchor', {}).pop('raw', '').decode('string-escape')
 
         stream_item.body = ContentItem(
             raw = b''.join(['<p>', anchor, '</p>',
                             '<p>', title, '</p>',
-                            body])
+                            body]),
             media_type = 'text/html',
             encoding = 'UTF-8',
             )
