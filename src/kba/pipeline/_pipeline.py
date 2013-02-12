@@ -178,6 +178,8 @@ class Pipeline(object):
                 ### transform should implement its own timeouts.
                 try:
                     si = transform(si)
+                    if si is None:
+                        break
 
                 except _exceptions.TransformGivingUp:
                     ## do nothing
@@ -193,18 +195,19 @@ class Pipeline(object):
                     if self.config['log_dir_path']:
                         log_full_file(si, 'fallback-givingup', self.config['log_dir_path'])
 
-            ## expect to always have a stream_time
-            if not si.stream_time:
-                msg = 'empty stream_time: %s' % si
-                logger.critical(msg)
-                sys.exit(msg)
+            if si is not None:
+                ## expect to always have a stream_time
+                if not si.stream_time:
+                    msg = 'empty stream_time: %s' % si
+                    logger.critical(msg)
+                    sys.exit(msg)
 
-            ## put the StreamItem into the output
-            t_chunk.add(si)
+                ## put the StreamItem into the output
+                t_chunk.add(si)
 
-            self.sources.add( si.source )
+                self.sources.add( si.source )
 
-            ## track position in the stream
-            self.next_stream_item_num += 1
+                ## track position in the stream
+                self.next_stream_item_num += 1
 
         t_chunk.close()
