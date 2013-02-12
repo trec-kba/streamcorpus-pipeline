@@ -381,9 +381,21 @@ class ZookeeperTaskQueue(object):
 
         Probably only safe to run this if all workers are off.
         '''
+        ## should assert that no workers are working
+        #workers = self._zk.get_children(self._path('workers'))
+        #workers = set(workers)
+        #print workers
+        #workers.remove( self._worker_id )
+        #assert not workers, 'cannot reset while workers=%r' % workers
+
         task_keys = self._zk.get_children(self._path('pending'))
         for task_key in task_keys:
             ## put it back in available
+            data, zstat = self._zk.get(self._path('tasks', task_key))
+            data = json.loads(data)
+            data['state'] = 'available'
+            data['owner'] = None
+            self._zk.set(self._path('tasks', task_key), json.dumps(data))
             self._zk.create(self._path('available', task_key))
             self._zk.delete(self._path('pending', task_key))
 
