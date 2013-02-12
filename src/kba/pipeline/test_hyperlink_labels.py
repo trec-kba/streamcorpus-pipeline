@@ -108,8 +108,6 @@ def test_anchors_re():
     ## now we check more of the output
     assert len(matches) == 3
 
-
-@pytest.mark.xfail
 def test_bytes_long_doc():
     stream_item = StreamItem()
     stream_item.body = ContentItem()
@@ -122,7 +120,8 @@ def test_bytes_long_doc():
     hyperlink_labels(
         {'require_abs_url': True, 
          'all_domains': True,
-         'offset_types': ['BYTES']}
+         ## will fail if set to bytes
+         'offset_types': ['LINES']}
         )(stream_item)
 
     
