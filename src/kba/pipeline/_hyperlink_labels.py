@@ -10,7 +10,7 @@ Copyright 2012 Diffeo, Inc.
 from streamcorpus import Offset, Label, LabelSet, Annotator, OffsetType
 
 import re
-from ._clean_visible import make_clean_visible
+from _clean_visible import make_clean_visible
 
 anchors_re = re.compile('''(?P<before>(.|\n)*?)''' + \
                         '''(?P<ahref>\<a(.|\n)*?href''' + \
@@ -19,6 +19,68 @@ anchors_re = re.compile('''(?P<before>(.|\n)*?)''' + \
                         '''(?P<posthref>(.|\n)*?)\>)''' + \
                         '''(?P<anchor>(.|\n)*?)(?P<after>\<\/a\>)''', re.I)
 
+def read_to( idx_bytes, stop_bytes=None, run_bytes=None ):
+    '''
+    iterates through idx_bytes until a byte in stop_bytes or a byte
+    not in run_bytes.
+
+    :rtype (int, string): idx of last byte and all of bytes including
+    the terminal byte from stop_bytes or not in run_bytes
+    '''
+    idx = None
+    vals = []
+    next_b = None
+    while 1:
+        try:
+            idx, next_b = idx_bytes.next()
+        except StopIteration:
+            ## maybe something going wrong?
+            idx = None
+            next_b = None
+            break
+        ## stop when we see any byte in stop_bytes
+        if stop_bytes and next_b in stop_bytes:
+            break
+        ## stop when we see any byte not in run_bytes
+        if run_bytes and next_b not in run_bytes:
+            break
+        ## assemble the ret_val
+        vals.append( next_b )
+
+    ## return whatever we have assembled
+    return idx, b''.join(vals), next_b
+
+
+def iter_attrs( idx_bytes ):
+    '''
+    called when idx_chars is just past "<a " inside an HTML anchor tag
+    
+    generates tuple(end_idx, attr_name, attr_value)
+    '''
+    ## read to the end of the "A" tag
+    while 1:
+        idx, attr_name, next_b = read_to(idx_bytes, ['=', '>'])
+        attr_vals = []
+
+        ## stop if we hit the end of the tag, or end of idx_bytes
+        if next_b is None or next_b == '>':
+            return
+        
+        idx, space, quote = read_to(idx_bytes, run_bytes = [' ', '\t', '\n', '\r'])
+        if quote not in ['"', "'"]:
+            ## caught start of the property value
+            attr_vals = [quote]
+            quote = ' '
+        
+        idx, attr_val, next_b = read_to(idx_bytes, [quote, '>'])
+        ## next_b had better either balance the start quote, end the
+        ## tag, or end idx_bytes
+        assert next_b in [quote, '>', None], attr_val
+        attr_vals.append( attr_val )
+
+        yield idx, attr_name.strip(), b''.join(attr_vals).strip()        
+
+
 class hyperlink_labels(object):
     '''
     Finds hyperlinks in clean_html and generate a
@@ -26,6 +88,7 @@ class hyperlink_labels(object):
     '''
     def __init__(self, config):
         self.config = config
+        self.offset_type = getattr(OffsetType, self.config['offset_types'][0])
 
     def href_filter(self, href):
         '''
@@ -40,8 +103,12 @@ class hyperlink_labels(object):
         :returns bool:
         '''
         if self.config['require_abs_url']:
-            if not href.lower().startswith('http'):
+            if not href.lower().startswith('http://'):
                 return False
+        if self.config['all_domains']:
+            ## blanket accept all domains as labels
+            return True
+
         if self.config['domain_substrings']:
             parts = href.split('/')
             if len(parts) < 3:
@@ -51,13 +118,16 @@ class hyperlink_labels(object):
                 if substring in domain:
                     return True            
 
-    def href_anchors(self):
+    def line_href_anchors(self):
         '''
         simple, regex-based extractor of anchor tags, so we can
-        compute byte offsets for anchor texts and associate them with
+        compute LINE offsets for anchor texts and associate them with
         their href.
         
         Generates tuple(href_string, first_byte, byte_length)
+
+        Also, this mangles the body.clean_html so that LINE offsets
+        uniquely identify tokens in anchor tags -- quite a kludge.
         '''
         idx = 0
         new_clean_html = ''
@@ -70,7 +140,6 @@ class hyperlink_labels(object):
             postequals = m.group('postequals')
 
             ## construct a text containing bytes up to the anchor text
-            ## PLUS ONE NEWLINE
             pre_anchor_increment = before + ahref + preequals + postequals + posthref
 
             ## increment the index to get line number for the anchor
@@ -94,17 +163,99 @@ class hyperlink_labels(object):
         ## replace clean_html with our new one that has newlines inserted
         self.clean_html = new_clean_html
 
-    def make_label_set(self, clean_html, clean_visible=None):
+    def byte_href_anchors(self):
+        '''
+        byte-based state machine extractor of anchor tags, so we can
+        compute byte offsets for anchor texts and associate them with
+        their href.
+        
+        Generates tuple(href_string, first_byte, byte_length)
+        '''
+        tag_depth = 0
+        a_tag_depth = 0
+        vals = []
+        href = None
+        idx_bytes = enumerate( self.clean_html )
+        while 1:
+            end_idx, val, next_b = read_to( idx_bytes, '<' )
+            tag_depth += 1
+
+            if href:
+                ## must be inside an anchor tag, so accumulate the
+                ## whole anchor
+                assert a_tag_depth > 0, (href, self.clean_html)
+                vals.append(val)
+
+            ## figure out if start of an "A" anchor tag or close
+            ## of a previous tag
+            idx, next_b1 = idx_bytes.next()
+            if next_b1.lower() == 'a':
+                ## could be start of "A" tag
+                idx, next_b2 = idx_bytes.next()
+                if next_b2 == ' ':
+                    a_tag_depth += 1
+
+                    href = None
+                    for idx, attr_name, attr_val in iter_attrs( idx_bytes ):
+                        if attr_name.lower() == 'href':
+                            href = attr_val
+                        if idx is None:
+                            ## doc ended mid tag, so invalid HTML--> just bail
+                            return
+
+                    first = idx + 1
+
+                    ## if we got an href, then we want to keep the
+                    ## first byte idx of the anchor:
+                    if href:
+                        ## Someone could nest an A tag inside another
+                        ## A tag, which is invalid (even in HTML5), so
+                        ## vals could be nonempty.  We only generate
+                        ## the leaf-level A tags in these rare cases
+                        ## of nested A tags, so reset it:
+                        vals = []
+
+            elif next_b1 == '/':
+                idx, next_b1 = idx_bytes.next()
+                if next_b1 == 'a':
+                    ## could be end of "A" tag
+                    idx, next_b2 = idx_bytes.next()
+                    if next_b2 == '>':
+                        a_tag_depth -= 1
+                        if href:
+                            ## join is much faster than using += above
+                            anchor = b''.join(vals)
+                            length = len(anchor)
+
+                            ## yield the data
+                            yield href, first, len(anchor), anchor
+
+                            ## reset, no yield again in a nested A tag
+                            href = None
+
+            else:
+                ## the next_b was not part of </a> or a nested <a tag,
+                ## so keep it in the output
+                vals.append(next_b)
+
+
+    def make_label_set(self, clean_html, clean_visible=None, offset_type=OffsetType.BYTES):
         '''
         Make a LabelSet for 'author' and the filtered hrefs & anchors
         '''
+        if   offset_type == OffsetType.BYTES:
+            parser = self.byte_href_anchors
+
+        elif offset_type == OffsetType.LINES:
+            parser = self.line_href_anchors
+
         annotator = Annotator()
         annotator.annotator_id = 'author'
 
         labels = []
         ## make clean_html accessible as a class property so we can 
         self.clean_html = clean_html
-        for href, first, length, value in self.href_anchors():
+        for href, first, length, value in parser():
             if self.href_filter(href):
                 '''
                 if clean_visible:
@@ -118,10 +269,11 @@ class hyperlink_labels(object):
                         print '\t html: %r' % _check_html
                         print '\t visi: %r' % _check_visi
                 '''
+                ## add a label for every href
                 label = Label()
                 label.target_id = href
-                label.offsets[OffsetType.LINES] = Offset(
-                    type=OffsetType.LINES, 
+                ## the offset type is specified by the config
+                label.offsets[self.offset_type] = Offset(
                     first=first, length=length, 
                     value=value,
                     ## the string name of the content field, not the
@@ -138,13 +290,16 @@ class hyperlink_labels(object):
         '''
         Act as an incremental transform in the kba.pipeline
         '''
+        
         if stream_item.body and stream_item.body.clean_html:
             labelset = self.make_label_set(stream_item.body.clean_html,
-                                           stream_item.body.clean_visible)
+                                           stream_item.body.clean_visible,
+                                           offset_type=self.offset_type)
             if labelset:
-                ## if we got labels, then we must replace clean_html
-                ## with a new one that has newlines inserted
-                stream_item.body.clean_html = self.clean_html
+                if self.offset_type == OffsetType.LINES:
+                    ## for LINES-type labels, must replace clean_html
+                    ## with a new one that has newlines inserted
+                    stream_item.body.clean_html = self.clean_html
 
                 ## add also add the new labelset
                 stream_item.body.labelsets.append( labelset )
