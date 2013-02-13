@@ -36,7 +36,7 @@ def test_matcher():
     
     ## verify the si has expected things
     for si in SIs:
-        len( si.body.labelsets ) == 1
+        len( si.body.labels ) == 1
 
     for i in range(2):
         print SIs[i].ratings
