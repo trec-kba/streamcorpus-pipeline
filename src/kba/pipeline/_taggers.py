@@ -18,7 +18,7 @@ import exceptions
 import collections
 import streamcorpus
 import xml.dom.minidom
-from streamcorpus import Chunk, Tagging, Label, OffsetType
+from streamcorpus import Chunk, Tagging, Label, OffsetType, add_annotation
 from _clean_visible import make_clean_visible_file, cleanse
 from sortedcollection import SortedCollection
 
@@ -78,56 +78,47 @@ def names_in_chains(stream_item, aligner_data):
       names: list of strings to require
       annotator_id: string to find at stream_item.Ratings[i].annotator.annotator_id
     '''
-    names        = aligner_data['names']
-    annotator_id = aligner_data['annotator_id']
+    names = aligner_data['names']
 
-    label = None
-    for rating in stream_item.ratings:
-        if annotator_id == rating.annotator.annotator_id:
-            label = Label(annotator=rating.annotator,
-                          target_id=rating.target_id)
-            break
+    for annotator_id, ratings in stream_item.ratings.items():        
+        if annotator_id == aligner_data['annotator_id']:
+            for rating in ratings:
+                label = Label(annotator=rating.annotator,
+                              target=rating.target)
 
-    ## do nothing
-    if label == None:
-        #log something?
-        return
+                ## make inverted index names-->tokens
+                equiv_ids = make_chains_with_names( stream_item.body.sentences )
 
-    ## make inverted index names-->tokens
-    equiv_ids = make_chains_with_names( stream_item.body.sentences )
+                for eqid, sets in equiv_ids.items():
+                    ## detect 'smith' in 'smithye'
+                    found_one = True
+                    for name in names:
+                        if name not in sets[0]:
+                            found_one = False
+                            ## try next chain
+                            break
 
-    for eqid, sets in equiv_ids.items():
-        ## detect 'smith' in 'smithye'
-        found_one = True
-        for name in names:
-            if name not in sets[0]:
-                found_one = False
-                ## try next chain
-                break
+                    if found_one:
+                        ## apply the label
+                        for tok in sets[1]:
+                            add_annotation(tok, label)
 
-        if found_one:
-            ## apply the label
-            for tok in sets[1]:
-                tok.labels.append( label )
+                ## stream_item passed by reference, so nothing to return
 
-    ## stream_item passed by reference, so nothing to return
-
-def line_offset_labelsets(stream_item, aligner_data):
+def line_offset_labels(stream_item, aligner_data):
     ## get a set of tokens -- must have OffsetType.LINES in them.
     sentences = stream_item.body.sentences[aligner_data['tagger_id']]
 
-    ## if given a LabelSet, then make labels on tokens
-    for labelset in stream_item.body.labelsets:
-        if labelset.annotator.annotator_id != aligner_data['annotator_id']:
+    ## if labels on ContentItem, then make labels on Tokens
+    for annotator_id in stream_item.body.labels:
+        if annotator_id != aligner_data['annotator_id']:
             continue
-        for label in labelset.labels:
-
-            ## make sure to update the annotator; no check for this...?
-            label.annotator = labelset.annotator
+        for label in stream_item.body.labels[annotator_id]:
 
             ## remove the offset from the label, because we are
             ## putting it into the token
             label_off = label.offsets.pop(OffsetType.LINES)
+
             assert label_off.length == len(label_off.value.split('\n'))
             #print 'L: %d\t%r\t%r' % (label_off.first, label_off.value, 
             #    '\n'.join(hope_original.split('\n')[label_off.first:
@@ -145,7 +136,7 @@ def line_offset_labelsets(stream_item, aligner_data):
                     label_off.first, label_off.first + label_off.length)
 
             for tok in toks:
-                tok.labels.append( label )
+                add_annotation(tok, label)
 
                 ## only for debugging
                 if not tok.token or tok.token not in label_off.value:
@@ -154,26 +145,24 @@ def line_offset_labelsets(stream_item, aligner_data):
                           for t in toks], 
                          label_off.value))
 
-def byte_offset_labelsets(stream_item, aligner_data):
+def byte_offset_labels(stream_item, aligner_data):
     ## get a set of tokens -- must have OffsetType.BYTES type offsets.
     sentences = stream_item.body.sentences[aligner_data['tagger_id']]
 
-    ## if given a LabelSet, then make labels on tokens
-    for labelset in stream_item.body.labelsets:
-        if labelset.annotator.annotator_id != aligner_data['annotator_id']:
+    ## if labels on ContentItem, then make labels on Tokens
+    for annotator_id in stream_item.body.labels:
+        if annotator_id != aligner_data['annotator_id']:
             continue
-        for label in labelset.labels:
-
-            ## make sure to update the annotator; no check for this...?
-            label.annotator = labelset.annotator
+        for label in stream_item.body.labels[annotator_id]:
 
             ## remove the offset from the label, because we are
             ## putting it into the token
             label_off = label.offsets.pop( OffsetType.BYTES )
-            assert off.length == len(off.value)
+
+            assert label_off.length == len(label_off.value)
             
-            #print 'L: %d\t%r\t%r' % (off.first, off.value, 
-            #                         '\n'.join(hope_original.split('\n')[off.first:off.first+off.length]))
+            #print 'L: %d\t%r\t%r' % (label_off.first, label_off.value, 
+            #                         '\n'.join(hope_original.split('\n')[label_off.first:label_off.first+label_off.length]))
 
             ## These next few steps are probably the most
             ## memory intensive, because they fully
@@ -181,38 +170,38 @@ def byte_offset_labelsets(stream_item, aligner_data):
 
             token_collection = SortedCollection(
                 itertools.chain(*[sent.tokens for sent in sentences]),
-                key=lambda x: x.offsets[OffsetType.BYTES].first
+                key=lambda tok: tok.offsets[OffsetType.BYTES].first
                 )
 
             #print 'tc %d %r' % (len(token_collection), token_collection._keys)
-            #print 'off.first=%d, length=%d, value=%r' % (off.first, off.length, off.value)
+            #print 'label_off.first=%d, length=%d, value=%r' % (label_off.first, label_off.length, label_off.value)
 
             toks = token_collection.find_range(
-                    off.first, off.first + off.length)
+                    label_off.first, label_off.first + label_off.length)
 
-            #print "find_le: ", token_collection.find_le(off.first)
+            #print "find_le: ", token_collection.find_le(label_off.first)
 
             toks = list(toks)
             #print 'aligned tokens', toks
 
             for tok in toks:
-                tok.labels.append( label )
+                add_annotation(tok, label)
 
                 ## only for debugging
                 assert tok.token is not None, tok.token
 
-                if not tok.token == off.value:
+                if not tok.token == label_off.value:
                     sys.exit('%r not in %r' % \
                         ([(t.offsets[OffsetType.BYTES].first, t.token) 
                           for t in toks], 
-                         off.value))
+                         label_off.value))
 
 
 
 AlignmentStrategies = {
     'names_in_chains': names_in_chains,
-    'line_offset_labelsets': line_offset_labelsets,
-    'byte_offset_labelsets': byte_offset_labelsets,
+    'line_offset_labels': line_offset_labels,
+    'byte_offset_labels': byte_offset_labels,
     }
 
 class TaggerBatchTransform(object):
