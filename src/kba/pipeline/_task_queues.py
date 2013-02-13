@@ -337,20 +337,32 @@ class ZookeeperTaskQueue(object):
                 logger.critical( 'whoa... how did we get a string here?' )
                 data = json.loads(data)
                 logger.critical( data )
-            if data['state'] == 'completed':
+            if data['state'] == 'completed' or data['end_count'] > 0:
                 yield data
 
     @property
     def counts(self):
         num_completed = 0
+        num_partials = 0
+        num_stream_items_done = 0
         for data in self.completed:
-            num_completed += 1
+            if data['state'] == 'completed':
+                num_completed += 1
+            else:
+                assert data['end_count'] > 0, data['end_count']
+                num_partials += 1
+
+            ## sum the current end_count for both partial and completed
+            num_stream_items_done += data['end_count']
+
         return {
             'tasks': len(self),
             'available': self._len('available'),
             'pending': self._len('pending'),
             'mode': self._read_mode(),
             'completed': num_completed,
+            'partials': num_partials,
+            'stream_items_done': num_stream_items_done,
             }        
 
     def set_mode(self, mode):
