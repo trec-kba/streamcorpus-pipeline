@@ -101,10 +101,18 @@ class Pipeline(object):
                     next_idx += 1
                 except StopIteration:
                     hit_last = True
+                    if next_idx == start_count:
+                        ## means that output_chunk_max_count is equal
+                        ## to length of chunk, so we have already done
+                        ## a partial commit, and can just finish with
+                        ## a final commit
+                        self._task_queue.commit( next_idx, [] )
+                        break
 
                 ## skip forward until we reach start_count
                 if next_idx <= start_count:
-                    assert not hit_last, 'how could we hit_last before getting as far as a previous run?'
+                    assert not hit_last, 'hit_last next_idx = %d <= %d = start_count' \
+                        % (next_idx, start_count)
                     continue
 
                 if next_idx % 100 == 0:
@@ -180,6 +188,7 @@ class Pipeline(object):
                             next_idx - start_count, elapsed, rate, i_str))
 
                     ## advance start_count for next loop
+                    logger.info('advancing start_count from %d to %d' % (start_count, next_idx))
                     start_count = next_idx
 
                 else:
