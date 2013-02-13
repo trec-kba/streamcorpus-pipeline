@@ -68,6 +68,7 @@ setup(
     ],
     install_requires=[
         'thrift',
+        'gevent',
         'protobuf',
         'requests',
         'streamcorpus',
