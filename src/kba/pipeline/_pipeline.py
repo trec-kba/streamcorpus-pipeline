@@ -103,8 +103,8 @@ class Pipeline(object):
                     hit_last = True
 
                 ## skip forward until we reach start_count
-                if next_idx < start_count:
-                    assert not hit_last
+                if next_idx <= start_count:
+                    assert not hit_last, 'how could we hit_last before getting as far as a previous run?'
                     continue
 
                 if next_idx % 100 == 0:
@@ -113,7 +113,7 @@ class Pipeline(object):
                     elapsed = time.time() - start_chunk_time
                     if elapsed > 0:
                         rate = float(next_idx) / elapsed
-                        logger.info('%d in %.1f --> %.1f per sec on (partial) %s' % (
+                        logger.info('%d in %.1f --> %.1f per sec on (pre-partial_commit) %s' % (
                             next_idx - start_count, elapsed, rate, i_str))
 
                 if not t_path:
@@ -134,7 +134,8 @@ class Pipeline(object):
                 sources.add( si.source )
                 assert len(sources) == 1, sources
 
-                if next_idx % self.config['output_chunk_max_count'] == 0:
+                if 'output_chunk_max_count' in self.config and \
+                        next_idx % self.config['output_chunk_max_count'] == 0:
                     logger.warn('reached an increment of output_chunk_max_count: %d' % next_idx)
                     self.t_chunk.close()
                     ## will execute steps below
@@ -171,6 +172,12 @@ class Pipeline(object):
 
                     ## reset t_path, so we get it again
                     t_path = None
+
+                    elapsed = time.time() - start_chunk_time
+                    if elapsed > 0:
+                        rate = float(next_idx) / elapsed
+                        logger.info('%d in %.1f --> %.1f per sec on (post-partial_commit) %s' % (
+                            next_idx - start_count, elapsed, rate, i_str))
 
                     ## advance start_count for next loop
                     start_count = next_idx
@@ -216,7 +223,7 @@ class Pipeline(object):
 
             except _exceptions.TransformGivingUp:
                 ## do nothing
-                logger.info('transform giving up on %r' % si.stream_id)
+                logger.info('transform %r giving up on %r' % (transform, si.stream_id))
                 pass
 
             except Exception, exc:
