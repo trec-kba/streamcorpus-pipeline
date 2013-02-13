@@ -4,46 +4,53 @@ import time
 from streamcorpus import StreamItem, ContentItem, OffsetType
 from _hyperlink_labels import anchors_re, hyperlink_labels
 
-def test_basics():
+def make_test_stream_item():
     stream_item = StreamItem()
     stream_item.body = ContentItem()
     path = os.path.dirname(__file__)
     path = os.path.join( path, '../../../data/test/' )
     stream_item.body.clean_html = open(
         os.path.join(path, 'nytimes-index-clean.html')).read()
+    return stream_item
 
+def test_basics():
     start = time.time()
     ## run it with a byte state machine
+    si1 = make_test_stream_item()
     hyperlink_labels(
         {'require_abs_url': True, 
          'domain_substrings': ['nytimes.com'],
          'all_domains': False,
          'offset_types': ['BYTES']}
-        )(stream_item)
+        )(si1)
     elapsed_state_machine = time.time() - start
 
-    assert stream_item.body.labelsets[0].labels[0].offsets.keys() == [OffsetType.BYTES]
+    assert si1.body.labels['author'][0].offsets.keys() == [OffsetType.BYTES]
 
     start = time.time()
+    si2 = make_test_stream_item()
     ## run it with regex
     hyperlink_labels(
         {'require_abs_url': True, 
          'domain_substrings': ['nytimes.com'],
          'all_domains': False,
          'offset_types': ['LINES']}
-        )(stream_item)
+        )(si2)
     elapsed_re = time.time() - start
 
-    assert stream_item.body.labelsets[1].labels[0].offsets.keys() == [OffsetType.LINES]
+    assert si2.body.labels['author'][0].offsets.keys() == [OffsetType.LINES]
+
+    byte_labels = set()
+    for annotator_id in si1.body.labels:
+        for label in si1.body.labels[annotator_id]:
+            assert OffsetType.BYTES in label.offsets
+            byte_labels.add(label.target.target_id)
 
     line_labels = set()
-    byte_labels = set()
-    for labelset in stream_item.body.labelsets:
-        for label in labelset.labels:
-            if OffsetType.BYTES in label.offsets:
-                byte_labels.add(label.target_id)
-            if OffsetType.LINES in label.offsets:
-                line_labels.add(label.target_id)
+    for annotator_id in si2.body.labels:
+        for label in si2.body.labels[annotator_id]:
+            assert OffsetType.LINES in label.offsets
+            line_labels.add(label.target.target_id)
 
     assert line_labels == byte_labels
     print '\n\n%.5f statemachine based,\n %.5f regex based' % (elapsed_state_machine, elapsed_re)

@@ -7,7 +7,7 @@ This software is released under an MIT/X11 open source license.
 
 Copyright 2012 Diffeo, Inc.
 '''
-from streamcorpus import Offset, Label, LabelSet, Annotator, OffsetType
+from streamcorpus import add_annotation, Offset, OffsetType, Annotator, Target, Label
 
 import re
 from _clean_visible import make_clean_visible
@@ -83,8 +83,8 @@ def iter_attrs( idx_bytes ):
 
 class hyperlink_labels(object):
     '''
-    Finds hyperlinks in clean_html and generate a
-    streamcorpus.LabelSet treating the author as the Annotator
+    Finds hyperlinks in clean_html and generate a list of Labels
+    treating the author as the Annotator
     '''
     def __init__(self, config):
         self.config = config
@@ -239,18 +239,16 @@ class hyperlink_labels(object):
                 vals.append(next_b)
 
 
-    def make_label_set(self, clean_html, clean_visible=None, offset_type=OffsetType.BYTES):
+    def make_labels(self, clean_html, clean_visible=None, offset_type=OffsetType.BYTES):
         '''
-        Make a LabelSet for 'author' and the filtered hrefs & anchors
+        Make a list of Labels for 'author' and the filtered hrefs &
+        anchors
         '''
         if   offset_type == OffsetType.BYTES:
             parser = self.byte_href_anchors
 
         elif offset_type == OffsetType.LINES:
             parser = self.line_href_anchors
-
-        annotator = Annotator()
-        annotator.annotator_id = 'author'
 
         labels = []
         ## make clean_html accessible as a class property so we can 
@@ -270,8 +268,10 @@ class hyperlink_labels(object):
                         print '\t visi: %r' % _check_visi
                 '''
                 ## add a label for every href
-                label = Label()
-                label.target_id = href
+                label = Label(
+                    annotator = Annotator(annotator_id = 'author'),
+                    target = Target(target_id = href),
+                    )
                 ## the offset type is specified by the config
                 label.offsets[self.offset_type] = Offset(
                     first=first, length=length, 
@@ -281,10 +281,7 @@ class hyperlink_labels(object):
                     content_form='clean_html')
                 labels.append(label)
 
-        if labels:
-            return LabelSet(annotator=annotator, labels=labels)
-        else:
-            return None
+        return labels
 
     def __call__(self, stream_item):
         '''
@@ -292,17 +289,17 @@ class hyperlink_labels(object):
         '''
         
         if stream_item.body and stream_item.body.clean_html:
-            labelset = self.make_label_set(stream_item.body.clean_html,
-                                           stream_item.body.clean_visible,
-                                           offset_type=self.offset_type)
-            if labelset:
+            labels = self.make_labels(stream_item.body.clean_html,
+                                         stream_item.body.clean_visible,
+                                         offset_type=self.offset_type)
+            if labels:
                 if self.offset_type == OffsetType.LINES:
                     ## for LINES-type labels, must replace clean_html
                     ## with a new one that has newlines inserted
                     stream_item.body.clean_html = self.clean_html
 
-                ## add also add the new labelset
-                stream_item.body.labelsets.append( labelset )
+                ## also add the new labels
+                add_annotation(stream_item.body, *labels)
         return stream_item
 
 if __name__ == '__main__':
