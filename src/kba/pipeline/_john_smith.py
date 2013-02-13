@@ -89,11 +89,11 @@ def generate_john_smith_chunk(path_to_original):
             ## build a Label for the doc-level label:
             rating = streamcorpus.Rating()
             rating.annotator = anno
-            rating.target_id = str(label_id) # must be string
+            rating.target = streamcorpus.Target(target_id = str(label_id)) # must be string
             rating.mentions = True
 
             ## put this one label in the array of labels
-            stream_item.ratings.append( rating )
+            streamcorpus.add_annotation(stream_item, rating)
 
             ## provide this stream_item to the pipeline
             yield stream_item
