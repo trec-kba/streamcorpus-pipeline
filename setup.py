@@ -71,7 +71,7 @@ setup(
         'gevent',
         'protobuf',
         'requests',
-        'streamcorpus',
+        'streamcorpus>=0.2.4',
         'pyyaml',
         'nltk',
         'lxml',
@@ -80,7 +80,7 @@ setup(
         'kazoo',
         #'marisa-trie',
         #'jellyfish',
-        'nilsimsa',
+        'nilsimsa>=0.2',
     ],
     # include_package_data = True,
     package_data = {
