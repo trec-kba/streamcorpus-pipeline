@@ -143,8 +143,8 @@ class Pipeline(object):
                 assert len(sources) == 1, sources
 
                 if 'output_chunk_max_count' in self.config and \
-                        next_idx % self.config['output_chunk_max_count'] == 0:
-                    logger.warn('reached an increment of output_chunk_max_count: %d' % next_idx)
+                        len(self.t_chunk) == self.config['output_chunk_max_count']:
+                    logger.warn('reached output_chunk_max_count at: %d' % next_idx)
                     self.t_chunk.close()
                     ## will execute steps below
 
@@ -253,4 +253,3 @@ class Pipeline(object):
 
             ## put the StreamItem into the output
             self.t_chunk.add(si)
-
