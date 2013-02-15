@@ -41,6 +41,11 @@ class Pipeline(object):
         if not os.path.exists(config['tmp_dir_path']):
             os.makedirs(config['tmp_dir_path'])
 
+        if 'rate_log_interval' in self.config:
+            self.rate_log_interval = self.config['rate_log_interval']
+        else:
+            self.rate_log_interval = 100
+
         ## load the one task queue
         task_queue_name = config['task_queue']
         self._task_queue = _init_stage(
@@ -115,7 +120,7 @@ class Pipeline(object):
                         % (next_idx, start_count)
                     continue
 
-                if next_idx % 100 == 0:
+                if next_idx % self.rate_log_interval == 0:
                     ## indexing is zero-based, so next_idx corresponds
                     ## to length of list of SIs processed so far
                     elapsed = time.time() - start_chunk_time
