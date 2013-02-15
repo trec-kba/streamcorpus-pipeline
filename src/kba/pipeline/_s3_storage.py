@@ -16,6 +16,7 @@ import requests
 import traceback
 import _extract_spinn3r
 import streamcorpus
+from _get_name_info import get_name_info
 from streamcorpus import decrypt_and_uncompress, compress_and_encrypt, Chunk
 from cStringIO import StringIO
 
@@ -105,7 +106,7 @@ class from_s3_chunks(object):
             i_content_md5 = key.key.split('.')[-4]
         f_content_md5 = hashlib.md5(data).hexdigest()
         if i_content_md5 != f_content_md5:
-            msg = 'FAIL: %s --> %s' % (key.key, f_content_md5)
+            msg = 'FAIL: %s --> %s != %s' % (key.key, i_content_md5, f_content_md5)
             self.log.critical(msg)
             sys.exit(msg)
 
@@ -113,7 +114,7 @@ class from_s3_chunks(object):
             ## convert the data from spinn3r's protostream format
             return _extract_spinn3r._generate_stream_items( data )
 
-        elif self.config['input_format'] == 'streamcorpus':
+        elif self.config['input_format'] == 'streamitem':
             message = _message_versions[ self.config['streamcorpus_version'] ]
 
             return streamcorpus.Chunk(data=data, message=message)
@@ -135,22 +136,7 @@ class to_s3_chunks(object):
         data = open(t_path).read()
         self.log.debug('got %d bytes from file' % len(data))
 
-        ch = Chunk(data=data)
-        date_hours = set()
-        for si in ch:
-            date_hours.add( si.stream_time.zulu_timestamp[:13] )
-
-        ## create the md5 property, so we can use it in the filename
-        name_info['md5'] = ch.md5_hexdigest
-
-        assert len(date_hours) == 1, \
-            'got a chunk with other than one data_hour! ' + \
-            repr(date_hours)
-
-        date_hour = list(date_hours)[0]
-        date_hour = date_hour.replace('T', '-')
-
-        name_info['date_hour'] = date_hour
+        name_info.update( get_name_info(data) )
         o_fname = self.config['output_name'] % name_info
         o_path = os.path.join(self.config['s3_path_prefix'], o_fname + '.sc.xz.gpg')
 
