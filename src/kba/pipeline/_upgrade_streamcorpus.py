@@ -7,7 +7,7 @@ This software is released under an MIT/X11 open source license.
 Copyright 2012 Diffeo, Inc.
 '''
 
-from streamcorpus import make_stream_item, ContentItem
+from streamcorpus import make_stream_item, make_stream_time, ContentItem, Tagging
 
 def upgrade_streamcorpus(config):
     '''
@@ -26,7 +26,18 @@ def upgrade_streamcorpus(config):
             encoding = s1.body.encoding,
             ## default, might get overwritten below
             media_type = 'text/html',
+            taggings = {'stanford': Tagging(
+                    tagger_id = 'stanford',
+                    raw_tagging = s1.body.ner,
+                    generation_time = make_stream_time('2012-06-01T00:00:00.0Z'),
+                    tagger_config = 'annotators: {tokenize, cleanxml, ssplit, pos, lemma, ner}, properties: pos.maxlen=100',
+                    tagger_version = 'Stanford CoreNLP ver 1.2.0',
+                    )}
             )
+        if 'keep_old_cleansed_as_clean_visible' in config and \
+                config['keep_old_cleansed_as_clean_visible']:
+            s2.body.clean_visible = s1.body.cleansed
+
         if s1.source == 'social':
             s2.body.media_type = 'text/plain'
             ## the separation of content items in the social stream
