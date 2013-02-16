@@ -162,17 +162,17 @@ class Pipeline(object):
                 ## loaders put the chunk somewhere, and could delete it
                 name_info = dict(
                     first = start_count,
-                    num = len(self.t_chunk),
-                    #md5 = computed in each loaders
+                    #num and md5 computed in each loaders
                     source = sources.pop(),
                     )
                 
                 ## gather the paths as the loaders run
                 o_paths = []
-                if len(self.t_chunk) > 0:
-                    for loader in self._loaders:
-                        o_path = loader(t_path, name_info, i_str)
-                        logger.warn('loaded (%d, %d) of %r into %r' % (start_count, next_idx - 1, i_str, o_path))
+                for loader in self._loaders:
+                    o_path = loader(t_path, name_info, i_str)
+                    logger.warn('loaded (%d, %d) of %r into %r' % (
+                            start_count, next_idx - 1, i_str, o_path))
+                    if o_path:
                         o_paths.append( o_path )
 
                 if not hit_last:
