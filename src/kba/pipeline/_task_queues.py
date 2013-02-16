@@ -272,19 +272,50 @@ class ZookeeperTaskQueue(object):
             except kazoo.exceptions.NodeExistsError:
                 pass
 
+    def purge(self, i_str):
+        '''
+        Completely expunge a str from the entire queue
+        '''
+        ## we always strip whitespace off both ends
+        i_str = i_str.strip()
+        key = self._make_key( i_str )
+        try:
+            self._zk.delete(self._path('tasks', key))
+        except:
+            pass
+        try:
+            self._zk.delete(self._path('available', key))
+        except:
+            pass
+        try:
+            self._zk.delete(self._path('pending', key))
+        except:
+            pass
+            
+
+    def _make_key(self, i_str):
+        '''construct a hash to use as the node name'''
+        return hashlib.md5(i_str).hexdigest()
+
     def push(self, *i_strs, **kwargs):
         '''
         Add task to the queue
         '''
         completed = kwargs.get('completed', False)
+        allow_wrong = kwargs.get('allow_wrong_s3', False)
         count = 0
         for i_str in i_strs:
             ## ignore leading and trailing whitespace
             i_str = i_str.strip()
             if len(i_str) == 0:
                 continue
+
+            if i_str.startswith('s3:/') and not (completed or allow_wrong):
+                raise Exception('do not load invalid s3 key strings: %r' % i_str)
+
             ## construct a hash to use as the node name
-            key = hashlib.md5(i_str).hexdigest()
+            key = self._make_key( i_str )
+
             ## construct a data payload
             data = dict(
                 i_str = i_str,
@@ -294,14 +325,24 @@ class ZookeeperTaskQueue(object):
                 results = [],
                 )
             if completed:
-                data['state'] = 'completed'
+                data['state'] = 'completed'                
             try:
                 ## attempt to push it
                 try:
                     self._zk.create(self._path('tasks', key), json.dumps(data), makepath=True)
                 except kazoo.exceptions.NodeExistsError, exc:
+                    logger.critical('already exists: %r' % i_str)
                     if completed:
                         self._zk.set(self._path('tasks', key), json.dumps(data))
+                        ## must also remove it from available and pending
+                        try:
+                            self._zk.delete(self._path('available', key))
+                        except:
+                            pass
+                        try:
+                            self._zk.delete(self._path('pending', key))
+                        except:
+                            pass
                     else:
                         raise(exc)
 
