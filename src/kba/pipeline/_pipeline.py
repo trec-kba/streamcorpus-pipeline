@@ -134,11 +134,6 @@ class Pipeline(object):
                     t_path = os.path.join(self.config['tmp_dir_path'], 'tmp-%s' % str(uuid.uuid1()))
                     self.t_chunk = streamcorpus.Chunk(path=t_path, mode='wb')
 
-                    ## track first_stream_item_num for naming output
-                    ## files.  Useful for partial chunks and
-                    ## single-process runs on special corpora.
-                    first_stream_item_num = next_idx - 1
-
                 ## incremental transforms populate t_chunk
                 if not hit_last: # avoid re-adding last si
                     self._run_incremental_transforms(si)
@@ -166,7 +161,7 @@ class Pipeline(object):
 
                 ## loaders put the chunk somewhere, and could delete it
                 name_info = dict(
-                    first = first_stream_item_num,
+                    first = start_count,
                     num = len(self.t_chunk),
                     #md5 = computed in each loaders
                     source = sources.pop(),
