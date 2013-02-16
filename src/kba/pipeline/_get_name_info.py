@@ -24,9 +24,12 @@ def get_name_info(chunk_data, assert_one_date_hour=False):
             'got a chunk with other than one data_hour! ' + \
             repr(date_hours)
 
-    date_hour = list(date_hours)[0]
-    date_hour = date_hour.replace('T', '-')
-
+    if len(date_hours) > 0:
+        date_hour = list(date_hours)[0]
+        date_hour = date_hour.replace('T', '-')
+    else:
+        assert count == 0, (date_hours, count)
+        date_hour = None
     name_info['date_hour'] = date_hour
 
     return name_info
