@@ -137,6 +137,10 @@ class to_s3_chunks(object):
         self.log.debug('got %d bytes from file' % len(data))
 
         name_info.update( get_name_info(data) )
+        if name_info['num'] == 0:
+            o_path = None
+            return o_path
+
         o_fname = self.config['output_name'] % name_info
         o_path = os.path.join(self.config['s3_path_prefix'], o_fname + '.sc.xz.gpg')
 
