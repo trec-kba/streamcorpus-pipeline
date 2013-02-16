@@ -169,10 +169,11 @@ class Pipeline(object):
                 
                 ## gather the paths as the loaders run
                 o_paths = []
-                for loader in self._loaders:
-                    o_path = loader(t_path, name_info, i_str)
-                    logger.warn('loaded (%d, %d) of %r into %r' % (start_count, next_idx - 1, i_str, o_path))
-                    o_paths.append( o_path )
+                if len(self.t_chunk) > 0:
+                    for loader in self._loaders:
+                        o_path = loader(t_path, name_info, i_str)
+                        logger.warn('loaded (%d, %d) of %r into %r' % (start_count, next_idx - 1, i_str, o_path))
+                        o_paths.append( o_path )
 
                 if not hit_last:
                     ## commit the paths saved so far
