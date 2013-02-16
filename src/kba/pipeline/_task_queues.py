@@ -397,6 +397,7 @@ class ZookeeperTaskQueue(object):
             num_stream_items_done += data['end_count']
 
         return {
+            'registered workers': self._len('workers'),
             'tasks': len(self),
             'available': self._len('available'),
             'pending': self._len('pending'),
