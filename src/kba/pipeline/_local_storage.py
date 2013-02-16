@@ -35,6 +35,15 @@ class to_local_chunks(object):
     def __call__(self, t_path, name_info, i_str):
         o_type = self.config['output_type']
         
+        data = open(t_path).read()
+        name_info.update( get_name_info( data ) )
+
+        if name_info['num'] == 0:
+            return None
+
+        if 'input' in self.config['output_name']:
+            name_info['input_fname'] = i_str.split('/')[-1]
+
         if o_type == 'samedir':
             ## assume that i_str was a local path
             assert i_str[-3:] == '.sc', repr(i_str[-3:])
@@ -54,21 +63,6 @@ class to_local_chunks(object):
 
             if not os.path.exists(o_dir):
                 os.makedirs(o_dir)
-
-            ## must compute md5 if needed by the output_name
-            if 'date_hour' in self.config['output_name']:
-                data = open(t_path).read()
-                name_info.update( get_name_info( data ) )
-                ## that will also get us md5
-
-            elif 'md5' in self.config['output_name']:
-                ## if we only have md5, then do this:
-                _md5 = hashlib.md5()
-                map(_md5.update, open(t_path))
-                name_info['md5'] = _md5.hexdigest()
-
-            if 'input' in self.config['output_name']:
-                name_info['input_fname'] = i_str.split('/')[-1]
 
             o_fname = self.config['output_name'] % name_info
             o_path = os.path.join(o_dir, o_fname + '.sc')
