@@ -9,7 +9,8 @@ def test_stdin():
 def test_zk():
     config = dict(
         zookeeper_address = 'localhost:2181',
-        namespace = 'kba-pipeline-task-queue',
+        namespace = 'kba-pipeline-task-queue-test',
+        zookeeper_timeout = 120,
         )
 
     test_data = set(['a', 'b', 'c', 'd'])
@@ -33,7 +34,8 @@ def test_zk():
 def test_zk_commit():
     config = dict(
         zookeeper_address = 'localhost:2181',
-        namespace = 'kba-pipeline-task-queue',
+        namespace = 'kba-pipeline-task-queue-test',
+        zookeeper_timeout = 120,
         )
 
     test_data = set(['a', 'b', 'c', 'd'])
@@ -51,7 +53,8 @@ def test_zk_commit():
 def test_zk_partial_commit():
     config = dict(
         zookeeper_address = 'localhost:2181',
-        namespace = 'kba-pipeline-task-queue',
+        namespace = 'kba-pipeline-task-queue-test',
+        zookeeper_timeout = 120,
         )
 
     test_data = set(['a', 'b', 'c', 'd'])

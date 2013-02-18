@@ -101,7 +101,9 @@ class ZookeeperTaskQueue(object):
     def __init__(self, config):
         self._config = config
         self._namespace = config['namespace']
-        self._zk = KazooClient(config['zookeeper_address'])
+        self._zk = KazooClient(config['zookeeper_address'],
+                               timeout = config['zookeeper_timeout'],
+                               )
         self._zk.start()
         ## save the client_id for reconnect
         self._zk.add_listener(self._restarter)
@@ -113,6 +115,9 @@ class ZookeeperTaskQueue(object):
         ## nodes under worker ephemeral without reseting the worker_id
         ## if we lose the zookeeper session.
         self._worker_id = str(uuid.uuid1())
+
+        logger.critical('worker_id=%r  zookeeper session_id=%r' % (self._worker_id, self._zk.client_id))
+
 
     def _restarter(self, state):
         '''
