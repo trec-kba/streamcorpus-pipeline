@@ -113,7 +113,6 @@ class ZookeeperTaskQueue(object):
         ## nodes under worker ephemeral without reseting the worker_id
         ## if we lose the zookeeper session.
         self._worker_id = str(uuid.uuid1())
-        self.init_all()
 
     def _restarter(self, state):
         '''
@@ -264,6 +263,7 @@ class ZookeeperTaskQueue(object):
 
     def delete_all(self):
         self._zk.delete(self._path(), recursive=True)
+        self.init_all()
 
     def init_all(self):
         for path in ['tasks', 'available', 'pending', 'mode', 'workers']:
