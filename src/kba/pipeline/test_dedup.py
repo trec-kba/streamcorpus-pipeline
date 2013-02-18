@@ -60,11 +60,11 @@ def test_dedup_debugging_config():
         if not d1( si ):
             num_dups += 1
 
-        if num > 20:
+        if num > 10:
             break
 
     print 'removed %d near-exact duplicates' % num_dups
-    assert num_dups == 16
+    assert num_dups == 7
 
 def test_dedup_production_config():
     ## now test the production config
