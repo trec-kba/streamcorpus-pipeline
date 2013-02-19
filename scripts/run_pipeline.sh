@@ -24,6 +24,23 @@ while [ "$tries" -le "10" ]; do
   fi
 done;
 
+signal_handler()
+{
+	# print message
+	#
+	echo "Received signal..."
+
+	pkill -P $$
+        
+	# Need to exit the script explicitly when done.
+	# Otherwise the script would live on, until system
+	# realy goes down, and KILL signals are send.
+	#
+	exit 0
+}
+
+trap 'signal_handler' SIGTERM SIGABRT SIGHUP SIGINT
+
 ## this will have to be modified for any other environments
 python -c "import sys; assert sys.executable == '/data/trec-kba/installs/py27env/bin/python'"
 if [ "$?" -ne "0" ]; then
