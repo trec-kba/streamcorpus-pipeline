@@ -27,6 +27,7 @@ logger = logging.getLogger(__name__)
 ## setup loggers -- should move this to run.py and load.py
 import logging
 kazoo_log = logging.getLogger('kazoo')
+kazoo_log.setLevel(logging.DEBUG)
 ch = logging.StreamHandler()
 ch.setLevel(logging.DEBUG)
 #ch.setFormatter(formatter)
@@ -98,14 +99,17 @@ def _ensure_connection(func):
         while tries < max_tries:
             try:
                 return func(self, *args, **kwargs)
+            except kazoo.exceptions.ConnectionLoss, exc:
                 logger.critical('worker_id=%r zookeeper session_id=%r %r --> %s\n ATTEMPT reconnect...'\
                                     % (self._worker_id, self._zk.client_id, func, traceback.format_exc(exc)))
-                self._restarter(self._zk.state)
-                logger.critical('worker_id=%r zookeeper session_id=%r COMPLETED reconnect'\
-                                    % (self._worker_id, self._zk.client_id))
-            except kazoo.exceptions.ConnectionLoss, exc:
-                logger.critical('worker_id=%r zookeeper session_id=%r FAILED reconnect'\
-                                    % (self._worker_id, self._zk.client_id))
+                try:
+                    self._restarter(self._zk.state)
+                    logger.critical('worker_id=%r zookeeper session_id=%r COMPLETED reconnect'\
+                                        % (self._worker_id, self._zk.client_id))
+                    break
+                except Exception, exc:
+                    logger.critical('worker_id=%r zookeeper session_id=%r FAILED reconnect --> %s'\
+                                        % (self._worker_id, self._zk.client_id, traceback.format_exc(exc)))
                 tries += 1
                 delay *= 2
                 time.sleep(delay)
@@ -172,7 +176,14 @@ class ZookeeperTaskQueue(object):
             self._zk.start(timeout=self._config['zookeeper_timeout'])
 
         elif state == KazooState.SUSPENDED:
-            logger.warn( 'state is currently suspended... attempting start()' )            
+            logger.warn( 'state is currently suspended... attempting start(%d)' % (
+                    self._config['zookeeper_timeout']))
+
+            client_id = self._zk.client_id
+            self._zk = KazooClient(self._config['zookeeper_address'],
+                                   timeout=self._config['zookeeper_timeout'],
+                                   client_id = client_id,
+                                   )
             self._zk.start(timeout=self._config['zookeeper_timeout'])
 
     def _path(self, *path_parts):
