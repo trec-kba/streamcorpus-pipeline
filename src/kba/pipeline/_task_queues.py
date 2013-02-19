@@ -13,6 +13,7 @@ import sys
 import time
 import json
 import uuid
+import signal
 import random
 import hashlib
 import logging
@@ -108,6 +109,9 @@ class ZookeeperTaskQueue(object):
         ## save the client_id for reconnect
         self._zk.add_listener(self._restarter)
 
+        ## create any missing keys
+        self.init_all()
+
         self._pending_task_key = None
         ## make a unique ID for this worker that persists across
         ## zookeeper sessions.  Could use a zookeeper generated
@@ -116,8 +120,18 @@ class ZookeeperTaskQueue(object):
         ## if we lose the zookeeper session.
         self._worker_id = str(uuid.uuid1())
 
-        logger.critical('worker_id=%r  zookeeper session_id=%r' % (self._worker_id, self._zk.client_id))
+        logger.critical('worker_id=%r zookeeper session_id=%r starting up' % (self._worker_id, self._zk.client_id))
 
+        for sig in [signal.SIGTERM, signal.SIGABRT, signal.SIGHUP, signal.SIGINT]:
+            logger.debug('setting signal handler for %r' % sig)
+            signal.signal(sig, self._handle_signal)
+
+    def _handle_signal(self, sig, frame):
+        logger.critical('worker_id=%r zookeeper session_id=%r received signal: %r' % (self._worker_id, self._zk.client_id, sig))
+        self._zk.stop()
+        logger.critical('worker_id=%r zookeeper session_id=%r closed zookeeper client' % (self._worker_id, self._zk.client_id))
+        logging.shutdown()
+        sys.exit(-1)
 
     def _restarter(self, state):
         '''
@@ -129,7 +143,8 @@ class ZookeeperTaskQueue(object):
             self._zk.start()
 
         elif state == KazooState.SUSPENDED:
-            logger.warn( 'state is currently suspended... do something?' )
+            logger.warn( 'state is currently suspended... attempting start()' )
+            self._zk.start(timeout=self._config['zookeeper_timeout'])
 
     def _path(self, *path_parts):
         '''
@@ -268,14 +283,11 @@ class ZookeeperTaskQueue(object):
 
     def delete_all(self):
         self._zk.delete(self._path(), recursive=True)
-        self.init_all()
 
     def init_all(self):
         for path in ['tasks', 'available', 'pending', 'mode', 'workers']:
-            try:
+            if not self._zk.exists(self._path(path)):
                 self._zk.create(self._path(path), makepath=True)
-            except kazoo.exceptions.NodeExistsError:
-                pass
 
     def purge(self, i_str):
         '''
