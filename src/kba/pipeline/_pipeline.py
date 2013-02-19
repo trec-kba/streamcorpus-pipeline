@@ -252,5 +252,10 @@ class Pipeline(object):
                 logger.critical(msg)
                 sys.exit(msg)
 
-            ## put the StreamItem into the output
-            self.t_chunk.add(si)
+            if si.stream_id is None:
+                logger.critical('empty stream_id: %r' % si)
+                si = None
+
+            else:
+                ## put the StreamItem into the output
+                self.t_chunk.add(si)
