@@ -63,7 +63,8 @@ if __name__ == '__main__':
 
     ch = logging.StreamHandler()
     ch.setLevel( log_level )
-    #ch.setFormatter(formatter)
+    formatter = logging.Formatter('%(asctime)s %(process)d %(levelname)s: %(message)s')
+    ch.setFormatter(formatter)
     logger.addHandler(ch)
 
     pipeline = Pipeline(config)
