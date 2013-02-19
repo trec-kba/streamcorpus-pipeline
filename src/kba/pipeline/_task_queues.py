@@ -13,6 +13,7 @@ import sys
 import time
 import json
 import uuid
+import socket
 import signal
 import random
 import hashlib
@@ -27,7 +28,7 @@ logger = logging.getLogger(__name__)
 ## setup loggers -- should move this to run.py and load.py
 import logging
 kazoo_log = logging.getLogger('kazoo')
-kazoo_log.setLevel(logging.DEBUG)
+#kazoo_log.setLevel(logging.DEBUG)
 ch = logging.StreamHandler()
 ch.setLevel(logging.DEBUG)
 #ch.setFormatter(formatter)
@@ -152,7 +153,7 @@ class ZookeeperTaskQueue(object):
         ## if we lose the zookeeper session.
         self._worker_id = str(uuid.uuid1())
 
-        logger.critical('worker_id=%r zookeeper session_id=%r starting up' % (self._worker_id, self._zk.client_id))
+        logger.critical('worker_id=%r zookeeper session_id=%r starting up on hostname=%r' % (self._worker_id, self._zk.client_id, socket.gethostbyname(socket.gethostname())))
 
         for sig in [signal.SIGTERM, signal.SIGABRT, signal.SIGHUP, signal.SIGINT]:
             logger.debug('setting signal handler for %r' % sig)
