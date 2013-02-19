@@ -17,6 +17,7 @@ import signal
 import random
 import hashlib
 import logging
+import traceback
 import kazoo.exceptions
 from kazoo.client import KazooClient
 from kazoo.client import KazooState
