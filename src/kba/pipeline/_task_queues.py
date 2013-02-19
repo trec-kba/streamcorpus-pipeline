@@ -98,10 +98,14 @@ def _ensure_connection(func):
         while tries < max_tries:
             try:
                 return func(self, *args, **kwargs)
-            except kazoo.exceptions.ConnectionLoss, exc:
-                logger.critical('%r --> %s\n attempting reconnect...' % (func, traceback.format_exc(exc)))
+                logger.critical('worker_id=%r zookeeper session_id=%r %r --> %s\n ATTEMPT reconnect...'\
+                                    % (self._worker_id, self._zk.client_id, func, traceback.format_exc(exc)))
                 self._restarter(self._zk.state)
-                logger.critical('completed reconnect')
+                logger.critical('worker_id=%r zookeeper session_id=%r COMPLETED reconnect'\
+                                    % (self._worker_id, self._zk.client_id))
+            except kazoo.exceptions.ConnectionLoss, exc:
+                logger.critical('worker_id=%r zookeeper session_id=%r FAILED reconnect'\
+                                    % (self._worker_id, self._zk.client_id))
                 tries += 1
                 delay *= 2
                 time.sleep(delay)
@@ -163,8 +167,9 @@ class ZookeeperTaskQueue(object):
         '''
         if state == KazooState.LOST:
             logger.warn( 'creating new connection: %r' % state )
-            self._zk = KazooClient(self._config['zookeeper_address'])
-            self._zk.start()
+            self._zk = KazooClient(self._config['zookeeper_address'],
+                                   timeout=self._config['zookeeper_timeout'])
+            self._zk.start(timeout=self._config['zookeeper_timeout'])
 
         elif state == KazooState.SUSPENDED:
             logger.warn( 'state is currently suspended... attempting start()' )            
