@@ -85,6 +85,29 @@ class stdin(TaskQueue):
             ## persistence mechanism in this queue for partial_commit
             yield 0, i_str
 
+def _ensure_connection(func):
+    '''
+    Decorator for methods on ZookeeperTaskQueue that attemps to
+    restart connection if kazoo.exceptions.ConnectionLoss happens.
+    '''
+    def wrapped_func(self, *args, **kwargs):
+        delay = 0.1
+        max_tries = 30
+        tries = 0
+        while tries < max_tries:
+            try:
+                return func(self, *args, **kwargs)
+            except kazoo.exceptions.ConnectionLoss, exc:
+                logger.critical('%r --> %s\n attempting reconnect...' % (func, traceback.format_exc(exc)))
+                self._restarter(self._zk.state)
+                logger.critical('completed reconnect')
+                tries += 1
+                delay *= 2
+                time.sleep(delay)
+
+    return wrapped_func
+
+
 class ZookeeperTaskQueue(object):
     '''
     Organizes tasks in a globally accessible zookeeper instance
@@ -143,7 +166,7 @@ class ZookeeperTaskQueue(object):
             self._zk.start()
 
         elif state == KazooState.SUSPENDED:
-            logger.warn( 'state is currently suspended... attempting start()' )
+            logger.warn( 'state is currently suspended... attempting start()' )            
             self._zk.start(timeout=self._config['zookeeper_timeout'])
 
     def _path(self, *path_parts):
@@ -153,6 +176,7 @@ class ZookeeperTaskQueue(object):
         '''
         return os.path.join(self._namespace, *path_parts)
 
+    @_ensure_connection        
     def _register(self):
         '''
         Get an ID for this worker process by creating a sequential
@@ -200,6 +224,7 @@ class ZookeeperTaskQueue(object):
                 logger.warn('won %d %r' % (end_count, i_str))
                 yield end_count, i_str
 
+    @_ensure_connection
     def commit(self, end_count=None, results=None):
         '''
         If caller iterates past the previous task, then assume it is
@@ -226,6 +251,7 @@ class ZookeeperTaskQueue(object):
             ## reset our internal state
             self._pending_task_key = None
 
+    @_ensure_connection
     def partial_commit(self, start_count, end_count, results):
 
         assert self._pending_task_key, \
@@ -243,8 +269,7 @@ class ZookeeperTaskQueue(object):
         ## set the data
         self._zk.set(self._path('tasks', self._pending_task_key), json.dumps(self.data))
 
-        
-
+    @_ensure_connection
     def _random_available_task(self):
         task_keys = self._zk.get_children(self._path('available'))
         if not task_keys:
@@ -252,6 +277,7 @@ class ZookeeperTaskQueue(object):
         else:
             return random.choice( task_keys )
 
+    @_ensure_connection        
     def _win_task(self, task_key):
         try:
             self._zk.create(self._path('pending', task_key), makepath=True)
@@ -281,9 +307,11 @@ class ZookeeperTaskQueue(object):
         ## previously, so use previous end_count as new start_count
         return self.data['end_count'], self.data['i_str']
 
+    @_ensure_connection        
     def delete_all(self):
         self._zk.delete(self._path(), recursive=True)
 
+    @_ensure_connection        
     def init_all(self):
         for path in ['tasks', 'available', 'pending', 'mode', 'workers']:
             if not self._zk.exists(self._path(path)):
@@ -435,6 +463,7 @@ class ZookeeperTaskQueue(object):
     FINISH = 'FINISH'
     TERMINATE = 'TERMINATE'
 
+    @_ensure_connection
     def _read_mode(self):
         '''
         Get the mode from ZK and convert back to a class property
