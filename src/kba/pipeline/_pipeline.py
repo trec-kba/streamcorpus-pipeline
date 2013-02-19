@@ -39,7 +39,11 @@ class Pipeline(object):
         self.config = config
 
         if not os.path.exists(config['tmp_dir_path']):
-            os.makedirs(config['tmp_dir_path'])
+            try:
+                os.makedirs(config['tmp_dir_path'])
+            except Exception, exc:
+                logger.debug('tmp_dir_path already there? %r' % exc)
+                pass
 
         if 'rate_log_interval' in self.config:
             self.rate_log_interval = self.config['rate_log_interval']
