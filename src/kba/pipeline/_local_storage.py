@@ -7,10 +7,15 @@ This software is released under an MIT/X11 open source license.
 Copyright 2012 Diffeo, Inc.
 '''
 import os
+import sys
 import time
 import hashlib
+import logging
+import traceback
 import streamcorpus
 from _get_name_info import get_name_info
+
+logger = logging.getLogger(__name__)
 
 class from_local_chunks(object):
     def __init__(self, config):
@@ -74,7 +79,12 @@ class to_local_chunks(object):
             os.makedirs(dirname)
 
         ## do an atomic renaming    
-        os.rename(t_path, o_path)
+        try:
+            os.rename(t_path, o_path)
+        except Exception, exc:
+            msg = 'failed os.rename(%r, %r) -- %s' % (t_path, o_path, traceback.format_exc(exc))
+            logger.critical(msg)
+            sys.exit(msg)
 
         ## return the final output path
         return o_path
