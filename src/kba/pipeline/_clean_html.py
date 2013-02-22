@@ -214,7 +214,7 @@ def make_clean_html(raw, stream_item=None, log_dir_path=None):
         root = lxml.html.fromstring(raw)
         ## if that worked, then we will be able to generate a
         ## valid HTML string
-        fixed_html = lxml.html.tostring(root, encoding='unicode')
+        fixed_html = lxml.html.tostring(root, encoding=unicode)
     except (TypeError, lxml.etree.ParserError, UnicodeDecodeError), exc:
         print '_clean_html.make_clean_html caught %s' % exc
         raise _exceptions.TransformGivingUp()
@@ -225,7 +225,14 @@ def make_clean_html(raw, stream_item=None, log_dir_path=None):
     ## remove any invalid chars, such as those resulting from this
     ## bogus HTML-escaped entity &#822050+ that reulted from someone
     ## failing to put the ";" between "&#8220;" and "50+"
+
+    #print 'first'
+    #print fixed_html.encode('utf8')
+
     fixed_html = drop_invalid_XML_chars(fixed_html)
+
+    #print 'second'
+    #print fixed_html.encode('utf8')
 
     ## construct a Cleaner that removes any ``<script>`` tags,
     ## Javascript, like an ``onclick`` attribute, comments, style
@@ -240,6 +247,9 @@ def make_clean_html(raw, stream_item=None, log_dir_path=None):
     ## now get the really sanitized HTML
     _clean_html = cleaner.clean_html(fixed_html)
 
+    #print 'third'
+    #print _clean_html.encode('utf8')
+
     ## generate pretty HTML in utf-8
     _clean_html = lxml.html.tostring(
         lxml.html.document_fromstring(_clean_html), 
@@ -247,6 +257,9 @@ def make_clean_html(raw, stream_item=None, log_dir_path=None):
         pretty_print=True, 
         #include_meta_content_type=True
         )
+
+    #print 'fourth'
+    #print _clean_html
 
     return _clean_html
 
@@ -257,6 +270,14 @@ def clean_html(config):
     '''
     ## make a closure around config
     def _make_clean_html(stream_item):
+        code = config.get('require_language_code', None)
+        if code:
+            ## need to check stream_item for language
+            if not stream_item.body.language or \
+                    code != stream_item.body.language.code:
+                ## either missing or different
+                return stream_item
+
         if stream_item.body and stream_item.body.raw \
                 and stream_item.body.media_type == 'text/html':
 
