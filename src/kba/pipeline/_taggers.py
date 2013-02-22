@@ -190,7 +190,7 @@ def byte_offset_labels(stream_item, aligner_data):
                 ## only for debugging
                 assert tok.token is not None, tok.token
 
-                if not tok.token == label_off.value:
+                if not tok.token in label_off.value:
                     sys.exit('%r not in %r' % \
                         ([(t.offsets[OffsetType.BYTES].first, t.token) 
                           for t in toks], 
@@ -309,7 +309,7 @@ the output path to create.
             ## get stream_id out of the XML
             stream_id = ner_dom.attributes.get('stream_id').value
             if stream_item.stream_id is None:
-                assert stream_id is None, 'out of sync: None != %r' % stream_id
+                assert not stream_id, 'out of sync: None != %r' % stream_id
                 print('si.stream_id is None... ignoring')
                 continue
             assert stream_id and stream_id == stream_item.stream_id, \
