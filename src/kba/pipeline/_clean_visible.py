@@ -106,6 +106,9 @@ def clean_visible(config):
     returns a kba.pipeline "transform" function that attempts to
     generate stream_item.body.clean_visible from body.clean_html
     '''
+    ## we only do clean_html today
+    assert config.get('require_clean_html', True)
+
     ## make a closure around config
     def _make_clean_visible(stream_item):
         if stream_item.body and stream_item.body.clean_html:
