@@ -23,27 +23,44 @@ class dedup(object):
 
         ## get the desired content from the text
         content = getattr(si.body, self.config['content_form'], None)
+        raw = getattr(si.body, 'raw', '')
+        len_raw = raw and len(raw) or 0
 
         ## we will always reject if the doc_id is the same and the
         ## sim and len requirements pass
         if si.doc_id in self._doc_ids:
 
+            stream_id2, abs_url2, nil2, content2, len_raw2 = self._doc_ids[si.doc_id]
+
             if not content:
-                logger.critical('duplicate doc %s has not si.body.%s' % (
+                logger.critical('duplicate doc %s has no si.body.%s trying for raw' % (
                         si.doc_id, self.config['content_form']))
+                len_raw_diff = abs(len_raw - len_raw2 )
+                if len_raw_diff <= self.config['max_raw_length_difference']:
+                    return None
+
+            elif not self.config['use_nilsimsa']:
+                len_diff = abs(len(content) - len(content2))
+                if len_diff <= self.config['max_clean_length_difference']:
+                    logger.critical(
+                        'rejecting same doc_id sim=not-computed, len=(%d +/- %d) %s %s %r %r' \
+                        % (len(content), len_diff, si.stream_id, stream_id2, si.abs_url, abs_url2))
+                    ## reject it!
+                    return None
+
 
             else:
                 ## get the data from the previously seen item with same doc_id
-                abs_url2, nil2, content2 = self._doc_ids[si.doc_id]
+                stream_id2, abs_url2, nil2, content2, len_raw2 = self._doc_ids[si.doc_id]
 
                 ## compute and compare the nilsimsa hashes
                 nil = nilsimsa.Nilsimsa(content).hexdigest()
                 sim = nilsimsa.compare_hexdigests( nil, nil2 )
 
                 if self.config['exactness_nilsimsa_threshold'] <= sim:
-                    if self.config['min_doc_length'] <= len(content):
+                    if self.config['min_clean_length'] <= len(content):
                         len_diff = abs(len(content) - len(content2))
-                        if len_diff <= self.config['max_doc_length_difference']:
+                        if len_diff <= self.config['max_clean_length_difference']:
                             logger.critical(
                                 'rejecting same doc_id sim=%d len=(%d +/- %d) %s %r' \
                                 % (sim, len(content), len_diff, si.doc_id, si.abs_url))
@@ -72,7 +89,7 @@ class dedup(object):
             if not nil:
                 nil = nilsimsa.Nilsimsa(content).hexdigest()
 
-            for doc_id, (abs_url2, nil2, content2) in self._doc_ids.items():
+            for doc_id, (stream_id2, abs_url2, nil2, content2, len_raw_2) in self._doc_ids.items():
                 sim = nilsimsa.compare_hexdigests( nil, nil2)
 
                 if sim >= self.config['log_nilsimsa_threshold']:
@@ -98,7 +115,7 @@ class dedup(object):
         ## not rejecting, so keep data for further comparisons within this pipeline run
         if not nil:
             nil = nilsimsa.Nilsimsa(content).hexdigest()
-        self._doc_ids[ si.doc_id ] = (si.abs_url, nil, content)
+        self._doc_ids[ si.doc_id ] = (si.stream_id, si.abs_url, nil, content, len_raw)
 
         return si
 
