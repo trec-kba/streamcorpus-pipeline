@@ -9,6 +9,29 @@ Copyright 2012 Diffeo, Inc.
 
 from streamcorpus import make_stream_item, make_stream_time, ContentItem, Tagging
 
+def keep_annotatoted(config):
+    '''
+    returns a kba.pipeline "transform" function that populates takes
+    in v0_1_0 StreamItems and emits v0_2_0 StreamItems
+    '''
+    fh = open(config['annotation_file'])
+    annotated_stream_ids = set()
+    for line in fh.readlines():
+        if line.startswith('#'):
+            continue
+        parts = line.split()
+        stream_id = parts[2]
+        annotated_stream_ids.add( stream_id )
+
+    ## make a closure around config
+    def _keep_annotatoted(s1):
+        if s1.stream_id in annotated_stream_ids:
+            return s1
+        else:
+            return None
+
+    return _keep_annotatoted
+
 def upgrade_streamcorpus(config):
     '''
     returns a kba.pipeline "transform" function that populates takes
