@@ -10,14 +10,24 @@ def get_name_info(chunk_data, assert_one_date_hour=False):
 
     ch = Chunk(data=chunk_data)
     date_hours = set()
+    target_names = set()
+    doc_ids = set()
     count = 0
     for si in ch:
         date_hours.add( si.stream_time.zulu_timestamp[:13] )
+        doc_ids.add( si.doc_id )
+        for annotator_id, ratings in si.ratings.items():
+            for rating in ratings:
+                target_name = rating.target.target_id.split('/')[-1]
+                target_names.add( target_name )
         count += 1
 
     ## create the md5 property, so we can use it in the filename
     name_info['md5'] = ch.md5_hexdigest
     name_info['num'] = count
+
+    name_info['target_names'] = '-'.join( target_names )
+    name_info['doc_ids_8'] = '-'.join( [di[:8] for di in doc_ids] )
 
     if assert_one_date_hour:
         assert len(date_hours) == 1, \

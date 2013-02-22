@@ -7,7 +7,7 @@ This software is released under an MIT/X11 open source license.
 Copyright 2012 Diffeo, Inc.
 '''
 
-from streamcorpus import make_stream_item, make_stream_time, ContentItem, Tagging
+from streamcorpus import make_stream_item, make_stream_time, ContentItem, Tagging, Rating, Target, Annotator
 
 def keep_annotatoted(config):
     '''
@@ -15,17 +15,21 @@ def keep_annotatoted(config):
     in v0_1_0 StreamItems and emits v0_2_0 StreamItems
     '''
     fh = open(config['annotation_file'])
-    annotated_stream_ids = set()
+    annotated_stream_ids = dict()
     for line in fh.readlines():
         if line.startswith('#'):
             continue
         parts = line.split()
         stream_id = parts[2]
-        annotated_stream_ids.add( stream_id )
+        if stream_id not in annotated_stream_ids:
+            annotated_stream_ids[ stream_id ] = Rating(annotator=Annotator(annotator_id=parts[0]),
+                                                       target=Target(target_id='http://en.wikipedia.org/wiki/%s' % parts[3]))
 
     ## make a closure around config
     def _keep_annotatoted(s1):
         if s1.stream_id in annotated_stream_ids:
+            r = annotated_stream_ids[s1.stream_id]
+            s1.ratings[r.annotator.annotator_id] = [r]
             return s1
         else:
             return None
