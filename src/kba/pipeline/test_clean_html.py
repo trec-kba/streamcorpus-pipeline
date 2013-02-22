@@ -1,6 +1,8 @@
 import os
 import pytest
 
+from streamcorpus import StreamItem, ContentItem
+from _stages import _init_stage
 from _clean_html import make_clean_html
 from _clean_visible import make_clean_visible
 
@@ -36,3 +38,43 @@ def test_target_parsing():
     
     assert 'logo' not in visible
     assert 'target' not in visible
+
+    hyperlink_labels = _init_stage(
+        'hyperlink_labels', 
+        dict(offset_types=['LINES'],
+             require_abs_url=True,
+             all_domains=True,
+             ))
+    si = StreamItem(body=ContentItem(clean_html=html))
+    hyperlink_labels( si )
+    html2 = si.body.clean_html
+
+    visible2 = make_clean_visible( html2 )
+    
+    #print visible2
+
+    assert 'target' not in visible2
+    assert 'logo' not in visible2
+
+
+
+@pytest.mark.xfail
+def test_unicode_conversion():
+    path = os.path.dirname(__file__)
+    path = os.path.join( path, '../../../data/test/' )
+    test_html = open(os.path.join(path, 'raw-unicode-issues.html')).read()
+
+    print type(test_html)
+    print test_html
+    print repr(test_html)
+    print str(test_html).decode('utf8')
+
+    html = make_clean_html( test_html )
+
+    print unicode(html)
+
+    visible = make_clean_visible( html )
+
+    print type(visible)
+
+    print visible.decode('utf8')
