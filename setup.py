@@ -81,6 +81,7 @@ setup(
         #'marisa-trie',
         #'jellyfish',
         'nilsimsa>=0.2',
+        'chromium_compact_language_detector',
     ],
     # include_package_data = True,
     package_data = {
