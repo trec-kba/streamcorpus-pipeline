@@ -35,10 +35,8 @@ kba.pipeline:
   ## generator of StreamItems
   extractor: from_local_chunks
 
-  ## hyperlink_labels must run after clean_html and before
-  ## clean_visible in order for the newlines that it inserted to get
-  ## into the clean_visible that lingpipe will operate on.
   incremental_transforms: []
+
   batch_transforms: [lingpipe]
 
   loaders: [to_local_chunks]
@@ -55,7 +53,7 @@ kba.pipeline:
   lingpipe:
     exit_code_on_out_of_memory: 1
     pipeline_root_path: ../third/
-    offset_types: [BYTES, LINES]
+    offset_types: [BYTES]
     offset_debugging: false
     cleanup_tmp_files: false
 

@@ -36,10 +36,8 @@ kba.pipeline:
   ## generator of StreamItems
   extractor: john_smith
 
-  ## hyperlink_labels must run after clean_html and before
-  ## clean_visible in order for the newlines that it inserted to get
-  ## into the clean_visible that lingpipe will operate on.
   incremental_transforms: []
+
   batch_transforms: []
 
   loaders: [to_local_chunks]
