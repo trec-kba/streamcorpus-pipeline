@@ -10,14 +10,17 @@ Copyright 2012 Diffeo, Inc.
 from streamcorpus import add_annotation, Offset, OffsetType, Annotator, Target, Label
 
 import re
+import logging
 from _clean_visible import make_clean_visible
 
+logger = logging.getLogger(__name__)
+
 anchors_re = re.compile('''(?P<before>(.|\n)*?)''' + \
-                        '''(?P<ahref>\<a(.|\n)*?href''' + \
+                        '''(?P<ahref>\<a\s+(.|\n)*?href''' + \
                         '''(?P<preequals>(\s|\n)*)=(?P<postequals>(\s|\n)*)''' + \
                         '''(?P<quote>("|')?)(?P<href>[^"]*)(?P=quote)''' + \
                         '''(?P<posthref>(.|\n)*?)\>)''' + \
-                        '''(?P<anchor>(.|\n)*?)(?P<after>\<\/a\>)''', re.I)
+                        '''(?P<anchor>(.|\n)*)''', re.I)
 
 def read_to( idx_bytes, stop_bytes=None, run_bytes=None ):
     '''
@@ -89,6 +92,8 @@ class hyperlink_labels(object):
     def __init__(self, config):
         self.config = config
         self.offset_type = getattr(OffsetType, self.config['offset_types'][0])
+        if self.offset_type != OffsetType.BYTES:
+            logger.warn('using offset_type other than BYTES: %r' % self.offset_type)
 
     def href_filter(self, href):
         '''
@@ -124,23 +129,35 @@ class hyperlink_labels(object):
         compute LINE offsets for anchor texts and associate them with
         their href.
         
-        Generates tuple(href_string, first_byte, byte_length)
+        Generates tuple(href_string, first_byte, byte_length, anchor_text)
 
         Also, this mangles the body.clean_html so that LINE offsets
         uniquely identify tokens in anchor tags -- quite a kludge.
         '''
         idx = 0
         new_clean_html = ''
-        for m in anchors_re.finditer(self.clean_html):
+        newlines_added = 0
+        ## split doc up into pieces that end on an anchor tag
+        parts = self.clean_html.split('</a>')
+        assert len('</a>'.join(parts) ) == len(self.clean_html)
+        for i in range(len(parts)):
+            part = parts[i]
+
+            ## try to get an A tag out:
+            m = anchors_re.match(part)
+
+            ## if not, then just keep going
+            if not m:
+                new_clean_html += part
+                if i < len(parts) - 1:
+                    new_clean_html += '</a>'
+                continue
+
             before = m.group('before')
-            href = m.group('href')
             ahref = m.group('ahref')
-            posthref = m.group('posthref')
-            preequals = m.group('preequals')
-            postequals = m.group('postequals')
 
             ## construct a text containing bytes up to the anchor text
-            pre_anchor_increment = before + ahref + preequals + postequals + posthref
+            pre_anchor_increment = before + ahref
 
             ## increment the index to get line number for the anchor
             idx += len( pre_anchor_increment.splitlines() )
@@ -150,26 +167,66 @@ class hyperlink_labels(object):
             ## that when an anchor text contains newlines
             length = len(m.group('anchor').split('\n'))
 
-            ## construct a replacement clean_html with these newlines
-            ## inserted
-            new_clean_html += pre_anchor_increment + '\n' + m.group('anchor') + '\n' \
-                + m.group('after')
+            ## construct new clean_html with these newlines inserted
+            new_clean_html += pre_anchor_increment + '\n' + m.group('anchor') + '\n</a>'
+
+            newlines_added += 2
 
             ## update the index for the next loop
-            idx += length - 1 + len( m.group('after').splitlines(True) )
+            idx += length - 1
 
-            yield href, first, length, m.group('anchor')
+            yield m.group('href'), first, length, m.group('anchor')
 
         ## replace clean_html with our new one that has newlines inserted
+        assert len(self.clean_html) == len(new_clean_html) - newlines_added
         self.clean_html = new_clean_html
 
     def byte_href_anchors(self):
+        '''
+        simple, regex-based extractor of anchor tags, so we can
+        compute BYTE offsets for anchor texts and associate them with
+        their href.
+        
+        Generates tuple(href_string, first_byte, byte_length, anchor_text)
+        '''
+        idx = 0
+        ## split doc up into pieces that end on an anchor tag
+        parts = self.clean_html.split('</a>')
+        assert len('</a>'.join(parts) ) == len(self.clean_html)
+        for part in parts:
+            ## try to get an A tag out:
+            m = anchors_re.match(part)
+
+            if not m:
+                idx += len(part) + 4
+                continue
+
+            before = m.group('before')
+            ahref = m.group('ahref')
+
+            ## increment the index to get line number for the anchor
+            idx += len(before) + len(ahref)
+            first = idx
+
+            ## usually this will be one, but it could be more than
+            ## that when an anchor text contains newlines
+            length = len(m.group('anchor'))
+
+            ## update the index for the next loop
+            # include anchor plus the </a>
+            idx += length + 4
+
+            yield m.group('href'), first, length, m.group('anchor')
+
+        assert idx - 4 == len(self.clean_html)
+
+    def byte_href_anchors_state_machine(self):
         '''
         byte-based state machine extractor of anchor tags, so we can
         compute byte offsets for anchor texts and associate them with
         their href.
         
-        Generates tuple(href_string, first_byte, byte_length)
+        Generates tuple(href_string, first_byte, byte_length, anchor_text)
         '''
         tag_depth = 0
         a_tag_depth = 0
@@ -239,15 +296,15 @@ class hyperlink_labels(object):
                 vals.append(next_b)
 
 
-    def make_labels(self, clean_html, clean_visible=None, offset_type=OffsetType.BYTES):
+    def make_labels(self, clean_html, clean_visible=None):
         '''
         Make a list of Labels for 'author' and the filtered hrefs &
         anchors
         '''
-        if   offset_type == OffsetType.BYTES:
+        if   self.offset_type == OffsetType.BYTES:
             parser = self.byte_href_anchors
 
-        elif offset_type == OffsetType.LINES:
+        elif self.offset_type == OffsetType.LINES:
             parser = self.line_href_anchors
 
         labels = []
@@ -287,11 +344,12 @@ class hyperlink_labels(object):
         '''
         Act as an incremental transform in the kba.pipeline
         '''
-        
+        ## right now, we only do clean_html
+        assert self.config.get('require_clean_html', True)
+
         if stream_item.body and stream_item.body.clean_html:
             labels = self.make_labels(stream_item.body.clean_html,
-                                         stream_item.body.clean_visible,
-                                         offset_type=self.offset_type)
+                                      stream_item.body.clean_visible)
             if labels:
                 if self.offset_type == OffsetType.LINES:
                     ## for LINES-type labels, must replace clean_html
