@@ -33,7 +33,7 @@ def test_dedup_debugging_config():
         content_form = 'clean_visible',
 
         ## set this to false for N^2 comparison within each chunk
-        require_same_stream_id = False,
+        require_same_doc_id = False,
 
         ## must be greater than or equal to this
         exactness_nilsimsa_threshold = 128,
@@ -42,7 +42,7 @@ def test_dedup_debugging_config():
         ## higher than exactness_nilsimsa_threshold with another doc
         min_doc_length = 500,
 
-        ## two docs with same stream_id that pass the
+        ## two docs with same doc_id that pass the
         ## exactness_nilsimsa_threshold are still not rejected if the
         ## length of content difference is longer than this:
         max_doc_length_difference = 100,
@@ -73,7 +73,7 @@ def test_dedup_production_config():
         content_form = 'clean_visible',
 
         ## set this to false for N^2 comparison within each chunk
-        require_same_stream_id = True,
+        require_same_doc_id = True,
 
         ## must be greater than or equal to this
         exactness_nilsimsa_threshold = 128,
@@ -82,7 +82,7 @@ def test_dedup_production_config():
         ## higher than exactness_nilsimsa_threshold with another doc
         min_doc_length = 500,
 
-        ## two docs with same stream_id that pass the
+        ## two docs with same doc_id that pass the
         ## exactness_nilsimsa_threshold are still not rejected if the
         ## length of content difference is longer than this:
         max_doc_length_difference = 100,
