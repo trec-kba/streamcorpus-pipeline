@@ -1,11 +1,13 @@
-import pytest 
 import os
 import time
-from streamcorpus import StreamItem, ContentItem, OffsetType
+import uuid
+import pytest 
+from streamcorpus import make_stream_item, StreamItem, ContentItem, OffsetType, Chunk
 from _hyperlink_labels import anchors_re, hyperlink_labels
+from _stages import _init_stage
 
 def make_test_stream_item():
-    stream_item = StreamItem()
+    stream_item = make_stream_item(None, 'http://nytimes.com/')
     stream_item.body = ContentItem()
     path = os.path.dirname(__file__)
     path = os.path.join( path, '../../../data/test/' )
@@ -13,9 +15,49 @@ def make_test_stream_item():
         os.path.join(path, 'nytimes-index-clean.html')).read()
     return stream_item
 
+def make_hyperlink_labeled_test_stream_item():
+    si = make_test_stream_item()
+    hyperlink_labels(
+        {'require_abs_url': True, 
+         'all_domains': True,
+         'offset_types': ['BYTES']}
+        )(si)
+
+    cv = _init_stage('clean_visible', {})
+    cv(si)
+
+    return si
+    
+def make_hyperlink_labeled_test_chunk():
+    '''
+    returns a path to a temporary chunk that has been hyperlink labeled
+    '''
+    tpath = os.path.join('/tmp', str(uuid.uuid1()) + '.sc')
+    o_chunk = Chunk(tpath, mode='wb')
+
+    dpath = os.path.dirname(__file__)
+    ipath = os.path.join( dpath, '../../../data/test/WEBLOG-100-fd5f05c8a680faa2bf8c55413e949bbf.sc' )
+
+    cv = _init_stage('clean_visible', {})
+    hl = hyperlink_labels(
+        {'require_abs_url': True, 
+         'all_domains': True,
+         'offset_types': ['BYTES']}
+        )
+    for si in Chunk(path=ipath):
+        ## clear out existing labels and tokens
+        si.body.labels = {}
+        si.body.sentences = {}
+        hl(si)
+        cv(si)
+        o_chunk.add(si)
+
+    o_chunk.close()
+    return tpath
+    
 def test_basics():
     start = time.time()
-    ## run it with a byte state machine
+    ## run it with a byte regex
     si1 = make_test_stream_item()
     hyperlink_labels(
         {'require_abs_url': True, 
@@ -23,7 +65,7 @@ def test_basics():
          'all_domains': False,
          'offset_types': ['BYTES']}
         )(si1)
-    elapsed_state_machine = time.time() - start
+    elapsed_bytes = time.time() - start
 
     assert si1.body.labels['author'][0].offsets.keys() == [OffsetType.BYTES]
 
@@ -36,7 +78,7 @@ def test_basics():
          'all_domains': False,
          'offset_types': ['LINES']}
         )(si2)
-    elapsed_re = time.time() - start
+    elapsed_lines = time.time() - start
 
     assert si2.body.labels['author'][0].offsets.keys() == [OffsetType.LINES]
 
@@ -53,7 +95,7 @@ def test_basics():
             line_labels.add(label.target.target_id)
 
     assert line_labels == byte_labels
-    print '\n\n%.5f statemachine based,\n %.5f regex based' % (elapsed_state_machine, elapsed_re)
+    print '\n\n%.5f bytes,\n %.5f lines' % (elapsed_bytes, elapsed_lines)
 
 
 
@@ -102,8 +144,15 @@ href ='http://en.wikipedia.org/wiki/Bogus'  asdf=4
 '''
 
 def test_anchors_re():
-    matches = list(anchors_re.finditer(sample_text))
+    parts = sample_text.split('</a>')
+    matches = list(anchors_re.match(part) for part in parts)
+
+    ## now we check more of the output
+    assert len(matches) == 4
+
     for m in matches:
+        if not m:
+            continue
         before = m.group('before')
         href = m.group('href')
         ahref = m.group('ahref')
@@ -112,10 +161,14 @@ def test_anchors_re():
         postequals = m.group('postequals')
         #print m.groups('href')
 
-    ## now we check more of the output
-    assert len(matches) == 3
+    assert sum(map(int, map(bool, matches))) == 3
 
-def test_bytes_long_doc():
+
+@pytest.mark.parametrize(('parser_type',), [
+    ('BYTES',),
+    ('LINES',),
+])
+def test_long_doc(parser_type):
     stream_item = StreamItem()
     stream_item.body = ContentItem()
     path = os.path.dirname(__file__)
@@ -128,7 +181,7 @@ def test_bytes_long_doc():
         {'require_abs_url': True, 
          'all_domains': True,
          ## will fail if set to bytes
-         'offset_types': ['LINES']}
+         'offset_types': [parser_type]}
         )(stream_item)
 
     
