@@ -49,15 +49,23 @@ class to_local_chunks(object):
         if 'input' in self.config['output_name']:
             name_info['input_fname'] = i_str.split('/')[-1]
 
+        ## prepare to compress the output
+        compress = self.config.get('compress', None)
+        assert compress in [None, 'xz']
+
         if o_type == 'samedir':
             ## assume that i_str was a local path
             assert i_str[-3:] == '.sc', repr(i_str[-3:])
             o_path = i_str[:-3] + '-%s.sc' % self.config['output_name']
+            if compress:
+                o_path += '.xz'
             #print 'creating %s' % o_path
             
         elif o_type == 'inplace':
             ## replace the input chunks with the newly created
             o_path = i_str
+            if o_path.endswith('.xz'):
+                compress = True
 
         elif o_type == 'otherdir':
             ## put the 
@@ -71,13 +79,22 @@ class to_local_chunks(object):
 
             o_fname = self.config['output_name'] % name_info
             o_path = os.path.join(o_dir, o_fname + '.sc')
-
+            if compress:
+                o_path += '.xz'
 
         ## if dir is missing make it
         dirname = os.path.dirname(o_path)
         if dirname and not os.path.exists(dirname):
             os.makedirs(dirname)
 
+        if compress:
+            assert o_path.endswith('.xz'), o_path
+            data = open(t_path).read()
+            logs, data = streamcorpus.compress_and_encrypt(data)
+            t_path2 = t_path + '_.xz'
+            open(t_path2, 'wb').write(data)
+            os.rename(t_path2, t_path)
+ 
         ## do an atomic renaming    
         try:
             os.rename(t_path, o_path)
