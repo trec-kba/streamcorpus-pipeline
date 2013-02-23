@@ -36,10 +36,14 @@ if __name__ == '__main__':
         '--counts', action='store_true', default=False,
         help='Display counts for the three different states.')
     parser.add_argument(
+        '--redo', action='store_true', default=False,
+        help='Must be used with --load, and sets all ' + \
+            'loaded tasks to "available" and ERASES previous state.')
+    parser.add_argument(
         '--set-completed', action='store_true', default=False,
         dest='set_completed',
-        help='Must be used in conjunction with --load, and causes all ' + \
-            'loaded tasks to be set to "completed".')
+        help='Must be used with --load, and sets all ' + \
+            'loaded tasks to "completed" and ERASES previous state.')
     parser.add_argument(
         '--list-completed', action='store_true', default=False,
         dest='list_completed',
@@ -102,7 +106,7 @@ if __name__ == '__main__':
         else:
             args.load = open(args.load)
         sys.stdout.write('Loading...')
-        num = tq.push(*args.load, completed=args.set_completed, allow_wrong_s3=args.allow_wrong_s3)
+        num = tq.push(*args.load, completed=args.set_completed, redo=args.redo, allow_wrong_s3=args.allow_wrong_s3)
         print(' %d pushed new tasks.' % num)
 
     if args.terminate:

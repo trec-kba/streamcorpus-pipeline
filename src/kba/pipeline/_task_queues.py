@@ -364,9 +364,19 @@ class ZookeeperTaskQueue(object):
     def push(self, *i_strs, **kwargs):
         '''
         Add task to the queue
+
+        :param completed: set all these jobs to state-->"completed"
+
+        :param redo: set all these jobs to state-->"available", even
+        if completed previously.  Deletes all previous state.
+
+        :param allow_wrong: all i_strs to start with s3:/, which is
+        usually wrong, because from_s3_chunks expects paths not URLs
         '''
         completed = kwargs.get('completed', False)
+        redo = kwargs.get('redo', False)
         allow_wrong = kwargs.get('allow_wrong_s3', False)
+        assert not completed and redo, 'Programmer Error: cannot set jobs to both "available" and "completed"'
         count = 0
         for i_str in i_strs:
             ## ignore leading and trailing whitespace
@@ -396,7 +406,7 @@ class ZookeeperTaskQueue(object):
                     self._zk.create(self._path('tasks', key), json.dumps(data), makepath=True)
                 except kazoo.exceptions.NodeExistsError, exc:
                     logger.critical('already exists: %r' % i_str)
-                    if completed:
+                    if completed or redo:
                         self._zk.set(self._path('tasks', key), json.dumps(data))
                         ## must also remove it from available and pending
                         try:
