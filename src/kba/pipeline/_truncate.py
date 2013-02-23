@@ -1,19 +1,40 @@
+'''
+pipeline stage for truncating chunks at a fixed length and deleting
+the overage
 
-def truncate(config):
-    '''
-    returns a kba.pipeline "transform" function that populates
-    body.media_type if it is empty and the content type is easily
-    guessed.
-    '''
-    ## make a closure around config
-    global count
-    count = 0
-    def _truncate(stream_item):
-        global count
-        count += 1
-        if count < config['max_items']:
-            return stream_item
-        else:
-            return None
+This software is released under an MIT/X11 open source license.
 
-    return _truncate
+Copyright 2012 Diffeo, Inc.
+'''
+
+import os
+from streamcorpus import Chunk
+
+class truncate(object):
+    '''
+    kba.pipeline "transform" callable of the "batch" type that takes a
+    chunk and replaces with one that has up to max_items in it.    
+    '''
+    def __init__(self, config):
+        self.config = config
+
+    def __call__(self, chunk_path):
+        '''
+        batch-type transform stage: reads a chunk from chunk_path, and
+        replaces it with a new chunk at the same path
+        '''
+        ## make a new output chunk at a temporary path
+        tmp_chunk_path = chunk_path + '_'
+        t_chunk = Chunk(path=tmp_chunk_path)
+
+        for num, si in enumerate(Chunk(path=chunk_path)):
+            if num < config['max_items']:
+                t_chunk.add(si)
+            else:
+                break
+
+        ## flush to disk
+        t_chunk.close()
+
+        ## atomic rename new chunk file into place
+        os.rename(tmp_chunk_path, chunk_path)
