@@ -25,10 +25,10 @@ class truncate(object):
         '''
         ## make a new output chunk at a temporary path
         tmp_chunk_path = chunk_path + '_'
-        t_chunk = Chunk(path=tmp_chunk_path)
+        t_chunk = Chunk(path=tmp_chunk_path, mode='wb')
 
         for num, si in enumerate(Chunk(path=chunk_path)):
-            if num < config['max_items']:
+            if num < self.config['max_items']:
                 t_chunk.add(si)
             else:
                 break
