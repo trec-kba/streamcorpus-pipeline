@@ -85,7 +85,7 @@ class dedup(object):
                     fh.write(content)
                     fh.close()
 
-        if content and not self.config['require_same_doc_id']:
+        if content and not self.config['require_same_doc_id'] and self.config['use_nilsimsa']:
             if not nil:
                 nil = nilsimsa.Nilsimsa(content).hexdigest()
 
@@ -113,8 +113,11 @@ class dedup(object):
                     logger.info( 'observed sim=%d %s %s  %r %r' % (sim, doc_id, si.doc_id, abs_url2, si.abs_url) )
 
         ## not rejecting, so keep data for further comparisons within this pipeline run
-        if not nil:
-            nil = nilsimsa.Nilsimsa(content).hexdigest()
+        if self.config['use_nilsimsa']:
+            if not nil:
+                nil = nilsimsa.Nilsimsa(content).hexdigest()
+        else:
+            nil = None
         self._doc_ids[ si.doc_id ] = (si.stream_id, si.abs_url, nil, content, len_raw)
 
         return si
