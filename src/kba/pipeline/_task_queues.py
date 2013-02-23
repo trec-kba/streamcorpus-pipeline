@@ -297,10 +297,11 @@ class ZookeeperTaskQueue(object):
 
     @_ensure_connection        
     def _win_task(self, task_key):
+        assert not self._pending_task_key
         try:
             self._zk.create(self._path('pending', task_key), makepath=True)
         except kazoo.exceptions.NodeExistsError:
-            return None
+            return None, None
         ## won it!
         data, zstat = self._zk.get(self._path('tasks', task_key))
 
