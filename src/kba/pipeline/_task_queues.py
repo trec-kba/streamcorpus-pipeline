@@ -376,7 +376,7 @@ class ZookeeperTaskQueue(object):
         completed = kwargs.get('completed', False)
         redo = kwargs.get('redo', False)
         allow_wrong = kwargs.get('allow_wrong_s3', False)
-        assert not completed and redo, 'Programmer Error: cannot set jobs to both "available" and "completed"'
+        assert not (completed and redo), 'Programmer Error: cannot set jobs to both "available" and "completed"'
         count = 0
         for i_str in i_strs:
             ## ignore leading and trailing whitespace
