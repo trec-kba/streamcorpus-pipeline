@@ -34,7 +34,10 @@ if __name__ == '__main__':
         help='Allow strings that start with s3:/')
     parser.add_argument(
         '--counts', action='store_true', default=False,
-        help='Display counts for the three different states.')
+        help='Display counts for the queue.')
+    parser.add_argument(
+        '--detailed', action='store_true', default=False,
+        help='Must be used with -- counts; scans all tasks to count partials.')
     parser.add_argument(
         '--redo', action='store_true', default=False,
         help='Must be used with --load, and sets all ' + \
@@ -148,7 +151,10 @@ if __name__ == '__main__':
         print('Done purging %d strs' % count)
 
     if args.counts:
-        counts = tq.counts
+        if args.detailed:
+            counts = tq.counts_detailed
+        else:
+            counts = tq.counts
         print('\n'.join(['\t%s:\t%s' % (k, v) for k, v in counts.items()]))
         print('Total: %d' % sum([counts[k] for k in ['available', 'pending', 'completed']]))
         print('Num Tasks: %d' % counts['tasks'])

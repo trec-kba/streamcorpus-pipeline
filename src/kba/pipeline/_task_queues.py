@@ -256,7 +256,7 @@ class ZookeeperTaskQueue(object):
             ## update the data
             self.data['state'] = 'completed'
             self.data['owner'] = None
-            self.data['end_count'] = end_count
+            self.data['end_count'] = end_count and end_count or 0
             if results:
                 self.data['results'] += results
 
@@ -457,9 +457,39 @@ class ZookeeperTaskQueue(object):
 
     @property
     def counts(self):
+        #num_completed = 0
+        #num_partials = 0
+        #num_stream_items_done = 0
+        
+        #for data in self.completed:
+        #    if data['state'] == 'completed':
+        #        num_completed += 1
+        #    else:
+        #        assert data['end_count'] > 0, data['end_count']
+        #        num_partials += 1
+
+        #    ## sum the current end_count for both partial and completed
+        #    num_stream_items_done += data['end_count'] and data['end_count'] or 0
+
+        num_completed = len(self) - self._len('available') - self._len('pending')
+
+        return {
+            'registered workers': self._len('workers'),
+            'tasks': len(self),
+            'available': self._len('available'),
+            'pending': self._len('pending'),
+            'mode': self._read_mode(),
+            'completed': num_completed,
+            #'partials': num_partials,
+            #'stream_items_done': num_stream_items_done,
+            }
+
+    @property
+    def counts_detailed(self):
         num_completed = 0
         num_partials = 0
         num_stream_items_done = 0
+        
         for data in self.completed:
             if data['state'] == 'completed':
                 num_completed += 1
@@ -468,7 +498,7 @@ class ZookeeperTaskQueue(object):
                 num_partials += 1
 
             ## sum the current end_count for both partial and completed
-            num_stream_items_done += data['end_count']
+            num_stream_items_done += data['end_count'] and data['end_count'] or 0
 
         return {
             'registered workers': self._len('workers'),
