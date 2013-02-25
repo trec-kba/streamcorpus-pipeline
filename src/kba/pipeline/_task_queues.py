@@ -135,7 +135,14 @@ class ZookeeperTaskQueue(object):
     def __init__(self, config):
         self._config = config
         self._namespace = config['namespace']
-        self._zk = KazooClient(config['zookeeper_address'],
+        if 'zookeeper_addresses' in config:
+            addresses = ','.join(config['zookeeper_addresses'])
+        elif 'zookeeper_address' in config:
+            addresses = config['zookeeper_address']
+        else:
+            raise Exception('must specify zookeeper_address(es) in config: %r' % config)
+            
+        self._zk = KazooClient(addresses,
                                timeout = config['zookeeper_timeout'],
                                )
         self._zk.start()
