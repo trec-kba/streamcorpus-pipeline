@@ -168,7 +168,7 @@ if __name__ == '__main__':
         for completed in tq.completed:
             print 'in:  %s\nout: %r' % (
                 completed['i_str'], 
-                result in completed and completed['result'] or [])
+                'result' in completed and completed['result'] or [])
 
             if args.detailed:
                 print json.dumps(completed, indent=4, sort_keys=True)
