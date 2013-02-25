@@ -13,6 +13,7 @@ from streamcorpus import make_stream_item, ContentItem
 import os
 import json
 import gzip
+import traceback
 
 def convert_kba_json(config):
     '''
