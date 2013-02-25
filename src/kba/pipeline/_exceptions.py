@@ -6,3 +6,6 @@ class PipelineBaseException(Exception):
 
 class TransformGivingUp(PipelineBaseException):
     pass
+
+class FailedExtraction(PipelineBaseException):
+    pass
