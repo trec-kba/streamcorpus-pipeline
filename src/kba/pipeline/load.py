@@ -8,6 +8,7 @@ Copyright 2012 Diffeo, Inc.
 '''
 import os
 import sys
+import json
 import logging
 from _getch import getch
 from _task_queues import ZookeeperTaskQueue
@@ -51,6 +52,10 @@ if __name__ == '__main__':
         '--list-completed', action='store_true', default=False,
         dest='list_completed',
         help='List all completed tasks.')
+    parser.add_argument(
+        '--list-not-completed', action='store_true', default=False,
+        dest='list_not_completed',
+        help='List all not completed tasks.')
     parser.add_argument(
         '--cleanup', action='store_true', default=False,
         help='Cleans up "available" and "pending" to match "state" of tasks.')
@@ -160,9 +165,15 @@ if __name__ == '__main__':
         print('Num Tasks: %d' % counts['tasks'])
 
     if args.list_completed:
-        import json
         for completed in tq.completed:
-            #print 'in:  %s\nout: %s' % (completed['i_str'], completed['result'])
+            print 'in:  %s\nout: %r' % (
+                completed['i_str'], 
+                result in completed and completed['result'] or [])
 
             if args.detailed:
                 print json.dumps(completed, indent=4, sort_keys=True)
+
+    if args.list_not_completed:
+        for task in tq.all_tasks:
+            if task['state'] != 'completed':
+                print json.dumps(task, indent=4, sort_keys=True)
