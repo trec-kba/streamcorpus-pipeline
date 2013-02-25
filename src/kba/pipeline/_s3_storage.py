@@ -19,6 +19,7 @@ import streamcorpus
 from _get_name_info import get_name_info
 from streamcorpus import decrypt_and_uncompress, compress_and_encrypt, Chunk
 from cStringIO import StringIO
+from _exceptions import FailedExtraction
 
 logger = logging.getLogger(__name__)
 
@@ -47,12 +48,22 @@ def _retry(func):
             try:
                 return func(self, *args, **kwargs)
                 break
+
+            except FailedExtraction, exc:
+                ## pass through exc to caller
+                raise exc
+
             except Exception, exc:
                 time.sleep(3 * tries)
-                logger.info('having I/O trouble with S3: %s' % traceback.format_exc(exc))
+                msg = 'FAIL(%d): having I/O trouble with S3: %s' % \
+                    (tries, traceback.format_exc(exc))
+                logger.info(msg)
                 tries += 1
                 if tries > self.config['tries']:
-                    sys.exit('giving up')
+                    ## indicate complete failure to pipeline so it
+                    ## gets recorded in task_queue
+                    raise FailedExtraction(msg)
+                    
     return retry_func
 
 def get_bucket(config):
@@ -90,36 +101,46 @@ class from_s3_chunks(object):
 
     @_retry
     def get_chunk(self, key):
-        fh = StringIO()
-        key.get_contents_to_file(fh)
-        data = fh.getvalue()
-        _errors, data = decrypt_and_uncompress(
-            data, 
-            self.config['gpg_decryption_key_path'])
-        logger.info( '\n'.join(_errors) )
-        if self.config['input_format'] == 'streamitem' and \
-                self.config['streamcorpus_version'] == 'v0_1_0':
-            i_content_md5 = key.key.split('.')[-3]
-        else:
-            ## go past {sc,protostream}.xz.gpg
-            i_content_md5 = key.key.split('.')[-4]
-        f_content_md5 = hashlib.md5(data).hexdigest()
-        if i_content_md5 != f_content_md5:
-            msg = 'FAIL: %s --> %s != %s' % (key.key, i_content_md5, f_content_md5)
-            logger.critical(msg)
-            sys.exit(msg)
+        tries = 0
+        while 1:
+            fh = StringIO()
+            key.get_contents_to_file(fh)
+            data = fh.getvalue()
+            _errors, data = decrypt_and_uncompress(
+                data, 
+                self.config['gpg_decryption_key_path'])
+            logger.info( '\n'.join(_errors) )
+            if self.config['input_format'] == 'streamitem' and \
+                    self.config['streamcorpus_version'] == 'v0_1_0':
+                i_content_md5 = key.key.split('.')[-3]
+            else:
+                ## go past {sc,protostream}.xz.gpg
+                i_content_md5 = key.key.split('.')[-4]
 
-        if self.config['input_format'] == 'spinn3r':
-            ## convert the data from spinn3r's protostream format
-            return _extract_spinn3r._generate_stream_items( data )
+            ## verify the data matches expected md5
+            f_content_md5 = hashlib.md5(data).hexdigest()
+            if i_content_md5 != f_content_md5:
+                msg = 'FAIL(%d): %s --> %s != %s' % (tries, key.key, i_content_md5, f_content_md5)
+                logger.critical(msg)
+                tries += 1
+                if tries > self.config['tries']:
+                    ## indicate complete failure to pipeline so it
+                    ## gets recorded in task_queue
+                    raise FailedExtraction(msg)
+                else:
+                    continue
 
-        elif self.config['input_format'] == 'streamitem':
-            message = _message_versions[ self.config['streamcorpus_version'] ]
+            if self.config['input_format'] == 'spinn3r':
+                ## convert the data from spinn3r's protostream format
+                return _extract_spinn3r._generate_stream_items( data )
 
-            return streamcorpus.Chunk(data=data, message=message)
+            elif self.config['input_format'] == 'streamitem':
+                message = _message_versions[ self.config['streamcorpus_version'] ]
 
-        else:
-            sys.exit('Invalid config: input_format = %r' % self.config['input_format'])
+                return streamcorpus.Chunk(data=data, message=message)
+
+            else:
+                sys.exit('Invalid config: input_format = %r' % self.config['input_format'])
 
 class to_s3_chunks(object):
     def __init__(self, config):

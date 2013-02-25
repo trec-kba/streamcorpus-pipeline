@@ -22,6 +22,7 @@ import streamcorpus
 
 from _logging import log_full_file
 from _stages import _init_stage
+from _exceptions import FailedExtraction
 import _exceptions
 
 logger = logging.getLogger(__name__)
@@ -92,7 +93,15 @@ class Pipeline(object):
             start_chunk_time = time.time()
 
             ## the extractor returns generators of StreamItems
-            i_chunk = self._extractor(i_str)
+            try:
+                i_chunk = self._extractor(i_str)
+            except FailedExtraction, exc:
+                ## means that task is invalid, extractor did its best
+                ## and gave up, so record it in task_queue as failed
+                logger.critical('committing failure_log on %s: %r' % (
+                        i_str, str(exc)))
+                self._task_queue.commit(0, [], failure_log=str(exc))
+                continue
 
             ## t_path points to the currently in-progress temp chunk
             t_path = None

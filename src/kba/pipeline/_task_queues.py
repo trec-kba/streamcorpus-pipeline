@@ -44,7 +44,7 @@ class TaskQueue(object):
     def __iter__(self):
         raise NotImplementedError('subclasses of TaskQueue must provide __iter__')
 
-    def commit(self, end_count=None, results=None):
+    def commit(self, end_count=None, results=None, failed=False):
         '''
         record results of processing i_str
         :param end_count: number of StreamItems generated from processing i_str
@@ -250,7 +250,7 @@ class ZookeeperTaskQueue(object):
                 yield end_count, i_str
 
     @_ensure_connection
-    def commit(self, end_count=None, results=None):
+    def commit(self, end_count=None, results=None, failure_log=''):
         '''
         If caller iterates past the previous task, then assume it is
         done and remove it.
@@ -263,6 +263,7 @@ class ZookeeperTaskQueue(object):
             ## update the data
             self.data['state'] = 'completed'
             self.data['owner'] = None
+            self.data['failure_log'] = failure_log
             self.data['end_count'] = end_count and end_count or 0
             if results:
                 self.data['results'] += results
@@ -461,6 +462,17 @@ class ZookeeperTaskQueue(object):
                 logger.critical( data )
             if data['state'] == 'completed' or data['end_count'] > 0:
                 yield data
+
+    @property
+    def all_tasks(self):
+        for child in self._zk.get_children(self._path('tasks')):
+            data, zstat = self._zk.get(self._path('tasks', child))
+            data = json.loads(data)
+            if not isinstance(data, dict):
+                logger.critical( 'whoa... how did we get a string here?' )
+                data = json.loads(data)
+                logger.critical( data )
+            yield data
 
     @property
     def counts(self):
