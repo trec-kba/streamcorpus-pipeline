@@ -37,7 +37,7 @@ if __name__ == '__main__':
         help='Display counts for the queue.')
     parser.add_argument(
         '--detailed', action='store_true', default=False,
-        help='Must be used with -- counts; scans all tasks to count partials.')
+        help='Must be used with --counts or --list-completed; scans all tasks to count partials.')
     parser.add_argument(
         '--redo', action='store_true', default=False,
         help='Must be used with --load, and sets all ' + \
@@ -160,5 +160,9 @@ if __name__ == '__main__':
         print('Num Tasks: %d' % counts['tasks'])
 
     if args.list_completed:
+        import json
         for completed in tq.completed:
-            print 'in:  %s\nout: %s' % (completed['i_str'], completed['result'])
+            #print 'in:  %s\nout: %s' % (completed['i_str'], completed['result'])
+
+            if args.detailed:
+                print json.dumps(completed, indent=4, sort_keys=True)
