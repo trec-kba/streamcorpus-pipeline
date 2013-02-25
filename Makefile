@@ -52,4 +52,8 @@ install-kba: clean lxml
 	python setup.py build
 	python setup.py install
 
+egg: 
+	python setup.py bdist_egg
+	echo "Newly build egg can be found in the dist/ directory"
+
 dev-all: install-kba

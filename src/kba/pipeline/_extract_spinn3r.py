@@ -7,6 +7,7 @@ Copyright 2013 Diffeo, Inc.
 import sys
 import zlib
 import json
+import traceback
 from streamcorpus import make_stream_item, Chunk, ContentItem
 from _spinn3r import spinn3rApi_pb2
 from _spinn3r import protoStream_pb2
@@ -40,7 +41,7 @@ def _VarintDecoder(mask):
             shift += 7
             if shift >= 64:
                 ## should create this exception and also catch it below
-                raise _DecodeError('Too many bytes when decoding varint.')
+                raise ValueError('Too many bytes when decoding varint.')
     return DecodeVarint
 
 def delimited_messages(data):
