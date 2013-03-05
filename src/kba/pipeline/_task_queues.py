@@ -212,6 +212,9 @@ class ZookeeperTaskQueue(object):
             ephemeral=True,
             makepath=True)
 
+    def _backoff(self, time):
+        time.sleep(time)
+
     def __iter__(self):
         '''
         This is the only external interface for getting tasks
@@ -219,6 +222,10 @@ class ZookeeperTaskQueue(object):
         self._register()
         ## loop until get a task
         task = None
+
+        ## Initial backoff time in secs 
+        sleep_time = 1
+
         while True:
             ## clear the last task, if it wasn't already cleared by
             ## the caller using the iterator
@@ -248,6 +255,12 @@ class ZookeeperTaskQueue(object):
             if i_str is not None:
                 logger.warn('won %d %r' % (end_count, i_str))
                 yield end_count, i_str
+                sleep_time = 1 
+            else:
+                # backoff before trying again
+                sleep_time = min(sleep_time * 2, 128) 
+                self._backoff(sleep_time)
+
 
     @_ensure_connection
     def commit(self, end_count=None, results=None, failure_log=''):
