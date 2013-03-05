@@ -160,7 +160,7 @@ class ZookeeperTaskQueue(object):
         ## if we lose the zookeeper session.
         self._worker_id = str(uuid.uuid1())
 
-        logger.critical('worker_id=%r zookeeper session_id=%r starting up on hostname=%r' % (self._worker_id, self._zk.client_id, socket.gethostbyname(socket.gethostname())))
+        logger.debug('worker_id=%r zookeeper session_id=%r starting up on hostname=%r' % (self._worker_id, self._zk.client_id, socket.gethostbyname(socket.gethostname())))
 
         for sig in [signal.SIGTERM, signal.SIGABRT, signal.SIGHUP, signal.SIGINT]:
             logger.debug('setting signal handler for %r' % sig)
