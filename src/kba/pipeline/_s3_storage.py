@@ -49,6 +49,10 @@ def _retry(func):
                 return func(self, *args, **kwargs)
                 break
 
+            except OSError, exc:
+                ## OSError: [Errno 24] Too many open files
+                raise exc
+
             except FailedExtraction, exc:
                 ## pass through exc to caller
                 raise exc
