@@ -142,7 +142,7 @@ class ZookeeperTaskQueue(object):
         else:
             raise Exception('must specify zookeeper_address(es) in config: %r' % config)
             
-        self._zk = KazooClient(addresses,
+        self._zk = KazooClient(self.addresses,
                                timeout = config['zookeeper_timeout'],
                                )
         self._zk.start()

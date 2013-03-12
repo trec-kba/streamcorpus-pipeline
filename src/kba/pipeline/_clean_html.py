@@ -40,6 +40,17 @@ def drop_invalid_XML_chars(possibly_invalid_string):
         for c in possibly_invalid_string         
         )
 
+def lower_utf8_char(ord_c):
+    return (  
+        0x0 <= ord_c <= 0xFFFF 
+        )
+
+def drop_upper_utf8_chars(possibly_invalid_string):
+    return ''.join(
+        c if lower_utf8_char(ord(c)) else ' '
+        for c in possibly_invalid_string         
+        )
+
 def make_traceback_log(all_exc):
     ## convert array of Exceptions into a string of tracebacks
     traceback_log = ''
@@ -230,6 +241,10 @@ def make_clean_html(raw, stream_item=None, log_dir_path=None):
     #print fixed_html.encode('utf8')
 
     fixed_html = drop_invalid_XML_chars(fixed_html)
+
+    ## We drop utf8 characters that are above 0xFFFF as 
+    ## Lingpipe seems to be doing the wrong thing with them. 
+    fixed_html = drop_upper_utf8_chars(fixed_html)
 
     #print 'second'
     #print fixed_html.encode('utf8')
