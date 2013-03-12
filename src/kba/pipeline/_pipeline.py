@@ -198,8 +198,8 @@ class Pipeline(object):
                     elapsed = time.time() - start_chunk_time
                     if elapsed > 0:
                         rate = float(next_idx) / elapsed
-                        logger.info('%d in %.1f --> %.1f per sec on (post-partial_commit) %s' % (
-                            next_idx - start_count, elapsed, rate, i_str))
+                        logger.info('%d more of %d in %.1f --> %.1f per sec on (post-partial_commit) %s' % (
+                            next_idx - start_count, next_idx, elapsed, rate, i_str))
 
                     ## advance start_count for next loop
                     logger.info('advancing start_count from %d to %d' % (start_count, next_idx))
