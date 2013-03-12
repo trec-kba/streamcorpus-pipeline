@@ -123,11 +123,11 @@ if __name__ == '__main__':
     if args.finish:
         tq.set_mode( tq.FINISH )
 
-    if args.reset_pending:
-        tq.reset_pending()
-
     if args.cleanup:
         tq.cleanup()
+
+    if args.reset_pending:
+        tq.reset_pending()
 
     if args.purge:
         if not args.i_meant_that:
