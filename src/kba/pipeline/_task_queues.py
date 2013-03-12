@@ -136,9 +136,9 @@ class ZookeeperTaskQueue(object):
         self._config = config
         self._namespace = config['namespace']
         if 'zookeeper_addresses' in config:
-            addresses = ','.join(config['zookeeper_addresses'])
+            self.addresses = ','.join(config['zookeeper_addresses'])
         elif 'zookeeper_address' in config:
-            addresses = config['zookeeper_address']
+            self.addresses = config['zookeeper_address']
         else:
             raise Exception('must specify zookeeper_address(es) in config: %r' % config)
             
@@ -179,7 +179,7 @@ class ZookeeperTaskQueue(object):
         '''
         if state == KazooState.LOST:
             logger.warn( 'creating new connection: %r' % state )
-            self._zk = KazooClient(self._config['zookeeper_address'],
+            self._zk = KazooClient(self.addresses,
                                    timeout=self._config['zookeeper_timeout'])
             self._zk.start(timeout=self._config['zookeeper_timeout'])
 
@@ -188,7 +188,7 @@ class ZookeeperTaskQueue(object):
                     self._config['zookeeper_timeout']))
 
             client_id = self._zk.client_id
-            self._zk = KazooClient(self._config['zookeeper_address'],
+            self._zk = KazooClient(self.addresses,
                                    timeout=self._config['zookeeper_timeout'],
                                    client_id = client_id,
                                    )
@@ -474,6 +474,7 @@ class ZookeeperTaskQueue(object):
                 data = json.loads(data)
                 logger.critical( data )
             if data['state'] == 'completed' or data['end_count'] > 0:
+                data['task_key'] = child
                 yield data
 
     @property
