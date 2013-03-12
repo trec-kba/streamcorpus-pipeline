@@ -220,6 +220,17 @@ def _generate_stream_items(protobuf_data):
 
 
 if __name__ == '__main__':
-    import sys
-    from _handle_unconvertible_spinn3r import handle_unconvertible_spinn3r as hus
-    map(hus, _generate_stream_items(sys.stdin.read()))
+    #import sys
+    #from _handle_unconvertible_spinn3r import handle_unconvertible_spinn3r as hus
+    #map(hus, _generate_stream_items(sys.stdin.read()))
+
+    o_chunk = Chunk('/tmp/foo.sc', mode='wb')
+    for si in _generate_stream_items(sys.stdin.read()):
+        print '---post smoosh raw: %s --' % si.stream_id
+        print si.body.raw
+        print si.stream_id
+
+        if si.stream_id == '1345928297-da71cfa833ce8218684b6dab152dd69b':
+            o_chunk.add( si )
+
+    o_chunk.close()
