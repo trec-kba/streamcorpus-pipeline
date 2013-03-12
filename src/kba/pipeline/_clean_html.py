@@ -42,10 +42,12 @@ def drop_invalid_XML_chars(possibly_invalid_string):
 
 def lower_utf8_char(ord_c):
     return (  
-        0x0 <= ord_c <= 0xFFFF 
+        0x20 <= ord_c <= 0xD7FF 
+        or ord_c in (0x9, 0xA, 0xD)
+        or 0xE000 <= ord_c <= 0xFFFD
         )
 
-def drop_upper_utf8_chars(possibly_invalid_string):
+def drop_invalid_and_upper_utf8_chars(possibly_invalid_string):
     return ''.join(
         c if lower_utf8_char(ord(c)) else ' '
         for c in possibly_invalid_string         
@@ -240,11 +242,9 @@ def make_clean_html(raw, stream_item=None, log_dir_path=None):
     #print 'first'
     #print fixed_html.encode('utf8')
 
-    fixed_html = drop_invalid_XML_chars(fixed_html)
-
     ## We drop utf8 characters that are above 0xFFFF as 
     ## Lingpipe seems to be doing the wrong thing with them. 
-    fixed_html = drop_upper_utf8_chars(fixed_html)
+    fixed_html = drop_invalid_and_upper_utf8_chars(fixed_html)
 
     #print 'second'
     #print fixed_html.encode('utf8')
