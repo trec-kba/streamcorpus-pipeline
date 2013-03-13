@@ -9,12 +9,15 @@ Copyright 2012 Diffeo, Inc.
 import re
 import os
 import string
+import logging
 import traceback
 import streamcorpus
 import lxml.html
 import lxml.html.clean
 import lxml.html.soupparser
 from BeautifulSoup import UnicodeDammit
+
+logger = logging.getLogger(__name__)
 
 if __name__ != '__main__':
     from _logging import log_full_file
@@ -222,15 +225,26 @@ def make_clean_html(raw, stream_item=None, log_dir_path=None):
     really is, and attempt to get a properly formatted HTML document
     with all HTML-escaped characters converted to their unicode.
     '''
+    #logger.debug('repr(raw):')
+    #logger.debug(repr(raw))
+    if stream_item.body.encoding:
+        ## if we know an encoding, then attempt to use it
+        try:
+            raw = raw.decode(stream_item.body.encoding)
+        except:
+            pass
     try:
         ## default attempt uses vanilla lxml.html
-        root = lxml.html.fromstring(raw)
+        root = lxml.html.document_fromstring(raw)
         ## if that worked, then we will be able to generate a
         ## valid HTML string
         fixed_html = lxml.html.tostring(root, encoding=unicode)
     except (TypeError, lxml.etree.ParserError, UnicodeDecodeError), exc:
-        print '_clean_html.make_clean_html caught %s' % exc
+        logger.critical( '_clean_html.make_clean_html caught %s' % exc )
         raise _exceptions.TransformGivingUp()
+
+    #logger.debug( 'repr(fixed_html):' )
+    #logger.debug( repr(fixed_html) )
 
     ## remove any ^M characters
     fixed_html = string.replace( fixed_html, '\r', ' ' )
@@ -239,15 +253,15 @@ def make_clean_html(raw, stream_item=None, log_dir_path=None):
     ## bogus HTML-escaped entity &#822050+ that reulted from someone
     ## failing to put the ";" between "&#8220;" and "50+"
 
-    #print 'first'
-    #print fixed_html.encode('utf8')
+    #logger.debug( 'first' )
+    #logger.debug( fixed_html.encode('utf8') )
 
     ## We drop utf8 characters that are above 0xFFFF as 
     ## Lingpipe seems to be doing the wrong thing with them. 
     fixed_html = drop_invalid_and_upper_utf8_chars(fixed_html)
 
-    #print 'second'
-    #print fixed_html.encode('utf8')
+    #logger.debug( 'second' )
+    #logger.debug( fixed_html.encode('utf8') )
 
     ## construct a Cleaner that removes any ``<script>`` tags,
     ## Javascript, like an ``onclick`` attribute, comments, style
@@ -262,8 +276,8 @@ def make_clean_html(raw, stream_item=None, log_dir_path=None):
     ## now get the really sanitized HTML
     _clean_html = cleaner.clean_html(fixed_html)
 
-    #print 'third'
-    #print _clean_html.encode('utf8')
+    #logger.debug( 'third' )
+    #logger.debug( _clean_html.encode('utf8') )
 
     ## generate pretty HTML in utf-8
     _clean_html = lxml.html.tostring(
@@ -273,8 +287,8 @@ def make_clean_html(raw, stream_item=None, log_dir_path=None):
         #include_meta_content_type=True
         )
 
-    #print 'fourth'
-    #print _clean_html
+    #logger.debug( 'fourth' )
+    #logger.debug( _clean_html )
 
     return _clean_html
 
