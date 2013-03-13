@@ -426,8 +426,8 @@ class ZookeeperTaskQueue(object):
                 try:
                     self._zk.create(self._path('tasks', key), json.dumps(data), makepath=True)
                 except kazoo.exceptions.NodeExistsError, exc:
-                    logger.critical('already exists: %r' % i_str)
                     if completed or redo:
+                        logger.critical('setting %r: %r' % (data['state'], i_str))
                         self._zk.set(self._path('tasks', key), json.dumps(data))
                         ## must also remove it from available and pending
                         try:
