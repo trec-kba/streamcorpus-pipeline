@@ -35,6 +35,9 @@ class dedup(object):
             stream_id2, abs_url2, nil2, content2, len_raw2 = self._doc_ids[si.doc_id]
 
             if not (content and content2):  ## fall back to using raw
+                if max( len_raw, len_raw2 ) == 0:
+                    ## reject is the length of everything is zero
+                    return None
                 len_sim_raw = 1 - float( abs( len_raw - len_raw2 ) ) / max( len_raw, len_raw2 )
                 if 1000 * len_sim_raw >= self.config['min_len_sim_thousandths_raw']:
                     logger.info('rejecting same doc %s, no si.body.%s, len_raw_sim_frac=%d >= %d=min_len_sim_thousandths_raw, lang=%r' % (
