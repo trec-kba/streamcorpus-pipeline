@@ -7,6 +7,7 @@ This software is released under an MIT/X11 open source license.
 Copyright 2012 Diffeo, Inc.
 '''
 import os
+import re
 import sys
 import json
 import logging
@@ -68,6 +69,12 @@ if __name__ == '__main__':
     parser.add_argument(
         '--reset-pending', action='store_true', default=False,
         help='Move all tasks from "pending" back to "available".')
+    parser.add_argument(
+        '--reset-failures', action='store_true', default=False,
+        help='Move all tasks from "completed" that have failure_log back to "available".')
+    parser.add_argument(
+        '--reset-wrong-output-path', metavar='REGEX', default=None,
+        help='Reset to "available" tasks for which any output path matches REGEX.')
     parser.add_argument(
         '--purge', 
         help='Totally remove these tasks from the entire queue -- gone.')
@@ -156,6 +163,7 @@ if __name__ == '__main__':
         print('Done purging %d strs' % count)
 
     if args.counts:
+        print 'hi'
         if args.detailed:
             counts = tq.counts_detailed
         else:
@@ -177,3 +185,30 @@ if __name__ == '__main__':
         for task in tq.all_tasks:
             if task['state'] != 'completed':
                 print json.dumps(task, indent=4, sort_keys=True)
+
+    if args.reset_failures:
+        print 'starting'
+        for num, task in enumerate(tq.completed):
+            if 'failure_log' in task and task['failure_log']:
+                logger.critical('reseting %s because %s' % (task['i_str'], task['failure_log']))
+                num = tq.push(task['i_str'], redo=True)
+                assert num == 1
+
+            if num % 100 == 0:
+                print num
+                sys.stdout.flush()
+
+    if args.reset_wrong_output_path:        
+        for num, task in enumerate(tq.all_tasks):
+            should_reset = False
+            for o_path in task['results']:
+                if re.search(args.reset_wrong_output_path, o_path):
+                    should_reset = True
+                    break
+
+            if should_reset:
+                for result in task['results']:
+                    logger.critical('abandoning output result: %s' % result)
+
+                num = tq.push(task['i_str'], redo=True)
+                assert num == 1

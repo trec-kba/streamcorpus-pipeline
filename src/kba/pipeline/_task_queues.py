@@ -22,6 +22,7 @@ import traceback
 import kazoo.exceptions
 from kazoo.client import KazooClient
 from kazoo.client import KazooState
+from streamcorpus import make_stream_time
 
 logger = logging.getLogger(__name__)
 
@@ -278,6 +279,9 @@ class ZookeeperTaskQueue(object):
             self.data['owner'] = None
             self.data['failure_log'] = failure_log
             self.data['end_count'] = end_count and end_count or 0
+            st = make_stream_time()
+            self.data['epoch_ticks'] = st.epoch_ticks
+            self.data['zulu_timestamp'] = st.zulu_timestamp
             if results:
                 self.data['results'] += results
 
