@@ -4,6 +4,7 @@ doc_id or have similar nilsimsa hashes.
 
 '''
 import os
+import sys
 import logging
 import nilsimsa
 
@@ -22,9 +23,10 @@ class dedup(object):
         nil = None
 
         ## get the desired content from the text
-        content = getattr(si.body, self.config['content_form'], None)
-        raw = getattr(si.body, 'raw', '')
-        len_raw = raw and len(raw) or 0
+        content = getattr(si.body, self.config['content_form'], '')
+        if content is None:
+            content = ''
+        len_raw = len( getattr(si.body, 'raw', '') )
 
         ## we will always reject if the doc_id is the same and the
         ## sim and len requirements pass
@@ -32,19 +34,24 @@ class dedup(object):
 
             stream_id2, abs_url2, nil2, content2, len_raw2 = self._doc_ids[si.doc_id]
 
-            if not content:
-                logger.critical('duplicate doc %s has no si.body.%s trying for raw' % (
-                        si.doc_id, self.config['content_form']))
-                len_raw_diff = abs(len_raw - len_raw2 )
-                if len_raw_diff <= self.config['max_raw_length_difference']:
+            if not (content and content2):  ## fall back to using raw
+                len_sim_raw = 1 - float( abs( len_raw - len_raw2 ) ) / max( len_raw, len_raw2 )
+                if 1000 * len_sim_raw >= self.config['min_len_sim_thousandths_raw']:
+                    logger.info('rejecting same doc %s, no si.body.%s, len_raw_sim_frac=%d >= %d=min_len_sim_thousandths_raw, lang=%r' % (
+                            si.stream_id, self.config['content_form'], 1000 * len_sim_raw, self.config['min_len_sim_thousandths_raw'], 
+                            si.body.language and si.body.language.code or None))
                     return None
+                else:
+                    logger.info('keeping doc %s (same page as %s), no si.body.%s, len_raw_sim_frac=%d > %d=min_len_sim_thousandths_raw' % (
+                            si.stream_id, stream_id2, self.config['content_form'], 1000 * len_sim_raw, self.config['min_len_sim_thousandths_raw']))
+
 
             elif not self.config['use_nilsimsa']:
-                len_diff = abs(len(content) - len(content2))
-                if len_diff <= self.config['max_clean_length_difference']:
-                    logger.critical(
+                len_sim = 1 - float( abs(len(content) - len(content2)) ) / max(len(content), len(content2))
+                if 1000 * len_sim >= self.config['min_len_sim_thousandths_clean']:
+                    logger.info(
                         'rejecting same doc_id sim=not-computed, len=(%d +/- %d) %s %s %r %r' \
-                        % (len(content), len_diff, si.stream_id, stream_id2, si.abs_url, abs_url2))
+                        % (len(content), len_sim, si.stream_id, stream_id2, si.abs_url, abs_url2))
                     ## reject it!
                     return None
 
@@ -59,31 +66,13 @@ class dedup(object):
 
                 if self.config['exactness_nilsimsa_threshold'] <= sim:
                     if self.config['min_clean_length'] <= len(content):
-                        len_diff = abs(len(content) - len(content2))
-                        if len_diff <= self.config['max_clean_length_difference']:
-                            logger.critical(
+                        len_sim = 1 - float( abs(len(content) - len(content2)) ) / max(len(content), len(content2))
+                        if 1000 * len_sim >= self.config['min_len_sim_thousandths_clean']:
+                            logger.info(
                                 'rejecting same doc_id sim=%d len=(%d +/- %d) %s %r' \
-                                % (sim, len(content), len_diff, si.doc_id, si.abs_url))
+                                % (sim, len(content), len_sim, si.doc_id, si.abs_url))
                             ## reject it!
                             return None
-
-                if 'log_dir_path' in self.config:
-                    if not os.path.exists(self.config['log_dir_path']):
-                        os.makedirs(self.config['log_dir_path'])
-
-                    first = os.path.join(self.config['log_dir_path'], '0-%s.html' % si.doc_id)
-                    if not os.path.exists(first):
-                        ## no need to overwrite it
-                        fh = open(first, 'wb')
-                        fh.write('href: %r\n\n' % abs_url2)
-                        fh.write(content2)
-                        fh.close()
-
-                    next = os.path.join(self.config['log_dir_path'], '%d_%r_%s.html' % (self._count, sim, si.doc_id))
-                    fh = open(next, 'wb')
-                    fh.write('href: %r\n\n' % si.abs_url)
-                    fh.write(content)
-                    fh.close()
 
         if content and not self.config['require_same_doc_id'] and self.config['use_nilsimsa']:
             if not nil:
@@ -105,9 +94,9 @@ class dedup(object):
                         fh.close()
 
                 if sim >= self.config['exactness_nilsimsa_threshold']:
-                    len_diff = abs(len(content) - len(content2))
+                    len_sim = abs(len(content) - len(content2))
                     logger.info( 'rejecting sim=%d len=(%d +/- %d) %s %s  %r %r' \
-                                     % (sim, len(content), len_diff, doc_id, si.doc_id, abs_url2, si.abs_url) )
+                                     % (sim, len(content), len_sim, doc_id, si.doc_id, abs_url2, si.abs_url) )
                     return None
                 else:
                     logger.info( 'observed sim=%d %s %s  %r %r' % (sim, doc_id, si.doc_id, abs_url2, si.abs_url) )
@@ -118,6 +107,10 @@ class dedup(object):
                 nil = nilsimsa.Nilsimsa(content).hexdigest()
         else:
             nil = None
+
+        logger.debug('dedup caching %s len(content) = %s, language=%r' % (
+                si.stream_id, len(content), 
+                si.body.language and si.body.language.code or None))
         self._doc_ids[ si.doc_id ] = (si.stream_id, si.abs_url, nil, content, len_raw)
 
         return si

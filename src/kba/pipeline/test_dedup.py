@@ -44,11 +44,12 @@ def test_dedup_debugging_config():
         ## higher than exactness_nilsimsa_threshold with another doc
         min_clean_length = 500,
 
-        ## two docs with same doc_id that pass the
-        ## exactness_nilsimsa_threshold are still not rejected if the
-        ## length of content difference is longer than this:
-        max_clean_length_difference = 100,
-        max_raw_length_difference = 100,
+        ## docs with same doc_id that pass exactness_nilsimsa_threshold
+        ## are KEPT if the two docs have lengths that differ by more than
+        ## this fraction (relative to the longer of the two, measured in
+        ## thousandths):
+        min_len_sim_thousandths_clean = 850,
+        min_len_sim_thousandths_raw = 850,
 
         log_dir_path = '/tmp/foo',
         log_nilsimsa_threshold = 100,
@@ -87,11 +88,12 @@ def test_dedup_production_config():
         ## higher than exactness_nilsimsa_threshold with another doc
         min_clean_length = 500,
 
-        ## two docs with same doc_id that pass the
-        ## exactness_nilsimsa_threshold are still not rejected if the
-        ## length of content difference is longer than this:
-        max_clean_length_difference = 100,
-        max_raw_length_difference = 100,
+        ## docs with same doc_id that pass exactness_nilsimsa_threshold
+        ## are KEPT if the two docs have lengths that differ by more than
+        ## this fraction (relative to the longer of the two, measured in
+        ## thousandths):
+        min_len_sim_thousandths_clean = 850,
+        min_len_sim_thousandths_raw = 850,
         )
 
     d1 = dedup( config )
