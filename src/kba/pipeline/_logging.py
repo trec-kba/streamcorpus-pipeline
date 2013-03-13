@@ -18,6 +18,8 @@ def log_full_file(stream_item, extension, log_path=None):
     if log_path and stream_item and extension:
         fname = '%s-%s.sc' % (stream_item.stream_id, extension)
         fpath = os.path.join(log_path, fname)
+        if os.path.exists(fpath):
+            os.remove(fpath)
         l_chunk = streamcorpus.Chunk(path=fpath, mode='wb')
         l_chunk.add(stream_item)
         l_chunk.close()
