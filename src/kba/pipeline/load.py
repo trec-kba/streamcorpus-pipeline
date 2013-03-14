@@ -180,6 +180,7 @@ if __name__ == '__main__':
             counts = tq.counts_detailed
         else:
             counts = tq.counts
+        print('\n\n     counts for %s at %s\n\n' % (namespace, tq.addresses))
         print('\n'.join(['\t%s:\t%s' % (k, v) for k, v in counts.items()]))
         print('Total: %d' % sum([counts[k] for k in ['available', 'pending', 'completed']]))
         print('Num Tasks: %d' % counts['tasks'])
