@@ -18,7 +18,9 @@ import signal
 import random
 import hashlib
 import logging
+import _memory
 import traceback
+import pkg_resources
 import kazoo.exceptions
 from kazoo.client import KazooClient
 from kazoo.client import KazooState
@@ -74,6 +76,12 @@ class TaskQueue(object):
         :type results: string
         '''
         #could print (i_str --> results)
+        pass
+
+    def shutdown(self):
+        '''
+        cleanly exit, return any open tasks to non-pending if necessary
+        '''
         pass
 
 class stdin(TaskQueue):
@@ -163,16 +171,11 @@ class ZookeeperTaskQueue(object):
 
         logger.debug('worker_id=%r zookeeper session_id=%r starting up on hostname=%r' % (self._worker_id, self._zk.client_id, socket.gethostbyname(socket.gethostname())))
 
-        for sig in [signal.SIGTERM, signal.SIGABRT, signal.SIGHUP, signal.SIGINT]:
-            logger.debug('setting signal handler for %r' % sig)
-            signal.signal(sig, self._handle_signal)
-
-    def _handle_signal(self, sig, frame):
-        logger.critical('worker_id=%r zookeeper session_id=%r received signal: %r' % (self._worker_id, self._zk.client_id, sig))
+    def shutdown(self):
+        logger.critical('worker_id=%r zookeeper session_id=%r ZookeeperTaskQueue.shutdown has been called')
+        self._return_task()
         self._zk.stop()
         logger.critical('worker_id=%r zookeeper session_id=%r closed zookeeper client' % (self._worker_id, self._zk.client_id))
-        logging.shutdown()
-        sys.exit(-1)
 
     def _restarter(self, state):
         '''
@@ -262,6 +265,35 @@ class ZookeeperTaskQueue(object):
                 sleep_time = min(sleep_time * 2, 128) 
                 self._backoff(sleep_time)
 
+    @_ensure_connection
+    def _return_task(self):
+        '''
+        "unwin" the current task, so it goes back to 'available' state
+        '''
+        if self._pending_task_key:
+            ## record some data about what is happening -- this should
+            ## have a better structure... maybe a thrift?
+            self.data['task_returned'] = self._worker_id
+            st = make_stream_time()
+            self.data['epoch_ticks'] = st.epoch_ticks
+            self.data['zulu_timestamp'] = st.zulu_timestamp
+            self.data['state'] = 'available'
+
+            ## remove the pending task
+            self._zk.delete(self._path('pending', self._pending_task_key))
+
+            ## set the data
+            self._zk.set(self._path('tasks', self._pending_task_key), json.dumps(self.data))
+
+            try:
+                self._zk.create(self._path('available', key), makepath=True)
+            except kazoo.exceptions.NodeExistsError:
+                logger.critical('_return_task encountered NodeExistsError! on %s' % key)
+                
+            ## reset our internal state
+            self._pending_task_key = None
+
+            logger.critical('worker_id=%r zookeeper session_id=%r _return_task succeeded on %s' % self.data['i_str'])
 
     @_ensure_connection
     def commit(self, end_count=None, results=None, failure_log=''):
@@ -308,6 +340,9 @@ class ZookeeperTaskQueue(object):
         ## update the data
         self.data['end_count'] = end_count
         self.data['results'] += results
+        st = make_stream_time()
+        self.data['epoch_ticks'] = st.epoch_ticks
+        self.data['zulu_timestamp'] = st.zulu_timestamp
 
         ## set the data
         self._zk.set(self._path('tasks', self._pending_task_key), json.dumps(self.data))
@@ -339,6 +374,15 @@ class ZookeeperTaskQueue(object):
         
         assert self.data['owner'] == None, self.data['owner']
         self.data['owner'] = self._worker_id
+
+        ## record data about the run environment, to enable forensics on failed tasks
+        self.data['host'] = socket.gethostbyname(socket.gethostname())
+        self.data['version'] = pkg_resources.get_distribution("kba.pipeline").version
+        self.data['config_hash'] = self._config['config_hash']
+        self.data['config_json'] = self._config['config_json']
+        self.data['VmSize'] = _memory.memory()
+        self.data['VmRSS']  = _memory.resident()
+        self.data['VmStk']  = _memory.stacksize()
 
         ## keep the value in the pending node for safe keeping
         self._zk.set(self._path('tasks', task_key), json.dumps(self.data))
@@ -469,6 +513,13 @@ class ZookeeperTaskQueue(object):
             return 0
 
     @property
+    def pending(self):
+        for task_key in self._zk.get_children(self._path('pending')):
+            data, zstat = self._zk.get(self._path('tasks', task_key))
+            data = json.loads(data)
+            yield data
+
+    @property
     def completed(self):
         for child in self._zk.get_children(self._path('tasks')):
             data, zstat = self._zk.get(self._path('tasks', child))
@@ -491,6 +542,34 @@ class ZookeeperTaskQueue(object):
                 data = json.loads(data)
                 logger.critical( data )
             yield data
+
+    def get_tasks_with_prefix(self, key_prefix=''):
+        start_time = time.time()
+        count = 0
+        total_tasks = set()
+        for task_key in self._zk.get_children(self._path('tasks')):
+            if task_key.startswith(key_prefix):
+                total_tasks.add(task_key)
+
+        for num, task in enumerate(total_tasks):
+            data, zstat = self._zk.get(self._path('tasks', task))
+            data = json.loads(data)
+            if not isinstance(data, dict):
+                logger.critical( 'whoa... how did we get a string here?' )
+                data = json.loads(data)
+                logger.critical( data )
+            yield data
+
+            count += 1
+            if count % 100 == 0:
+                elapsed = time.time() - start_time
+                if elapsed > 0:
+                    rate = float(count) / elapsed
+                    undone = len(total_tasks) - count
+                    remaining = float(undone) / rate / 3600
+                    logger.info('%d in %.1f --> %.1f/sec --> %d (%.1f hrs) remaining'\
+                                    % (count, elapsed, rate, undone, remaining))
+
 
     @property
     def counts(self):
@@ -571,9 +650,9 @@ class ZookeeperTaskQueue(object):
         else:
             return getattr(self, mode)
 
-    def reset_pending(self):
+    def reset_pending(self, key_prefix=''):
         '''
-        Move anything in 'pending' back to 'available'
+        Move every task that startswith(key_prefix) in 'pending' back to 'available'
 
         Probably only safe to run this if all workers are off.
         '''
@@ -584,18 +663,40 @@ class ZookeeperTaskQueue(object):
         #workers.remove( self._worker_id )
         #assert not workers, 'cannot reset while workers=%r' % workers
 
-        task_keys = self._zk.get_children(self._path('pending'))
-        for task_key in task_keys:
+        start_time = time.time()
+        count = 0
+        total_pending = set()
+        pending = self._zk.get_children(self._path('pending'))
+        for task_key in pending:
+            if task_key.startswith(key_prefix):
+                total_pending.add(task_key)
+
+        for task_key in total_pending:
             ## put it back in available
             data, zstat = self._zk.get(self._path('tasks', task_key))
             data = json.loads(data)
             data['state'] = 'available'
             data['owner'] = None
             self._zk.set(self._path('tasks', task_key), json.dumps(data))
-            self._zk.create(self._path('available', task_key))
-            self._zk.delete(self._path('pending', task_key))
+            try:
+                self._zk.create(self._path('available', task_key))
+            except kazoo.exceptions.NodeExistsError:
+                pass
+            try:
+                self._zk.delete(self._path('pending', task_key))
+            except kazoo.exceptions.NoNodeExistsError:
+                pass
+            count += 1
+            if count % 100 == 0:
+                elapsed = time.time() - start_time
+                if elapsed > 0:
+                    rate = float(count) / elapsed
+                    undone = len(total_pending) - count
+                    remaining = float(undone) / rate / 3600
+                    logger.critical('reset pending-->available %d in %.1f --> %.1f/sec --> %d (%.1f hrs) remaining'\
+                                    % (count, elapsed, rate, undone, remaining))
 
-    def cleanup(self):
+    def cleanup(self, key_prefix=''):
         '''
         Go through all the tasks and make sure that the 'available'
         and 'pending' queues match the tasks 'state' property
@@ -603,10 +704,26 @@ class ZookeeperTaskQueue(object):
         tasks = self._zk.get_children(self._path('tasks'))
         pending = self._zk.get_children(self._path('pending'))
         available = self._zk.get_children(self._path('available'))
+        start_time = time.time()
+        count = 0
+        total_tasks = set()
         for task_key in tasks:
+            if task_key.startswith(key_prefix):
+                total_tasks.add(task_key)
+
+        for task_key in total_tasks:
             task_path = self._path('tasks', task_key)
             data, zstat = self._zk.get(task_path)
             data = json.loads(data)
+            count += 1
+            if count % 100 == 0:
+                elapsed = time.time() - start_time
+                if elapsed > 0:
+                    rate = float(count) / elapsed
+                    undone = len(total_tasks) - count
+                    remaining = float(undone) / rate / 3600
+                    logger.info('cleaning up %d in %.1f --> %.1f/sec --> %d (%.1f hrs) remaining'\
+                                    % (count, elapsed, rate, undone, remaining))
             assert data['i_str'], repr(data['i_str'])
             if data['state'] == 'completed':
                 if task_key in pending:

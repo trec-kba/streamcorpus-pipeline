@@ -35,6 +35,12 @@ if __name__ == '__main__':
         dest='allow_wrong_s3',
         help='Allow strings that start with s3:/')
     parser.add_argument(
+        '--terminate', action='store_true', default=False,
+        help='End all current task workers.')
+    parser.add_argument(
+        '--finish', action='store_true', default=False,
+        help='Finish the queue and then stop all current task workers.')
+    parser.add_argument(
         '--counts', action='store_true', default=False,
         help='Display counts for the queue.')
     parser.add_argument(
@@ -58,14 +64,11 @@ if __name__ == '__main__':
         dest='list_not_completed',
         help='List all not completed tasks.')
     parser.add_argument(
+        '--list-pending', action='store_true', default=False,
+        help='List full details of all "pending" tasks.')
+    parser.add_argument(
         '--cleanup', action='store_true', default=False,
-        help='Cleans up "available" and "pending" to match "state" of tasks.')
-    parser.add_argument(
-        '--terminate', action='store_true', default=False,
-        help='End all current task workers.')
-    parser.add_argument(
-        '--finish', action='store_true', default=False,
-        help='Finish the queue and then stop all current task workers.')
+        help='Cleans up "available" and "pending" to match task["state"].')
     parser.add_argument(
         '--reset-pending', action='store_true', default=False,
         help='Move all tasks from "pending" back to "available".')
@@ -76,6 +79,9 @@ if __name__ == '__main__':
         '--reset-wrong-output-path', metavar='REGEX', default=None,
         help='Reset to "available" tasks for which any output path matches REGEX.')
     parser.add_argument(
+        '--key-prefix', default='', metavar='PREFIX', 
+        help='apply command to all keys starting with PREFIX.  Works with --reset-wrong-output-path, --reset-pending, and --cleanup')
+    parser.add_argument(
         '--purge', 
         help='Totally remove these tasks from the entire queue -- gone.')
     parser.add_argument(
@@ -85,13 +91,20 @@ if __name__ == '__main__':
         '--i-meant-that', action='store_true', default=False,
         dest='i_meant_that',
         help='Enter "y" for prompt when purging.')
+    parser.add_argument(
+        '--verbosity', default=None,
+        help='log level.')
     args = parser.parse_args()
 
     assert os.path.exists(args.config), '%s does not exist' % args.config
     config = yaml.load(open(args.config))
 
     ## setup loggers
-    log_level = getattr(logging, config['kba.pipeline']['log_level'])
+    if args.verbosity:
+        log_level = args.verbosity
+    else:
+        log_level = config['kba.pipeline']['log_level']
+    log_level = getattr(logging, log_level)
 
     logger = logging.getLogger('kba')
     logger.setLevel( log_level )
@@ -131,10 +144,10 @@ if __name__ == '__main__':
         tq.set_mode( tq.FINISH )
 
     if args.cleanup:
-        tq.cleanup()
+        tq.cleanup(args.key_prefix)
 
     if args.reset_pending:
-        tq.reset_pending()
+        tq.reset_pending(args.key_prefix)
 
     if args.purge:
         if not args.i_meant_that:
@@ -163,7 +176,6 @@ if __name__ == '__main__':
         print('Done purging %d strs' % count)
 
     if args.counts:
-        print 'hi'
         if args.detailed:
             counts = tq.counts_detailed
         else:
@@ -180,6 +192,12 @@ if __name__ == '__main__':
 
             if args.detailed:
                 print json.dumps(completed, indent=4, sort_keys=True)
+
+    if args.list_pending:
+        for task in tq.pending:
+            if task['end_count'] == 0:
+                print task['i_str']
+                #print json.dumps(task, indent=4, sort_keys=True)
 
     if args.list_not_completed:
         for task in tq.all_tasks:
@@ -198,8 +216,9 @@ if __name__ == '__main__':
                 print num
                 sys.stdout.flush()
 
-    if args.reset_wrong_output_path:        
-        for num, task in enumerate(tq.all_tasks):
+    if args.reset_wrong_output_path:
+
+        for num, task in enumerate(tq.get_tasks_with_prefix(args.key_prefix)):
             should_reset = False
             for o_path in task['results']:
                 if re.search(args.reset_wrong_output_path, o_path):
