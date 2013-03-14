@@ -205,7 +205,7 @@ class Pipeline(object):
 
                 elif 'output_chunk_max_clean_visible_bytes' in self.config and \
                         len_clean_visible >= self.config['output_chunk_max_clean_visible_bytes']:
-                    logger.warn('reached output_chunk_max_clean_visible_bytes at: %d >= %d' % (
+                    logger.warn('reached output_chunk_max_clean_visible_bytes (%d) at: %d' % (
                             self.config['output_chunk_max_clean_visible_bytes'], len_clean_visible))
                     len_clean_visible = 0
                     self.t_chunk.close()
