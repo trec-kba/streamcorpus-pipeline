@@ -10,6 +10,7 @@ import gc
 import os
 import sys
 import time
+import _stages
 import logging
 import traceback
 import itertools
@@ -204,7 +205,7 @@ AlignmentStrategies = {
     'byte_offset_labels': byte_offset_labels,
     }
 
-class TaggerBatchTransform(object):
+class TaggerBatchTransform(_stages.BatchTransform):
     '''
     kba.pipeline.TaggerBatchTransform provides a structure for
     aligning a taggers output with labels and generating
@@ -268,7 +269,7 @@ the output path to create.
         ## make sure we are using as little memory as possible
         gc.collect()
         try:
-            _child = subprocess.Popen(cmd, stderr=subprocess.PIPE, shell=True)
+            self._child = subprocess.Popen(cmd, stderr=subprocess.PIPE, shell=True)
         except OSError, exc:
             print traceback.format_exc(exc)
             print('out of memory on:\n%r\n%r' % (clean_visible_path, ner_xml_path))
@@ -284,8 +285,8 @@ the output path to create.
             #print 'current objects: %r' % gc.get_objects()
             sys.exit(int(self.config['exit_code_on_out_of_memory']))
 
-        s_out, errors = _child.communicate()
-        assert _child.returncode == 0 and 'Exception' not in errors, errors
+        s_out, errors = self._child.communicate()
+        assert self._child.returncode == 0 and 'Exception' not in errors, errors
         elapsed = time.time() - start_time
         return elapsed
         #print '%.1f sec --> %.1f StreamItems/second' % (elapsed, rate)
@@ -363,3 +364,9 @@ the output path to create.
     def get_sentences(self, ner_dom):
         '''parse the sentences and tokens out of the XML'''
         raise exceptions.NotImplementedError
+
+    def shutdown(self):
+        '''
+        send SIGTERM to the tagger child process
+        '''
+        self._child.terminate()
