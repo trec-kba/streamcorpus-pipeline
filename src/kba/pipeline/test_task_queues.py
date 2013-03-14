@@ -11,6 +11,8 @@ def test_zk():
         zookeeper_address = 'localhost:2181',
         namespace = 'kba-pipeline-task-queue-test',
         zookeeper_timeout = 120,
+        config_hash = '',
+        config_json = '',
         )
 
     test_data = set(['a', 'b', 'c', 'd'])
@@ -36,6 +38,8 @@ def test_zk_commit():
         zookeeper_address = 'localhost:2181',
         namespace = 'kba-pipeline-task-queue-test',
         zookeeper_timeout = 120,
+        config_hash = '',
+        config_json = '',
         )
 
     test_data = set(['a', 'b', 'c', 'd'])
@@ -55,6 +59,8 @@ def test_zk_partial_commit():
         zookeeper_address = 'localhost:2181',
         namespace = 'kba-pipeline-task-queue-test',
         zookeeper_timeout = 120,
+        config_hash = '',
+        config_json = '',
         )
 
     test_data = set(['a', 'b', 'c', 'd'])
