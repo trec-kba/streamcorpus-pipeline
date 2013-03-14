@@ -8,6 +8,8 @@ Copyright 2012 Diffeo, Inc.
 '''
 import os
 import sys
+import copy
+import json
 import logging
 from _pipeline import Pipeline
 
@@ -37,6 +39,26 @@ def make_absolute_paths( config ):
     ## put the root_path back
     config['root_path'] = root_path
 
+def make_hash(obj):
+    '''
+    Makes a hash from a dictionary, list, tuple or set to any level,
+    that contains only other hashable types (including any lists,
+    tuples, sets, and dictionaries).  See second answer (not the
+    accepted answer):
+    http://stackoverflow.com/questions/5884066/hashing-a-python-dictionary
+    '''
+    if isinstance(obj, (set, tuple, list)):
+        return tuple([make_hash(e) for e in obj])
+    elif not isinstance(obj, dict):
+        return hash(obj)
+
+    new_obj = copy.deepcopy(obj)
+    for k, v in new_obj.items():
+        ## call self recursively
+        new_obj[k] = make_hash(v)
+
+    return hash(tuple(frozenset(new_obj.items())))
+
 if __name__ == '__main__':
     import yaml
     import argparse
@@ -55,6 +77,13 @@ if __name__ == '__main__':
 
     make_absolute_paths(config)
 
+    ## put info about the whole config in the extractor's config
+    extractor_name = config['kba.pipeline']['extractor']
+    if extractor_name not in config['kba.pipeline']:
+        config['kba.pipeline'][extractor_name] = {}
+    config['kba.pipeline'][extractor_name]['config_hash'] = make_hash(config)
+    config['kba.pipeline'][extractor_name]['config_json'] = json.dumps(config)
+
     ## setup loggers
     log_level = getattr(logging, config['kba.pipeline']['log_level'])
 
@@ -66,6 +95,9 @@ if __name__ == '__main__':
     formatter = logging.Formatter('%(asctime)s %(process)d %(levelname)s: %(message)s')
     ch.setFormatter(formatter)
     logger.addHandler(ch)
+
+    logger.critical('running config: %s = %s' % (
+            config['kba.pipeline'][extractor_name]['config_hash'], args.config))
 
     pipeline = Pipeline(config)
     pipeline.run()
