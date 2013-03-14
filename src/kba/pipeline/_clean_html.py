@@ -227,7 +227,7 @@ def make_clean_html(raw, stream_item=None, log_dir_path=None):
     '''
     #logger.debug('repr(raw):')
     #logger.debug(repr(raw))
-    if stream_item.body.encoding:
+    if stream_item and stream_item.body and stream_item.body.encoding:
         ## if we know an encoding, then attempt to use it
         try:
             raw = raw.decode(stream_item.body.encoding)
