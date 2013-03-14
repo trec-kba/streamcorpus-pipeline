@@ -146,9 +146,14 @@ class Pipeline(object):
                     ## paranoia that the kazoo module used in
                     ## ZookeeperTaskQueue may need to do a monkey
                     ## patch before this gets imported:
-                    import gevent
-                    logger.debug('pipeline yielded to gevent hub')
-                    gevent.sleep(0)
+                    try:
+                        import gevent
+                    except:
+                        ## only load gevent if it is available :-)
+                        gevent = None
+                    if gevent:
+                        logger.debug('pipeline yielded to gevent hub')
+                        gevent.sleep(0)
 
                 try:
                     si = i_chunk_iter.next()
