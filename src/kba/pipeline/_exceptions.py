@@ -9,3 +9,6 @@ class TransformGivingUp(PipelineBaseException):
 
 class FailedExtraction(PipelineBaseException):
     pass
+
+class HitMaxi16(PipelineBaseException):
+    pass
