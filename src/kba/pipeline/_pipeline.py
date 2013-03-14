@@ -14,7 +14,8 @@ import re
 import sys
 import time
 import uuid
-#import gevent
+import math
+import signal
 import logging
 import traceback
 import itertools
@@ -38,6 +39,8 @@ class Pipeline(object):
             '"kba.pipeline" missing from config: %r' % config
         config = config['kba.pipeline']
         self.config = config
+
+        self._shutting_down = False
 
         if not os.path.exists(config['tmp_dir_path']):
             try:
@@ -81,6 +84,20 @@ class Pipeline(object):
             _init_stage(name, config.get(name, {}))
             for name in config['loaders']]
 
+        for sig in [signal.SIGTERM, signal.SIGABRT, signal.SIGHUP, signal.SIGINT]:
+            logger.debug('setting signal handler for %r' % sig)
+            signal.signal(sig, self.shutdown)
+
+    def shutdown(self, sig=None, frame=None):
+        logger.critical('shutdown inititated by signal: %r' % sig)
+        self._shutting_down = True
+        self._task_queue.shutdown()
+        for transform in self._batch_transforms:
+            transform.shutdown()
+        logger.critical('shutdown in final steps')
+        logging.shutdown()
+        sys.exit()
+
     def run(self):
         '''
         operate pipeline on chunks loaded from task_queue
@@ -89,6 +106,9 @@ class Pipeline(object):
 
         ## iterate over input strings from the specified task_queue
         for start_count, i_str in self._task_queue:
+
+            if self._shutting_down:
+                break
 
             start_chunk_time = time.time()
 
@@ -110,10 +130,26 @@ class Pipeline(object):
             ## smaller chunks if needed
             i_chunk_iter = iter(i_chunk)
 
+            len_clean_visible = 0
             sources = set()
             next_idx = 0
             hit_last = False
             while not hit_last:
+
+                if self._shutting_down:
+                    break
+                else:
+                    ## must yield to the gevent hub to allow other
+                    ## things to run, in particular test_pipeline
+                    ## needs this to verify that shutdown works.  We
+                    ## import gevent here instead of above out of
+                    ## paranoia that the kazoo module used in
+                    ## ZookeeperTaskQueue may need to do a monkey
+                    ## patch before this gets imported:
+                    import gevent
+                    logger.debug('pipeline yielded to gevent hub')
+                    gevent.sleep(0)
+
                 try:
                     si = i_chunk_iter.next()
                     next_idx += 1
@@ -155,9 +191,23 @@ class Pipeline(object):
                 sources.add( si.source )
                 assert len(sources) == 1, sources
 
+                if si.body and si.body.clean_visible:
+                    len_clean_visible += len(si.body.clean_visible)
+                    ## log binned clean_visible lengths, for quick stats estimates
+                    #logger.debug('len(si.body.clean_visible)=%d' % int(10 * int(math.floor(float(len(si.body.clean_visible)) / 2**10)/10)))
+                    logger.debug('len(si.body.clean_visible)=%d' % len(si.body.clean_visible))
+
                 if 'output_chunk_max_count' in self.config and \
                         len(self.t_chunk) == self.config['output_chunk_max_count']:
-                    logger.warn('reached output_chunk_max_count at: %d' % next_idx)
+                    logger.warn('reached output_chunk_max_count (%d) at: %d' % (len(self.t_chunk), next_idx))
+                    self.t_chunk.close()
+                    ## will execute steps below
+
+                elif 'output_chunk_max_clean_visible_bytes' in self.config and \
+                        len_clean_visible >= self.config['output_chunk_max_clean_visible_bytes']:
+                    logger.warn('reached output_chunk_max_clean_visible_bytes at: %d >= %d' % (
+                            self.config['output_chunk_max_clean_visible_bytes'], len_clean_visible))
+                    len_clean_visible = 0
                     self.t_chunk.close()
                     ## will execute steps below
 
