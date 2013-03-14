@@ -77,12 +77,14 @@ if __name__ == '__main__':
 
     make_absolute_paths(config)
 
+    print 'loaded config from %r' % args.config
+
     ## put info about the whole config in the extractor's config
-    extractor_name = config['kba.pipeline']['extractor']
-    if extractor_name not in config['kba.pipeline']:
-        config['kba.pipeline'][extractor_name] = {}
-    config['kba.pipeline'][extractor_name]['config_hash'] = make_hash(config)
-    config['kba.pipeline'][extractor_name]['config_json'] = json.dumps(config)
+    tq_name = config['kba.pipeline']['task_queue']
+    if tq_name not in config['kba.pipeline']:
+        config['kba.pipeline'][tq_name] = {}
+    config['kba.pipeline'][tq_name]['config_hash'] = make_hash(config)
+    config['kba.pipeline'][tq_name]['config_json'] = json.dumps(config)
 
     ## setup loggers
     log_level = getattr(logging, config['kba.pipeline']['log_level'])
@@ -97,7 +99,7 @@ if __name__ == '__main__':
     logger.addHandler(ch)
 
     logger.critical('running config: %s = %s' % (
-            config['kba.pipeline'][extractor_name]['config_hash'], args.config))
+            config['kba.pipeline'][tq_name]['config_hash'], args.config))
 
     pipeline = Pipeline(config)
     pipeline.run()
