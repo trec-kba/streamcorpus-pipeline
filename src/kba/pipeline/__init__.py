@@ -10,5 +10,8 @@ This software is released under an MIT/X11 open source license.
 
 Copyright 2012 Diffeo, Inc.
 '''
-__all__ = ['Pipeline']
-from ._pipeline import Pipeline
+__all__ = ['Pipeline', 'load', 'run']
+import run
+import load
+from _pipeline import Pipeline
+
