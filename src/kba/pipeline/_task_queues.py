@@ -302,7 +302,8 @@ class ZookeeperTaskQueue(object):
             ## reset our internal state
             self._pending_task_key = None
 
-            logger.critical('worker_id=%r zookeeper session_id=%r _return_task succeeded on %s' % self.data['i_str'])
+            logger.critical('worker_id=%r zookeeper session_id=%r _return_task succeeded on %s' \
+                                % (self._worker_id, self._zk.client_id, self.data['i_str']))
 
     @_ensure_connection
     def commit(self, end_count=None, results=None, failure_log=''):
