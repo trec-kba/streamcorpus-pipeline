@@ -294,6 +294,7 @@ class Pipeline(object):
                                         traceback.format_exc(exc))
                 else:
                     ## otherwise, let it bubble up and kill this process
+                    logger.critical(traceback.format_exc(exc))
                     raise exc
 
     def _run_incremental_transforms(self, si):
