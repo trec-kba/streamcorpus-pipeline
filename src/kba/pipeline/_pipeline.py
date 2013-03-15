@@ -249,6 +249,12 @@ class Pipeline(object):
                     if o_path:
                         o_paths.append( o_path )
 
+                    if self._shutting_down:
+                        break
+
+                if self._shutting_down:
+                    break
+
                 if not hit_last:
                     ## commit the paths saved so far
                     self._task_queue.partial_commit( start_count, next_idx, o_paths )

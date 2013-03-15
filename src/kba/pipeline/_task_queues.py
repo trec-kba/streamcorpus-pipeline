@@ -341,7 +341,7 @@ class ZookeeperTaskQueue(object):
 
         assert self._pending_task_key, \
             'partial_commit(%d, %d, %r) without pending task' \
-            % (start, end, results)
+            % (start_count, end_count, results)
 
         assert self.data['end_count'] == start_count, \
             "data['end_count'] = %d != %d = start_count " + \
