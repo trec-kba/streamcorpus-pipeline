@@ -329,7 +329,7 @@ the output path to create.
             stream_id = ner_dom.attributes.get('stream_id').value
             if stream_item.stream_id is None:
                 assert not stream_id, 'out of sync: None != %r' % stream_id
-                print('si.stream_id is None... ignoring')
+                logger.critical('si.stream_id is None... ignoring')
                 continue
             assert stream_id and stream_id == stream_item.stream_id, \
                 '%s != %s' % (stream_id, stream_item.stream_id)
@@ -376,14 +376,20 @@ the output path to create.
 
             try:
                 o_chunk.add(stream_item)
-            except MemoryError:
+            except MemoryError, exc:
                 msg = traceback.format_exc(exc)
                 msg += make_memory_info_msg()
                 logger.critical(msg)
                 raise PipelineOutOfMemory(msg)
 
         ## all done, so close the o_chunk
-        o_chunk.close()
+        try:
+            o_chunk.close()
+        except MemoryError, exc:
+            msg = traceback.format_exc(exc)
+            msg += make_memory_info_msg()
+            logger.critical(msg)
+            raise PipelineOutOfMemory(msg)
 
     def get_sentences(self, ner_dom):
         '''parse the sentences and tokens out of the XML'''
@@ -394,4 +400,10 @@ the output path to create.
         send SIGTERM to the tagger child process
         '''
         if self._child:
-            self._child.terminate()
+            try:
+                self._child.terminate()
+            except OSError, exc:
+                if exc.errno == 3:
+                    ## child is already gone, possibly because it ran
+                    ## out of memory and caused us to shutdown
+                    pass
