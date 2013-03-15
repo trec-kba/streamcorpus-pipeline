@@ -440,6 +440,17 @@ class ZookeeperTaskQueue(object):
         '''construct a hash to use as the node name'''
         return hashlib.md5(i_str).hexdigest()
 
+    def _make_new_data(self, i_str):
+        ## construct a data payload
+        data = dict(
+            i_str = i_str,
+            state = 'available',
+            owner = None,
+            end_count = 0,
+            results = [],
+            )
+        return data
+
     def push(self, *i_strs, **kwargs):
         '''
         Add task to the queue
@@ -469,14 +480,8 @@ class ZookeeperTaskQueue(object):
             ## construct a hash to use as the node name
             key = self._make_key( i_str )
 
-            ## construct a data payload
-            data = dict(
-                i_str = i_str,
-                state = 'available',
-                owner = None,
-                end_count = 0,
-                results = [],
-                )
+            data = self._make_new_data(i_str)
+
             if completed:
                 data['state'] = 'completed'                
             try:
@@ -561,14 +566,14 @@ class ZookeeperTaskQueue(object):
             if task_key.startswith(key_prefix):
                 total_tasks.add(task_key)
 
-        for num, task in enumerate(total_tasks):
-            data, zstat = self._zk.get(self._path('tasks', task))
+        for num, task_key in enumerate(total_tasks):
+            data, zstat = self._zk.get(self._path('tasks', task_key))
             data = json.loads(data)
             if not isinstance(data, dict):
                 logger.critical( 'whoa... how did we get a string here?' )
                 data = json.loads(data)
                 logger.critical( data )
-            yield data
+            yield task_key, data
 
             count += 1
             if count % 100 == 0:
@@ -660,6 +665,29 @@ class ZookeeperTaskQueue(object):
         else:
             return getattr(self, mode)
 
+    def reset_completed(self, key_prefix=''):
+        '''
+        Move every task that startswith(key_prefix) to 'available'
+
+        Probably only safe to run this if all workers are off.
+        '''
+        for task_key, data in self.get_tasks_with_prefix(key_prefix):
+            data = self._make_new_data(data['i_str'])
+            self._zk.set(self._path('tasks', task_key), json.dumps(data))
+            try:
+                self._zk.create(self._path('available', task_key))
+            except kazoo.exceptions.NodeExistsError:
+                pass
+            try:
+                self._zk.delete(self._path('pending', task_key))
+            except kazoo.exceptions.NoNodeError:
+                pass
+            try:
+                self._zk.delete(self._path('completed', task_key))
+            except kazoo.exceptions.NoNodeError:
+                pass
+
+
     def reset_pending(self, key_prefix=''):
         '''
         Move every task that startswith(key_prefix) in 'pending' back to 'available'
@@ -694,7 +722,7 @@ class ZookeeperTaskQueue(object):
                 pass
             try:
                 self._zk.delete(self._path('pending', task_key))
-            except kazoo.exceptions.NoNodeExistsError:
+            except kazoo.exceptions.NoNodeError:
                 pass
             count += 1
             if count % 100 == 0:

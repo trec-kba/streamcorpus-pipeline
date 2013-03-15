@@ -73,6 +73,9 @@ if __name__ == '__main__':
         '--reset-pending', action='store_true', default=False,
         help='Move all tasks from "pending" back to "available".')
     parser.add_argument(
+        '--reset-completed', action='store_true', default=False,
+        help='Move all tasks from "completed" back to "available".')
+    parser.add_argument(
         '--reset-failures', action='store_true', default=False,
         help='Move all tasks from "completed" that have failure_log back to "available".')
     parser.add_argument(
@@ -80,7 +83,7 @@ if __name__ == '__main__':
         help='Reset to "available" tasks for which any output path matches REGEX.')
     parser.add_argument(
         '--key-prefix', default='', metavar='PREFIX', 
-        help='apply command to all keys starting with PREFIX.  Works with --reset-wrong-output-path, --reset-pending, and --cleanup')
+        help='apply command to all keys starting with PREFIX.  Works with --reset-wrong-output-path, --reset-pending, --reset-completed, and --cleanup')
     parser.add_argument(
         '--purge', 
         help='Totally remove these tasks from the entire queue -- gone.')
@@ -148,6 +151,9 @@ if __name__ == '__main__':
 
     if args.reset_pending:
         tq.reset_pending(args.key_prefix)
+
+    if args.reset_completed:
+        tq.reset_completed(args.key_prefix)
 
     if args.purge:
         if not args.i_meant_that:
@@ -219,7 +225,7 @@ if __name__ == '__main__':
 
     if args.reset_wrong_output_path:
 
-        for num, task in enumerate(tq.get_tasks_with_prefix(args.key_prefix)):
+        for num, (task_key, task) in enumerate(tq.get_tasks_with_prefix(args.key_prefix)):
             should_reset = False
             for o_path in task['results']:
                 if re.search(args.reset_wrong_output_path, o_path):
