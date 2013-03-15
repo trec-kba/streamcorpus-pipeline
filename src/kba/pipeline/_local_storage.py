@@ -91,7 +91,8 @@ class to_local_chunks(object):
 
         if compress:
             assert o_path.endswith('.xz'), o_path
-            t_path2 = streamcorpus.compress_and_encrypt_path(t_path)
+            errors, t_path2 = streamcorpus.compress_and_encrypt_path(t_path)
+            assert not errors
             os.rename(t_path2, t_path)
  
         ## do an atomic renaming    
