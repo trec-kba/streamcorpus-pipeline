@@ -225,8 +225,8 @@ class ZookeeperTaskQueue(object):
         '''
         self._zk.delete(self._path('workers', self._worker_id))
 
-    def _backoff(self, time):
-        time.sleep(time)
+    def _backoff(self, backoff_time):
+        time.sleep(backoff_time)
 
     def __iter__(self):
         '''
