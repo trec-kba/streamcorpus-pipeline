@@ -243,7 +243,13 @@ class Pipeline(object):
                 ## gather the paths as the loaders run
                 o_paths = []
                 for loader in self._loaders:
-                    o_path = loader(t_path, name_info, i_str)
+                    try:
+                        o_path = loader(t_path, name_info, i_str)
+                    except OSError, exc:
+                        if exc.errno == 12:
+                            logger.critical('caught OSError 12 in loader, so shutting down')
+                            self.shutdown( msg=traceback.format_exc(exc) )
+
                     logger.warn('loaded (%d, %d) of %r into %r' % (
                             start_count, next_idx - 1, i_str, o_path))
                     if o_path:
@@ -293,7 +299,7 @@ class Pipeline(object):
                 transform(chunk_path)
             except _exceptions.PipelineOutOfMemory, exc:
                 logger.critical('caught PipelineOutOfMemory, so shutting down')
-                self.shutdown( msg=str(exc) )
+                self.shutdown( msg=traceback.format_exc(exc) )
             except Exception, exc:
                 if self._shutting_down:
                     logger.critical('ignoring exception while shutting down: %s' % \
