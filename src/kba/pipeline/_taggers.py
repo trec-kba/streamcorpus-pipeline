@@ -23,7 +23,7 @@ import xml.dom.minidom
 from streamcorpus import Chunk, Tagging, Label, OffsetType, add_annotation
 from _clean_visible import make_clean_visible_file, cleanse
 from sortedcollection import SortedCollection
-from _exceptions import PipelineOutOfMemory
+from _exceptions import PipelineOutOfMemory, PipelineBaseException
 
 logger = logging.getLogger(__name__)
 
@@ -199,7 +199,17 @@ def byte_offset_labels(stream_item, aligner_data):
                           for t in toks], 
                          label_off.value))
 
-
+def make_memory_info_msg():
+    msg = 'out of memory on:\n%r\n%r' % (clean_visible_path, ner_xml_path)
+    msg += 'VmSize: %d bytes' % _memory.memory()
+    msg += 'VmRSS:  %d bytes' % _memory.resident()
+    msg += 'VmStk:  %d bytes' % _memory.stacksize()
+    msg += 'uncollectable garbage: %r' % gc.garbage
+    msg += 'gc.get_count() = %r' % repr(gc.get_count())
+    ## Do not do gc.get_objects, because it causes nltk to
+    ## load stuff that is not actually in memory yet!
+    #msg += 'current objects: %r' % gc.get_objects()
+    return msg
 
 AlignmentStrategies = {
     'names_in_chains': names_in_chains,
@@ -273,22 +283,21 @@ the output path to create.
         try:
             self._child = subprocess.Popen(cmd, stderr=subprocess.PIPE, shell=True)
         except OSError, exc:
-            msg = traceback.format_exc(exc)
-            msg += 'out of memory on:\n%r\n%r' % (clean_visible_path, ner_xml_path)
-            msg += 'VmSize: %d bytes' % _memory.memory()
-            msg += 'VmRSS:  %d bytes' % _memory.resident()
-            msg += 'VmStk:  %d bytes' % _memory.stacksize()
-            msg += 'uncollectable garbage: %r' % gc.garbage
-            msg += 'gc.get_count() = %r' % repr(gc.get_count())
-            ## Do not do gc.get_objects, because it causes nltk to
-            ## load stuff that is not actually in memory yet!
-            #msg += 'current objects: %r' % gc.get_objects()
+            msg = traceback.format_exc(exc) + make_memory_info_msg()
             # instead of sys.ext, do proper shutdown
             #sys.exit(int(self.config['exit_code_on_out_of_memory']))
             raise PipelineOutOfMemory(msg)
 
         s_out, errors = self._child.communicate()
-        assert self._child.returncode == 0 and 'Exception' not in errors, errors
+        if not self._child.returncode == 0:
+            if 'java.lang.OutOfMemoryError' in errors:
+                msg = errors + make_memory_info_msg()
+                raise PipelineOutOfMemory(msg)
+            elif 'Exception' in errors:
+                raise PipelineBaseException(errors)
+            else:
+                raise PipelineBaseException('tagger exitted with %r' % self._child.returncode)
+
         elapsed = time.time() - start_time
         return elapsed
         #print '%.1f sec --> %.1f StreamItems/second' % (elapsed, rate)
