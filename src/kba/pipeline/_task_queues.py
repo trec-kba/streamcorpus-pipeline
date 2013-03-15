@@ -295,7 +295,7 @@ class ZookeeperTaskQueue(object):
             self._zk.set(self._path('tasks', self._pending_task_key), json.dumps(self.data))
 
             try:
-                self._zk.create(self._path('available', key), makepath=True)
+                self._zk.create(self._path('available', self._pending_task_key), makepath=True)
             except kazoo.exceptions.NodeExistsError:
                 logger.critical('_return_task encountered NodeExistsError! on %s' % key)
                 
