@@ -3,6 +3,7 @@ import sys
 import yaml
 import pytest
 import gevent
+import signal
 import logging
 from cStringIO import StringIO
 from _pipeline import Pipeline
@@ -26,8 +27,8 @@ def log(msg):
     sys.stdout.flush()
 
 def test_pipeline(monkeypatch):
-    def mockexit():
-        log( ' sys.exit called ' )
+    def mockexit(status=0):
+        log( ' sys.exit(%d) ' % status )
         raise SuccessfulExit()
     monkeypatch.setattr(sys, 'exit', mockexit)
     path = os.path.dirname(__file__)
@@ -44,7 +45,7 @@ def test_pipeline(monkeypatch):
     gevent.sleep(5)
 
     with pytest.raises(SuccessfulExit):
-        p.shutdown()
+        p.shutdown(sig=signal.SIGTERM)
 
     log( 'now joining...' )
     timeout = gevent.Timeout(1)
