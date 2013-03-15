@@ -12,3 +12,6 @@ class FailedExtraction(PipelineBaseException):
 
 class HitMaxi16(PipelineBaseException):
     pass
+
+class PipelineOutOfMemory(PipelineBaseException):
+    pass

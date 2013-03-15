@@ -11,6 +11,7 @@ import os
 import sys
 import time
 import _stages
+import _memory
 import logging
 import traceback
 import itertools
@@ -22,6 +23,7 @@ import xml.dom.minidom
 from streamcorpus import Chunk, Tagging, Label, OffsetType, add_annotation
 from _clean_visible import make_clean_visible_file, cleanse
 from sortedcollection import SortedCollection
+from _exceptions import PipelineOutOfMemory
 
 logger = logging.getLogger(__name__)
 
@@ -271,19 +273,19 @@ the output path to create.
         try:
             self._child = subprocess.Popen(cmd, stderr=subprocess.PIPE, shell=True)
         except OSError, exc:
-            print traceback.format_exc(exc)
-            print('out of memory on:\n%r\n%r' % (clean_visible_path, ner_xml_path))
-            from . import _memory
-            print 'VmSize: %d bytes' % _memory.memory()
-            print 'VmRSS:  %d bytes' % _memory.resident()
-            print 'VmStk:  %d bytes' % _memory.stacksize()
-            print 'uncollectable garbage: %r' % gc.garbage
-            print 'gc.get_count() = %r' % repr(gc.get_count())
-            sys.stdout.flush()
+            msg = traceback.format_exc(exc)
+            msg += 'out of memory on:\n%r\n%r' % (clean_visible_path, ner_xml_path)
+            msg += 'VmSize: %d bytes' % _memory.memory()
+            msg += 'VmRSS:  %d bytes' % _memory.resident()
+            msg += 'VmStk:  %d bytes' % _memory.stacksize()
+            msg += 'uncollectable garbage: %r' % gc.garbage
+            msg += 'gc.get_count() = %r' % repr(gc.get_count())
             ## Do not do gc.get_objects, because it causes nltk to
             ## load stuff that is not actually in memory yet!
-            #print 'current objects: %r' % gc.get_objects()
-            sys.exit(int(self.config['exit_code_on_out_of_memory']))
+            #msg += 'current objects: %r' % gc.get_objects()
+            # instead of sys.ext, do proper shutdown
+            #sys.exit(int(self.config['exit_code_on_out_of_memory']))
+            raise PipelineOutOfMemory(msg)
 
         s_out, errors = self._child.communicate()
         assert self._child.returncode == 0 and 'Exception' not in errors, errors

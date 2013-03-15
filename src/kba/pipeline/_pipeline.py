@@ -88,8 +88,11 @@ class Pipeline(object):
             logger.debug('setting signal handler for %r' % sig)
             signal.signal(sig, self.shutdown)
 
-    def shutdown(self, sig=None, frame=None):
-        logger.critical('shutdown inititated by signal: %r' % sig)
+    def shutdown(self, sig=None, frame=None, msg=None):
+        if sig:
+            logger.critical('shutdown inititated by signal: %r' % sig)
+        elif msg:
+            logger.critical('shutdown inititated, msg: %s' % msg)
         self._shutting_down = True
         self._task_queue.shutdown()
         for transform in self._batch_transforms:
@@ -277,7 +280,18 @@ class Pipeline(object):
 
     def _run_batch_transforms(self, chunk_path):
         for transform in self._batch_transforms:
-            transform(chunk_path)
+            try:
+                transform(chunk_path)
+            except _exceptions.PipelineOutOfMemory, exc:
+                logger.critical('caught PipelineOutOfMemory, so shutting down')
+                self.shutdown( msg=str(exc) )
+            except Exception, exc:
+                if self._shutting_down:
+                    logger.critical('ignoring exception while shutting down: %s' % \
+                                        traceback.format_exc(exc))
+                else:
+                    ## otherwise, let it bubble up and kill this process
+                    raise exc
 
     def _run_incremental_transforms(self, si):
         ## operate each transform on this one StreamItem
