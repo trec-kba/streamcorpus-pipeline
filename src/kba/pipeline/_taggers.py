@@ -199,7 +199,7 @@ def byte_offset_labels(stream_item, aligner_data):
                           for t in toks], 
                          label_off.value))
 
-def make_memory_info_msg():
+def make_memory_info_msg(clean_visible_path, ner_xml_path):
     msg = 'out of memory on:\n%r\n%r' % (clean_visible_path, ner_xml_path)
     msg += 'VmSize: %d bytes' % _memory.memory()
     msg += 'VmRSS:  %d bytes' % _memory.resident()
@@ -283,7 +283,8 @@ the output path to create.
         try:
             self._child = subprocess.Popen(cmd, stderr=subprocess.PIPE, shell=True)
         except OSError, exc:
-            msg = traceback.format_exc(exc) + make_memory_info_msg()
+            msg = traceback.format_exc(exc) 
+            msg += make_memory_info_msg(clean_visible_path, ner_xml_path)
             # instead of sys.ext, do proper shutdown
             #sys.exit(int(self.config['exit_code_on_out_of_memory']))
             raise PipelineOutOfMemory(msg)
@@ -291,7 +292,12 @@ the output path to create.
         s_out, errors = self._child.communicate()
         if not self._child.returncode == 0:
             if 'java.lang.OutOfMemoryError' in errors:
-                msg = errors + make_memory_info_msg()
+                msg = errors + make_memory_info_msg(clean_visible_path, ner_xml_path)
+                raise PipelineOutOfMemory(msg)
+            elif self._child.returncode == 137:
+                msg = 'tagger returncode = 137\n' + errors
+                msg += make_memory_info_msg(clean_visible_path, ner_xml_path)
+                # maybe get a tail of /var/log/messages
                 raise PipelineOutOfMemory(msg)
             elif 'Exception' in errors:
                 raise PipelineBaseException(errors)
