@@ -174,6 +174,7 @@ class ZookeeperTaskQueue(object):
     def shutdown(self):
         logger.critical('worker_id=%r zookeeper session_id=%r ZookeeperTaskQueue.shutdown has been called')
         self._return_task()
+        self._unregister()
         self._zk.stop()
         logger.critical('worker_id=%r zookeeper session_id=%r closed zookeeper client' % (self._worker_id, self._zk.client_id))
 
@@ -215,6 +216,14 @@ class ZookeeperTaskQueue(object):
             self._path('workers', self._worker_id), 
             ephemeral=True,
             makepath=True)
+
+    @_ensure_connection        
+    def _unregister(self):
+        '''
+        Get an ID for this worker process by creating a sequential
+        ephemeral node
+        '''
+        self._zk.delete(self._path('workers', self._worker_id))
 
     def _backoff(self, time):
         time.sleep(time)
