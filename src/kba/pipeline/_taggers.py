@@ -227,6 +227,7 @@ class TaggerBatchTransform(_stages.BatchTransform):
 
     def __init__(self, config):
         self.config = config
+        self._child = None
 
     def __call__(self, chunk_path):
         ## make temporary file paths based on chunk_path
@@ -386,4 +387,5 @@ the output path to create.
         '''
         send SIGTERM to the tagger child process
         '''
-        self._child.terminate()
+        if self._child:
+            self._child.terminate()
