@@ -80,7 +80,7 @@ if __name__ == '__main__':
     print 'loaded config from %r' % args.config
 
     ## put info about the whole config in the extractor's config
-    tq_name = config['kba.pipeline']['task_queue']
+    tq_name = config['kba.pipeline'].get('task_queue', 'no-task-queue')
     if tq_name not in config['kba.pipeline']:
         config['kba.pipeline'][tq_name] = {}
     config['kba.pipeline'][tq_name]['config_hash'] = make_hash(config)
