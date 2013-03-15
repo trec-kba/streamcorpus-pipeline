@@ -199,7 +199,7 @@ def byte_offset_labels(stream_item, aligner_data):
                           for t in toks], 
                          label_off.value))
 
-def make_memory_info_msg(clean_visible_path, ner_xml_path):
+def make_memory_info_msg(clean_visible_path=None, ner_xml_path=None):
     msg = 'out of memory on:\n%r\n%r' % (clean_visible_path, ner_xml_path)
     msg += 'VmSize: %d bytes' % _memory.memory()
     msg += 'VmRSS:  %d bytes' % _memory.resident()
@@ -374,7 +374,13 @@ the output path to create.
                 aligner = AlignmentStrategies[ self.config['align_labels_by'] ]
                 aligner( stream_item, self.config['aligner_data'] )
 
-            o_chunk.add(stream_item)
+            try:
+                o_chunk.add(stream_item)
+            except MemoryError:
+                msg = traceback.format_exc(exc)
+                msg += make_memory_info_msg()
+                logger.critical(msg)
+                raise PipelineOutOfMemory(msg)
 
         ## all done, so close the o_chunk
         o_chunk.close()
