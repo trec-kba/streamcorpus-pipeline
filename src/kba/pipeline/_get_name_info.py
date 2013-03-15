@@ -2,13 +2,13 @@
 
 from streamcorpus import Chunk
 
-def get_name_info(chunk_data, assert_one_date_hour=False):
+def get_name_info(chunk_path, assert_one_date_hour=False):
     '''
     takes a chunk blob and obtains the date_hour, md5, num
     '''
     name_info = dict()
 
-    ch = Chunk(data=chunk_data)
+    ch = Chunk(path=chunk_path, mode='rb')
     date_hours = set()
     target_names = set()
     doc_ids = set()

@@ -40,8 +40,7 @@ class to_local_chunks(object):
     def __call__(self, t_path, name_info, i_str):
         o_type = self.config['output_type']
         
-        data = open(t_path).read()
-        name_info.update( get_name_info( data ) )
+        name_info.update( get_name_info( t_path ) )
 
         if name_info['num'] == 0:
             return None
@@ -92,10 +91,7 @@ class to_local_chunks(object):
 
         if compress:
             assert o_path.endswith('.xz'), o_path
-            data = open(t_path).read()
-            logs, data = streamcorpus.compress_and_encrypt(data)
-            t_path2 = t_path + '_.xz'
-            open(t_path2, 'wb').write(data)
+            t_path2 = streamcorpus.compress_and_encrypt_path(t_path)
             os.rename(t_path2, t_path)
  
         ## do an atomic renaming    

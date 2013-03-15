@@ -156,10 +156,7 @@ class to_s3_chunks(object):
         Load chunk from t_path and put it into the right place in s3
         using the output_name template from the config
         '''
-        data = open(t_path).read()
-        logger.debug('got %d bytes from file' % len(data))
-
-        name_info.update( get_name_info(data) )
+        name_info.update( get_name_info(t_path) )
         if name_info['num'] == 0:
             o_path = None
             return o_path
@@ -170,6 +167,8 @@ class to_s3_chunks(object):
         logger.info('to_s3_chunks: \n\t%r\n\tfrom: %r\n\tby way of %r ' % (o_path, i_str, t_path))
 
         ## compress and encrypt
+        data = open(t_path).read()
+        logger.debug('got %d bytes from file' % len(data))
         logger.critical( 'key path: %r' % self.config['gpg_encryption_key_path'] )
         _errors, data = compress_and_encrypt(
             data, self.config['gpg_encryption_key_path'],

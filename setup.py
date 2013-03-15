@@ -71,7 +71,7 @@ setup(
         'gevent',
         'protobuf',
         'requests',
-        'streamcorpus>=0.2.11',
+        'streamcorpus>=0.2.14',
         'pyyaml',
         'nltk',
         'lxml',
