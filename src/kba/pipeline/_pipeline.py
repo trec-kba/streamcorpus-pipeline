@@ -99,7 +99,10 @@ class Pipeline(object):
             transform.shutdown()
         logger.critical('shutdown in final steps')
         logging.shutdown()
-        sys.exit()
+        if msg:
+            sys.exit(-1)
+        elif sig:
+            sys.exit()
 
     def run(self):
         '''
