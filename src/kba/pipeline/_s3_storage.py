@@ -17,7 +17,7 @@ import traceback
 import _extract_spinn3r
 import streamcorpus
 from _get_name_info import get_name_info
-from streamcorpus import decrypt_and_uncompress, compress_and_encrypt, Chunk
+from streamcorpus import decrypt_and_uncompress, compress_and_encrypt_path, Chunk
 from cStringIO import StringIO
 from _exceptions import FailedExtraction
 
@@ -167,14 +167,14 @@ class to_s3_chunks(object):
         logger.info('to_s3_chunks: \n\t%r\n\tfrom: %r\n\tby way of %r ' % (o_path, i_str, t_path))
 
         ## compress and encrypt
-        data = open(t_path).read()
-        logger.debug('got %d bytes from file' % len(data))
         logger.critical( 'key path: %r' % self.config['gpg_encryption_key_path'] )
-        _errors, data = compress_and_encrypt(
-            data, self.config['gpg_encryption_key_path'],
+        _errors, t_path2 = compress_and_encrypt_path(
+            t_path, 
+            self.config['gpg_encryption_key_path'],
             gpg_recipient=self.config['gpg_recipient'])
         logger.info( '\n'.join(_errors) )
 
+        data = open(t_path2).read()
         logger.debug('compressed size: %d' % len(data))
         while 1:
             start_time  = time.time()
