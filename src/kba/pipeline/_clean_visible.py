@@ -13,9 +13,12 @@ Copyright 2012 Diffeo, Inc.
 import re
 import sys
 import string
+import logging
 import itertools
 import traceback
 import lxml.etree
+
+logger = logging.getLogger(__name__)
 
 ## regex to identify all XML-like tags, including SCRIPT and STYLE tags
 invisible = re.compile(
@@ -141,18 +144,17 @@ def make_clean_visible_file(i_chunk, clean_visible_path):
                 ## then it means that clean_visible (or more likely
                 ## clean_html) is not what it is supposed to be.
                 ## Therefore, do not take it lightly:
-                print traceback.format_exc(exc)
-                print 'failed on stream_id=%s to follow:' % si.stream_id
-                print repr(si.body.clean_visible)
-                print 'above was stream_id=%s' % si.stream_id
+                logger.critical( traceback.format_exc(exc) )
+                logger.critical( 'failed on stream_id=%s to follow:' % si.stream_id )
+                logger.critical( repr(si.body.clean_visible) )
+                logger.critical( 'above was stream_id=%s' % si.stream_id )
                 sys.exit(str(exc))
         else:
             doc.text = ''
         _clean.write(lxml.etree.tostring(doc, encoding='UTF-8'))
     _clean.write('</root>')
     _clean.close()
-    ## replace this with log.info()
-    print clean_visible_path
+    logger.info( clean_visible_path )
 
     '''
     ## hack to capture html for inspection
