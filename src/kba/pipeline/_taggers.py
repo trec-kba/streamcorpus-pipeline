@@ -291,6 +291,7 @@ the output path to create.
             raise PipelineOutOfMemory(msg)
 
         s_out, errors = self._child.communicate()
+
         if not self._child.returncode == 0:
             if 'java.lang.OutOfMemoryError' in errors:
                 msg = errors + make_memory_info_msg(clean_visible_path, ner_xml_path)
@@ -306,7 +307,9 @@ the output path to create.
                 raise PipelineBaseException('tagger exitted with %r' % self._child.returncode)
 
         elapsed = time.time() - start_time
+        logger.info('finished tagging in %.1f seconds' % elapsed)
         return elapsed
+
         #print '%.1f sec --> %.1f StreamItems/second' % (elapsed, rate)
 
     ## gets called by self.__call__
@@ -363,6 +366,8 @@ the output path to create.
             ## could consume lots of memory here by instantiating everything
             stream_item.body.sentences[self.tagger_id] = list( self.get_sentences(ner_dom) )
 
+            logger.debug('finished aligning tokens %s' % stream_item.stream_id)
+
             '''
             for num, sent in enumerate(sentences):
                 for tok in sent.tokens:
@@ -385,6 +390,7 @@ the output path to create.
         ## all done, so close the o_chunk
         try:
             o_chunk.close()
+            logger.info('finished chunk for %r' % ner_xml_path)
         except MemoryError, exc:
             msg = traceback.format_exc(exc)
             msg += make_memory_info_msg()
