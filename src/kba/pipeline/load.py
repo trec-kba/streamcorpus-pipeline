@@ -13,6 +13,7 @@ import json
 import logging
 from _getch import getch
 from _task_queues import ZookeeperTaskQueue
+from streamcorpus import make_stream_time
 
 if __name__ == '__main__':
     import yaml
@@ -40,6 +41,9 @@ if __name__ == '__main__':
     parser.add_argument(
         '--finish', action='store_true', default=False,
         help='Finish the queue and then stop all current task workers.')
+    parser.add_argument(
+        '--run-forever', action='store_true', default=False,
+        help='set "mode" ot RUN_FOREVER for all task workers.')
     parser.add_argument(
         '--counts', action='store_true', default=False,
         help='Display counts for the queue.')
@@ -146,6 +150,9 @@ if __name__ == '__main__':
     if args.finish:
         tq.set_mode( tq.FINISH )
 
+    if args.run_forever:
+        tq.set_mode( tq.RUN_FOREVER )
+
     if args.cleanup:
         tq.cleanup(args.key_prefix)
 
@@ -186,7 +193,8 @@ if __name__ == '__main__':
             counts = tq.counts_detailed
         else:
             counts = tq.counts
-        print('\n\n     counts for %s at %s\n\n' % (namespace, tq.addresses))
+        print('\ncounts for %s at %s' % (namespace, tq.addresses))
+        print(repr(make_stream_time()))
         print('\n'.join(['\t%s:\t%s' % (k, v) for k, v in counts.items()]))
         print('Total: %d' % sum([counts[k] for k in ['available', 'pending', 'completed']]))
         print('Num Tasks: %d' % counts['tasks'])
