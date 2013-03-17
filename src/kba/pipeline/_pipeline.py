@@ -196,13 +196,15 @@ class Pipeline(object):
 
                 ## incremental transforms populate t_chunk
                 if not hit_last: # avoid re-adding last si
-                    self._run_incremental_transforms(si)
+                    ## let the incremental transforms destroy the si by returning None
+                    si = self._run_incremental_transforms(si)
 
                 ## insist that every chunk has only one source string
-                sources.add( si.source )
-                assert len(sources) == 1, sources
+                if si:
+                    sources.add( si.source )
+                    assert len(sources) == 1, sources
 
-                if si.body and si.body.clean_visible:
+                if si and si.body and si.body.clean_visible:
                     len_clean_visible += len(si.body.clean_visible)
                     ## log binned clean_visible lengths, for quick stats estimates
                     #logger.debug('len(si.body.clean_visible)=%d' % int(10 * int(math.floor(float(len(si.body.clean_visible)) / 2**10)/10)))
@@ -357,3 +359,5 @@ class Pipeline(object):
             else:
                 ## put the StreamItem into the output
                 self.t_chunk.add(si)
+
+        return si
