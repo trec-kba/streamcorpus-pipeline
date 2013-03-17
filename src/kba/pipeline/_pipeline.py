@@ -246,13 +246,17 @@ class Pipeline(object):
                 o_paths = []
                 for loader in self._loaders:
                     try:
-                        o_path = loader(t_path, name_info, i_str)
+                        logger.debug('running %r on %r: %r' % (loader, i_str, name_info))
+                        o_path = loader(t_path, name_info, i_str)                        
                     except OSError, exc:
                         if exc.errno == 12:
                             logger.critical('caught OSError 12 in loader, so shutting down')
                             self.shutdown( msg=traceback.format_exc(exc) )
+                        else:
+                            logger.critical(traceback.format_exc(exc))
+                            raise exc
 
-                    logger.warn('loaded (%d, %d) of %r into %r' % (
+                    logger.debug('loaded (%d, %d) of %r into %r' % (
                             start_count, next_idx - 1, i_str, o_path))
                     if o_path:
                         o_paths.append( o_path )
@@ -265,6 +269,7 @@ class Pipeline(object):
 
                 if not hit_last:
                     ## commit the paths saved so far
+                    logger.debug('partial_commit( %d, %d, %r )' % (start_count, next_idx, o_paths))
                     self._task_queue.partial_commit( start_count, next_idx, o_paths )
 
                     ## reset t_path, so we get it again
@@ -283,6 +288,7 @@ class Pipeline(object):
                 else:
                     ## put the o_paths into the task_queue, and set
                     ## the task to 'completed'
+                    logger.debug('commit( %d, %r )' % (next_idx, o_paths))
                     self._task_queue.commit( next_idx, o_paths )
 
             ## record elapsed time
