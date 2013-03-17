@@ -102,7 +102,7 @@ class Pipeline(object):
         if msg:
             sys.exit(-1)
         elif sig:
-            sys.exit()
+            sys.exit(128 + sig)
 
     def run(self):
         '''
@@ -299,7 +299,7 @@ class Pipeline(object):
                         next_idx, elapsed, rate, i_str))
 
             ## loop to next i_str
-
+        logger.critical('exiting Pipeline.run')
 
     def _run_batch_transforms(self, chunk_path):
         for transform in self._batch_transforms:

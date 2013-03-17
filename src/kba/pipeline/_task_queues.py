@@ -274,6 +274,10 @@ class ZookeeperTaskQueue(object):
                 sleep_time = min(sleep_time * 2, 128) 
                 self._backoff(sleep_time)
 
+        assert not self._pending_task_key, \
+            'should never break out of worker loop with _pending_task_key=%r' \
+            % self._pending_task_key
+
     @_ensure_connection
     def _return_task(self):
         '''
