@@ -73,6 +73,21 @@ def upgrade_streamcorpus(config):
                     s1.title.cleansed,
                     s1.anchor.cleansed,
                     s1.body.cleansed])
+
+            changed_body_raw = False
+            if s1.title and s1.title.raw:
+                s2.body.raw = s1.title.raw
+                s2.body.raw += r'\n\n'
+                changed_body_raw = True
+
+            if s1.anchor and s1.anchor.raw:
+                s2.body.raw += s1.anchor.raw
+                s2.body.raw += r'\n\n'
+                changed_body_raw = True
+
+            if changed_body_raw:
+                s2.body.raw += s1.body.raw
+
         if s1.title:
             ci = ContentItem(
                 raw = s1.title.raw,
