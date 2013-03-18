@@ -38,3 +38,6 @@ class truncate(object):
 
         ## atomic rename new chunk file into place
         os.rename(tmp_chunk_path, chunk_path)
+
+    def shutdown(self):
+        pass
