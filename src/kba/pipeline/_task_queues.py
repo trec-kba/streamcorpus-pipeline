@@ -291,6 +291,7 @@ class ZookeeperTaskQueue(object):
             self.data['epoch_ticks'] = st.epoch_ticks
             self.data['zulu_timestamp'] = st.zulu_timestamp
             self.data['state'] = 'available'
+            self.data['owner'] = None
 
             ## remove the pending task
             self._zk.delete(self._path('pending', self._pending_task_key))
