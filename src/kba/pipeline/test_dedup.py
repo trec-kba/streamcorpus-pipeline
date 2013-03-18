@@ -18,7 +18,7 @@ logger.addHandler(ch)
 
 from _test_data import get_test_chunk_path, get_test_chunk
 
-def test_dedup_debugging_config():
+def test_dedup_debugging_config(tmpdir):
     
     ## first test the debugging config
     config = dict(
@@ -44,7 +44,7 @@ def test_dedup_debugging_config():
         min_len_sim_thousandths_clean = 850,
         min_len_sim_thousandths_raw = 850,
 
-        log_dir_path = '/tmp/foo',
+        log_dir_path = tmpdir.dirname,
         log_nilsimsa_threshold = 100,
         )
 
