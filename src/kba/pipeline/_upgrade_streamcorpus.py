@@ -8,6 +8,8 @@ Copyright 2012 Diffeo, Inc.
 '''
 
 from streamcorpus import make_stream_item, make_stream_time, ContentItem, Tagging, Rating, Target, Annotator
+import logging
+logger = logging.getLogger(__name__)
 
 def keep_annotatoted(config):
     '''
@@ -51,6 +53,8 @@ def upgrade_streamcorpus(config):
 
         logger.critical('len(original .body.raw) = %d' % len( s1.body.raw ))
 
+        #logger.critical(repr(s2))
+
         s2.body = ContentItem(
             raw = s1.body.raw,
             encoding = s1.body.encoding,
@@ -64,6 +68,7 @@ def upgrade_streamcorpus(config):
                     tagger_version = 'Stanford CoreNLP ver 1.2.0',
                     )}
             )
+
         if 'keep_old_cleansed_as_clean_visible' in config and \
                 config['keep_old_cleansed_as_clean_visible']:
             s2.body.clean_visible = s1.body.cleansed
