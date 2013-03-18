@@ -345,10 +345,10 @@ class Pipeline(object):
             except Exception, exc:
                 logger.critical('Pipeline trapped: %s' % traceback.format_exc(exc))
 
-                if self.config['embedded_logs']:
+                if self.config.get('embedded_logs', None):
                     si.body.logs.append( traceback.format_exc(exc) )
 
-                if self.config['log_dir_path']:
+                if self.config.get('log_dir_path', None):
                     log_full_file(si, 'fallback-givingup', self.config['log_dir_path'])
 
         if si is not None:
