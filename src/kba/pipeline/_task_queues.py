@@ -117,7 +117,7 @@ def _ensure_connection(func):
                     self._restarter(self._zk.state)
                     logger.critical('worker_id=%r zookeeper session_id=%r COMPLETED reconnect'\
                                         % (self._worker_id, self._zk.client_id))
-                    break
+                    continue 
                 except Exception, exc:
                     logger.critical('worker_id=%r zookeeper session_id=%r FAILED reconnect --> %s'\
                                         % (self._worker_id, self._zk.client_id, traceback.format_exc(exc)))
