@@ -15,3 +15,6 @@ class HitMaxi16(PipelineBaseException):
 
 class PipelineOutOfMemory(PipelineBaseException):
     pass
+
+class TaskQueueUnreachable(PipelineBaseException):
+    pass

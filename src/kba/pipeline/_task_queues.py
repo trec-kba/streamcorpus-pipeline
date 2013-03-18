@@ -25,6 +25,7 @@ import kazoo.exceptions
 from kazoo.client import KazooClient
 from kazoo.client import KazooState
 from streamcorpus import make_stream_time
+from _exceptions import TaskQueueUnreachable
 
 logger = logging.getLogger(__name__)
 
@@ -123,6 +124,9 @@ def _ensure_connection(func):
                 tries += 1
                 delay *= 2
                 time.sleep(delay)
+
+        ## if we get here, then we hit max_tries:
+        raise TaskQueueUnreachable()
 
     return wrapped_func
 
