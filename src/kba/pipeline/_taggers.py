@@ -300,11 +300,11 @@ the output path to create.
                 msg = 'tagger returncode = 137\n' + errors
                 msg += make_memory_info_msg(clean_visible_path, ner_xml_path)
                 # maybe get a tail of /var/log/messages
-                raise PipelineOutOfMemory(msg)
+                raise PipelineOutOfMemory(msg)                
             elif 'Exception' in errors:
                 raise PipelineBaseException(errors)
             else:
-                raise PipelineBaseException('tagger exitted with %r' % self._child.returncode)
+                raise PipelineBaseException('tagger exited with %r' % self._child.returncode)
 
         elapsed = time.time() - start_time
         logger.info('finished tagging in %.1f seconds' % elapsed)
