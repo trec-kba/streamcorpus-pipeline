@@ -48,6 +48,9 @@ def upgrade_streamcorpus(config):
         s2.schost = s1.schost
         s2.source = s1.source
         s2.source_metadata['kba-2012'] = s1.source_metadata
+
+        logger.critical('len(original .body.raw) = %d' % len( s1.body.raw ))
+
         s2.body = ContentItem(
             raw = s1.body.raw,
             encoding = s1.body.encoding,
