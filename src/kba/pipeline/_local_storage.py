@@ -34,6 +34,37 @@ class from_local_chunks(object):
 
         return chunk
 
+def patient_move(path1, path2, max_tries=30):
+    backoff = 0.1
+    tries = 0
+    while tries < max_tries:
+        try:
+            shutil.copy2(path1, path2)
+        except IOError, exc:
+            if exc.errno == 2:
+                logger.critical('attempting retry on shutil.copy2(%r, %r)' % (path1, path2))
+                tries += 1
+                backoff *= 2
+                time.sleep(backoff)
+                continue
+            else:
+                logger.critical(traceback.format_exc(exc))
+                raise exc
+
+        try:
+            os.remove(path1)
+        except Exception, exc:
+            logger.critical('ignoring failure to os.remove(%r)' % path1)
+            pass
+
+        ## if we get here, we succeeded
+        return
+
+    ## if we get here, we hit max_tries
+    logger.critical('retried %d times' % tries)
+    logger.critical(traceback.format_exc(exc))
+    raise exc
+
 class to_local_chunks(object):
     def __init__(self, config):
         self.config = config
@@ -100,8 +131,7 @@ class to_local_chunks(object):
                 logger.debug('renamed %r --> %r' % (t_path2, t_path))
             except OSError, exc:                
                 if exc.errno==18:
-                    shutil.copy2(t_path2, t_path)
-                    os.remove(t_path2)
+                    patient_move(t_path2, t_path)
                 else:
                     logger.critical(traceback.format_exc(exc))
                     raise exc
@@ -112,8 +142,7 @@ class to_local_chunks(object):
             os.rename(t_path, o_path)
         except OSError, exc:                
             if exc.errno==18:
-                shutil.copy2(t_path, o_path)
-                os.remove(t_path)
+                patient_move(t_path, o_path)
             else:
                 msg = 'failed shutil.copy2(%r, %r) and/or os.remove(t_path)\n%s'\
                     % (t_path, o_path, traceback.format_exc(exc))
