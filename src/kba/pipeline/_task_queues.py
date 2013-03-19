@@ -227,7 +227,12 @@ class ZookeeperTaskQueue(object):
         Get an ID for this worker process by creating a sequential
         ephemeral node
         '''
-        self._zk.delete(self._path('workers', self._worker_id))
+        try:
+            self._zk.delete(self._path('workers', self._worker_id))
+        except kazoo.exceptions.NoNodeError:
+            logger.critical('attempted to _unregsiter node already gone: %r'\
+                                % self._path('workers', self._worker_id))
+            pass
 
     def _backoff(self, backoff_time):
         time.sleep(backoff_time)
