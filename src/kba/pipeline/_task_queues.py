@@ -515,6 +515,17 @@ class ZookeeperTaskQueue(object):
                             self._zk.delete(self._path('pending', key))
                         except:
                             pass
+                        if completed:
+                            try:
+                                self._zk.create(self._path('completed', key))
+                            except kazoo.exceptions.NodeExistsError:
+                                pass
+                        else:
+                            try:
+                                self._zk.delete(self._path('completed', key))
+                            except kazoo.exceptions.NoNodeError:
+                                pass
+                            
                     else:
                         raise(exc)
 
