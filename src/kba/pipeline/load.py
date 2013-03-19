@@ -61,12 +61,13 @@ if __name__ == '__main__':
             'loaded tasks to "completed" and ERASES previous state.')
     parser.add_argument(
         '--list-completed', action='store_true', default=False,
-        dest='list_completed',
         help='List all completed tasks.')
     parser.add_argument(
         '--list-not-completed', action='store_true', default=False,
-        dest='list_not_completed',
         help='List all not completed tasks.')
+    parser.add_argument(
+        '--list-failures', action='store_true', default=False,
+        help='List all tasks with "failure_log".')
     parser.add_argument(
         '--list-pending', action='store_true', default=False,
         help='List full details of all "pending" tasks.')
@@ -219,17 +220,21 @@ if __name__ == '__main__':
             if task['state'] != 'completed':
                 print json.dumps(task, indent=4, sort_keys=True)
 
-    if args.reset_failures:
-        print 'starting'
+    if args.reset_failures or args.list_failures:
+        logger.critical( 'starting' )
         for num, task in enumerate(tq.completed):
             if 'failure_log' in task and task['failure_log']:
-                logger.critical('reseting %s because %s' % (task['i_str'], task['failure_log']))
-                num = tq.push(task['i_str'], redo=True)
-                assert num == 1
+                if args.reset_failures:
+                    logger.critical('reseting %s because %s' % (task['i_str'], task['failure_log']))
+                    num = tq.push(task['i_str'], redo=True)
+                    assert num == 1
+                elif args.list_failures:
+                    logger.critical(json.dumps(task, indent=4, sort_keys=True))
+                else:
+                    raise Exception('must be either --list-failures or --reset-failures')
 
             if num % 100 == 0:
-                print num
-                sys.stdout.flush()
+                logger.critical( '%d finished' % num )
 
     if args.reset_wrong_output_path:
 
