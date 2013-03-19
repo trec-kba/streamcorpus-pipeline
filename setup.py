@@ -68,10 +68,10 @@ setup(
     ],
     install_requires=[
         'thrift',
-        'gevent',
+        #'gevent',      ## required in .rpm
         'protobuf',
         'requests',
-        'streamcorpus>=0.2.16',
+        'streamcorpus>=0.2.17',
         'pyyaml',
         'nltk',
         'lxml',
@@ -79,8 +79,10 @@ setup(
         'boto',
         'kazoo',
         #'marisa-trie',
-        #'jellyfish',
+        #'jellyfish',    ## required in .rpm
         'nilsimsa>=0.2',
+        #'pytest',       ## required in .rpm
+        #'pycassa', 
         'chromium_compact_language_detector',
     ],
     # include_package_data = True,
