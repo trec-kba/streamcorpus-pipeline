@@ -9,6 +9,7 @@ Copyright 2012 Diffeo, Inc.
 import os
 import sys
 import time
+import errno
 import shutil
 import hashlib
 import logging
@@ -23,16 +24,32 @@ class from_local_chunks(object):
         self.config = config
 
     def __call__(self, i_str):
+        backoff = 0.1
+        start_time = time.time()
         tries = 0
         while tries < self.config['max_retries']:
             try:
                 chunk = streamcorpus.Chunk(path=i_str, mode='rb')
-                tries += 1
-            except IOError:
-                ## File is missing?  Assume is slow NFS, keep trying
-                time.sleep(2 ** (tries / 6))
+                return chunk
+            except IOError, exc:
+                if exc.errno == errno.ENOENT:
+                    logger.critical('File is missing?  Assume is slow NFS, try %d more times'\
+                                        % (self.config['max_retries'] - tries))
+                    backoff *= 2
+                    tries += 1
+                    elapsed = time.time() - start_time
+                    if elapsed > self.config.get('max_backoff', 300):
+                        ## give up after five minutes of retries
+                        break
+                    time.sleep(backoff)
+                    
+                else:
+                    logger.critical(traceback.format_exc(exc))
+                    raise exc
+        ## exceeded max_retries
+        logger.critical('File not found after %d retries' % tries)
+        raise exc
 
-        return chunk
 
 def patient_move(path1, path2, max_tries=30):
     backoff = 0.1
