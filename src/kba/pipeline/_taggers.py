@@ -379,6 +379,9 @@ the output path to create.
                 aligner = AlignmentStrategies[ self.config['align_labels_by'] ]
                 aligner( stream_item, self.config['aligner_data'] )
 
+            ## forcibly collect dereferenced objects
+            gc.collect()
+
             try:
                 o_chunk.add(stream_item)
             except MemoryError, exc:

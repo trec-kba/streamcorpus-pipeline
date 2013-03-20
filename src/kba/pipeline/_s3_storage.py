@@ -166,6 +166,9 @@ class to_s3_chunks(object):
 
         logger.info('to_s3_chunks: \n\t%r\n\tfrom: %r\n\tby way of %r ' % (o_path, i_str, t_path))
 
+        ## forcibly collect dereferenced objects
+        #gc.collect()
+
         ## compress and encrypt
         logger.critical( 'key path: %r' % self.config['gpg_encryption_key_path'] )
         _errors, t_path2 = compress_and_encrypt_path(
