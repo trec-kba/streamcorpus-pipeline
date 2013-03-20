@@ -58,7 +58,7 @@ As a test run this:
     source /data/trec-kba/installs/py27env/bin/activate
 
     ## install all the python libraries
-    make dev-all
+    make install
 
     ## run a simple test
     make john-smith-simple
