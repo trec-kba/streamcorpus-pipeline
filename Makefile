@@ -15,7 +15,7 @@ test: clean
 	py.test --genscript=runtests.py
 	python runtests.py -s
 
-john-smith: clean dev-all test
+john-smith: clean install test
 	echo data/john-smith/original | python -m kba.pipeline.run configs/john-smith.yaml
 	echo data/john-smith/original | python -m kba.pipeline.run configs/john-smith-lingpipe.yaml
 	echo data/john-smith/john-smith-0.sc | python -m kba.pipeline.run configs/john-smith-lingpipe-from-chunk.yaml
@@ -27,10 +27,10 @@ john-smith: clean dev-all test
 	diff tmp/lp-0.tsv tmp/lp-test-0.tsv
 	diff tmp/lp-0.tsv data/john-smith/john-smith-tagged-by-lingpipe-0.tsv
 
-john-smith-simple: clean install-kba test
+john-smith-simple: clean install test
 	echo data/john-smith/original | python -m kba.pipeline.run configs/john-smith.yaml
 
-stanford: dev-all
+stanford: install
 	## this is so slow that there must be something wrong with our
 	## build of Stanford CoreNLP
 	echo data/john-smith/john-smith-0.sc | python -m kba.pipeline.run configs/john-smith-stanford-from-chunk.yaml
@@ -47,7 +47,7 @@ lxml:
 post-build-test:
 	echo data/john-smith/john-smith-0.sc | python -m kba.pipeline.run configs/john-smith-lingpipe-from-chunk.yaml
 
-install-kba: clean lxml
+install: clean lxml
 	python setup.py clean --all
 	python setup.py build
 	python setup.py install
@@ -55,5 +55,3 @@ install-kba: clean lxml
 egg: 
 	python setup.py bdist_egg
 	echo "Newly build egg can be found in the dist/ directory"
-
-dev-all: install-kba
