@@ -87,6 +87,15 @@ if __name__ == '__main__':
         '--reset-wrong-output-path', metavar='REGEX', default=None,
         help='Reset to "available" tasks for which any output path matches REGEX.')
     parser.add_argument(
+        '--reset-regex', action='store_true', default=False,
+        help='Reset to "available" tasks for which the i_str matches --regex=REGEX.')
+    parser.add_argument(
+        '--list-regex', action='store_true', default=False,
+        help='list tasks for which the i_str matches --regex=REGEX.')
+    parser.add_argument(
+        '--regex', metavar='REGEX',
+        help='use with --list-regex or --reset-regex.')    
+    parser.add_argument(
         '--key-prefix', default='', metavar='PREFIX', 
         help='apply command to all keys starting with PREFIX.  Works with --reset-wrong-output-path, --reset-pending, --reset-completed, and --cleanup')
     parser.add_argument(
@@ -202,9 +211,9 @@ if __name__ == '__main__':
 
     if args.list_completed:
         for completed in tq.completed:
-            print 'in:  %s\nout: %r' % (
+            print '#%s\n%s' % (
                 completed['i_str'], 
-                'result' in completed and completed['result'] or [])
+                '\n'.join(completed['results']))
 
             if args.detailed:
                 print json.dumps(completed, indent=4, sort_keys=True)
@@ -232,6 +241,22 @@ if __name__ == '__main__':
                     logger.critical(json.dumps(task, indent=4, sort_keys=True))
                 else:
                     raise Exception('must be either --list-failures or --reset-failures')
+
+            if num % 100 == 0:
+                logger.critical( '%d finished' % num )
+
+    if args.reset_regex or args.list_regex:
+        logger.critical( 'starting' )
+        for num, task in enumerate(tq.completed):
+            if re.match(args.regex, task['i_str']):
+                if args.reset_regex:
+                    logger.critical('reseting %s' % task['i_str'])
+                    num = tq.push(task['i_str'], redo=True)
+                    assert num == 1
+                elif args.list_regex:
+                    logger.critical(json.dumps(task, indent=4, sort_keys=True))
+                else:
+                    raise Exception('must be either --list-regex or --reset-regex')
 
             if num % 100 == 0:
                 logger.critical( '%d finished' % num )
