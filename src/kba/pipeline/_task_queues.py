@@ -824,3 +824,13 @@ class ZookeeperTaskQueue(object):
                     self._zk.create(self._path('available', task_key))
             else:
                 raise Exception( 'unknown state: %r' % data['state'] )
+
+    def clear_registered_workers(self):
+        '''
+        Delete every registered worker node
+        '''
+        for worker_id in self._zk.get_children(self._path('workers')):
+            try:
+                self._zk.delete(self._path('workers', worker_id))
+            except kazoo.exceptions.NoNodeError:
+                pass

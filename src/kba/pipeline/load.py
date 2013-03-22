@@ -99,6 +99,9 @@ if __name__ == '__main__':
         '--key-prefix', default='', metavar='PREFIX', 
         help='apply command to all keys starting with PREFIX.  Works with --reset-wrong-output-path, --reset-pending, --reset-completed, and --cleanup')
     parser.add_argument(
+        '--clear-registered-workers', action='store_true', default=False,
+        help='Delete registered worker nodes from Zookeeper... the worker might still continue running, so be careful.')
+    parser.add_argument(
         '--purge', 
         help='Totally remove these tasks from the entire queue -- gone.')
     parser.add_argument(
@@ -153,6 +156,9 @@ if __name__ == '__main__':
         sys.stdout.write('Loading...')
         num = tq.push(*args.load, completed=args.set_completed, redo=args.redo, allow_wrong_s3=args.allow_wrong_s3)
         print(' %d pushed new tasks.' % num)
+
+    if args.clear_registered_workers:
+        tq.clear_registered_workers()
 
     if args.terminate:
         tq.set_mode( tq.TERMINATE )
