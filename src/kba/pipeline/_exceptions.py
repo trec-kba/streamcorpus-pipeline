@@ -18,3 +18,7 @@ class PipelineOutOfMemory(PipelineBaseException):
 
 class TaskQueueUnreachable(PipelineBaseException):
     pass
+
+class GracefulShutdown(PipelineBaseException):
+    pass
+

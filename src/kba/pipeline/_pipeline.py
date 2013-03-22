@@ -23,7 +23,7 @@ import streamcorpus
 
 from _logging import log_full_file
 from _stages import _init_stage
-from _exceptions import FailedExtraction
+from _exceptions import FailedExtraction, GracefulShutdown
 import _exceptions
 
 logger = logging.getLogger(__name__)
@@ -88,7 +88,7 @@ class Pipeline(object):
             logger.debug('setting signal handler for %r' % sig)
             signal.signal(sig, self.shutdown)
 
-    def shutdown(self, sig=None, frame=None, msg=None):
+    def shutdown(self, sig=None, frame=None, msg=None, exit_code=None):
         if sig:
             logger.critical('shutdown inititated by signal: %r' % sig)
         elif msg:
@@ -97,12 +97,15 @@ class Pipeline(object):
         self._task_queue.shutdown()
         for transform in self._batch_transforms:
             transform.shutdown()
-        logger.critical('shutdown in final steps')
+        if exit_code is None:
+            if msg:
+                exit_code = -1
+            elif sig:
+                exit_code = 128 + sig
+        logger.critical('shutdown in final steps, exit_code=%d' % exit_code)
         logging.shutdown()
-        if msg:
-            sys.exit(-1)
-        elif sig:
-            sys.exit(128 + sig)
+        sys.exit(exit_code)
+
 
     def run(self):
         '''
@@ -111,7 +114,20 @@ class Pipeline(object):
         start_processing_time = time.time()
 
         ## iterate over input strings from the specified task_queue
-        for start_count, i_str in self._task_queue:
+        tasks = iter(self._task_queue)
+        while 1:
+            try:
+                start_count, i_str = tasks.next()
+            except StopIteration:
+                break
+            except GracefulShutdown, exc:
+                ## do a graceful shutdown instead of just a simple
+                ## clean exit, because we want to do the various
+                ## .shutdown() calls, e.g. to the task_queue itself
+                exit_code = 0
+                self.shutdown(
+                    exit_code=exit_code,
+                    msg='executing %r, exit_code=%d' % (exc, exit_code))
 
             if self._shutting_down:
                 break

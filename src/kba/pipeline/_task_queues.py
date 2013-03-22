@@ -25,7 +25,7 @@ import kazoo.exceptions
 from kazoo.client import KazooClient
 from kazoo.client import KazooState
 from streamcorpus import make_stream_time
-from _exceptions import TaskQueueUnreachable
+from _exceptions import TaskQueueUnreachable, GracefulShutdown
 
 logger = logging.getLogger(__name__)
 
@@ -251,6 +251,7 @@ class ZookeeperTaskQueue(object):
         while True:
             ## clear the last task, if it wasn't already cleared by
             ## the caller using the iterator
+            # maybe stop doing this?
             self.commit()
 
             ## get a task
@@ -374,6 +375,23 @@ class ZookeeperTaskQueue(object):
     @_ensure_connection
     def _random_available_task(self):
         task_keys = self._zk.get_children(self._path('available'))
+        num_workers = len(self._zk.get_children(self._path('workers')))
+        num_tasks = len(task_keys)
+        if num_workers > num_tasks:
+            ## consider shutting down
+            mode = self._read_mode()
+            do_shutdown = False
+            if mode == self.TERMINATE:
+                do_shutdown = True
+            elif mode == self.FINISH and \
+                    random.random() < self._config.get('finish_ramp_down_fraction', 0.1):
+                do_shutdown = True
+            elif mode == self.RUN_FOREVER:
+                ## maybe backoff here?
+                pass
+            if do_shutdown:
+                raise GracefulShutdown('mode=%r num_workers=%d > %d=num_tasks' \
+                                           % (mode, num_workers, num_tasks))
         if not task_keys:
             return None
         else:
@@ -688,6 +706,7 @@ class ZookeeperTaskQueue(object):
             ## default to RUN_FOREVER
             return self.RUN_FOREVER
         else:
+            ## convert mode string into class property
             return getattr(self, mode)
 
     def reset_completed(self, key_prefix=''):
