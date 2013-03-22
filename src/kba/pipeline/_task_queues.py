@@ -645,15 +645,13 @@ class ZookeeperTaskQueue(object):
         #    ## sum the current end_count for both partial and completed
         #    num_stream_items_done += data['end_count'] and data['end_count'] or 0
 
-        num_completed = len(self) - self._len('available') - self._len('pending')
-
         return {
             'registered workers': self._len('workers'),
             'tasks': len(self),
             'available': self._len('available'),
             'pending': self._len('pending'),
             'mode': self._read_mode(),
-            'completed': num_completed,
+            'completed': self._len('completed'),
             #'partials': num_partials,
             #'stream_items_done': num_stream_items_done,
             }
