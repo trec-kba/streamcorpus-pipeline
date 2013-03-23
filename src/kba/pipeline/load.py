@@ -212,8 +212,12 @@ if __name__ == '__main__':
         print('\ncounts for %s at %s' % (namespace, tq.addresses))
         print(repr(make_stream_time()))
         print('\n'.join(['\t%s:\t%s' % (k, v) for k, v in counts.items()]))
-        print('Total: %d' % sum([counts[k] for k in ['available', 'pending', 'completed']]))
-        print('Num Tasks: %d' % counts['tasks'])
+        
+        available_pending_completed = sum([counts[k] for k in ['available', 'pending', 'completed']])
+        print('%d len(available+pending+completed)' % available_pending_completed)
+        print('%d len(tasks)' % counts['tasks'])
+        print('%d missing' % (counts['tasks'] - available_pending_completed))
+
 
     if args.list_completed:
         for completed in tq.completed:

@@ -348,6 +348,11 @@ class ZookeeperTaskQueue(object):
             ## set the data
             self._zk.set(self._path('tasks', self._pending_task_key), json.dumps(self.data))
 
+            try:
+                self._zk.create(self._path('completed', self._pending_task_key))
+            except kazoo.exceptions.NodeExistsError:
+                pass
+
             ## reset our internal state
             self._pending_task_key = None
 
@@ -443,7 +448,7 @@ class ZookeeperTaskQueue(object):
 
     @_ensure_connection        
     def init_all(self):
-        for path in ['tasks', 'available', 'pending', 'mode', 'workers']:
+        for path in ['tasks', 'available', 'completed', 'pending', 'mode', 'workers']:
             if not self._zk.exists(self._path(path)):
                 self._zk.create(self._path(path), makepath=True)
 
@@ -784,6 +789,7 @@ class ZookeeperTaskQueue(object):
         tasks = self._zk.get_children(self._path('tasks'))
         pending = self._zk.get_children(self._path('pending'))
         available = self._zk.get_children(self._path('available'))
+        completed = self._zk.get_children(self._path('completed'))
         start_time = time.time()
         count = 0
         total_tasks = set()
@@ -802,24 +808,34 @@ class ZookeeperTaskQueue(object):
                     rate = float(count) / elapsed
                     undone = len(total_tasks) - count
                     remaining = float(undone) / rate / 3600
-                    logger.info('cleaning up %d in %.1f --> %.1f/sec --> %d (%.1f hrs) remaining'\
+                    logger.info('cleaning up %d in %.1f --> %.1f/sec --> %d (%.3f hrs) remaining'\
                                     % (count, elapsed, rate, undone, remaining))
             assert data['i_str'], repr(data['i_str'])
+
             if data['state'] == 'completed':
+                if task_key not in completed:
+                    self._zk.create(self._path('completed', task_key))
                 if task_key in pending:
                     self._zk.delete(self._path('pending', task_key))
                 if task_key in available:
                     self._zk.delete(self._path('available', task_key))
-            elif data['state'] == 'pending':
+
+            elif data['state'] == 'pending':                    
+                if task_key in completed:
+                    self._zk.delete(self._path('completed', task_key))
                 if task_key not in pending:
                     self._zk.create(self._path('pending', task_key))
                 if task_key in available:
                     self._zk.delete(self._path('available', task_key))
+
             elif data['state'] == 'available':
+                if task_key in completed:
+                    self._zk.delete(self._path('completed', task_key))
                 if task_key in pending:
                     self._zk.delete(self._path('pending', task_key))
                 if task_key not in available:
                     self._zk.create(self._path('available', task_key))
+
             else:
                 raise Exception( 'unknown state: %r' % data['state'] )
 
