@@ -48,13 +48,14 @@ def test_dedup_debugging_config(tmpdir):
         log_nilsimsa_threshold = 100,
         )
 
+    context = {}
     d1 = dedup( config )
 
     num_dups = 0
 
     for num, si in enumerate(get_test_chunk()):
 
-        if not d1( si ):
+        if not d1( si, context ):
             num_dups += 1
 
         if num > 10:
@@ -89,13 +90,15 @@ def test_dedup_production_config():
         min_len_sim_thousandths_raw = 850,
         )
 
+    context = {}
+
     d1 = dedup( config )
 
     num_dups = 0
 
     for num, si in enumerate(get_test_chunk()):
 
-        if not d1( si ):
+        if not d1( si, context ):
             num_dups += 1
 
 

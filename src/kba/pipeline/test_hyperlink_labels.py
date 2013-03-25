@@ -16,15 +16,16 @@ def make_test_stream_item():
     return stream_item
 
 def make_hyperlink_labeled_test_stream_item():
+    context = {}
     si = make_test_stream_item()
     hyperlink_labels(
         {'require_abs_url': True, 
          'all_domains': True,
          'offset_types': ['BYTES']}
-        )(si)
+        )(si, context)
 
     cv = _init_stage('clean_visible', {})
-    cv(si)
+    cv(si, context)
 
     return si
     
@@ -48,8 +49,9 @@ def make_hyperlink_labeled_test_chunk():
         ## clear out existing labels and tokens
         si.body.labels = {}
         si.body.sentences = {}
-        hl(si)
-        cv(si)
+        context = {}
+        hl(si, context)
+        cv(si, context)
         o_chunk.add(si)
 
     o_chunk.close()
@@ -59,12 +61,13 @@ def test_basics():
     start = time.time()
     ## run it with a byte regex
     si1 = make_test_stream_item()
+    context = {}
     hyperlink_labels(
         {'require_abs_url': True, 
          'domain_substrings': ['nytimes.com'],
          'all_domains': False,
          'offset_types': ['BYTES']}
-        )(si1)
+        )(si1, context)
     elapsed_bytes = time.time() - start
 
     assert si1.body.labels['author'][0].offsets.keys() == [OffsetType.BYTES]
@@ -77,7 +80,7 @@ def test_basics():
          'domain_substrings': ['nytimes.com'],
          'all_domains': False,
          'offset_types': ['LINES']}
-        )(si2)
+        )(si2, context)
     elapsed_lines = time.time() - start
 
     assert si2.body.labels['author'][0].offsets.keys() == [OffsetType.LINES]
@@ -114,6 +117,7 @@ def test_speed(parser_type):
             os.path.join(path, 'nytimes-index-clean.html')).read()
         stream_items.append( stream_item )
 
+    context = {}
     start = time.time()
     ## run it with a byte state machine
     for si in stream_items:
@@ -122,7 +126,7 @@ def test_speed(parser_type):
              'domain_substrings': ['nytimes.com'],
              'all_domains': False,
              'offset_types': [parser_type]}
-            )(si)
+            )(si, context)
     elapsed = time.time() - start
     
     rate = len(stream_items) / elapsed
@@ -176,12 +180,13 @@ def test_long_doc(parser_type):
     stream_item.body.clean_html = open(
         os.path.join(path, 'company-test.html')).read()
 
+    context = {}
     ## run it with a byte state machine
     hyperlink_labels(
         {'require_abs_url': True, 
          'all_domains': True,
          ## will fail if set to bytes
          'offset_types': [parser_type]}
-        )(stream_item)
+        )(stream_item, context)
 
     

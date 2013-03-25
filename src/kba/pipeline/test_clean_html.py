@@ -46,7 +46,8 @@ def test_target_parsing():
              all_domains=True,
              ))
     si = StreamItem(body=ContentItem(clean_html=html))
-    hyperlink_labels( si )
+    context = {}
+    hyperlink_labels( si, context )
     html2 = si.body.clean_html
 
     visible2 = make_clean_visible( html2 )
