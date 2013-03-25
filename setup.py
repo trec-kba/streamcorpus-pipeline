@@ -14,7 +14,7 @@ from distutils.core import Command
 from setuptools import setup, find_packages
 
 PROJECT = 'kba.pipeline'
-VERSION = '0.1.16'
+VERSION = '0.1.17'
 AUTHOR = 'Diffeo, Inc.'
 AUTHOR_EMAIL = 'support@diffeo.com'
 DESC = 'Tools for building streamcorpus objects for particular collections of text used in TREC KBA.'
