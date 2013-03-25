@@ -28,7 +28,7 @@ def keep_annotatoted(config):
                                                        target=Target(target_id='http://en.wikipedia.org/wiki/%s' % parts[3]))
 
     ## make a closure around config
-    def _keep_annotatoted(s1):
+    def _keep_annotatoted(s1, context):
         if s1.stream_id in annotated_stream_ids:
             r = annotated_stream_ids[s1.stream_id]
             s1.ratings[r.annotator.annotator_id] = [r]
@@ -44,7 +44,7 @@ def upgrade_streamcorpus(config):
     in v0_1_0 StreamItems and emits v0_2_0 StreamItems
     '''
     ## make a closure around config
-    def _upgrade_streamcorpus(s1):
+    def _upgrade_streamcorpus(s1, context):
         s2 = make_stream_item(s1.stream_time.zulu_timestamp,
                               s1.abs_url)
         s2.schost = s1.schost
