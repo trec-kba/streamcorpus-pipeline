@@ -119,7 +119,7 @@ class from_s3_chunks(object):
                 i_content_md5 = key.key.split('.')[-3]
             else:
                 ## go past {sc,protostream}.xz.gpg
-                i_content_md5 = key.key.split('.')[-4]
+                i_content_md5 = key.key.split('.')[-4][-32:]
 
             ## verify the data matches expected md5
             f_content_md5 = hashlib.md5(data).hexdigest()
