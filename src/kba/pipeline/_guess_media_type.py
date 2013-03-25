@@ -56,7 +56,7 @@ def file_type_stats(config):
     stats are just the first five non-whitespace characters.
     '''
     ## make a closure around config
-    def _file_type_stats(stream_item):
+    def _file_type_stats(stream_item, context):
         if stream_item.body and stream_item.body.raw:
             #print repr(stream_item.body.raw[:250])
             #sys.stdout.flush()
@@ -104,7 +104,7 @@ def guess_media_type(config):
     guessed.
     '''
     ## make a closure around config
-    def _guess_media_type(stream_item):
+    def _guess_media_type(stream_item, context):
         if stream_item.body and stream_item.body.media_type:
             ## don't change it
             return stream_item

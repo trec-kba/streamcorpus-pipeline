@@ -15,7 +15,7 @@ def language(config):
     If available, use .body.raw to guess the language name/code and
     store in .body.language
     '''
-    def _language(si):
+    def _language(si, context):
         if si.body and si.body.raw:
             name, code, is_reliable, num_text_bytes, details = cld.detect(si.body.raw)
             if is_reliable:

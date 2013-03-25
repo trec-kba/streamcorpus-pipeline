@@ -17,7 +17,7 @@ class dedup(object):
         self._doc_ids = dict()
         self._count = 0
 
-    def __call__(self, si):
+    def __call__(self, si, context):
         self._count += 1
 
         nil = None

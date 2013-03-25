@@ -13,7 +13,7 @@ class dump_label_stats(object):
         _path = os.path.join(self.config['dump_path'], str(uuid.uuid1()) + '.txt')
         self._dump_fh = open(self._path, 'wb')
 
-    def __call__(self, si):
+    def __call__(self, si, context):
         if self.config['annotator_id'] not in si.body.labels:
             return si
         for label in si.body.labels[self.config['annotator_id']]:

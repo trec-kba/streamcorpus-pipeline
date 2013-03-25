@@ -20,7 +20,7 @@ def handle_unconvertible_spinn3r(config):
     document from the corpus.
     '''
 
-    def _handle_unconvertible_spinn3r( si ):
+    def _handle_unconvertible_spinn3r( si, context ):
 
         if not si.body:
             sys.exit('si.body should never be none: %r' % si.stream_id)

@@ -340,7 +340,7 @@ class hyperlink_labels(object):
 
         return labels
 
-    def __call__(self, stream_item):
+    def __call__(self, stream_item, context):
         '''
         Act as an incremental transform in the kba.pipeline
         '''

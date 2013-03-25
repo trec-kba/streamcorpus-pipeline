@@ -298,7 +298,7 @@ def clean_html(config):
     generate stream_item.body.clean_html from body.raw
     '''
     ## make a closure around config
-    def _make_clean_html(stream_item):
+    def _make_clean_html(stream_item, context):
         code = config.get('require_language_code', None)
         allow_null = config.get('allow_null_language_code', False)
 

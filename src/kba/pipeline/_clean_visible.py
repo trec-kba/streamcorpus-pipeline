@@ -113,7 +113,7 @@ def clean_visible(config):
     assert config.get('require_clean_html', True)
 
     ## make a closure around config
-    def _make_clean_visible(stream_item):
+    def _make_clean_visible(stream_item, context):
         if stream_item.body and stream_item.body.clean_html:
             stream_item.body.clean_visible = \
                 make_clean_visible(stream_item.body.clean_html)
