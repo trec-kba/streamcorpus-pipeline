@@ -10,8 +10,8 @@ def test_langauge():
     si.body = ContentItem(raw=open(path).read())
 
     lang = _init_stage('language', {})
-
-    lang(si)
+    context = {}
+    lang(si, context)
 
     assert si.body.language.name == 'Japanese'
     assert si.body.language.code == 'ja'
