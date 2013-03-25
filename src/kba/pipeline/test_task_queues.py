@@ -59,6 +59,7 @@ def test_zk_partial_commit():
         zookeeper_address = 'localhost:2181',
         namespace = 'kba-pipeline-task-queue-test',
         zookeeper_timeout = 120,
+        finish_ramp_down_fraction = 0.0,
         config_hash = '',
         config_json = '',
         )
@@ -78,7 +79,7 @@ def test_zk_partial_commit():
     tq1 = _init_stage('zookeeper', config)
 
     tasks = iter(tq1)
-    start, t0 = tasks.next()
+    start, t0, data = tasks.next()
     assert start == 0
     tq1.partial_commit(0, 10, ['some path'])
     tq1.partial_commit(10, 20, ['some path'])
@@ -92,9 +93,10 @@ def test_zk_partial_commit():
 
     ## get a new client
     tq1 = _init_stage('zookeeper', config)
-    expected = set( [(30, t0)] )
+    expected = set( [(30, t0, '{}')] )
     for letter in test_data:
         if letter != t0:
-            expected.add( (0, letter) )
-    received = set(list(tq1))
-    assert expected == received, received
+            expected.add( (0, letter, '{}') )
+    received = set([(start_count, task_string, '{}')
+                 for start_count, task_string,  data in tq1])
+    assert expected == received

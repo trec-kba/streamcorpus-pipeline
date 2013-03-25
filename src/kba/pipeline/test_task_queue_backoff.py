@@ -7,6 +7,7 @@ class TestableZookeeperTaskQueue(ZookeeperTaskQueue):
     def __init__(self):
         self.sleeping = []
         self.tasks = [ (0, None) for x in xrange(0,8) ] + [(1, "Test Done")]
+        self.data = {}
         pass
 
     def _register(self):
@@ -31,7 +32,7 @@ class TestableZookeeperTaskQueue(ZookeeperTaskQueue):
 def test_iter_backoff():
     tq = TestableZookeeperTaskQueue()
     it = iter(tq)
-    end_count, i_str = it.next()
+    end_count, i_str, data = it.next()
     assert i_str == "Test Done"
     # Specification is to sleep for upto 128 seconds with exponential backoff starting at 2 seconds
     assert tq.sleeping == [2, 4, 8, 16, 32, 64, 128, 128]
