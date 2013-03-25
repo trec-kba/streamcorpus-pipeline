@@ -90,13 +90,14 @@ class stdin(TaskQueue):
     A task_queue-type stage that wraps sys.stdin
     '''
     def __iter__(self):
+        data = {}
         for i_str in sys.stdin:
             ## remove trailing newlines
             if i_str.endswith('\n'):
                 i_str = i_str[:-1]
             ## yield the start position of zero, because we have not
             ## persistence mechanism in this queue for partial_commit
-            yield 0, i_str
+            yield 0, i_str, data
 
 def _ensure_connection(func):
     '''
@@ -166,6 +167,8 @@ class ZookeeperTaskQueue(object):
         self.init_all()
 
         self._pending_task_key = None
+        self._continue_running = True
+
         ## make a unique ID for this worker that persists across
         ## zookeeper sessions.  Could use a zookeeper generated
         ## sequence number, but using this uuid approach let's us keep
@@ -177,6 +180,7 @@ class ZookeeperTaskQueue(object):
 
     def shutdown(self):
         logger.critical('worker_id=%r zookeeper session_id=%r ZookeeperTaskQueue.shutdown has been called')
+        self._continue_running = False
         self._return_task()
         self._unregister()
         self._zk.stop()
@@ -248,7 +252,7 @@ class ZookeeperTaskQueue(object):
         ## Initial backoff time in secs 
         sleep_time = 1
 
-        while True:
+        while self._continue_running:
             ## clear the last task, if it wasn't already cleared by
             ## the caller using the iterator
             # maybe stop doing this?
@@ -277,7 +281,7 @@ class ZookeeperTaskQueue(object):
             ## if won it, yield
             if i_str is not None:
                 logger.warn('won %d %r' % (end_count, i_str))
-                yield end_count, i_str
+                yield end_count, i_str, self.data
                 sleep_time = 1 
             else:
                 # backoff before trying again
@@ -390,7 +394,10 @@ class ZookeeperTaskQueue(object):
                 do_shutdown = True
             elif mode == self.FINISH and \
                     random.random() < self._config.get('finish_ramp_down_fraction', 0.1):
-                do_shutdown = True
+
+                if num_workers > self._config.get('min_workers', 0):
+                    do_shutdown = True
+
             elif mode == self.RUN_FOREVER:
                 ## maybe backoff here?
                 pass
