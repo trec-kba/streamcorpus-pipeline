@@ -113,11 +113,20 @@ class Pipeline(object):
         '''
         start_processing_time = time.time()
 
+        self.context = dict(
+            i_str = None,
+            data = None, 
+            )
+
         ## iterate over input strings from the specified task_queue
         tasks = iter(self._task_queue)
         while 1:
             try:
-                start_count, i_str = tasks.next()
+                start_count, i_str, data = tasks.next()
+
+                self.context['i_str'] = i_str
+                self.context['data'] = data
+
             except StopIteration:
                 break
             except GracefulShutdown, exc:
@@ -349,7 +358,7 @@ class Pipeline(object):
             ### various libraries.  This probably means that each
             ### transform should implement its own timeouts.
             try:
-                si = transform(si)
+                si = transform(si, context=self.context)
                 if si is None:
                     break
 
