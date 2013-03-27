@@ -8,6 +8,7 @@ class TestableZookeeperTaskQueue(ZookeeperTaskQueue):
         self.sleeping = []
         self.tasks = [ (0, None) for x in xrange(0,8) ] + [(1, "Test Done")]
         self.data = {}
+        self._continue_running = True
         pass
 
     def _register(self):
