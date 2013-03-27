@@ -233,6 +233,9 @@ def make_clean_html(raw, stream_item=None, log_dir_path=None):
             raw_decoded = raw.decode(stream_item.body.encoding)
         except:
             raw_decoded = raw
+    else:
+        raw_decoded = raw
+
     try:
         ## default attempt uses vanilla lxml.html
         try:
