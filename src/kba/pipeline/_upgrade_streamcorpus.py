@@ -51,7 +51,7 @@ def upgrade_streamcorpus(config):
         s2.source = s1.source
         s2.source_metadata['kba-2012'] = s1.source_metadata
 
-        logger.critical('len(original .body.raw) = %d' % len( s1.body.raw ))
+        logger.debug('len(original .body.raw) = %d' % len( s1.body.raw ))
 
         #logger.critical(repr(s2))
 
