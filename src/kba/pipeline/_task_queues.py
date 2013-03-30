@@ -159,7 +159,7 @@ class ZookeeperTaskQueue(object):
         self._zk = KazooClient(self.addresses,
                                timeout = config['zookeeper_timeout'],
                                )
-        self._zk.start()
+        self._zk.start(timeout = config['zookeeper_timeout'])
         ## save the client_id for reconnect
         self._zk.add_listener(self._restarter)
 
