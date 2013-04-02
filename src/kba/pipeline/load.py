@@ -102,6 +102,9 @@ if __name__ == '__main__':
         '--clear-registered-workers', action='store_true', default=False,
         help='Delete registered worker nodes from Zookeeper... the worker might still continue running, so be careful.')
     parser.add_argument(
+        '--worker-data', action='store_true', default=False,
+        help='Show full data for each pending task.')
+    parser.add_argument(
         '--purge', 
         help='Totally remove these tasks from the entire queue -- gone.')
     parser.add_argument(
@@ -286,3 +289,7 @@ if __name__ == '__main__':
 
                 num = tq.push(task['i_str'], redo=True)
                 assert num == 1
+
+    if args.worker_data:
+        for data in tq.pending:
+            print json.dumps(data, indent=4, sort_keys=True)
