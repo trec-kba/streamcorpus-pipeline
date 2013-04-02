@@ -230,12 +230,21 @@ def make_clean_html(raw, stream_item=None, log_dir_path=None):
     if stream_item and stream_item.body and stream_item.body.encoding:
         ## if we know an encoding, then attempt to use it
         try:
-            raw = raw.decode(stream_item.body.encoding)
+            raw_decoded = raw.decode(stream_item.body.encoding)
         except:
-            pass
+            raw_decoded = raw
+    else:
+        raw_decoded = raw
+
     try:
         ## default attempt uses vanilla lxml.html
-        root = lxml.html.document_fromstring(raw)
+        try:
+            root = lxml.html.document_fromstring(raw_decoded)
+        except ValueError, exc:
+            if 'with encoding declaration' in str(exc):
+                root = lxml.html.document_fromstring(raw)
+            else:
+                raise exc
         ## if that worked, then we will be able to generate a
         ## valid HTML string
         fixed_html = lxml.html.tostring(root, encoding=unicode)

@@ -152,6 +152,15 @@ def byte_offset_labels(stream_item, aligner_data):
     ## get a set of tokens -- must have OffsetType.BYTES type offsets.
     sentences = stream_item.body.sentences[aligner_data['tagger_id']]
 
+    ## These next few steps are probably the most
+    ## memory intensive, because they fully
+    ## instantiate all the tokens.
+
+    token_collection = SortedCollection(
+        itertools.chain(*[sent.tokens for sent in sentences]),
+        key=lambda tok: tok.offsets[OffsetType.BYTES].first
+        )
+
     ## if labels on ContentItem, then make labels on Tokens
     for annotator_id in stream_item.body.labels:
         if annotator_id != aligner_data['annotator_id']:
@@ -166,15 +175,6 @@ def byte_offset_labels(stream_item, aligner_data):
             
             #print 'L: %d\t%r\t%r' % (label_off.first, label_off.value, 
             #                         '\n'.join(hope_original.split('\n')[label_off.first:label_off.first+label_off.length]))
-
-            ## These next few steps are probably the most
-            ## memory intensive, because they fully
-            ## instantiate all the tokens.
-
-            token_collection = SortedCollection(
-                itertools.chain(*[sent.tokens for sent in sentences]),
-                key=lambda tok: tok.offsets[OffsetType.BYTES].first
-                )
 
             #print 'tc %d %r' % (len(token_collection), token_collection._keys)
             #print 'label_off.first=%d, length=%d, value=%r' % (label_off.first, label_off.length, label_off.value)
