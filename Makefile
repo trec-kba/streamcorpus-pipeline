@@ -1,3 +1,7 @@
+export PATH := /opt/diffeo/bin:$(PATH)
+VERSION:=$(shell grep ^VERSION setup.py | cut -d\' -f2)
+RELEASE:=2
+TMPISODIR:=$(shell mktemp --tmpdir=/var/tmp -d)
 
 clean_js:
 	## to make real tests, we need to dump a non-time-sensitive
@@ -36,7 +40,7 @@ stanford: install
 	echo data/john-smith/john-smith-0.sc | python -m kba.pipeline.run configs/john-smith-stanford-from-chunk.yaml
 
 clean: clean_js
-	rm -rf build dist src/kba.pipeline.egg-info runtests.py
+	rm -rf build dist src/kba.pipeline.egg-info runtests.py *.iso
 
 .IGNORE: lxml
 lxml:
@@ -55,3 +59,15 @@ install: clean lxml
 egg: 
 	python setup.py bdist_egg
 	echo "Newly build egg can be found in the dist/ directory"
+
+centos_rpm:
+	python setup.py bdist_rpm --requires=diffeo-common
+
+trec-kba-pipeline-$(VERSION)-$(RELEASE).iso: centos_rpm
+	cp diffeo-common/latest_rpm/* $(TMPISODIR)
+	cp dist/kba.pipeline-*noarch.*rpm $(TMPISODIR)
+	genisoimage -R -J -o trec-kba-pipeline-$(VERSION)-$(RELEASE).iso $(TMPISODIR)
+	rm -fR $(TMPISODIR)
+
+centos_iso: trec-kba-pipeline-$(VERSION)-$(RELEASE).iso
+
