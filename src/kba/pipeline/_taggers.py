@@ -273,10 +273,13 @@ command string format for running a tagger.  It should take
 %(clean_visible_path)s as the input XML file, and %(ner_xml_path)s as
 the output path to create.
 ''')
-        cmd = self.template % dict(
+        tagger_config = dict(
             pipeline_root_path=self.config['pipeline_root_path'],
             clean_visible_path=clean_visible_path,
             ner_xml_path=ner_xml_path)
+        ## get a java_heap_size or default to 1GB
+        tagger_config['java_heap_size'] = self.config.get('java_heap_size', '')
+        cmd = self.template % tagger_config
         logger.critical( cmd )
         start_time = time.time()
         ## make sure we are using as little memory as possible
