@@ -315,7 +315,7 @@ def clean_html(config):
         if require_code:
             ## need to check stream_item for language
             if not stream_item.body.language or \
-                    code != stream_item.body.language.code:
+                    require_code != stream_item.body.language.code:
                 ## either missing or different
                 return stream_item
 
