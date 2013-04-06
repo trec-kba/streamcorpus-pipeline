@@ -329,7 +329,7 @@ def clean_html(config):
                 and stream_item.body.media_type == 'text/html':
 
             logger.critical('making clean html for %s %r' % (
-                    stream_item.stream_id, stream_item.language))
+                    stream_item.stream_id, stream_item.body.language))
 
             stream_item.body.clean_html = make_clean_html(
                 stream_item.body.raw, 
