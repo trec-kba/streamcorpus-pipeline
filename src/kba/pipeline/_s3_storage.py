@@ -156,7 +156,7 @@ class to_s3_chunks(object):
         Load chunk from t_path and put it into the right place in s3
         using the output_name template from the config
         '''
-        name_info.update( get_name_info(t_path) )
+        name_info.update( get_name_info(t_path, i_str=i_str) )
         if name_info['num'] == 0:
             o_path = None
             return o_path

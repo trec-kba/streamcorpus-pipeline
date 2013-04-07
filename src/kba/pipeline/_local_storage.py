@@ -89,7 +89,7 @@ class to_local_chunks(object):
     def __call__(self, t_path, name_info, i_str):
         o_type = self.config['output_type']
         
-        name_info.update( get_name_info( t_path ) )
+        name_info.update( get_name_info( t_path, i_str=i_str ) )
 
         if name_info['num'] == 0:
             return None

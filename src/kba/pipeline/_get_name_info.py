@@ -2,11 +2,19 @@
 
 from streamcorpus import Chunk
 
-def get_name_info(chunk_path, assert_one_date_hour=False):
+def get_name_info(chunk_path, assert_one_date_hour=False, i_str=None):
     '''
     takes a chunk blob and obtains the date_hour, md5, num
     '''
+    assert i_str is not None, 'must provide i_str as keyword arg'
+
     name_info = dict()
+
+    i_fname = i_str.split('/')[-1]
+    i_fname = i_fname.split('.')[0]  ## strip off .sc[.xz[.gpg]]
+    name_info['input_fname'] = i_fname 
+
+    name_info['input_md5'] = i_fname.split('-')[-1]
 
     ch = Chunk(path=chunk_path, mode='rb')
     date_hours = set()
