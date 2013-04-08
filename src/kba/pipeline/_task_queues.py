@@ -457,7 +457,10 @@ class ZookeeperTaskQueue(object):
     def init_all(self):
         for path in ['tasks', 'available', 'completed', 'pending', 'mode', 'workers']:
             if not self._zk.exists(self._path(path)):
-                self._zk.create(self._path(path), makepath=True)
+                try:
+                    self._zk.create(self._path(path), makepath=True)
+                except kazoo.exceptions.NodeExistsError, exc:
+                    pass
 
     def purge(self, i_str):
         '''
