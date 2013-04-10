@@ -257,37 +257,42 @@ class Pipeline(object):
                     assert hit_last
                     self.t_chunk.close()
 
-                ## batch transforms act on the whole chunk in-place
-                self._run_batch_transforms(t_path)
-
-                ## loaders put the chunk somewhere, and could delete it
-                name_info = dict(
-                    first = start_count,
-                    #num and md5 computed in each loaders
-                    source = sources.pop(),
-                    )
-                
                 ## gather the paths as the loaders run
                 o_paths = []
-                for loader in self._loaders:
-                    try:
-                        logger.debug('running %r on %r: %r' % (loader, i_str, name_info))
-                        o_path = loader(t_path, name_info, i_str)                        
-                    except OSError, exc:
-                        if exc.errno == 12:
-                            logger.critical('caught OSError 12 in loader, so shutting down')
-                            self.shutdown( msg=traceback.format_exc(exc) )
-                        else:
-                            logger.critical(traceback.format_exc(exc))
-                            raise exc
+                if len(self.t_chunk) > 0:
+                    ## only batch transform and load if the chunk
+                    ## isn't empty, which can happen when filtering
+                    ## with stages like "find"
+                    
+                    ## batch transforms act on the whole chunk in-place
+                    self._run_batch_transforms(t_path)
 
-                    logger.debug('loaded (%d, %d) of %r into %r' % (
-                            start_count, next_idx - 1, i_str, o_path))
-                    if o_path:
-                        o_paths.append( o_path )
+                    ## loaders put the chunk somewhere, and could delete it
+                    name_info = dict(
+                        first = start_count,
+                        #num and md5 computed in each loaders
+                        source = sources.pop(),
+                        )
 
-                    if self._shutting_down:
-                        break
+                    for loader in self._loaders:
+                        try:
+                            logger.debug('running %r on %r: %r' % (loader, i_str, name_info))
+                            o_path = loader(t_path, name_info, i_str)                        
+                        except OSError, exc:
+                            if exc.errno == 12:
+                                logger.critical('caught OSError 12 in loader, so shutting down')
+                                self.shutdown( msg=traceback.format_exc(exc) )
+                            else:
+                                logger.critical(traceback.format_exc(exc))
+                                raise exc
+
+                        logger.debug('loaded (%d, %d) of %r into %r' % (
+                                start_count, next_idx - 1, i_str, o_path))
+                        if o_path:
+                            o_paths.append( o_path )
+
+                        if self._shutting_down:
+                            break
 
                 if self._shutting_down:
                     break

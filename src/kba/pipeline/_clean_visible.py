@@ -17,6 +17,7 @@ import logging
 import itertools
 import traceback
 import lxml.etree
+from _clean_html import drop_invalid_and_upper_utf8_chars
 
 logger = logging.getLogger(__name__)
 
@@ -139,6 +140,8 @@ def make_clean_visible_file(i_chunk, clean_visible_path):
             try:
                 ## is UTF-8, and etree wants .text to be unicode
                 doc.text = si.body.clean_visible.decode('utf8')
+            except ValueError:
+                doc.text = drop_invalid_and_upper_utf8_chars(si.body.clean_visible.decode('utf8'))
             except Exception, exc:
                 ## this should never ever fail, because if it does,
                 ## then it means that clean_visible (or more likely

@@ -156,7 +156,7 @@ class to_s3_chunks(object):
         Load chunk from t_path and put it into the right place in s3
         using the output_name template from the config
         '''
-        name_info.update( get_name_info(t_path) )
+        name_info.update( get_name_info(t_path, i_str=i_str) )
         if name_info['num'] == 0:
             o_path = None
             return o_path
@@ -225,13 +225,13 @@ class to_s3_chunks(object):
         url = 'http://s3.amazonaws.com/%(bucket)s/%(o_path)s' % dict(
             bucket = self.config['bucket'],
             o_path = o_path)
-        logger.debug('fetching %r' % url)
+        logger.info('fetching %r' % url)
         req = requests.get(url)
         errors, data = decrypt_and_uncompress(
             req.content, 
             self.config['gpg_decryption_key_path'])
 
-        logger.debug( 'got back SIs: %d' % len( list( Chunk(data=data) ) ))
+        logger.info( 'got back SIs: %d' % len( list( Chunk(data=data) ) ))
 
         rec_md5 = hashlib.md5(data).hexdigest()
         if md5 == rec_md5:

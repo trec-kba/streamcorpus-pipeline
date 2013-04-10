@@ -308,24 +308,28 @@ def clean_html(config):
     '''
     ## make a closure around config
     def _make_clean_html(stream_item, context):
-        code = config.get('require_language_code', None)
-        allow_null = config.get('allow_null_language_code', False)
+        require_code = config.get('require_language_code', None)
 
-        if code and not allow_null:
+        codes = config.get('include_language_codes', [])
+
+        if require_code:
             ## need to check stream_item for language
             if not stream_item.body.language or \
-                    code != stream_item.body.language.code:
+                    require_code != stream_item.body.language.code:
                 ## either missing or different
                 return stream_item
 
-        elif code and allow_null:
+        elif codes:
             if stream_item.body.language and \
-                    code != stream_item.body.language.code:
+                    stream_item.body.language.code not in codes:
                 ## has code and not the right one
                 return stream_item
 
         if stream_item.body and stream_item.body.raw \
                 and stream_item.body.media_type == 'text/html':
+
+            logger.critical('making clean html for %s %r' % (
+                    stream_item.stream_id, stream_item.body.language))
 
             stream_item.body.clean_html = make_clean_html(
                 stream_item.body.raw, 
