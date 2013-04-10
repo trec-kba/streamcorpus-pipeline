@@ -71,7 +71,7 @@ setup(
         #'gevent',      ## required in .rpm
         'protobuf',
         'requests',
-        'streamcorpus==0.2.18',
+        'streamcorpus>=0.3.0',
         'pyyaml',
         'nltk',
         'lxml',
