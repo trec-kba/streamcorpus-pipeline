@@ -54,34 +54,46 @@ class Pipeline(object):
         else:
             self.rate_log_interval = 100
 
+        if 'external_stages_path' in config:
+            import imp
+            external_stages = imp.load_source('', config['external_stages_path'])
+            external_stages = external_stages.Stages
+        else:
+            external_stages = None
+
         ## load the one task queue
         task_queue_name = config['task_queue']
         self._task_queue = _init_stage(
             task_queue_name,
-            config.get(task_queue_name, {}))
+            config.get(task_queue_name, {}),
+            external_stages)
 
         ## load the one extractor
         extractor_name = config['extractor']
         self._extractor = _init_stage(
             extractor_name,
-            config.get(extractor_name, {}))
+            config.get(extractor_name, {}),
+            external_stages)
 
         ## a list of transforms that take StreamItem instances as
         ## input and emit modified StreamItem instances
         self._incremental_transforms = [
-            _init_stage(name, config.get(name, {}))
+            _init_stage(name, config.get(name, {}),
+                        external_stages)
             for name in config['incremental_transforms']]
 
         ## a list of transforms that take a chunk path as input and
         ## return a path to a new chunk
         self._batch_transforms = [
-            _init_stage(name, config.get(name, {}))
+            _init_stage(name, config.get(name, {}),
+                        external_stages)
             for name in config['batch_transforms']]
 
         ## a list of transforms that take a chunk path as input and
         ## return a path to a new chunk
         self._loaders  = [
-            _init_stage(name, config.get(name, {}))
+            _init_stage(name, config.get(name, {}),
+                        external_stages)
             for name in config['loaders']]
 
         for sig in [signal.SIGTERM, signal.SIGABRT, signal.SIGHUP, signal.SIGINT]:
