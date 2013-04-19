@@ -71,7 +71,7 @@ setup(
         #'gevent',      ## required in .rpm
         'protobuf',
         'requests',
-        'streamcorpus>=0.3.0',
+        'streamcorpus-dev>=0.3.0',
         'pyyaml',
         'nltk',
         'lxml',
@@ -81,9 +81,10 @@ setup(
         #'marisa-trie',
         #'jellyfish',    ## required in .rpm
         'nilsimsa>=0.2',
-        #'pytest',       ## required in .rpm
-        #'pycassa', 
+        'pytest',       ## required in .rpm
+        'pycassa', 
         'chromium_compact_language_detector',
+        'pytest',
     ],
     # include_package_data = True,
     package_data = {
