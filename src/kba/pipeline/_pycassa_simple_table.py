@@ -101,10 +101,41 @@ class Cassa(object):
         '''
         for row in self._tasks.get_range():
             logger.critical(row)
-            yield json.loads(row[1]['task_data'])
+            data = json.loads(row[1]['task_data'])
+            data['task_key'] = row[0]
+            yield data
 
     def put_task(self, key, task_data):
         self._tasks.insert(key, {'task_data': json.dumps(task_data)})
+
+    def get_task(self, key):
+        data = self._tasks.get(key)
+        return json.loads(data['task_data'])
+
+    def pop_task(self, key):
+        self._tasks.remove(key)
+        return key
+
+    @property
+    def task_keys(self):
+        c = 0
+        for key, _ in self._tasks.get_range(column_count=0, filter_empty=False):
+            c += 1
+            yield key
+
+    def num_tasks(self):
+        c = 0
+        for key, _ in self._tasks.get_range(column_count=0, filter_empty=False):
+            c += 1
+        return c
+
+    def num_available(self, max_count=None):
+        c = 0
+        for key, _ in self._available.get_range(column_count=0, filter_empty=False):
+            c += 1
+            if max_count is not None and c == max_count:
+                break
+        return c
 
     def put_available(self, key):
         ## closest thing to storing only the key
@@ -129,6 +160,14 @@ class Cassa(object):
                 break
             c += 1
         return keeper
+
+    @property
+    def available(self):
+        return self._available.get_range(column_count=0, filter_empty=False)
+
+    def pop_available(self, key):
+        self._available.remove(key)
+        return key
 
     def close(self):
         self._closed = True
