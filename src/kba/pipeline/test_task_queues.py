@@ -5,13 +5,11 @@ from operator import itemgetter
 def test_stdin():
     stdin = _init_stage('stdin', {})
     
+from config import get_config
 
 def test_zk():
-    config = dict(
-        zookeeper_address = 'localhost:2181',
-        storage_addresses = ['localhost:9160'],
+    config = get_config(
         namespace = 'kba_pipeline_task_queue_test',
-        zookeeper_timeout = 120,
         config_hash = '',
         config_json = '',
         )
@@ -35,11 +33,8 @@ def test_zk():
     assert tq2._len('pending') == 0
 
 def test_zk_commit():
-    config = dict(
-        zookeeper_address = 'localhost:2181',
-        storage_addresses = ['localhost:9160'],
+    config = get_config(
         namespace = 'kba_pipeline_task_queue_test',
-        zookeeper_timeout = 120,
         config_hash = '',
         config_json = '',
         )
@@ -57,12 +52,8 @@ def test_zk_commit():
         tq1.commit('finished it with foo')
 
 def test_zk_partial_commit():
-    config = dict(
-        zookeeper_address = 'localhost:2181',
-        storage_addresses = ['localhost:9160'],
+    config = get_config(
         namespace = 'kba_pipeline_task_queue_test',
-        zookeeper_timeout = 120,
-        finish_ramp_down_fraction = 0.0,
         config_hash = '',
         config_json = '',
         )
