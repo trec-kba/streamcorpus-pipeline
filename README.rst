@@ -4,6 +4,11 @@ TREC KBA Data
 kba.pipeline is a document processing pipeline that assembles
 streamcorpus objects from raw data sets for us in TREC KBA.
 
+TREC KBA 2013
+-------------
+1006305073 all-stream-ids.suc.txt
+884018982 all-stream-ids.doc_ids.suc.txt
+
 
 kba.pipeline
 -------------
