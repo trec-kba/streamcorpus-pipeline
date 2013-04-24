@@ -17,8 +17,8 @@ from pycassa.system_manager import SystemManager, SIMPLE_STRATEGY, \
     TIME_UUID_TYPE, TIME_UUID_TYPE, ASCII_TYPE, BYTES_TYPE
 
 def _delete_namespace(config):
-    sm = SystemManager(config['treelab']['environment']['storage_addresses'][0])
-    sm.drop_keyspace(config['treelab']['namespace'])
+    sm = SystemManager(config['storage_addresses'][0])
+    sm.drop_keyspace(config['namespace'])
     sm.close()
 
 class Cassa(object):
