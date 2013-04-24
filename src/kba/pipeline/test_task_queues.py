@@ -9,7 +9,8 @@ def test_stdin():
 def test_zk():
     config = dict(
         zookeeper_address = 'localhost:2181',
-        namespace = 'kba-pipeline-task-queue-test',
+        storage_addresses = ['localhost:9160'],
+        namespace = 'kba_pipeline_task_queue_test',
         zookeeper_timeout = 120,
         config_hash = '',
         config_json = '',
@@ -36,7 +37,8 @@ def test_zk():
 def test_zk_commit():
     config = dict(
         zookeeper_address = 'localhost:2181',
-        namespace = 'kba-pipeline-task-queue-test',
+        storage_addresses = ['localhost:9160'],
+        namespace = 'kba_pipeline_task_queue_test',
         zookeeper_timeout = 120,
         config_hash = '',
         config_json = '',
@@ -57,7 +59,8 @@ def test_zk_commit():
 def test_zk_partial_commit():
     config = dict(
         zookeeper_address = 'localhost:2181',
-        namespace = 'kba-pipeline-task-queue-test',
+        storage_addresses = ['localhost:9160'],
+        namespace = 'kba_pipeline_task_queue_test',
         zookeeper_timeout = 120,
         finish_ramp_down_fraction = 0.0,
         config_hash = '',
@@ -100,3 +103,4 @@ def test_zk_partial_commit():
     received = set([(start_count, task_string, '{}')
                  for start_count, task_string,  data in tq1])
     assert expected == received
+

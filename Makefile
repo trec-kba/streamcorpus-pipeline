@@ -17,7 +17,7 @@ test: clean
 	## it does not confuse py.test
 	rm -rf build
 	py.test --genscript=runtests.py
-	python runtests.py -s
+	cd src && python ../runtests.py -s
 
 john-smith: clean install test
 	echo data/john-smith/original | python -m kba.pipeline.run configs/john-smith.yaml
@@ -52,6 +52,7 @@ post-build-test:
 	echo data/john-smith/john-smith-0.sc | python -m kba.pipeline.run configs/john-smith-lingpipe-from-chunk.yaml
 
 install: clean lxml
+	## might need to do this on mac: export C_INCLUDE_PATH=/usr/include:/usr/local/include:/opt/local/include
 	python setup.py clean --all
 	python setup.py build
 	python setup.py install

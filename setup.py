@@ -14,7 +14,7 @@ from distutils.core import Command
 from setuptools import setup, find_packages
 
 PROJECT = 'kba.pipeline'
-VERSION = '0.1.27'
+VERSION = '0.3.1'
 AUTHOR = 'Diffeo, Inc.'
 AUTHOR_EMAIL = 'support@diffeo.com'
 DESC = 'Tools for building streamcorpus objects for particular collections of text used in TREC KBA.'
@@ -71,7 +71,7 @@ setup(
         #'gevent',      ## required in .rpm
         'protobuf',
         'requests',
-        'streamcorpus==0.2.18',
+        'streamcorpus-dev>=0.3.0',
         'pyyaml',
         'nltk',
         'lxml',
@@ -81,9 +81,10 @@ setup(
         #'marisa-trie',
         #'jellyfish',    ## required in .rpm
         'nilsimsa>=0.2',
-        #'pytest',       ## required in .rpm
-        #'pycassa', 
+        'pytest',       ## required in .rpm
+        'pycassa', 
         'chromium_compact_language_detector',
+        'pytest',
     ],
     # include_package_data = True,
     package_data = {
