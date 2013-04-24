@@ -367,7 +367,10 @@ the output path to create.
             stream_item.body.taggings[self.tagger_id] = tagging
 
             ## could consume lots of memory here by instantiating everything
-            stream_item.body.sentences[self.tagger_id] = list( self.get_sentences(ner_dom) )
+            sentences, relations, attributes = self.get_sentences(ner_dom)
+            stream_item.body.sentences[self.tagger_id] = sentences 
+            stream_item.body.relations[self.tagger_id] = relations
+            stream_item.body.attributes[self.tagger_id] = attributes 
 
             logger.debug('finished aligning tokens %s' % stream_item.stream_id)
 

@@ -81,6 +81,8 @@ def generate_john_smith_chunk(path_to_original):
             ## attach the content_item to the stream_item
             stream_item.body = body
 
+            stream_item.body.language = streamcorpus.Language(code='en', name='ENGLISH')
+
             ## The authors also annotated the corpus
             anno = streamcorpus.Annotator()
             anno.annotator_id = 'bagga-and-baldwin'
