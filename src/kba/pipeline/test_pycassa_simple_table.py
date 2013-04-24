@@ -7,7 +7,7 @@ from _pycassa_simple_table import Cassa
 def mk(s):
     return hashlib.md5(str(s)).hexdigest()
 
-@pytest.mark.xfail
+#@pytest.mark.xfail
 def test_ranges():
     c = Cassa('test')
     c.delete_namespace()
@@ -20,8 +20,28 @@ def test_ranges():
     keys.sort()
     map(c.put_available, keys)
 
-    print list(c._available.get_range(start=keys[0], finish=keys[2**7 - 1]))
-    print list(c._available.get_range(start=keys[2**7], finish=keys[2**8-1]))
+    #for row in c.pool.execute_cql3('SELECT * FROM available;'):
+    #    print row
+
+    #print list(c._available.get_range(start=keys[0], finish=keys[2**7 - 1]))
+    #print list(c._available.get_range(start=keys[2**7], finish=keys[2**8-1]))
+    '''
+    import cql
+    conn = cql.connect('localhost')
+    cursor = conn.cursor()
+    cursor.execute('USE test;')
+    cursor.execute('CREATE TABLE available (k int PRIMARY KEY, v1 int, v2 int);')
+    cursor.execute('INSERT INTO available (k, v1, v2) VALUES (0, 10, 10;')
+    cursor.execute('INSERT INTO available (k, v1, v2) VALUES (1, 10, 10;')
+    cursor.execute('INSERT INTO available (k, v1, v2) VALUES (2, 10, 10;')
+    cursor.execute('INSERT INTO available (k, v1, v2) VALUES (3, 10, 10;')
+    cursor.execute('SELECT RowKey FROM available WHERE token(RowKey) < token(2);')
+    for row in cursor:
+        print row
+
+    cursor.close()
+    conn.close()
+    '''
 
 def test_tasks():
     c = Cassa('test')
