@@ -18,8 +18,10 @@ def language(config):
     def _language(si, context):
         if si.body and si.body.raw:
             name, code, is_reliable, num_text_bytes, details = cld.detect(si.body.raw)
-            if is_reliable:
+            if is_reliable and code != 'xxx':
                 si.body.language = Language(code=code, name=name)
+            else:
+                si.body.language = Language(code='', name='')
         return si
 
     return _language
