@@ -585,6 +585,13 @@ class ZookeeperTaskQueue(object):
         except kazoo.exceptions.NoNodeError:
             return 0
 
+    def details(self, i_str):
+        key = self._make_key(i_str)
+        data, zstat = self._zk.get(self._path('tasks', key))
+        data = json.loads(data)
+        data['task_key'] = key
+        return data
+
     @property
     def pending(self):
         for task_key in self._zk.get_children(self._path('pending')):
