@@ -72,6 +72,9 @@ if __name__ == '__main__':
         '--list-pending', action='store_true', default=False,
         help='List full details of all "pending" tasks.')
     parser.add_argument(
+        '--list-details', 
+        help='List full details of a task specified by its i_str.')
+    parser.add_argument(
         '--cleanup', action='store_true', default=False,
         help='Cleans up "available" and "pending" to match task["state"].')
     parser.add_argument(
@@ -221,6 +224,11 @@ if __name__ == '__main__':
         print('%d len(tasks)' % counts['tasks'])
         print('%d missing' % (counts['tasks'] - available_pending_completed))
 
+
+    if args.list_details:
+        data = tq.details(args.list_details)
+        #print '\n'.join(data['results'])
+        print data
 
     if args.list_completed:
         for completed in tq.completed:
