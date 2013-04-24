@@ -22,3 +22,6 @@ class TaskQueueUnreachable(PipelineBaseException):
 class GracefulShutdown(PipelineBaseException):
     pass
 
+class ConfigurationError(PipelineBaseException):
+    pass
+
