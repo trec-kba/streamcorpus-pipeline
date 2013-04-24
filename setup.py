@@ -13,8 +13,9 @@ from distutils.core import Command
 
 from setuptools import setup, find_packages
 
+from version import get_git_version
+VERSION = get_git_version()
 PROJECT = 'kba.pipeline'
-VERSION = '0.3.1'
 AUTHOR = 'Diffeo, Inc.'
 AUTHOR_EMAIL = 'support@diffeo.com'
 DESC = 'Tools for building streamcorpus objects for particular collections of text used in TREC KBA.'
@@ -68,7 +69,7 @@ setup(
     ],
     install_requires=[
         'thrift',
-        #'gevent',      ## required in .rpm
+        'gevent',      ## required in .rpm
         'protobuf',
         'requests',
         'streamcorpus-dev>=0.3.0',
