@@ -14,7 +14,9 @@ logger = logging.getLogger(__name__)
 import pycassa
 from pycassa.pool import ConnectionPool
 from pycassa.system_manager import SystemManager, SIMPLE_STRATEGY, \
-    TIME_UUID_TYPE, TIME_UUID_TYPE, ASCII_TYPE, BYTES_TYPE
+    TIME_UUID_TYPE, TIME_UUID_TYPE, ASCII_TYPE, BYTES_TYPE, \
+    COUNTER_COLUMN_TYPE
+from pycassa.types import CounterColumnType, UTF8Type
 
 def _delete_namespace(config):
     sm = SystemManager(config['storage_addresses'][0])
@@ -45,8 +47,6 @@ class Cassa(object):
             self._create_namespace(namespace)
             self.pool = ConnectionPool(namespace, self.server_list)
 
-        # Grab a handle on the 'table' column family, creating it if it
-        # doesn't already exist
         try:
             self._tasks = pycassa.ColumnFamily(self.pool, 'tasks')
         except pycassa.NotFoundException:
@@ -55,8 +55,6 @@ class Cassa(object):
                                        bytes_columns=['task_data'])
             self._tasks = pycassa.ColumnFamily(self.pool, 'tasks')
 
-        # Grab a handle on the 'meta' column family, creating it if it
-        # doesn't already exist
         try:
             self._available = pycassa.ColumnFamily(self.pool, 'available')
         except pycassa.NotFoundException:
@@ -64,6 +62,24 @@ class Cassa(object):
                                         key_validation_class=ASCII_TYPE, 
                                         bytes_columns=['available'])
             self._available = pycassa.ColumnFamily(self.pool, 'available')
+
+        try:
+            self._task_count = pycassa.ColumnFamily(self.pool, 'task_count')
+        except pycassa.NotFoundException:
+            self._create_counter_column_family('task_count', 
+                                       key_validation_class=ASCII_TYPE, 
+                                       counter_columns=['task_count'])
+            self._task_count = pycassa.ColumnFamily(self.pool, 'task_count')
+            self._task_count.insert('RowKey', {'task_count': 0})
+
+        try:
+            self._available_count = pycassa.ColumnFamily(self.pool, 'available_count')
+        except pycassa.NotFoundException:
+            self._create_counter_column_family('available_count', 
+                                       key_validation_class=ASCII_TYPE, 
+                                       counter_columns=['available_count'])
+            self._available_count = pycassa.ColumnFamily(self.pool, 'available_count')
+            self._available_count.insert('RowKey', {'available_count': 0})
 
     def delete_namespace(self):
         sm = SystemManager(random.choice(self.server_list))
@@ -94,6 +110,25 @@ class Cassa(object):
             sm.alter_column(self.namespace, family, column, BYTES_TYPE)
         sm.close()
 
+    def _create_counter_column_family(self, family, counter_columns=[],
+                              key_validation_class=UTF8Type):
+        '''
+        Creates a column family of the name 'family' and sets any of
+        the names in the bytes_column list to have the BYTES_TYPE.
+
+        key_validation_class defaults to TIME_UUID_TYPE and could also
+        be ASCII_TYPE for md5 hash keys, like we use for 'inbound'
+        '''
+        sm = SystemManager(random.choice(self.server_list))
+        # sys.create_column_family(self.namespace, family, super=False)
+        sm.create_column_family(self.namespace, family, super=False,
+                key_validation_class = key_validation_class, 
+                default_validation_class="CounterColumnType",
+                column_name_class = ASCII_TYPE)
+        for column in counter_columns:
+            sm.alter_column(self.namespace, family, column, COUNTER_COLUMN_TYPE)
+        sm.close()
+
     @property
     def tasks(self):
         '''
@@ -107,6 +142,7 @@ class Cassa(object):
 
     def put_task(self, key, task_data):
         self._tasks.insert(key, {'task_data': json.dumps(task_data)})
+        self._task_count.insert('RowKey', {'task_count': 1})
 
     def get_task(self, key):
         data = self._tasks.get(key)
@@ -114,6 +150,7 @@ class Cassa(object):
 
     def pop_task(self, key):
         self._tasks.remove(key)
+        self._task_count.insert('RowKey', {'task_count': -1})
         return key
 
     @property
@@ -124,22 +161,17 @@ class Cassa(object):
             yield key
 
     def num_tasks(self):
-        c = 0
-        for key, _ in self._tasks.get_range(column_count=0, filter_empty=False):
-            c += 1
-        return c
+        data = self._task_count.get('RowKey')
+        return data['task_count']
 
     def num_available(self, max_count=None):
-        c = 0
-        for key, _ in self._available.get_range(column_count=0, filter_empty=False):
-            c += 1
-            if max_count is not None and c == max_count:
-                break
-        return c
+        data = self._available_count.get('RowKey')
+        return data['available_count']
 
     def put_available(self, key):
         ## closest thing to storing only the key
         self._available.insert(key, {'available': ''})
+        self._available_count.insert('RowKey', {'available_count': 1})
 
     #def push_batch(self, row_iter):
     #    '''
@@ -167,6 +199,7 @@ class Cassa(object):
 
     def pop_available(self, key):
         self._available.remove(key)
+        self._available_count.insert('RowKey', {'available_count': -1})
         return key
 
     def close(self):
