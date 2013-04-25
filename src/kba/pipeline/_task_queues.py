@@ -598,8 +598,7 @@ class ZookeeperTaskQueue(object):
 
     def details(self, i_str):
         key = self._make_key(i_str)
-        data, zstat = self._zk.get(self._path('tasks', key))
-        data = json.loads(data)
+        data = self._cassa.get_task(key)
         data['task_key'] = key
         return data
 
@@ -613,9 +612,7 @@ class ZookeeperTaskQueue(object):
     def completed(self):
         for data in self._cassa.tasks:
             if not isinstance(data, dict):
-                logger.critical( 'whoa... how did we get a string here?' )
-                data = json.loads(data)
-                logger.critical( data )
+                logger.critical( 'whoa... how did we get a string here? %r' % data )
             if data['state'] == 'completed' or data['end_count'] > 0:
                 yield data
 
@@ -634,9 +631,7 @@ class ZookeeperTaskQueue(object):
         for num, task_key in enumerate(total_tasks):
             data = self._cassa.get_task(task_key)
             if not isinstance(data, dict):
-                logger.critical( 'whoa... how did we get a string here?' )
-                data = json.loads(data)
-                logger.critical( data )
+                logger.critical( 'whoa... how did we get a string here? %r' % data )
             yield task_key, data
 
             count += 1
@@ -736,7 +731,7 @@ class ZookeeperTaskQueue(object):
         '''
         for task_key, data in self.get_tasks_with_prefix(key_prefix):
             data = self._make_new_data(data['i_str'])
-            self._cassa.put_task(task_key, json.dumps(data))
+            self._cassa.put_task(task_key, data)
             try:
                 self._cassa.put_available(task_key)
             except kazoo.exceptions.NodeExistsError:
