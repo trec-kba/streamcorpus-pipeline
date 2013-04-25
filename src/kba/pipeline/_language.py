@@ -22,6 +22,11 @@ def language(config):
                 si.body.language = Language(code=code, name=name)
             else:
                 si.body.language = Language(code='', name='')
+
+        elif si.body:
+            ## no .body.raw -- rare, but not impossible
+            si.body.language = Language(code='', name='')
+
         return si
 
     return _language
