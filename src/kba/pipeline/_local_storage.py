@@ -11,10 +11,12 @@ import sys
 import time
 import errno
 import shutil
+import tarfile
 import hashlib
 import logging
 import traceback
 import streamcorpus
+from cStringIO import StringIO
 from _get_name_info import get_name_info
 
 logger = logging.getLogger(__name__)
@@ -173,6 +175,69 @@ class to_local_chunks(object):
             msg = 'failed os.rename(%r, %r) -- %s' % (t_path, o_path, traceback.format_exc(exc))
             logger.critical(msg)
             raise exc
+
+        ## return the final output path
+        return o_path
+
+
+class to_local_tarballs(object):
+    def __init__(self, config):
+        self.config = config
+
+    def __call__(self, t_path, name_info, i_str):
+        name_info.update( get_name_info( t_path, i_str=i_str ) )
+
+        if name_info['num'] == 0:
+            return None
+
+        o_fname = self.config['output_name'] % name_info
+        o_dir = self.config['output_path']
+        o_path = os.path.join(o_dir, o_fname + '.tar.gz')
+
+        ## if dir is missing make it
+        dirname = os.path.dirname(o_path)
+        if dirname and not os.path.exists(dirname):
+            os.makedirs(dirname)
+
+        t_path2 = t_path + '.tar.gz.tmp'
+        tar = tarfile.open(name=t_path2, mode='w:gz')
+        for si in streamcorpus.Chunk(t_path):
+            if si.body.clean_visible:
+                ## create a file record
+                data = StringIO(si.body.clean_html)
+                info = tar.tarinfo()
+                ## make a name from the path and stream_id
+                info.name = '%s#%s' % (i_str, si.stream_id)
+                info.uname = 'jrf'
+                info.gname = 'trec-kba'
+                info.type = tarfile.REGTYPE
+                info.mode = 0755
+                info.mtime = si.stream_time.epoch_ticks
+                info.size = len(si.body.clean_html)
+                tar.addfile(info, data)
+        tar.close()
+
+        ## do an atomic renaming    
+        try:
+            logger.debug('attemping os.rename(%r, %r)' % (t_path2, o_path))
+            os.rename(t_path2, o_path)
+        except OSError, exc:                
+            if exc.errno==18:
+                patient_move(t_path2, o_path)
+            else:
+                msg = 'failed shutil.copy2(%r, %r) and/or os.remove(t_path)\n%s'\
+                    % (t_path2, o_path, traceback.format_exc(exc))
+                logger.critical(traceback.format_exc(exc))
+                raise exc
+        except Exception, exc:
+            msg = 'failed os.rename(%r, %r) -- %s' % (t_path, o_path, traceback.format_exc(exc))
+            logger.critical(msg)
+            raise exc
+
+        try:
+            os.remove(t_path)
+        except Exception, exc:
+            logger.critical('failed to os.remove(%r) --> %s' % (t_path, exc))
 
         ## return the final output path
         return o_path
