@@ -164,6 +164,8 @@ class to_s3_chunks(object):
         o_fname = self.config['output_name'] % name_info
         o_path = os.path.join(self.config['s3_path_prefix'], o_fname + '.sc.xz.gpg')
 
+        name_info['s3_output_path'] = o_path
+
         logger.info('to_s3_chunks: \n\t%r\n\tfrom: %r\n\tby way of %r ' % (o_path, i_str, t_path))
 
         ## forcibly collect dereferenced objects

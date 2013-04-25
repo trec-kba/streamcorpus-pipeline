@@ -215,7 +215,7 @@ class to_local_tarballs(object):
                 data = StringIO(export_text)
                 info = tar.tarinfo()
                 ## make a name from the path and stream_id
-                info.name = '%s#%s' % (i_str, si.stream_id)
+                info.name = '%s#%s' % (name_info['s3_output_path'], si.stream_id)
                 info.uname = 'jrf'
                 info.gname = 'trec-kba'
                 info.type = tarfile.REGTYPE
