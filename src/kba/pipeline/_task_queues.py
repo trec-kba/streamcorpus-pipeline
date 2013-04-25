@@ -460,6 +460,7 @@ class ZookeeperTaskQueue(object):
     @_ensure_connection        
     def delete_all(self):
         self._zk.delete(self._path(), recursive=True)
+        self._cassa.delete_namespace()
 
     @_ensure_connection        
     def init_all(self):
