@@ -212,7 +212,7 @@ class to_local_tarballs(object):
 
             if export_text:
                 ## create a file record
-                data = StringIO(si.body.clean_html)
+                data = StringIO(export_text)
                 info = tar.tarinfo()
                 ## make a name from the path and stream_id
                 info.name = '%s#%s' % (i_str, si.stream_id)
@@ -221,7 +221,7 @@ class to_local_tarballs(object):
                 info.type = tarfile.REGTYPE
                 info.mode = 0644
                 info.mtime = si.stream_time.epoch_ticks
-                info.size = len(si.body.clean_html)
+                info.size = len(export_text)
                 tar.addfile(info, data)
 
                 count += 1
