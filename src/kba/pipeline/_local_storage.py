@@ -201,8 +201,16 @@ class to_local_tarballs(object):
 
         t_path2 = t_path + '.tar.gz.tmp'
         tar = tarfile.open(name=t_path2, mode='w:gz')
+        count = 0
         for si in streamcorpus.Chunk(t_path):
-            if si.body.clean_visible:
+            if si.body.clean_html:
+                export_text = si.body.clean_html
+            elif si.body.clean_visible:
+                export_text = si.body.clean_visible
+            else:
+                export_text = None
+
+            if export_text:
                 ## create a file record
                 data = StringIO(si.body.clean_html)
                 info = tar.tarinfo()
@@ -211,11 +219,15 @@ class to_local_tarballs(object):
                 info.uname = 'jrf'
                 info.gname = 'trec-kba'
                 info.type = tarfile.REGTYPE
-                info.mode = 0755
+                info.mode = 0644
                 info.mtime = si.stream_time.epoch_ticks
                 info.size = len(si.body.clean_html)
                 tar.addfile(info, data)
+
+                count += 1
+
         tar.close()
+        logger.info('wrote %d texts to %s' % (count, t_path2))
 
         ## do an atomic renaming    
         try:
