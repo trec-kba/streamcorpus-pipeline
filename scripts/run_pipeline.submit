@@ -34,23 +34,23 @@ on_exit_remove = (ExitBySignal == False) && (ExitCode == 0)
 Executable = /data/trec-kba/trec-kba-data/scripts/run_pipeline.sh
 
 ## pass the config file path as the one argument
-Arguments = /data/trec-kba/trec-kba-data/configs/kba-2012-social-json-transform.yaml
+Arguments = /data/trec-kba/trec-kba-data/configs/kba-streamcorpus-2013-v0_3_0-clean_visible.yaml
 
 # queue log (doesn't like to be on NFS due to locking needs) 
 Log = /tmp/kba.pipeline-jrf.log
 
 # initial working directory context
-initialdir = /data/trec-kba/kba-2012-social-json-transform/
+initialdir = /data/trec-kba/kba-streamcorpus-2013-v0_3_0-clean_visible/
 
 ## What to do with stdin,stdout,stderr:
 # $(PROCESS) is replaced by the sequential run number (zero based) of
 # this submission see "queue" below
 
 ## disable stdin because we are using task_queue: zookeeper 
-#Input = /data/trec-kba/kba-2012-social-json-transform/input.$(PROCESS)
+#Input = /data/trec-kba/kba-streamcorpus-2013-v0_3_0-clean_visible/input.$(PROCESS).$$([NumJobStarts])
 
-Error  = /data/trec-kba/kba-2012-social-json-transform/err.$(PROCESS)
-Output = /data/trec-kba/kba-2012-social-json-transform/out.$(PROCESS)
+Error  = /data/trec-kba/kba-streamcorpus-2013-v0_3_0-clean_visible/err.$(PROCESS).$$([NumJobStarts])
+Output = /data/trec-kba/kba-streamcorpus-2013-v0_3_0-clean_visible/out.$(PROCESS).$$([NumJobStarts])
 
 # how many copies of this job to queue
 ## to fully utilize available resources, make this more than you
