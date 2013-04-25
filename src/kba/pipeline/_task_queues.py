@@ -542,14 +542,10 @@ class ZookeeperTaskQueue(object):
                 data['state'] = 'completed'                
             try:
                 ## attempt to push it
-                try:
-                    #if self._cassa.get_task(key):
-                    #    raise kazoo.exceptions.NodeExistsError()
-                    self._cassa.put_task(key, data)
-                except kazoo.exceptions.NodeExistsError, exc:
+                created = self._cassa.put_task(key, data)
+                if created:
                     if completed or redo:
-                        logger.critical('setting %r: %r' % (data['state'], i_str))
-                        self._cassa.put_task(key, data)
+                        logger.critical('created %r: %r' % (data['state'], i_str))
                         ## must also remove it from available and pending
                         try:
                             self._cassa.pop_available(key)
@@ -570,8 +566,6 @@ class ZookeeperTaskQueue(object):
                             except kazoo.exceptions.NoNodeError:
                                 pass
                             
-                    else:
-                        raise(exc)
 
                 ## if succeeded, count it
                 count += 1

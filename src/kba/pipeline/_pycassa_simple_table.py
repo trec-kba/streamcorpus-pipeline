@@ -42,10 +42,10 @@ class Cassa(object):
         # Connect to the server creating the namespace if it doesn't
         # already exist
         try:
-            self.pool = ConnectionPool(namespace, self.server_list)
+            self.pool = ConnectionPool(namespace, self.server_list, max_retries=500)
         except pycassa.InvalidRequestException:
             self._create_namespace(namespace)
-            self.pool = ConnectionPool(namespace, self.server_list)
+            self.pool = ConnectionPool(namespace, self.server_list, max_retries=500)
 
         try:
             self._tasks = pycassa.ColumnFamily(self.pool, 'tasks')
@@ -141,8 +141,16 @@ class Cassa(object):
             yield data
 
     def put_task(self, key, task_data):
+        try:
+            found = self._tasks.get(key, column_count=1)
+            exists = True
+        except pycassa.cassandra.ttypes.NotFoundException:
+            exists = False
+
         self._tasks.insert(key, {'task_data': json.dumps(task_data)})
-        self._task_count.insert('RowKey', {'task_count': 1})
+        if not exists:
+            self._task_count.insert('RowKey', {'task_count': 1})
+        return exists
 
     def get_task(self, key):
         data = self._tasks.get(key)
@@ -170,8 +178,15 @@ class Cassa(object):
 
     def put_available(self, key):
         ## closest thing to storing only the key
-        self._available.insert(key, {'available': ''})
-        self._available_count.insert('RowKey', {'available_count': 1})
+        try:
+            found = self._available.get(key, column_count=1)
+            exists = True
+        except pycassa.cassandra.ttypes.NotFoundException:
+            exists = False
+
+        if not exists:
+            self._available.insert(key, {'available': ''})
+            self._available_count.insert('RowKey', {'available_count': 1})
 
     #def push_batch(self, row_iter):
     #    '''
