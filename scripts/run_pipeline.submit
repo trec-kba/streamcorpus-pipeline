@@ -55,7 +55,6 @@ Output = /data/trec-kba/kba-streamcorpus-2013-v0_3_0-clean_visible/out.$(PROCESS
 # how many copies of this job to queue
 ## to fully utilize available resources, make this more than you
 ## expect to get:
-queue 409
-
+queue 500
 
 ### END job  specific bits ###
