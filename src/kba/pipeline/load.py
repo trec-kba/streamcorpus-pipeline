@@ -81,8 +81,8 @@ if __name__ == '__main__':
         '--reset-pending', action='store_true', default=False,
         help='Move all tasks from "pending" back to "available".')
     parser.add_argument(
-        '--reset-completed', action='store_true', default=False,
-        help='Move all tasks from "completed" back to "available".')
+        '--reset-all-to-available', action='store_true', default=False,
+        help='Move all tasks back to "available".')
     parser.add_argument(
         '--reset-failures', action='store_true', default=False,
         help='Move all tasks from "completed" that have failure_log back to "available".')
@@ -100,7 +100,7 @@ if __name__ == '__main__':
         help='use with --list-regex or --reset-regex.')    
     parser.add_argument(
         '--key-prefix', default='', metavar='PREFIX', 
-        help='apply command to all keys starting with PREFIX.  Works with --reset-wrong-output-path, --reset-pending, --reset-completed, and --cleanup')
+        help='apply command to all keys starting with PREFIX.  Works with --reset-wrong-output-path, --reset-pending, --reset-all-to-available, and --cleanup')
     parser.add_argument(
         '--clear-registered-workers', action='store_true', default=False,
         help='Delete registered worker nodes from Zookeeper... the worker might still continue running, so be careful.')
@@ -181,8 +181,8 @@ if __name__ == '__main__':
     if args.reset_pending:
         tq.reset_pending(args.key_prefix)
 
-    if args.reset_completed:
-        tq.reset_completed(args.key_prefix)
+    if args.reset_all_to_available:
+        tq.reset_all_to_available(args.key_prefix)
 
     if args.purge:
         if not args.i_meant_that:
