@@ -129,13 +129,14 @@ class Cassa(object):
             sm.alter_column(self.namespace, family, column, COUNTER_COLUMN_TYPE)
         sm.close()
 
-    @property
-    def tasks(self):
+    def tasks(self, key_prefix=''):
         '''
         generate the data objects for every task
         '''
         for row in self._tasks.get_range():
-            logger.critical(row)
+            logger.debug(row)
+            if not row[0].startswith(key_prefix):
+                continue
             data = json.loads(row[1]['task_data'])
             data['task_key'] = row[0]
             yield data
@@ -194,13 +195,15 @@ class Cassa(object):
     #    '''
     #    return self._tasks.batch_insert({k: json.dumps(v) for k, v in row_iter})
 
-    def get_random_available(self, max_iter=100):
+    def get_random_available(self, max_iter=10):
         '''
         get a random key out of the first max_iter rows
         '''
         c = 1
+        logger.debug('attempting get_range on available to get_random_available')
         keeper = None
-        for row in self._available.get_range():
+        for row in self._available.get_range(column_count=0, filter_empty=False):
+            logger.debug('considering %r' % (row,))
             if random.random() < 1 / c:
                 keeper = row[0]
             if c == max_iter:
@@ -208,9 +211,12 @@ class Cassa(object):
             c += 1
         return keeper
 
-    @property
-    def available(self):
-        return self._available.get_range(column_count=0, filter_empty=False)
+    def in_available(self, key):
+        row = self._available.get(key)
+        if row:
+            return True
+        else:
+            return False
 
     def pop_available(self, key):
         self._available.remove(key)
