@@ -156,7 +156,8 @@ class ZookeeperTaskQueue(object):
             self.addresses = config['zookeeper_address']
         else:
             raise Exception('must specify zookeeper_address(es) in config: %r' % config)
-            
+
+        logger.debug('connecting to zookeeper at %r' % self.addresses)
         self._zk = KazooClient(self.addresses,
                                timeout = config['zookeeper_timeout'],
                                )
@@ -179,6 +180,7 @@ class ZookeeperTaskQueue(object):
 
         logger.debug('worker_id=%r zookeeper session_id=%r starting up on hostname=%r' % (self._worker_id, self._zk.client_id, socket.gethostbyname(socket.gethostname())))
 
+        logger.debug('connecting to cassandra at %r' % config['storage_addresses'])
         self._cassa = Cassa(config['namespace'], config['storage_addresses'])
 
     def shutdown(self):
@@ -256,27 +258,23 @@ class ZookeeperTaskQueue(object):
         sleep_time = 1
 
         while self._continue_running:
-            ## clear the last task, if it wasn't already cleared by
-            ## the caller using the iterator
-            # maybe stop doing this?
-            self.commit()
-
-            ## get a task
-            task_key = self._random_available_task()
-
             ## check the mode
             mode = self._read_mode()
             if mode is self.TERMINATE:
                 break
-            elif mode is self.FINISH:
-                if task_key is None:
-                    break
 
-            else:
-                ## only here do we wait
-                if task_key is None:
-                    time.sleep(2)
-                    continue
+            ## get a task
+            task_key = self._random_available_task()
+
+            ## happens once for each worker at the end
+            if mode is self.FINISH and task_key is None:
+                break
+
+            ## mode must be run forever
+            if task_key is None:
+                assert mode == self.RUN_FOREVER
+                time.sleep(2)
+                continue
 
             ## attempt to win the task
             end_count, i_str = self._win_task(task_key)
@@ -285,9 +283,12 @@ class ZookeeperTaskQueue(object):
             if i_str is not None:
                 logger.warn('won %d %r' % (end_count, i_str))
                 yield end_count, i_str, self.data
+
+                ## reset sleep time for next backoff loop
                 sleep_time = 1 
+
             else:
-                # backoff before trying again
+                ## backoff before trying again
                 sleep_time = min(sleep_time * 2, 128) 
                 self._backoff(sleep_time)
 
@@ -393,12 +394,16 @@ class ZookeeperTaskQueue(object):
         '''
         get an available task -- selected at random
         '''
+        logger.debug('attempting to find random available task')
         num_workers = len(self._zk.get_children(self._path('workers')))
+        logger.debug('num_workers is %d' % num_workers)
         num_tasks = self._cassa.num_available(max_count=num_workers)
+        logger.debug('num_tasks is %d' % num_tasks)
         if num_tasks < num_workers:
             ## fewer tasks than workers
             ## consider shutting down
             mode = self._read_mode()
+            logger.debug('mode is %r' % mode)
             do_shutdown = False
             if mode == self.TERMINATE:
                 do_shutdown = True
@@ -421,6 +426,7 @@ class ZookeeperTaskQueue(object):
 
     @_ensure_connection        
     def _win_task(self, task_key):
+        logger.debug('attempting to win %r' % task_key)
         assert not self._pending_task_key
         try:
             self._zk.create(self._path('pending', task_key), makepath=True)
@@ -540,44 +546,41 @@ class ZookeeperTaskQueue(object):
 
             if completed:
                 data['state'] = 'completed'                
-            try:
-                ## attempt to push it
-                created = self._cassa.put_task(key, data)
-                if created:
-                    if completed or redo:
-                        logger.critical('created %r: %r' % (data['state'], i_str))
-                        ## must also remove it from available and pending
-                        try:
-                            self._cassa.pop_available(key)
-                        except:
-                            pass
-                        try:
-                            self._zk.delete(self._path('pending', key))
-                        except:
-                            pass
-                        if completed:
-                            try:
-                                self._zk.create(self._path('completed', key))
-                            except kazoo.exceptions.NodeExistsError:
-                                pass
-                        else:
-                            try:
-                                self._zk.delete(self._path('completed', key))
-                            except kazoo.exceptions.NoNodeError:
-                                pass
-                            
 
-                ## if succeeded, count it
-                count += 1
-                if completed:
-                    continue
+            ## attempt to push it
+            created = self._cassa.put_task(key, data)
+            if created and (completed or redo):
+                logger.critical('created %r: %r' % (data['state'], i_str))
+                ## must also remove it from available and pending
+                self._cassa.pop_available(key)
+                
                 try:
-                    self._cassa.put_available(key)
-                except Exception, exc:
-                    sys.exit('task(%r) was new put already in available' % key)
-            except kazoo.exceptions.NodeExistsError:
-                ## if it already exists, then just don't count it
-                pass
+                    self._zk.delete(self._path('pending', key))
+                except:
+                    pass
+
+                if completed:
+                    try:
+                        self._zk.create(self._path('completed', key))
+                    except kazoo.exceptions.NodeExistsError:
+                        pass
+
+                else:
+                    try:
+                        self._zk.delete(self._path('completed', key))
+                    except kazoo.exceptions.NoNodeError:
+                        pass
+
+            ## if succeeded, count it
+            count += 1
+            if completed:
+                continue
+
+            try:
+                self._cassa.put_available(key)
+            except Exception, exc:
+                sys.exit('task(%r) was new put already in available' % key)
+
         return count
 
     def __len__(self):
@@ -604,25 +607,25 @@ class ZookeeperTaskQueue(object):
 
     @property
     def completed(self):
-        for data in self._cassa.tasks:
+        for data in self._cassa.tasks():
             if not isinstance(data, dict):
                 logger.critical( 'whoa... how did we get a string here? %r' % data )
-            if data['state'] == 'completed' or data['end_count'] > 0:
+            if data['state'] == 'completed' or data['end_count'] > 0 \
+                    or len(data['results']) > 0:
                 yield data
 
     @property
     def all_tasks(self):
-        return self._cassa.tasks
+        return self._cassa.tasks()
 
     def get_tasks_with_prefix(self, key_prefix=''):
         start_time = time.time()
         count = 0
         total_tasks = set()
-        for task_key in self._cassa.task_keys:
-            if task_key.startswith(key_prefix):
-                total_tasks.add(task_key)
+        for num, task_key in enumerate(self._cassa.task_keys):
+            if not task_key.startswith(key_prefix):
+                continue
 
-        for num, task_key in enumerate(total_tasks):
             data = self._cassa.get_task(task_key)
             if not isinstance(data, dict):
                 logger.critical( 'whoa... how did we get a string here? %r' % data )
@@ -717,28 +720,54 @@ class ZookeeperTaskQueue(object):
             ## convert mode string into class property
             return getattr(self, mode)
 
-    def reset_completed(self, key_prefix=''):
+    def reset_all_to_available(self, key_prefix=''):
         '''
         Move every task that startswith(key_prefix) to 'available'
 
         Probably only safe to run this if all workers are off.
         '''
-        for task_key, data in self.get_tasks_with_prefix(key_prefix):
-            data = self._make_new_data(data['i_str'])
-            self._cassa.put_task(task_key, data)
-            try:
-                self._cassa.put_available(task_key)
-            except kazoo.exceptions.NodeExistsError:
-                pass
-            try:
-                self._cassa.pop_available(task_key)
-            except kazoo.exceptions.NoNodeError:
-                pass
-            try:
-                self._cassa.pop_available(task_key)
-            except kazoo.exceptions.NoNodeError:
-                pass
+        pending = self._zk.get_children(self._path('pending'))
+        completed = self._zk.get_children(self._path('completed'))
 
+        approx_num_assigned_tasks = int(float(self._cassa.num_tasks()) / \
+                                            max(1, 16 * len(key_prefix)))
+        count = 0
+        start_time = time.time()
+        for data in self._cassa.tasks(key_prefix):
+            count += 1
+            if count % 100 == 0:
+                elapsed = time.time() - start_time
+                if elapsed > 0:
+                    rate = float(count) / elapsed
+                    undone = approx_num_assigned_tasks - count
+                    remaining = float(undone) / rate / 3600
+                    logger.info('cleaning up %d in %.1f --> %.1f/sec --> %d (%.3f hrs) remaining'\
+                                    % (count, elapsed, rate, undone, remaining))
+
+            ## if the state is not already available, or if it has
+            ## anything resembling partial work:
+            if data['state'] != 'available' or data['end_count'] > 0 \
+                    or len(data['results']) > 0 or data.get('failure_log', ''):
+                ## recreate new record:
+                data = self._make_new_data(data['i_str'])
+                self._cassa.put_task(task_key, data)
+
+            task_key = data['task_key']
+
+            ## make sure it is in available
+            self._cassa.put_available(task_key)
+
+            ## make sure it is not in pending or completed
+            if task_key in pending:
+                try:
+                    self._zk.delete(self._path('pending', task_key))
+                except kazoo.exceptions.NoNodeError:
+                    pass
+            if task_key in completed:
+                try:
+                    self._zk.delete(self._path('completed', task_key))
+                except kazoo.exceptions.NoNodeError:
+                    pass
 
     def reset_pending(self, key_prefix=''):
         '''
@@ -791,23 +820,28 @@ class ZookeeperTaskQueue(object):
         and 'pending' queues match the tasks 'state' property
         '''
         pending = self._zk.get_children(self._path('pending'))
-        available = self._cassa.available
         completed = self._zk.get_children(self._path('completed'))
         start_time = time.time()
         count = 0
-        total_tasks = set()
-        for task_key in self._cassa.task_keys:
-            if task_key.startswith(key_prefix):
-                total_tasks.add(task_key)
 
-        for task_key in total_tasks:
+        approx_num_assigned_tasks = int(float(self._cassa.num_tasks()) / (16 * len(key_prefix)))
+
+        for task_key in self._cassa.task_keys:
+            if not task_key.startswith(key_prefix):
+                #logger.debug('skipping %s' % task_key)
+                continue
+
+            logger.debug('evaluatinging %s' % task_key)
             data = self._cassa.get_task(task_key)
+
+            logger.debug('got data %r' % data)
+
             count += 1
             if count % 100 == 0:
                 elapsed = time.time() - start_time
                 if elapsed > 0:
                     rate = float(count) / elapsed
-                    undone = len(total_tasks) - count
+                    undone = approx_num_assigned_tasks - count
                     remaining = float(undone) / rate / 3600
                     logger.info('cleaning up %d in %.1f --> %.1f/sec --> %d (%.3f hrs) remaining'\
                                     % (count, elapsed, rate, undone, remaining))
@@ -818,7 +852,7 @@ class ZookeeperTaskQueue(object):
                     self._zk.create(self._path('completed', task_key))
                 if task_key in pending:
                     self._zk.delete(self._path('pending', task_key))
-                if task_key in available:
+                if self._cassa.in_available(task_key):
                     self._cassa.pop_available(task_key)
 
             elif data['state'] == 'pending':                    
@@ -826,15 +860,17 @@ class ZookeeperTaskQueue(object):
                     self._zk.delete(self._path('completed', task_key))
                 if task_key not in pending:
                     self._zk.create(self._path('pending', task_key))
-                if task_key in available:
+                if self._cassa.in_available(task_key):
                     self._cassa.pop_available(task_key)
 
             elif data['state'] == 'available':
+                logger.debug('handling state == %r' % data['state'])
                 if task_key in completed:
                     self._zk.delete(self._path('completed', task_key))
                 if task_key in pending:
                     self._zk.delete(self._path('pending', task_key))
-                if task_key not in available:
+                if self._cassa.in_available(task_key):
+                    logger.debug('attempting to put_available %r' % task_key)
                     self._cassa.put_available(task_key)
 
             else:
