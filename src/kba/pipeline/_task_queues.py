@@ -530,6 +530,7 @@ class ZookeeperTaskQueue(object):
         allow_wrong = kwargs.get('allow_wrong_s3', False)
         assert not (completed and redo), 'Programmer Error: cannot set jobs to both "available" and "completed"'
         count = 0
+        start_time = time.time()
         for i_str in i_strs:
             ## ignore leading and trailing whitespace
             i_str = i_str.strip()
@@ -573,6 +574,11 @@ class ZookeeperTaskQueue(object):
 
             ## if succeeded, count it
             count += 1
+            if count % 100 == 0:
+                elapsed = time.time() - start_time
+                rate = float(count) / elapsed
+                logger.info('%d in %.f sec --> %.1f tasks/sec' % (count, elapsed, rate))
+
             if completed:
                 continue
 
