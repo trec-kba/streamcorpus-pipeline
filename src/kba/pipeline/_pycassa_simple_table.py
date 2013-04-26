@@ -42,10 +42,10 @@ class Cassa(object):
         # Connect to the server creating the namespace if it doesn't
         # already exist
         try:
-            self.pool = ConnectionPool(namespace, self.server_list, max_retries=500)
+            self.pool = ConnectionPool(namespace, self.server_list, max_retries=500, pool_timeout=600, timeout=10)
         except pycassa.InvalidRequestException:
             self._create_namespace(namespace)
-            self.pool = ConnectionPool(namespace, self.server_list, max_retries=500)
+            self.pool = ConnectionPool(namespace, self.server_list, max_retries=500, pool_timeout=600, timeout=10)
 
         try:
             self._tasks = pycassa.ColumnFamily(self.pool, 'tasks')
