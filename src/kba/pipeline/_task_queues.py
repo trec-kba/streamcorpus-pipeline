@@ -744,6 +744,8 @@ class ZookeeperTaskQueue(object):
                     logger.info('cleaning up %d in %.1f --> %.1f/sec --> %d (%.3f hrs) remaining'\
                                     % (count, elapsed, rate, undone, remaining))
 
+            task_key = data['task_key']
+
             ## if the state is not already available, or if it has
             ## anything resembling partial work:
             if data['state'] != 'available' or data['end_count'] > 0 \
