@@ -173,7 +173,7 @@ class Cassa(object):
         data = self._task_count.get('RowKey')
         return data['task_count']
 
-    def num_available(self, max_count=None):
+    def num_available(self):
         data = self._available_count.get('RowKey')
         return data['available_count']
 
@@ -202,7 +202,12 @@ class Cassa(object):
         c = 1
         logger.debug('attempting get_range on available to get_random_available')
         keeper = None
-        for row in self._available.get_range(column_count=0, filter_empty=False):
+        ## note the ConsistencyLevel here.  If we do not do this, and
+        ## get all slick with things like column_count=0 and filter
+        ## empty False, then we can get keys that were recently
+        ## deleted... EVEN if the default consistency would seem to
+        ## rule that out!
+        for row in self._available.get_range(read_consistency_level=pycassa.ConsistencyLevel.ALL):
             logger.debug('considering %r' % (row,))
             if random.random() < 1 / c:
                 keeper = row[0]
@@ -212,15 +217,16 @@ class Cassa(object):
         return keeper
 
     def in_available(self, key):
-        row = self._available.get(key)
-        if row:
+        try:
+            row = self._available.get(key)
             return True
-        else:
+        except pycassa.NotFoundException:
             return False
 
     def pop_available(self, key):
-        self._available.remove(key)
+        self._available.remove(key, write_consistency_level=pycassa.ConsistencyLevel.ALL)
         self._available_count.insert('RowKey', {'available_count': -1})
+        assert not self.in_available(key)
         return key
 
     def close(self):
