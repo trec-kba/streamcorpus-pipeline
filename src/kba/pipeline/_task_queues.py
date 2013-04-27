@@ -397,9 +397,9 @@ class ZookeeperTaskQueue(object):
         logger.debug('attempting to find random available task')
         num_workers = len(self._zk.get_children(self._path('workers')))
         logger.debug('num_workers is %d' % num_workers)
-        num_tasks = self._cassa.num_available(max_count=num_workers)
-        logger.debug('num_tasks is %d' % num_tasks)
-        if num_tasks < num_workers:
+        num_available = self._cassa.num_available()
+        logger.debug('num_available is %d' % num_available)
+        if num_available < num_workers:
             ## fewer tasks than workers
             ## consider shutting down
             mode = self._read_mode()
@@ -417,9 +417,12 @@ class ZookeeperTaskQueue(object):
                 ## maybe backoff here?
                 pass
             if do_shutdown:
-                raise GracefulShutdown('mode=%r num_workers=%d > %d=num_tasks' \
-                                           % (mode, num_workers, num_tasks))
-        if num_tasks == 0:
+                raise GracefulShutdown('mode=%r num_workers=%d > %d=num_available' \
+                                           % (mode, num_workers, num_available))
+
+        ## if no tasks are available, the __iter__ loop will either
+        ## exit or sleep
+        if num_available == 0:
             return None
         else:
             return self._cassa.get_random_available()
