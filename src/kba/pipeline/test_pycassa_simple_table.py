@@ -1,6 +1,7 @@
 
 import pytest
 import random
+import getpass
 import hashlib
 from _pycassa_simple_table import Cassa
 
@@ -8,16 +9,17 @@ def mk(s):
     return hashlib.md5(str(s)).hexdigest()
 
 from config import get_config
+namespace = 'test_' + getpass.getuser().replace('-', '_')
 
 #@pytest.mark.xfail
 def test_ranges():
 
-    config = get_config(namespace='test')
+    config = get_config(namespace=namespace)
 
-    c = Cassa('test', server_list=config['storage_addresses'])
+    c = Cassa(namespace, server_list=config['storage_addresses'])
     c.delete_namespace()
 
-    c = Cassa('test', server_list=config['storage_addresses'])
+    c = Cassa(namespace, server_list=config['storage_addresses'])
 
     keys = []
     for i in range(2**8):
@@ -49,27 +51,27 @@ def test_ranges():
     '''
 
 def test_tasks():
-    config = get_config(namespace='test')
+    config = get_config(namespace=namespace)
 
-    c = Cassa('test', server_list=config['storage_addresses'])
+    c = Cassa(namespace, server_list=config['storage_addresses'])
     c.delete_namespace()
 
-    c = Cassa('test', server_list=config['storage_addresses'])
+    c = Cassa(namespace, server_list=config['storage_addresses'])
 
-    key = hashlib.md5('test').hexdigest()
+    key = hashlib.md5(namespace).hexdigest()
     c.put_task(key, dict(test='hi'))
-    for t in c.tasks:
+    for t in c.tasks():
         print t
 
 def test_available():
-    config = get_config(namespace='test')
+    config = get_config(namespace=namespace)
 
-    c = Cassa('test', server_list=config['storage_addresses'])
+    c = Cassa(namespace, server_list=config['storage_addresses'])
     c.delete_namespace()
 
-    c = Cassa('test', server_list=config['storage_addresses'])
+    c = Cassa(namespace, server_list=config['storage_addresses'])
 
-    key = hashlib.md5('test').hexdigest()
+    key = hashlib.md5(namespace).hexdigest()
     c.put_available(key)
     ava = c.get_random_available()
     assert ava == key
@@ -77,23 +79,23 @@ def test_available():
     c.pop_available(ava)
 
 def test_pop_available():
-    config = get_config(namespace='test')
+    config = get_config(namespace=namespace)
 
-    c = Cassa('test', server_list=config['storage_addresses'])
+    c = Cassa(namespace, server_list=config['storage_addresses'])
     c.delete_namespace()
 
-    c = Cassa('test', server_list=config['storage_addresses'])
+    c = Cassa(namespace, server_list=config['storage_addresses'])
     
-    key = hashlib.md5('test').hexdigest()
+    key = hashlib.md5(namespace).hexdigest()
     c.pop_available(key)
 
 def test_lengths():
-    config = get_config(namespace='test')
+    config = get_config(namespace=namespace)
 
-    c = Cassa('test', server_list=config['storage_addresses'])
+    c = Cassa(namespace, server_list=config['storage_addresses'])
     c.delete_namespace()
 
-    c = Cassa('test', server_list=config['storage_addresses'])
+    c = Cassa(namespace, server_list=config['storage_addresses'])
 
     for i in range(10):
         key = hashlib.md5('test %.10f' % random.random()).hexdigest()
@@ -102,30 +104,30 @@ def test_lengths():
     assert 10 == c.num_tasks()
 
 def test_more_available_than():
-    config = get_config(namespace='test')
+    config = get_config(namespace=namespace)
 
-    c = Cassa('test', server_list=config['storage_addresses'])
+    c = Cassa(namespace, server_list=config['storage_addresses'])
     c.delete_namespace()
 
-    c = Cassa('test', server_list=config['storage_addresses'])
+    c = Cassa(namespace, server_list=config['storage_addresses'])
 
     for i in range(10):
         key = hashlib.md5('test %.10f' % random.random()).hexdigest()
         c.put_available(key)
 
-    assert c.num_available(5) == 5
-    assert c.num_available(15) == 10
+    assert c.num_available() == 10
 
 def test_available_iter():
-    config = get_config(namespace='test')
+    config = get_config(namespace=namespace)
 
-    c = Cassa('test', server_list=config['storage_addresses'])
+    c = Cassa(namespace, server_list=config['storage_addresses'])
     c.delete_namespace()
 
-    c = Cassa('test', server_list=config['storage_addresses'])
+    c = Cassa(namespace, server_list=config['storage_addresses'])
 
     for i in range(10):
         key = hashlib.md5('test %.10f' % random.random()).hexdigest()
         c.put_available(key)
 
-    assert len(list(c.available))
+    ## check that the last key comes back to us
+    assert c.pop_available(key)

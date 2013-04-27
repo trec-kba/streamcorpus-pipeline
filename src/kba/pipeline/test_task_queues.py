@@ -12,6 +12,7 @@ def test_zk():
         namespace = 'kba_pipeline_task_queue_test',
         config_hash = '',
         config_json = '',
+        min_workers = 1,
         )
 
     test_data = set(['a', 'b', 'c', 'd'])
@@ -25,7 +26,11 @@ def test_zk():
     tq1.set_mode(tq1.FINISH)
 
     tq2 = _init_stage('zookeeper', config)
-    received_data = set(map(itemgetter(1), tq2))
+    received_data = set()
+    for end_count, i_str, data in tq2:
+        assert data['state'] == 'pending'
+        tq2.commit()
+        received_data.add(i_str)
 
     assert received_data == test_data
         
@@ -37,6 +42,7 @@ def test_zk_commit():
         namespace = 'kba_pipeline_task_queue_test',
         config_hash = '',
         config_json = '',
+        min_workers = 1,
         )
 
     test_data = set(['a', 'b', 'c', 'd'])
@@ -56,6 +62,7 @@ def test_zk_partial_commit():
         namespace = 'kba_pipeline_task_queue_test',
         config_hash = '',
         config_json = '',
+        min_workers = 1,
         )
 
     test_data = set(['a', 'b', 'c', 'd'])
@@ -91,7 +98,11 @@ def test_zk_partial_commit():
     for letter in test_data:
         if letter != t0:
             expected.add( (0, letter, '{}') )
-    received = set([(start_count, task_string, '{}')
-                 for start_count, task_string,  data in tq1])
+
+    received = set()
+    for start_count, task_str, data in tq1:
+        tq1.commit()
+        received.add((start_count, task_str, '{}'))
+
     assert expected == received
 
