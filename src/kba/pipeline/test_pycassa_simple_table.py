@@ -49,6 +49,8 @@ def test_ranges():
     cursor.close()
     conn.close()
     '''
+    c.delete_namespace()
+
 
 def test_tasks():
     config = get_config(namespace=namespace)
@@ -62,6 +64,9 @@ def test_tasks():
     c.put_task(key, dict(test='hi'))
     for t in c.tasks():
         print t
+
+    c.delete_namespace()
+
 
 def test_available():
     config = get_config(namespace=namespace)
@@ -78,6 +83,9 @@ def test_available():
 
     c.pop_available(ava)
 
+    c.delete_namespace()
+
+
 def test_pop_available():
     config = get_config(namespace=namespace)
 
@@ -88,6 +96,9 @@ def test_pop_available():
     
     key = hashlib.md5(namespace).hexdigest()
     c.pop_available(key)
+
+    c.delete_namespace()
+
 
 def test_lengths():
     config = get_config(namespace=namespace)
@@ -103,6 +114,9 @@ def test_lengths():
 
     assert 10 == c.num_tasks()
 
+    c.delete_namespace()
+
+
 def test_more_available_than():
     config = get_config(namespace=namespace)
 
@@ -116,6 +130,9 @@ def test_more_available_than():
         c.put_available(key)
 
     assert c.num_available() == 10
+
+    c.delete_namespace()
+
 
 def test_available_iter():
     config = get_config(namespace=namespace)
@@ -131,3 +148,6 @@ def test_available_iter():
 
     ## check that the last key comes back to us
     assert c.pop_available(key)
+
+    c.delete_namespace()
+

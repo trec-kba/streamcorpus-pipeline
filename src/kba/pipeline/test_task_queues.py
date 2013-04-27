@@ -37,6 +37,8 @@ def test_zk():
     assert tq2._len('available') == 0
     assert tq2._len('pending') == 0
 
+    tq2.delete_all()
+
 def test_zk_commit():
     config = get_config(
         namespace = 'kba_pipeline_task_queue_test',
@@ -56,6 +58,8 @@ def test_zk_commit():
 
     for t in tq1:
         tq1.commit('finished it with foo')
+
+    tq1.delete_all()
 
 def test_zk_partial_commit():
     config = get_config(
@@ -106,3 +110,4 @@ def test_zk_partial_commit():
 
     assert expected == received
 
+    tq1.delete_all()
