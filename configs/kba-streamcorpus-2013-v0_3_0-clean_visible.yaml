@@ -11,7 +11,7 @@ kba.pipeline:
 
   ## the main pipeline log_dir_path can trigger similar log chunk
   #log_dir_path:  logs
-  log_level: INFO 
+  log_level: INFO
 
   output_chunk_max_count: 10000
 
