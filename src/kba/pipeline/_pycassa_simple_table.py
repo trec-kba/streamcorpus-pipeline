@@ -7,6 +7,7 @@ Copyright 2012-2013 Diffeo, Inc.
 '''
 import json
 import random
+import hashlib
 import logging
 logger = logging.getLogger(__name__)
 
@@ -195,7 +196,7 @@ class Cassa(object):
     #    '''
     #    return self._tasks.batch_insert({k: json.dumps(v) for k, v in row_iter})
 
-    def get_random_available(self, max_iter=10):
+    def get_random_available(self, max_iter=100):
         '''
         get a random key out of the first max_iter rows
         '''
@@ -207,7 +208,11 @@ class Cassa(object):
         ## empty False, then we can get keys that were recently
         ## deleted... EVEN if the default consistency would seem to
         ## rule that out!
-        for row in self._available.get_range(read_consistency_level=pycassa.ConsistencyLevel.ALL):
+
+        ## note the random start key, so that we do not always hit the
+        ## same place in the key range with all workers
+        random_key = hashlib.md5(str(random.random())).hexdigest()
+        for row in self._available.get_range(start=random_key, row_count=1, read_consistency_level=pycassa.ConsistencyLevel.ALL):
             logger.debug('considering %r' % (row,))
             if random.random() < 1 / c:
                 keeper = row[0]
