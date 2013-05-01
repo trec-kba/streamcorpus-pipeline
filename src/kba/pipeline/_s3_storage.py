@@ -51,13 +51,17 @@ def _retry(func):
 
             except OSError, exc:
                 ## OSError: [Errno 24] Too many open files
+                logger.critical(traceback.format_exc(exc))
                 raise exc
 
             except FailedExtraction, exc:
                 ## pass through exc to caller
+                logger.critical(traceback.format_exc(exc))
                 raise exc
 
             except Exception, exc:
+                logger.critical(traceback.format_exc(exc))
+                logger.critical('will retry')
                 time.sleep(3 * tries)
                 msg = 'FAIL(%d): having I/O trouble with S3: %s' % \
                     (tries, traceback.format_exc(exc))
