@@ -20,6 +20,7 @@ from _get_name_info import get_name_info
 from streamcorpus import decrypt_and_uncompress, compress_and_encrypt_path, Chunk
 from cStringIO import StringIO
 from _exceptions import FailedExtraction
+from _tarball_export import tarball_export
 
 logger = logging.getLogger(__name__)
 
@@ -218,6 +219,7 @@ class to_s3_chunks(object):
                 logger.info('%s --> failed to remove %s' % (exc, t_path))
 
         ## return the final output path
+        logger.info('to_s3_chunks finished:\n\t input: %s\n\toutput: %s' % (i_str, o_path))
         return o_path
 
     @_retry
@@ -238,6 +240,106 @@ class to_s3_chunks(object):
             self.config['gpg_decryption_key_path'])
 
         logger.info( 'got back SIs: %d' % len( list( Chunk(data=data) ) ))
+
+        rec_md5 = hashlib.md5(data).hexdigest()
+        if md5 == rec_md5:
+            return
+        else:
+            logger.critical('\n'.join(errors))
+            raise Exception('original md5 = %r != %r = received md5' % (md5, rec_md5))
+
+class to_s3_tarballs(object):
+    def __init__(self, config):
+        self.config = config
+        self.bucket = get_bucket(config)
+
+    def __call__(self, t_path, name_info, i_str):
+        '''
+        Load chunk from t_path and put it into the right place in s3
+        using the output_name template from the config
+        '''
+        name_info.update( get_name_info(t_path, i_str=i_str) )
+        if name_info['num'] == 0:
+            o_path = None
+            return o_path
+
+        o_fname = self.config['output_name'] % name_info
+        o_path = os.path.join(self.config['s3_path_prefix'], o_fname + '.tar.gz')
+
+        logger.info('to_s3_tarballs: \n\t%r\n\tfrom: %r\n\tby way of %r ' % (o_path, i_str, t_path))
+
+        ## forcibly collect dereferenced objects
+        #gc.collect()
+
+        t_path2 = tarball_export(t_path, name_info)
+
+        data = open(t_path2).read()
+        name_info['md5'] = hashlib.md5(data).hexdigest()
+
+        self.upload(o_path, data, name_info)
+        self.cleanup(t_path)
+        self.cleanup(t_path2)
+
+        logger.info('to_s3_tarballs finished:\n\t input: %s\n\toutput: %s' % (i_str, o_path))
+        ## return the final output path
+        return o_path
+
+    def upload(self, o_path, data, name_info):
+
+        logger.debug('to_s3_tarballs: compressed size: %d' % len(data))
+        max_retries = 20
+        tries = 0
+        while tries < max_retries:
+            tries += 1
+
+            start_time  = time.time()
+            ## this automatically retries
+            self.put(o_path, data)
+            elapsed = time.time() - start_time
+            if elapsed  > 0:
+                logger.debug('to_s3_tarballs: put %.1f bytes/second' % (len(data) / elapsed))
+
+            if self.config['verify_via_http']:
+                try:
+                    start_time = time.time()
+                    self.verify(o_path, name_info['md5'])
+                    elapsed = time.time() - start_time
+                    if elapsed > 0:
+                        logger.debug('to_s3_tarballs: verify %.1f bytes/second' % (len(data) / elapsed))
+
+                    break
+
+                except Exception, exc:
+                    logger.critical( 'to_s3_tarballs: verify_via_http failed so retrying: %r' % exc )
+                    ## keep looping if verify raises anything
+                    continue
+
+            else:
+                ## not verifying, so don't attempt multiple puts
+                break
+
+    @_retry
+    def cleanup(self, t_path):
+        if self.config['cleanup_tmp_files']:
+            try:
+                os.remove( t_path )
+            except Exception, exc:
+                logger.info('%s --> failed to remove %s' % (exc, t_path))
+
+    @_retry
+    def put(self, o_path, data):
+        key = Key(self.bucket, o_path)
+        key.set_contents_from_file(StringIO(data))
+        key.set_acl('public-read')
+
+    @_retry
+    def verify(self, o_path, md5):
+        url = 'http://s3.amazonaws.com/%(bucket)s/%(o_path)s' % dict(
+            bucket = self.config['bucket'],
+            o_path = o_path)
+        logger.info('fetching %r' % url)
+        req = requests.get(url)
+        data = req.content
 
         rec_md5 = hashlib.md5(data).hexdigest()
         if md5 == rec_md5:
