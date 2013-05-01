@@ -26,7 +26,8 @@ logger = logging.getLogger(__name__)
 
 _message_versions = {
     'v0_1_0': streamcorpus.StreamItem_v0_1_0,
-    'v0_2_0': streamcorpus.StreamItem,
+    'v0_2_0': streamcorpus.StreamItem_v0_2_0,
+    'v0_3_0': streamcorpus.StreamItem_v0_3_0,
     }
 
 import boto
