@@ -266,6 +266,8 @@ class ZookeeperTaskQueue(object):
             ## get a task
             task_key = self._random_available_task()
 
+            logger.critical('considering task_key=%r' % task_key)
+
             ## happens once for each worker at the end
             if mode is self.FINISH and task_key is None:
                 break
@@ -276,6 +278,7 @@ class ZookeeperTaskQueue(object):
                 time.sleep(2)
                 continue
 
+            logger.critical('attempting to win task')
             ## attempt to win the task
             end_count, i_str = self._win_task(task_key)
 
