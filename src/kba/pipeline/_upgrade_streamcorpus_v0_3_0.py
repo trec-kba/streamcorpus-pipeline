@@ -46,5 +46,28 @@ class upgrade_streamcorpus_v0_3_0(object):
                     token.mention_id = new_mention_id
                     logger.debug('new_mention_id = %d' % new_mention_id)
 
+                    if token.entity_type in [3, 4]:
+                        ## convert FEMALE/MALE_PRONOUN
+                        token.mention_type = streamcorpus.MentionType.PRO
+                        
+                        if token.entity_type == 3:
+                            gender_value = 1
+                        else:
+                            gender_value = 0
+
+                        attr = streamcorpus.Attribute(
+                            attribute_type = streamcorpus.AttributeType.PER_AGE,
+                            attribute_evidence = token.token,
+                            value = str(gender_value),
+                            sentence_id = sentence_id,
+                            mention_id = token.mention_id)
+
+                        if 'lingpipe' not in si3.attributes:
+                            si3.attributes['lingpipe'] = []
+                        si3.attributes['lingpipe'].append(attr)
+
+                    else:
+                        token.mention_type = streamcorpus.MentionType.NAME
+
         ## return our newly manufacturered v0_3_0 StreamItem
         return si3
