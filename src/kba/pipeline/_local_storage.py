@@ -11,13 +11,13 @@ import sys
 import time
 import errno
 import shutil
-import tarfile
 import hashlib
 import logging
 import traceback
 import streamcorpus
 from cStringIO import StringIO
 from _get_name_info import get_name_info
+from _tarball_export import tarball_export
 
 logger = logging.getLogger(__name__)
 
@@ -199,35 +199,7 @@ class to_local_tarballs(object):
         if dirname and not os.path.exists(dirname):
             os.makedirs(dirname)
 
-        t_path2 = t_path + '.tar.gz.tmp'
-        tar = tarfile.open(name=t_path2, mode='w:gz')
-        count = 0
-        for si in streamcorpus.Chunk(t_path):
-            if si.body.clean_html:
-                export_text = si.body.clean_html
-            elif si.body.clean_visible:
-                export_text = si.body.clean_visible
-            else:
-                export_text = None
-
-            if export_text:
-                ## create a file record
-                data = StringIO(export_text)
-                info = tar.tarinfo()
-                ## make a name from the path and stream_id
-                info.name = '%s#%s' % (name_info['s3_output_path'], si.stream_id)
-                info.uname = 'jrf'
-                info.gname = 'trec-kba'
-                info.type = tarfile.REGTYPE
-                info.mode = 0644
-                info.mtime = si.stream_time.epoch_ticks
-                info.size = len(export_text)
-                tar.addfile(info, data)
-
-                count += 1
-
-        tar.close()
-        logger.info('wrote %d texts to %s' % (count, t_path2))
+        t_path2 = tarball_export(t_path, name_info)
 
         ## do an atomic renaming    
         try:
@@ -250,6 +222,8 @@ class to_local_tarballs(object):
             os.remove(t_path)
         except Exception, exc:
             logger.critical('failed to os.remove(%r) --> %s' % (t_path, exc))
+
+        logger.info('to_local_tarballs created %s' % o_path)
 
         ## return the final output path
         return o_path

@@ -31,6 +31,7 @@ kba.pipeline:
   extractor: from_s3_chunks
 
   incremental_transforms: [
+    upgrade_streamcorpus_v0_3_0,
     language, 
     guess_media_type, 
     clean_html, 
