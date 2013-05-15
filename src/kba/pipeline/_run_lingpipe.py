@@ -221,7 +221,7 @@ def run_pipeline(tagger_id, input_dir, output_dir, tmp_dir='/tmp', pipeline_root
         os.rename(tmp_done_path, final_done_path)
 
         ## replace with log.info()
-        print 'done with %s' % done_path
+        print 'done with %s' % final_done_path
 
 if __name__ == '__main__':
     import argparse
