@@ -6,7 +6,7 @@ from streamcorpus import Chunk, make_stream_item, ContentItem
 from _fpat_matcher import fpat_matcher
 
 
-@pytest.mark.xfail
+@pytest.mark.xfail  # pylint: disable=E1101
 def test_matcher():
     
     config = dict(

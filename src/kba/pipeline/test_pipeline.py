@@ -44,7 +44,7 @@ def test_pipeline(monkeypatch):
 
     gevent.sleep(5)
 
-    with pytest.raises(SuccessfulExit):
+    with pytest.raises(SuccessfulExit):  # pylint: disable=E1101
         p.shutdown(sig=signal.SIGTERM)
 
     log( 'now joining...' )

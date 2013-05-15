@@ -11,7 +11,7 @@ def mk(s):
 from config import get_config
 namespace = 'test_' + getpass.getuser().replace('-', '_')
 
-#@pytest.mark.xfail
+#@pytest.mark.xfail # pylint: disable=E1101
 def test_ranges():
 
     config = get_config(namespace=namespace)

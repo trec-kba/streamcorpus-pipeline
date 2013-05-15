@@ -10,7 +10,7 @@ def test_max_retries():
         )
     flc = from_local_chunks(config)
     start_time = time.time()
-    with pytest.raises(IOError) as excinfo:
+    with pytest.raises(IOError) as excinfo:  # pylint: disable=E1101
         flc('no-such-path')
     elapsed = time.time() - start_time
     assert elapsed > 0.1 * 2**4
@@ -23,7 +23,7 @@ def test_max_backoff():
         )
     flc = from_local_chunks(config)
     start_time = time.time()
-    with pytest.raises(IOError) as excinfo:
+    with pytest.raises(IOError) as excinfo:  # pylint: disable=E1101
         flc('no-such-path')
     elapsed = time.time() - start_time
     assert elapsed < 4

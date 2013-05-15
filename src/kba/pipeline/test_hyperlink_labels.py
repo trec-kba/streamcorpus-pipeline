@@ -102,7 +102,7 @@ def test_basics():
 
 
 
-@pytest.mark.parametrize(('parser_type',), [
+@pytest.mark.parametrize(('parser_type',), [  # pylint: disable=E1101
     ('BYTES',),
     ('LINES',),
 ])
@@ -168,7 +168,7 @@ def test_anchors_re():
     assert sum(map(int, map(bool, matches))) == 3
 
 
-@pytest.mark.parametrize(('parser_type',), [
+@pytest.mark.parametrize(('parser_type',), [  # pylint: disable=E1101
     ('BYTES',),
     ('LINES',),
 ])

@@ -60,7 +60,7 @@ def test_target_parsing():
 
 
 
-@pytest.mark.xfail
+@pytest.mark.xfail  # pylint: disable=E1101
 def test_unicode_conversion():
     path = os.path.dirname(__file__)
     path = os.path.join( path, '../../../data/test/' )
