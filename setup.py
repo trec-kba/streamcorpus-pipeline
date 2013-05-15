@@ -80,7 +80,7 @@ setup(
         'boto',
         'kazoo',
         #'marisa-trie',
-        #'jellyfish',    ## required in .rpm
+        'jellyfish',
         'nilsimsa>=0.2',
         'pytest',       ## required in .rpm
         'pycassa', 
