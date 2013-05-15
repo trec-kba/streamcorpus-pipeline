@@ -4,6 +4,10 @@ import streamcorpus
 
 logger = logging.getLogger(__name__)
 
+content_item_attrs = ['raw', 'encoding', 'media_type', 'clean_html', 'clean_visible', 'logs', 
+                      'taggings', 'labels', 'language', 
+                      ]
+
 class upgrade_streamcorpus_v0_3_0(object):
     def __init__(self, config):
         self._config = config
@@ -20,10 +24,19 @@ class upgrade_streamcorpus_v0_3_0(object):
             abs_url=si.abs_url)
 
         ## copy everything 
-        for attr in ['original_url', 'other_content', 'ratings', 'schost', 'source', 'source_metadata']:
+        for attr in ['original_url', 'ratings', 'schost', 'source', 'source_metadata',
+                     'ratings', ]:
             setattr(si3, attr, copy.deepcopy(getattr(si, attr)))
 
-        for attr in ['raw', 'encoding', 'media_type', 'clean_html', 'clean_visible', 'logs', 'labels']:
+        si3.body = streamcorpus.ContentItem()
+
+        for name, ci in si.other_content.items():
+            ci3 = streamcorpus.ContentItem()
+            si3.other_content[name] = ci3
+            for attr in content_item_attrs:
+                setattr(ci3, attr, copy.deepcopy(getattr(ci, attr)))
+
+        for attr in content_item_attrs:
             setattr(si3.body, attr, copy.deepcopy(getattr(si.body, attr)))
 
         ## fix the body.sentences['lingpipe'] mention_id ranges
