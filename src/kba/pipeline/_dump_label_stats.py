@@ -5,12 +5,14 @@ This software is released under an MIT/X11 open source license.
 
 Copyright 2012 Diffeo, Inc.
 '''
+import os
 import uuid
+from streamcorpus import OffsetType
 
 class dump_label_stats(object):
     def __init__(self, config):
         self.config = config
-        _path = os.path.join(self.config['dump_path'], str(uuid.uuid1()) + '.txt')
+        self._path = os.path.join(self.config['dump_path'], str(uuid.uuid1()) + '.txt')
         self._dump_fh = open(self._path, 'wb')
 
     def __call__(self, si, context):

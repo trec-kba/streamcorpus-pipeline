@@ -16,6 +16,7 @@ atomic move to put the final product into position.
 import streamcorpus
 from streamcorpus import Chunk, Label, Tagging
 #import lingpipe
+lingpipe = None
 
 import os
 import re

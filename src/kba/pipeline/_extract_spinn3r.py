@@ -81,7 +81,7 @@ def delimited_messages(data):
             
             #print pos
 
-            if delimiter.delimiter_type == delimiter.END:
+            if delimiter.delimiter_type == delimiter.END:  # pylint: disable=E1101
                 ## last yield provides None as a flag and the bytes of
                 ## the end delimiter
                 yield None, data[pre_decoder_pos : pos + delta]

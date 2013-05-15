@@ -4,7 +4,7 @@ import streamcorpus
 from _stages import _init_stage
 
 def test_protection():
-    with pytest.raises(streamcorpus.VersionMismatchError):
+    with pytest.raises(streamcorpus.VersionMismatchError):  # pylint: disable=E1101
         for si in streamcorpus.Chunk(
             os.path.join(
                 os.path.dirname(__file__),

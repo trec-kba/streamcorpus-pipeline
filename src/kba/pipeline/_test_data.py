@@ -9,4 +9,3 @@ def get_test_chunk_path():
 
 def get_test_chunk():
     return Chunk(path=get_test_chunk_path())
-    return stream_item

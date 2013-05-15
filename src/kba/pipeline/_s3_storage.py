@@ -346,5 +346,4 @@ class to_s3_tarballs(object):
         if md5 == rec_md5:
             return
         else:
-            logger.critical('\n'.join(errors))
             raise Exception('original md5 = %r != %r = received md5' % (md5, rec_md5))

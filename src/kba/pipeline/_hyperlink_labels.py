@@ -10,6 +10,7 @@ Copyright 2012 Diffeo, Inc.
 from streamcorpus import add_annotation, Offset, OffsetType, Annotator, Target, Label
 
 import re
+import sys
 import logging
 from _clean_visible import make_clean_visible
 

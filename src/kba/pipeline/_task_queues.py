@@ -450,7 +450,7 @@ class ZookeeperTaskQueue(object):
 
         ## record data about the run environment, to enable forensics on failed tasks
         self.data['host'] = socket.gethostbyname(socket.gethostname())
-        self.data['version'] = pkg_resources.get_distribution("kba.pipeline").version
+        self.data['version'] = pkg_resources.get_distribution("kba.pipeline").version # pylint: disable=E1103
         self.data['config_hash'] = self._config['config_hash']
         self.data['config_json'] = self._config['config_json']
         self.data['VmSize'] = _memory.memory()
@@ -491,7 +491,7 @@ class ZookeeperTaskQueue(object):
         i_str = i_str.strip()
         key = self._make_key( i_str )
         try:
-            self._cassa.pop_tasks(key)
+            self._cassa.pop_task(key)
         except:
             pass
         try:
