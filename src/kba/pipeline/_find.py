@@ -66,7 +66,8 @@ class find_doc_ids(object):
         for line in open(config['list_of_doc_ids_path']).read().splitlines():
             doc_id = line.split()
             self._doc_ids.add(doc_id.strip())
-        logger.critical('loaded %d doc_ids, e.g. %s' % (len(self._doc_ids), list(self._doc_ids)[0]))
+        logger.critical('loaded %d doc_ids, e.g. %s' % (
+                len(self._doc_ids), list(self._doc_ids)[0]))
         _path = os.path.join(config['dump_path'], str(uuid.uuid4()) + '.txt')
         _parent_dir = os.path.dirname(_path)
         if not os.path.exists(_parent_dir):
@@ -77,7 +78,8 @@ class find_doc_ids(object):
 
     def __call__(self, si, context):
 
-        assert si.stream_id.split('-')[1] == si.doc_id, (si.stream_id, si.doc_id, context['i_str'])
+        assert si.stream_id.split('-')[1] == si.doc_id, \
+            (si.stream_id, si.doc_id, context['i_str'])
 
         if si.doc_id in self._doc_ids:
 
