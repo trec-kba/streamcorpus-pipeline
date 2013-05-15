@@ -346,7 +346,7 @@ the output path to create.
                 continue
 
             tagging = Tagging()
-            tagging.tagger_id = self.tagger_id
+            tagging.tagger_id = self.tagger_id  # pylint disable=E1101
 
             '''
             ## get this one file out of its FILENAME tags
@@ -364,13 +364,13 @@ the output path to create.
 
             #tagging.raw_tagging = tagged_doc
             tagging.generation_time = streamcorpus.make_stream_time()
-            stream_item.body.taggings[self.tagger_id] = tagging
+            stream_item.body.taggings[self.tagger_id] = tagging       # pylint disable=E1101
 
             ## could consume lots of memory here by instantiating everything
             sentences, relations, attributes = self.get_sentences(ner_dom)
-            stream_item.body.sentences[self.tagger_id] = sentences 
-            stream_item.body.relations[self.tagger_id] = relations
-            stream_item.body.attributes[self.tagger_id] = attributes 
+            stream_item.body.sentences[self.tagger_id] = sentences    # pylint disable=E1101
+            stream_item.body.relations[self.tagger_id] = relations    # pylint disable=E1101
+            stream_item.body.attributes[self.tagger_id] = attributes  # pylint disable=E1101 
 
             logger.debug('finished aligning tokens %s' % stream_item.stream_id)
 
