@@ -8,7 +8,7 @@ def test_stdin():
     
 from config import get_config
 
-@pytest.mark.skipif('True')
+@pytest.mark.skipif('True')  # pylint: disable=E1101
 def test_zk():
     config = get_config(
         namespace = 'kba_pipeline_task_queue_test',
@@ -41,7 +41,7 @@ def test_zk():
 
     tq2.delete_all()
 
-@pytest.mark.skipif('True')
+@pytest.mark.skipif('True')  # pylint: disable=E1101
 def test_zk_commit():
     config = get_config(
         namespace = 'kba_pipeline_task_queue_test',
@@ -64,7 +64,7 @@ def test_zk_commit():
 
     tq1.delete_all()
 
-@pytest.mark.skipif('True')
+@pytest.mark.skipif('True')  # pylint: disable=E1101
 def test_zk_partial_commit():
     config = get_config(
         namespace = 'kba_pipeline_task_queue_test',
