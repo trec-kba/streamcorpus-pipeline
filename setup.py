@@ -68,7 +68,6 @@ setup(
         'License :: MIT',  ## MIT/X11 license http://opensource.org/licenses/MIT
     ],
     install_requires=[
-        'distribute>=0.6.21',
         'thrift',
         'gevent',      ## required in .rpm
         'protobuf',
