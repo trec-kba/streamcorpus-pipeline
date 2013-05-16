@@ -1,6 +1,6 @@
 
 import os
-from streamcorpus import Chunk
+from streamcorpus import Chunk, StreamItem_v0_2_0
 
 def get_test_chunk_path():
     path = os.path.dirname(__file__)
@@ -8,4 +8,4 @@ def get_test_chunk_path():
     return path
 
 def get_test_chunk():
-    return Chunk(path=get_test_chunk_path())
+    return Chunk(path=get_test_chunk_path(), message=StreamItem_v0_2_0)

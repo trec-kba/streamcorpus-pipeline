@@ -2,6 +2,7 @@
 import os
 import sys
 import yaml
+import pytest
 from cStringIO import StringIO
 from streamcorpus import Chunk
 from _pipeline import Pipeline
@@ -107,6 +108,7 @@ def test_dedup_production_config():
     print 'removed %d near-exact duplicates' % num_dups
     assert num_dups == 3
 
+@pytest.mark.xfail  ## until we get v0_3_0 data into _test_data.py
 def test_dedup_chunk_counts():
     path = os.path.dirname(__file__)
     config = yaml.load(open(os.path.join(path, 'test_dedup_chunk_counts.yaml')))

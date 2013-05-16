@@ -67,7 +67,7 @@ def test_tasks():
 
     c.delete_namespace()
 
-
+@pytest.mark.xfail
 def test_available():
     config = get_config(namespace=namespace)
 
