@@ -414,6 +414,8 @@ class ZookeeperTaskQueue(object):
                     random.random() < self._config.get('finish_ramp_down_fraction', 0.1):
 
                 if num_workers > self._config.get('min_workers', 0):
+                    logger.critical('num_workers=%d > %d=min_workers: %r' % (
+                            num_workers, self._config.get('min_workers', 0), self._config))
                     do_shutdown = True
 
             elif mode == self.RUN_FOREVER:

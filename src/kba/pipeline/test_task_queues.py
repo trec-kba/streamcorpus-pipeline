@@ -1,21 +1,41 @@
 import time
+import json
 import pytest
+import logging
 from _stages import _init_stage
 from operator import itemgetter
+from _exceptions import GracefulShutdown
+
+logger = logging.getLogger('kba')
 
 def test_stdin():
     stdin = _init_stage('stdin', {})
     
 from config import get_config
+namespace = 'kba_pipeline_task_queue_test'
 
-@pytest.mark.skipif('True')  # pylint: disable=E1101
-def test_zk():
+def teardown_function(function):
+    #print ("teardown_function function:%s" % function.__name__)
     config = get_config(
-        namespace = 'kba_pipeline_task_queue_test',
+        namespace = namespace,
         config_hash = '',
         config_json = '',
-        min_workers = 1,
+        min_workers = 4,
         )
+    tq1 = _init_stage('zookeeper', config)
+    tq1.delete_all()    
+    logger.info('deleting %r' % namespace)
+
+#@pytest.mark.skipif('True')  # pylint: disable=E1101
+def test_zk():
+    config = get_config(
+        namespace = namespace,
+        config_hash = '',
+        config_json = '',
+        min_workers = 4,
+        )
+
+    logger.debug(json.dumps(config, indent=4, sort_keys=True))
 
     test_data = set(['a', 'b', 'c', 'd'])
 
@@ -29,11 +49,16 @@ def test_zk():
 
     tq2 = _init_stage('zookeeper', config)
     received_data = set()
-    for end_count, i_str, data in tq2:
-        assert data['state'] == 'pending'
-        tq2.commit()
-        received_data.add(i_str)
-
+    observed = 0
+    try:
+        for end_count, i_str, data in tq2:
+            observed += 1
+            assert data['state'] == 'pending'
+            tq2.commit()
+            received_data.add(i_str)
+    except GracefulShutdown:
+        logger.critical('did a GracefulShutdown... were we done?')
+    assert observed == 4
     assert received_data == test_data
         
     assert tq2._len('available') == 0
@@ -41,13 +66,13 @@ def test_zk():
 
     tq2.delete_all()
 
-@pytest.mark.skipif('True')  # pylint: disable=E1101
+#@pytest.mark.skipif('True')  # pylint: disable=E1101
 def test_zk_commit():
     config = get_config(
-        namespace = 'kba_pipeline_task_queue_test',
+        namespace = namespace,
         config_hash = '',
         config_json = '',
-        min_workers = 1,
+        min_workers = 4,
         )
 
     test_data = set(['a', 'b', 'c', 'd'])
@@ -59,18 +84,21 @@ def test_zk_commit():
     map(tq1.push, test_data)
     tq1.set_mode(tq1.FINISH)
 
-    for t in tq1:
-        tq1.commit('finished it with foo')
+    try:
+        for t in tq1:
+            tq1.commit('finished it with foo')
+    except GracefulShutdown:
+        logger.critical('did a GracefulShutdown... were we done?')
 
     tq1.delete_all()
 
-@pytest.mark.skipif('True')  # pylint: disable=E1101
+#@pytest.mark.skipif('True')  # pylint: disable=E1101
 def test_zk_partial_commit():
     config = get_config(
-        namespace = 'kba_pipeline_task_queue_test',
+        namespace = namespace,
         config_hash = '',
         config_json = '',
-        min_workers = 1,
+        min_workers = 4,
         )
 
     test_data = set(['a', 'b', 'c', 'd'])
@@ -108,9 +136,12 @@ def test_zk_partial_commit():
             expected.add( (0, letter, '{}') )
 
     received = set()
-    for start_count, task_str, data in tq1:
-        tq1.commit()
-        received.add((start_count, task_str, '{}'))
+    try:
+        for start_count, task_str, data in tq1:
+            tq1.commit()
+            received.add((start_count, task_str, '{}'))
+    except GracefulShutdown:
+        logger.critical('did a GracefulShutdown... were we done?')
 
     assert expected == received
 

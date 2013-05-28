@@ -196,12 +196,11 @@ class Cassa(object):
     #    '''
     #    return self._tasks.batch_insert({k: json.dumps(v) for k, v in row_iter})
 
-    def get_random_available(self, max_iter=100):
+    def get_random_available(self, max_iter=10000):
         '''
         get a random key out of the first max_iter rows
         '''
         c = 1
-        logger.debug('attempting get_range on available to get_random_available')
         keeper = None
         ## note the ConsistencyLevel here.  If we do not do this, and
         ## get all slick with things like column_count=0 and filter
@@ -211,8 +210,27 @@ class Cassa(object):
 
         ## note the random start key, so that we do not always hit the
         ## same place in the key range with all workers
-        random_key = hashlib.md5(str(random.random())).hexdigest()
-        for row in self._available.get_range(start=random_key, row_count=1, read_consistency_level=pycassa.ConsistencyLevel.ALL):
+        #random_key = hashlib.md5(str(random.random())).hexdigest()
+        #random_key = '0' * 32
+        #logger.debug('available.get_range(%r)' % random_key)
+        ## scratch that idea: turns out that using a random start key
+        ## OR using row_count=1 can cause get_range to hang for hours
+
+        ## why we need ConsistencyLevel.ALL on a single node is not
+        ## clear, but experience indicates it is needed.
+
+        ## note that putting a finite row_count is problematic in two
+        ## ways:
+        # 1) if there are more workers than max_iter, some will not
+        # get tasks
+        #
+        # 2) if there are more than max_iter records, then all workers
+        # have to wade through all of these just to get a task!  What
+        # we really want is a "pick random row" function, and that is
+        # probably best implemented using CQL3 token function via the
+        # cql python module instead of pycassa...
+        for row in self._available.get_range(row_count=max_iter, read_consistency_level=pycassa.ConsistencyLevel.ALL):
+        #for row in self._available.get_range(row_count=100):
             logger.debug('considering %r' % (row,))
             if random.random() < 1 / c:
                 keeper = row[0]
