@@ -21,6 +21,13 @@ from _tarball_export import tarball_export
 
 logger = logging.getLogger(__name__)
 
+_message_versions = {
+    'v0_1_0': streamcorpus.StreamItem_v0_1_0,
+    'v0_2_0': streamcorpus.StreamItem_v0_2_0,
+    'v0_3_0': streamcorpus.StreamItem_v0_3_0,
+    }
+
+
 class from_local_chunks(object):
     def __init__(self, config):
         self.config = config
@@ -31,7 +38,8 @@ class from_local_chunks(object):
         tries = 0
         while tries < self.config['max_retries']:
             try:
-                chunk = streamcorpus.Chunk(path=i_str, mode='rb')
+                message = _message_versions[ self.config['streamcorpus_version'] ]
+                chunk = streamcorpus.Chunk(path=i_str, mode='rb', message=message)
                 return chunk
             except IOError, exc:
                 if exc.errno == errno.ENOENT:

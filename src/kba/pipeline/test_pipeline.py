@@ -52,3 +52,19 @@ def test_pipeline(monkeypatch):
     g.join(timeout=timeout)
 
 
+def test_post_batch_incremental_stage():
+    path = os.path.dirname(__file__)
+    config = yaml.load(open(os.path.join(path, 'test_post_batch_incremental.yaml')))
+
+    ## config says read from stdin, so make that have what we want
+    stdin = sys.stdin
+    sys.stdin = StringIO(get_test_chunk_path())
+
+    ## run the pipeline
+    p = Pipeline( config )
+    p.run()
+
+
+
+
+
