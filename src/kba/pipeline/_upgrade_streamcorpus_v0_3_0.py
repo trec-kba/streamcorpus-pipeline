@@ -12,7 +12,7 @@ class upgrade_streamcorpus_v0_3_0(object):
     def __init__(self, config):
         self._config = config
 
-    def __call__(self, si):
+    def __call__(self, si, context=None):
         if si.version == streamcorpus.Versions.v0_3_0:
             return si
 

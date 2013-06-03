@@ -1,0 +1,59 @@
+## YAML kba.pipeline config for testing dedup
+
+kba.pipeline:
+  ## root path for all things that are called *_path in this file and
+  ## are not an absolute path, i.e. start with '/'
+  root_path: 
+
+  ## thrift version of the streamitems
+  streamcorpus_version: v0_3_0
+
+  ## put logs inside each chunk file
+  embedded_logs: false
+
+  ## level to select from python's logging module, string must be one
+  ## of NOTSET, DEBUG, INFO, WARN, WARNING, ERROR, FATAL, CRITICAL
+  log_level: DEBUG
+
+  output_chunk_max_count: 1
+
+  ## the main pipeline log_dir_path can trigger similar log chunk
+  log_dir_path:  tmp/test-logs
+
+  ## tmp_dir_path, some extractors and loaders require this dir to be in
+  ## the same file system as their output.  This is also where the
+  ## batch_transforms operate.
+  tmp_dir_path: tmp/test-data
+
+  ## task_queue specifies the strings that are passed to an extractor
+  ## to obtain a Chunk.  The strings might be paths in a file system
+  ## or some other source of data.  The task_queue might simply be
+  ## stdin, or it might be a more sophisticated shared queue.
+  task_queue: stdin
+
+  ## generator of StreamItems
+  extractor: from_local_chunks
+
+  ## hyperlink_labels must run after clean_html and before
+  ## clean_visible in order for the newlines that it inserted to get
+  ## into the clean_visible that lingpipe will operate on.
+  incremental_transforms: []
+  batch_transforms: []
+  post_batch_incremental_transforms: [align_serif]
+
+  ## to_local_chunks must be last, because *moves* the tmp file away
+  loaders: [to_local_chunks]
+
+  from_local_chunks:
+    max_retries: 30
+    streamcorpus_version: v0_3_0
+
+  to_local_chunks:
+    output_type: otherdir
+    output_name: "%(source)s-%(num)d-%(md5)s"
+    output_path: tmp/test-output-data
+
+  align_serif:
+    aligner_data:
+      annotator_id: author
+      tagger_id: lingpipe

@@ -170,6 +170,11 @@ class ZookeeperTaskQueue(object):
 
         self._pending_task_key = None
         self._continue_running = True
+        
+        ## number of levels in the available hierarchy
+        self._available_levels = 2
+       
+        self._sample_from_available = 1
 
         ## make a unique ID for this worker that persists across
         ## zookeeper sessions.  Could use a zookeeper generated
@@ -218,6 +223,18 @@ class ZookeeperTaskQueue(object):
         namespace/path_parts[0]/parth_parts[1]/...
         '''
         return os.path.join(self._namespace, *path_parts)
+
+    def _available_path(self, task_key):
+        '''
+        Return path into available hierarchy for a given key.
+        '''
+        split_task_key = []
+        split_len = 2
+        for level in xrange(self._available_levels):
+            split_task_key.append(task_key[level * split_len: (level+1) * split_len])
+        else:
+            split_task_key.append(task_key)
+        return self._path('available', *split_task_key)
 
     @_ensure_connection        
     def _register(self):
@@ -327,7 +344,7 @@ class ZookeeperTaskQueue(object):
              
             ## put this one back in the potentially large pool of
             ## available task keys in cassandra
-            self._cassa.put_available(self._pending_task_key)
+            self._put_available(self._pending_task_key)
    
             ## reset our internal state
             self._pending_task_key = None
@@ -393,6 +410,81 @@ class ZookeeperTaskQueue(object):
         self._cassa.put_task(self._pending_task_key, self.data)
 
     @_ensure_connection
+    def _num_available(self):
+        '''
+        return estimated number of currently available tasks
+        '''
+        available = self._zk.get_children(self._path('available'))
+        return self._sample_from_available * len(available) * 256 ** self._available_levels
+
+
+    @_ensure_connection
+    def _put_available(self, task_key):
+        ''' 
+        pop a key into the zookeeper available set
+        '''
+        self._zk.create(self._available_path(task_key), makepath=True)
+    
+    @_ensure_connection
+    def _pop_available(self, task_key):
+        ''' 
+        pop a key from the zookeeper available set
+        '''
+        path = self._available_path(task_key)
+        self._zk.delete(self._available_path(task_key))
+        for x in xrange(self._available_levels):
+            path = path.rsplit('/', 1)[0]
+            try:
+                print "trying to delete: ", path
+                self._zk.delete(path)
+            except kazoo.exceptions.NotEmptyError:
+                break
+
+    @_ensure_connection
+    def _get_random_available_hier(self):
+        ''' 
+        get a random task_key from the hierachical zookeeper 
+        available set
+        '''
+
+        ## Path into available hierarchy
+        path = self._path('available')
+        available = self._zk.get_children(path)
+
+        ## descend into available hierarchy
+        for level in xrange(self._available_levels):
+
+            ## Ensure there are branches this level
+            ## before trying to descend 
+            if len(available) > 0:
+                random_dir = random.sample(available,1)[0]  
+                path = os.path.join(path, random_dir)
+                print "trying path:", path
+
+                ## Someone could delete this path before
+                ## we descent into it.
+                try:
+                    available = self._zk.get_children(path)
+                except kazoo.exceptions.NoNodeError:
+                    ## Start over, caller will retry
+                    return None
+            
+            ## We may end up on an empty branch of the hierachy
+            else:
+                ## Start over, caller will retry
+                return None
+
+        len_available = len(available)
+        self._sample_from_available = len_available
+        if len_available > 0:
+            random_task = random.sample(available,1)[0]  
+            print "found random_task:", random_task
+            return random_task
+        else:
+            ## Caller will retry
+            return None
+
+    @_ensure_connection
     def _random_available_task(self):
         '''
         get an available task -- selected at random
@@ -400,7 +492,7 @@ class ZookeeperTaskQueue(object):
         logger.debug('attempting to find random available task')
         num_workers = len(self._zk.get_children(self._path('workers')))
         logger.debug('num_workers is %d' % num_workers)
-        num_available = self._cassa.num_available()
+        num_available = self._num_available()
         logger.debug('num_available is %d' % num_available)
         if num_available < num_workers:
             ## fewer tasks than workers
@@ -430,7 +522,7 @@ class ZookeeperTaskQueue(object):
         if num_available == 0:
             return None
         else:
-            return self._cassa.get_random_available()
+            return self._get_random_available_hier()
 
     @_ensure_connection        
     def _win_task(self, task_key):
@@ -463,7 +555,7 @@ class ZookeeperTaskQueue(object):
         self._cassa.put_task(task_key, self.data)
 
         ## remove it from the list of available tasks
-        self._cassa.pop_available(task_key)
+        self._pop_available(task_key)
 
         self._pending_task_key = task_key
 
@@ -478,7 +570,7 @@ class ZookeeperTaskQueue(object):
 
     @_ensure_connection        
     def init_all(self):
-        for path in ['completed', 'pending', 'mode', 'workers']:
+        for path in ['available', 'completed', 'pending', 'mode', 'workers']:
             if not self._zk.exists(self._path(path)):
                 try:
                     self._zk.create(self._path(path), makepath=True)
@@ -497,7 +589,7 @@ class ZookeeperTaskQueue(object):
         except:
             pass
         try:
-            self._cassa.pop_available(key)
+            self._pop_available(key)
         except:
             pass
         try:
@@ -561,7 +653,7 @@ class ZookeeperTaskQueue(object):
             if created and (completed or redo):
                 logger.critical('created %r: %r' % (data['state'], i_str))
                 ## must also remove it from available and pending
-                self._cassa.pop_available(key)
+                self._pop_available(key)
                 
                 try:
                     self._zk.delete(self._path('pending', key))
@@ -591,7 +683,7 @@ class ZookeeperTaskQueue(object):
                 continue
 
             try:
-                self._cassa.put_available(key)
+                self._put_available(key)
             except Exception, exc:
                 sys.exit('task(%r) was new put already in available' % key)
 
@@ -675,7 +767,7 @@ class ZookeeperTaskQueue(object):
         return {
             'registered workers': self._len('workers'),
             'tasks': len(self),
-            'available': self._cassa.num_available(),
+            'available': self._num_available(),
             'pending': self._len('pending'),
             'mode': self._read_mode(),
             'completed': self._len('completed'),
@@ -702,7 +794,7 @@ class ZookeeperTaskQueue(object):
         return {
             'registered workers': self._len('workers'),
             'tasks': len(self),
-            'available': self._cassa.num_available(),
+            'available': self._num_available(),
             'pending': self._len('pending'),
             'mode': self._read_mode(),
             'completed': num_completed,
@@ -771,7 +863,7 @@ class ZookeeperTaskQueue(object):
             task_key = data['task_key']
 
             ## make sure it is in available
-            self._cassa.put_available(task_key)
+            self._put_available(task_key)
 
             ## make sure it is not in pending or completed
             if task_key in pending:
@@ -813,7 +905,7 @@ class ZookeeperTaskQueue(object):
             data['owner'] = None
             self._cassa.put_task(task_key, data)
             try:
-                self._cassa.put_available(task_key)
+                self._put_available(task_key)
             except kazoo.exceptions.NodeExistsError:
                 pass
             try:
@@ -869,7 +961,7 @@ class ZookeeperTaskQueue(object):
                 if task_key in pending:
                     self._zk.delete(self._path('pending', task_key))
                 if self._cassa.in_available(task_key):
-                    self._cassa.pop_available(task_key)
+                    self._pop_available(task_key)
 
             elif data['state'] == 'pending':                    
                 if task_key in completed:
@@ -877,7 +969,7 @@ class ZookeeperTaskQueue(object):
                 if task_key not in pending:
                     self._zk.create(self._path('pending', task_key))
                 if self._cassa.in_available(task_key):
-                    self._cassa.pop_available(task_key)
+                    self._pop_available(task_key)
 
             elif data['state'] == 'available':
                 logger.debug('handling state == %r' % data['state'])
@@ -886,8 +978,8 @@ class ZookeeperTaskQueue(object):
                 if task_key in pending:
                     self._zk.delete(self._path('pending', task_key))
                 if self._cassa.in_available(task_key):
-                    logger.debug('attempting to put_available %r' % task_key)
-                    self._cassa.put_available(task_key)
+                    logger.debug('attempting to _put_available %r' % task_key)
+                    self._put_available(task_key)
 
             else:
                 raise Exception( 'unknown state: %r' % data['state'] )

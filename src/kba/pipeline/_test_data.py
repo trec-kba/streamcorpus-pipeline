@@ -9,3 +9,10 @@ def get_test_chunk_path():
 
 def get_test_chunk():
     return Chunk(path=get_test_chunk_path(), message=StreamItem_v0_2_0)
+
+def get_serif_test_path():
+
+    path = os.path.dirname(__file__)
+    # path = os.path.join( path, '../../../data/test/', 'smith-harris-normalized-serif-10.ent' )
+    path = os.path.join( path, '../../../data/test/', 'smith-harris-normalized.ent' )
+    return path

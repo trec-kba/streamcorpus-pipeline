@@ -93,6 +93,13 @@ class Pipeline(object):
 
         ## a list of transforms that take a chunk path as input and
         ## return a path to a new chunk
+        self._pbi_stages = [
+            _init_stage(name, config.get(name, {}),
+                        external_stages)
+            for name in config['post_batch_incremental_transforms']]
+
+        ## a list of transforms that take a chunk path as input and
+        ## return a path to a new chunk
         self._loaders  = [
             _init_stage(name, config.get(name, {}),
                         external_stages)
@@ -236,7 +243,7 @@ class Pipeline(object):
                 ## incremental transforms populate t_chunk
                 if not hit_last: # avoid re-adding last si
                     ## let the incremental transforms destroy the si by returning None
-                    si = self._run_incremental_transforms(si)
+                    si = self._run_incremental_transforms(si, self._incremental_transforms)
 
                 ## insist that every chunk has only one source string
                 if si:
@@ -281,13 +288,28 @@ class Pipeline(object):
                     ## batch transforms act on the whole chunk in-place
                     self._run_batch_transforms(t_path)
 
+                    ## Run post batch incremental (pbi) transform stages.
+                    ## These exist because certain batch transforms have 
+                    ## to run before certain incremental stages.
+                    t_path2 = os.path.join(self.config['tmp_dir_path'], 'trec-kba-pipeline-tmp-%s' % str(uuid.uuid1()))
+                    self.t_chunk = streamcorpus.Chunk(path=t_path2, mode='wb')
+
+                    input_t_chunk = streamcorpus.Chunk(path=t_path, mode='rb')
+                    for si in input_t_chunk:
+                        si = self._run_incremental_transforms(si, self._pbi_stages)
+
+                    self.t_chunk.close()
+
+                    if len(self.t_chunk) == 0:
+                        continue
+
                     ## loaders put the chunk somewhere, and could delete it
                     name_info = dict(
                         first = start_count,
                         #num and md5 computed in each loaders
                         source = sources.pop(),
                         )
-
+                   
                     for loader in self._loaders:
                         try:
                             logger.debug('running %r on %r: %r' % (loader, i_str, name_info))
@@ -361,9 +383,9 @@ class Pipeline(object):
                     logger.critical(traceback.format_exc(exc))
                     raise exc
 
-    def _run_incremental_transforms(self, si):
+    def _run_incremental_transforms(self, si, transforms):
         ## operate each transform on this one StreamItem
-        for transform in self._incremental_transforms:
+        for transform in transforms:
             #timer = gevent.Timeout.start_new(1)
             #thread = gevent.spawn(transform, si)
             #try:
