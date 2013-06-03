@@ -1,3 +1,5 @@
+# coding: utf-8 
+
 import os
 import pytest
 
@@ -18,7 +20,7 @@ def test_make_clean_html():
 id="comments-template"><h3 id="comments">4 Responses to &#822050+ Years of Digiscoping History.&#8221;</h3>'''
 
     correct_test_bad_html = '''<html><body>
-<a href="http://birdingblogs.com/author/daleforbes">birdingblogs.com</a><div id="comments-template"><h3 id="comments">4 Responses to   + Years of Digiscoping History.”</h3></div>
+<a href="http://birdingblogs.com/author/daleforbes">birdingblogs.com</a><div id="comments-template"><h3 id="comments">4 Responses to  + Years of Digiscoping History.”</h3></div>
 </body></html>
 '''
 
