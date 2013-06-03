@@ -765,7 +765,7 @@ class ZookeeperTaskQueue(object):
         return {
             'registered workers': self._len('workers'),
             'tasks': len(self),
-            'available': self._cassa._num_available(),
+            'available': self._num_available(),
             'pending': self._len('pending'),
             'mode': self._read_mode(),
             'completed': self._len('completed'),
