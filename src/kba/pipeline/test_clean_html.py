@@ -20,12 +20,23 @@ def test_make_clean_html():
 id="comments-template"><h3 id="comments">4 Responses to &#822050+ Years of Digiscoping History.&#8221;</h3>'''
 
     correct_test_bad_html = '''<html><body>
-<a href="http://birdingblogs.com/author/daleforbes">birdingblogs.com</a><div id="comments-template"><h3 id="comments">4 Responses to  + Years of Digiscoping History.”</h3></div>
+<a href="http://birdingblogs.com/author/daleforbes">birdingblogs.com</a><div id="comments-template"><h3 id="comments">4 Responses to   + Years of Digiscoping History.”</h3></div>
 </body></html>
 '''
+    ## split things up around the "+" because different versions of
+    ## lxml insert different numbers of spaces!
+    correct_first_half, correct_second_half = correct_test_bad_html.split('+')
+    correct_first_half = correct_first_half.strip()
+    correct_second_half = correct_second_half.strip()
 
     cleaned =  make_clean_html(test_bad_html)
-    assert cleaned == correct_test_bad_html, cleaned
+    cleaned_first_half, cleaned_second_half = cleaned.split('+')
+    cleaned_first_half = cleaned_first_half.strip()
+    cleaned_second_half = cleaned_second_half.strip()
+
+    #assert cleaned == correct_test_bad_html, cleaned
+    assert cleaned_first_half == correct_first_half and cleaned_second_half == correct_second_half, cleaned
+
 
 def test_target_parsing():
     path = os.path.dirname(__file__)
