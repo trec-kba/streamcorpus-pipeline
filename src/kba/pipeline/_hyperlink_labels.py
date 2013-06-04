@@ -357,6 +357,9 @@ class hyperlink_labels(object):
                     ## with a new one that has newlines inserted
                     stream_item.body.clean_html = self.clean_html
 
+                ## Remove any previous author labels
+                stream_item.body.labels['author'] = []
+
                 ## also add the new labels
                 add_annotation(stream_item.body, *labels)
         return stream_item
