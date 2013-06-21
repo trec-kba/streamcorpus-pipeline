@@ -43,6 +43,7 @@ kba.pipeline:
 
   from_local_chunks:
     max_retries: 30
+    streamcorpus_version: v0_3_0
 
   to_local_chunks:
     #output_type: inplace

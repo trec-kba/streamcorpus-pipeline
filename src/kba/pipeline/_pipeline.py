@@ -96,7 +96,7 @@ class Pipeline(object):
         self._pbi_stages = [
             _init_stage(name, config.get(name, {}),
                         external_stages)
-            for name in config['post_batch_incremental_transforms']]
+            for name in config.get('post_batch_incremental_transforms', [])]
 
         ## a list of transforms that take a chunk path as input and
         ## return a path to a new chunk

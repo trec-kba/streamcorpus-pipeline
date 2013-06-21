@@ -38,7 +38,7 @@ class from_local_chunks(object):
         tries = 0
         while tries < self.config['max_retries']:
             try:
-                message = _message_versions[ self.config['streamcorpus_version'] ]
+                message = _message_versions[ self.config.get('streamcorpus_version', 'v0_3_0') ]
                 chunk = streamcorpus.Chunk(path=i_str, mode='rb', message=message)
                 return chunk
             except IOError, exc:
