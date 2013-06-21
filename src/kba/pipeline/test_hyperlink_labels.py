@@ -5,6 +5,7 @@ import pytest
 from streamcorpus import make_stream_item, StreamItem, ContentItem, OffsetType, Chunk
 from _hyperlink_labels import anchors_re, hyperlink_labels
 from _stages import _init_stage
+from _logging import logger
 
 def make_test_stream_item():
     stream_item = make_stream_item(None, 'http://nytimes.com/')
