@@ -86,6 +86,7 @@ setup(
         'pycassa', 
         'chromium_compact_language_detector',
         'pytest',
+        'pytest-capturelog',
     ],
     # include_package_data = True,
     package_data = {

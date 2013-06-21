@@ -17,9 +17,9 @@ test: clean
 	## it does not confuse py.test
 	rm -rf build
 	py.test --genscript=runtests.py
-	cd src && python ../runtests.py -s
+	cd src && python ../runtests.py -vv
 
-john-smith: clean install test
+john-smith: 
 	echo data/john-smith/original | python -m kba.pipeline.run configs/john-smith.yaml
 	echo data/john-smith/original | python -m kba.pipeline.run configs/john-smith-lingpipe.yaml
 	echo data/john-smith/john-smith-0.sc | python -m kba.pipeline.run configs/john-smith-lingpipe-from-chunk.yaml
