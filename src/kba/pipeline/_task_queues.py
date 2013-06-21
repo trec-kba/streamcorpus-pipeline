@@ -415,7 +415,7 @@ class ZookeeperTaskQueue(object):
         return estimated number of currently available tasks
         '''
         available = self._zk.get_children(self._path('available'))
-        return self._sample_from_available * len(available) * 256 ** self._available_levels
+        return self._sample_from_available * len(available) ** self._available_levels
 
 
     @_ensure_connection

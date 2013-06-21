@@ -7,6 +7,7 @@ def test_max_retries():
     config = dict(
         max_retries = 5,
         max_backoff = 100,
+        streamcorpus_version = 'v0_2_0'
         )
     flc = from_local_chunks(config)
     start_time = time.time()
@@ -20,6 +21,7 @@ def test_max_backoff():
     config = dict(
         max_retries = 5,
         max_backoff = 2,
+        streamcorpus_version = 'v0_2_0'
         )
     flc = from_local_chunks(config)
     start_time = time.time()

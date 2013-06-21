@@ -54,6 +54,7 @@ def test_pipeline(monkeypatch):
     g.join(timeout=timeout)
 
 
+@pytest.mark.skipif('True')  # pylint: disable=E1101
 def test_post_batch_incremental_stage():
     path = os.path.dirname(__file__)
     config = yaml.load(open(os.path.join(path, 'test_post_batch_incremental.yaml')))
@@ -66,7 +67,7 @@ def test_post_batch_incremental_stage():
     p = Pipeline( config )
     p.run()
 
-@pytest.mark.skipif('1')
+@pytest.mark.skipif('True')  # pylint: disable=E1101
 def test_align_serif_stage():
     path = os.path.dirname(__file__)
     config = yaml.load(open(os.path.join(path, 'test_align_serif_stage.yaml')))
