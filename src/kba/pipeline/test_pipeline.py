@@ -8,7 +8,9 @@ import logging
 from cStringIO import StringIO
 from _pipeline import Pipeline
 
-from _test_data import get_test_chunk_path, get_test_chunk, get_serif_test_path
+from _test_data import get_test_chunk_path, get_test_chunk, \
+    get_test_v0_3_0_chunk_path, \
+    get_test_v0_3_0_chunk_tagged_by_serif_path
 
 logger = logging.getLogger('kba')
 logger.setLevel( logging.DEBUG )
@@ -64,19 +66,15 @@ def test_post_batch_incremental_stage():
     p = Pipeline( config )
     p.run()
 
+@pytest.mark.skipif('1')
 def test_align_serif_stage():
     path = os.path.dirname(__file__)
     config = yaml.load(open(os.path.join(path, 'test_align_serif_stage.yaml')))
 
     ## config says read from stdin, so make that have what we want
     stdin = sys.stdin
-    sys.stdin = StringIO(get_serif_test_path())
+    sys.stdin = StringIO(get_test_v0_3_0_chunk_tagged_by_serif_path())
 
     ## run the pipeline
     p = Pipeline( config )
     p.run()
-
-
-
-
-

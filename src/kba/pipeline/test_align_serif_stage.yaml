@@ -56,4 +56,4 @@ kba.pipeline:
   align_serif:
     aligner_data:
       annotator_id: author
-      tagger_id: lingpipe
+      tagger_id: serif
