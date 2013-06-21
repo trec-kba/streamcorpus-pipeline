@@ -237,7 +237,7 @@ class Pipeline(object):
 
                 if not t_path:
                     ## make a temporary chunk at a temporary path
-                    t_path = os.path.join(self.config['tmp_dir_path'], 'trec-kba-pipeline-tmp-%s' % str(uuid.uuid1()))
+                    t_path = os.path.join(self.config['tmp_dir_path'], 'trec-kba-pipeline-tmp-%s' % str(uuid.uuid4()))
                     self.t_chunk = streamcorpus.Chunk(path=t_path, mode='wb')
 
                 ## incremental transforms populate t_chunk
