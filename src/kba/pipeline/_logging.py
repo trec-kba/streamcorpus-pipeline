@@ -1,13 +1,13 @@
-#!/usr/bin/env python
 '''
 Logging utilities for the kba.pipeline
 
 This software is released under an MIT/X11 open source license.
 
-Copyright 2012 Diffeo, Inc.
+Copyright 2012-2013 Diffeo, Inc.
 '''
 
 import os
+import logging
 import streamcorpus
 
 def log_full_file(stream_item, extension, log_path=None):
@@ -25,3 +25,13 @@ def log_full_file(stream_item, extension, log_path=None):
         l_chunk.close()
 
         print 'created %s' % fpath
+
+ch = logging.StreamHandler()
+formatter = logging.Formatter('%(asctime)s pid=%(process)d %(filename)s:%(lineno)d %(levelname)s: %(message)s')
+ch.setLevel('DEBUG')
+ch.setFormatter(formatter)
+
+logger = logging.getLogger('kba')
+logger.setLevel('DEBUG')
+logger.handlers = []
+logger.addHandler(ch)
