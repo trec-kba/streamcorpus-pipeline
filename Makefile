@@ -43,6 +43,8 @@ john-smith-lingpipe: john-smith-simple
 
 john-smith-serif: john-smith-simple
 	echo data/john-smith/original | python -m kba.pipeline.run configs/john-smith-serif-streamcorpus_one_step.yaml
+	echo data/john-smith/john-smith-0.sc | python -m kba.pipeline.run configs/john-smith-serif-streamcorpus_generate_serifxml.yaml
+	#echo data/john-smith/john-smith-tagged-by-serifxml-only.sc | python -m kba.pipeline.run configs/john-smith-serif-streamcorpus_read_serifxml.yaml
 
 john-smith-stanford: john-smith-simple
 	## this is so slow that there must be something wrong with our
