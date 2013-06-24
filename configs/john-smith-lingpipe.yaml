@@ -54,11 +54,13 @@ kba.pipeline:
     offset_debugging: false
     cleanup_tmp_files: false
 
-    ## convert doc-level labels into token-level labels by requiring
-    ## particular substrings appear in the strings of a coref chain
+    ## convert all doc-level Rating objects into Label objects on all
+    ## Tokens that appear in a coref chain that meets the criterion
     align_labels_by: names_in_chains
     aligner_data:
-      ## token substring to require in the names of a coref chains
-      names: [john, smith]
+      ## apply Label to each Token in any chain for which ALL|ANY of
+      ## the strings in Rating.mentions appear as substrings in at
+      ## least one Token.token string of the coref chain
+      chain_selector:  ALL
       ## identifier of annotator to find in the doc-level Ratings
       annotator_id: bagga-and-baldwin

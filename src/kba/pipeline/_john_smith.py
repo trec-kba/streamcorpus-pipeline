@@ -93,6 +93,7 @@ def generate_john_smith_chunk(path_to_original):
             rating.annotator = anno
             rating.target = streamcorpus.Target(target_id = str(label_id)) # must be string
             rating.contains_mention = True
+            rating.mentions = ['john', 'smith']
 
             ## put this one label in the array of labels
             streamcorpus.add_annotation(stream_item, rating)

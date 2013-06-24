@@ -19,8 +19,10 @@ test: clean
 	py.test --genscript=runtests.py
 	cd src && python ../runtests.py -vv
 
-john-smith: 
+john-smith-simple: 
 	echo data/john-smith/original | python -m kba.pipeline.run configs/john-smith.yaml
+
+john-smith-lingpipe: john-smith-simple
 	echo data/john-smith/original | python -m kba.pipeline.run configs/john-smith-lingpipe.yaml
 	echo data/john-smith/john-smith-0.sc | python -m kba.pipeline.run configs/john-smith-lingpipe-from-chunk.yaml
 
@@ -31,13 +33,16 @@ john-smith:
 	diff tmp/lp-0.tsv tmp/lp-test-0.tsv
 	diff tmp/lp-0.tsv data/john-smith/john-smith-tagged-by-lingpipe-0.tsv
 
-john-smith-simple: clean install test
-	echo data/john-smith/original | python -m kba.pipeline.run configs/john-smith.yaml
+john-smith-serif: john-smith-simple
+	echo data/john-smith/original | python -m kba.pipeline.run configs/john-smith-serif-streamcorpus_one_step.yaml
 
-stanford: install
+john-smith-stanford: john-smith-simple
 	## this is so slow that there must be something wrong with our
 	## build of Stanford CoreNLP
 	echo data/john-smith/john-smith-0.sc | python -m kba.pipeline.run configs/john-smith-stanford-from-chunk.yaml
+
+john-smith-all: clean install test john-smith-simple john-smith-lingpipe john-smith-serif
+
 
 clean: clean_js
 	rm -rf build dist src/kba.pipeline.egg-info runtests.py *.iso

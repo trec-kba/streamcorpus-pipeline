@@ -61,27 +61,88 @@ def make_chains_with_names(sentences):
 
                     ## store the name parts initially as a set
                     equiv_ids[eqid][0].add(cleanse(tok.token.decode('utf8')))
-                    ## 
+                    ## carry a *reference* to the entire Token object
                     equiv_ids[eqid][1].add(tok)
-
-    ## convert name sets to strings
-    for eqid in equiv_ids:
-        equiv_ids[eqid] = ( 
-            u' '.join( equiv_ids[eqid][0] ),
-            equiv_ids[eqid][1] )
 
     return equiv_ids
 
+def ALL_mentions(target_mentions, chain_mentions):
+    '''
+    For each name string in the target_mentions list, searches through
+    all chain_mentions looking for any cleansed Token.token that
+    contains the name.  Returns True only if all of the target_mention
+    strings appeared as substrings of at least one cleansed
+    Token.token.  Otherwise, returns False.
+
+    :type target_mentions: list of basestring
+    :type chain_mentions: list of basestring
+    
+    :returns bool:
+    '''
+    found_all = True
+    for name in target_mentions:
+        found_one = False
+        for chain_ment in chain_mentions:
+            if name in chain_ment:
+                found_one = True
+                break
+        if not found_one:
+            found_all = False
+            break
+    return found_all
+
+def ANY_mentions(target_mentions, chain_mentions):
+    '''
+    For each name string in the target_mentions list, searches through
+    all chain_mentions looking for any cleansed Token.token that
+    contains the name.  Returns True if any of the target_mention
+    strings appeared as substrings of any cleansed Token.token.
+    Otherwise, returns False.
+
+    :type target_mentions: list of basestring
+    :type chain_mentions: list of basestring
+    
+    :returns bool:
+    '''
+    for name in target_mentions:
+        for chain_ment in chain_mentions:
+            if name in chain_ment:
+                return True
+    return False
+
+_CHAIN_SELECTORS = dict(
+    ALL = ALL_mentions,
+    ANY = ANY_mentions,
+    )
+
 def names_in_chains(stream_item, aligner_data):
     '''
-    Add label to any token in a coref chain that has all the names
+    Convert doc-level Rating object into a Label, and add that Label
+    to all Token in all coref chains identified by
+    aligner_data["chain_selector"]
 
     :param stream_item: document that has a doc-level Rating to translate into token-level Labels.
     :param aligner_data: dict containing:
-      names: list of strings to require
+      chain_selector: ALL or ANY
       annotator_id: string to find at stream_item.Ratings[i].annotator.annotator_id
+
+    If chain_selector==ALL, then only apply Label to chains in which
+    all of the Rating.mentions strings appear as substrings within at
+    least one of the Token.token strings.
+
+    If chain_selector==ANY, then apply Label to chains in which any of
+    the Rating.mentions strings appear as a substring within at least
+    one of the Token.token strings.
     '''
-    names = aligner_data['names']
+    chain_selector = aligner_data.get('chain_selector', '')
+    assert chain_selector in _CHAIN_SELECTORS, \
+        'chain_selector: %r not in %r' % (chain_selector, _CHAIN_SELECTORS.keys())
+
+    ## convert chain_selector to a function
+    chain_selector = _CHAIN_SELECTORS[chain_selector]
+
+    ## make inverted index equiv_id --> (names, tokens)
+    equiv_ids = make_chains_with_names( stream_item.body.sentences )
 
     for annotator_id, ratings in stream_item.ratings.items():        
         if annotator_id == aligner_data['annotator_id']:
@@ -89,21 +150,10 @@ def names_in_chains(stream_item, aligner_data):
                 label = Label(annotator=rating.annotator,
                               target=rating.target)
 
-                ## make inverted index names-->tokens
-                equiv_ids = make_chains_with_names( stream_item.body.sentences )
-
-                for eqid, sets in equiv_ids.items():
-                    ## detect 'smith' in 'smithye'
-                    found_one = True
-                    for name in names:
-                        if name not in sets[0]:
-                            found_one = False
-                            ## try next chain
-                            break
-
-                    if found_one:
+                for eqid, (chain_mentions, chain_tokens) in equiv_ids.items():
+                    if chain_selector(rating.mentions, chain_mentions):
                         ## apply the label
-                        for tok in sets[1]:
+                        for tok in chain_tokens:
                             add_annotation(tok, label)
 
                 ## stream_item passed by reference, so nothing to return
