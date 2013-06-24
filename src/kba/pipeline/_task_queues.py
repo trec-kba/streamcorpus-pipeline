@@ -30,15 +30,6 @@ from _pycassa_simple_table import Cassa
 
 logger = logging.getLogger(__name__)
 
-## setup loggers -- should move this to run.py and load.py
-import logging
-kazoo_log = logging.getLogger('kazoo')
-#kazoo_log.setLevel(logging.DEBUG)
-ch = logging.StreamHandler()
-ch.setLevel(logging.DEBUG)
-#ch.setFormatter(formatter)
-kazoo_log.addHandler(ch)
-
 class TaskQueue(object):
     '''
     task_queue base class
@@ -435,7 +426,7 @@ class ZookeeperTaskQueue(object):
         for x in xrange(self._available_levels):
             path = path.rsplit('/', 1)[0]
             try:
-                print "trying to delete: ", path
+                logger.info( 'trying to delete: %r' % path )
                 self._zk.delete(path)
             except kazoo.exceptions.NotEmptyError:
                 break
@@ -459,7 +450,7 @@ class ZookeeperTaskQueue(object):
             if len(available) > 0:
                 random_dir = random.sample(available,1)[0]  
                 path = os.path.join(path, random_dir)
-                print "trying path:", path
+                logger.info( 'trying path: %r' % path )
 
                 ## Someone could delete this path before
                 ## we descent into it.
@@ -478,7 +469,7 @@ class ZookeeperTaskQueue(object):
         self._sample_from_available = len_available
         if len_available > 0:
             random_task = random.sample(available,1)[0]  
-            print "found random_task:", random_task
+            logger.info( 'found random_task: %r' % random_task )
             return random_task
         else:
             ## Caller will retry
