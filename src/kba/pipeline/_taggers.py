@@ -267,6 +267,26 @@ AlignmentStrategies = {
     'byte_offset_labels': byte_offset_labels,
     }
 
+def align_labels(t_path1, config):
+    if not ('align_labels_by' in config and config['align_labels_by']):
+        return
+    assert 'aligner_data' in config, 'config missing "aligner_data"'
+    aligner = AlignmentStrategies[ config['align_labels_by'] ]
+    
+    t_chunk1 = Chunk(t_path1, mode='rb')
+    t_path2 = t_path1 + '-tmp-aligning'
+    t_chunk2 = Chunk(t_path2, mode='wb')
+    for si in t_chunk1:
+        aligner( si, config['aligner_data'] )
+        t_chunk2.add(si)
+    t_chunk1.close()
+    t_chunk2.close()
+
+    logger.info('atomic rename: %r --> %r' % (t_path2, t_path1))
+    os.rename(t_path2, t_path1)
+    logger.debug('done renaming')
+
+
 class TaggerBatchTransform(_stages.BatchTransform):
     '''
     kba.pipeline.TaggerBatchTransform provides a structure for
