@@ -56,7 +56,11 @@ class Pipeline(object):
 
         if 'external_stages_path' in config:
             import imp
-            external_stages = imp.load_source('', config['external_stages_path'])
+            try:
+                external_stages = imp.load_source('', config['external_stages_path'])
+            except Exception, exc:
+                logger.critical('failed to load external_stages_path: %r' % config['external_stages_path'])
+                sys.exit(traceback.format_exc(exc))
             external_stages = external_stages.Stages
         else:
             external_stages = None

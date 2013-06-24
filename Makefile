@@ -21,6 +21,14 @@ test: clean
 
 john-smith-simple: 
 	echo data/john-smith/original | python -m kba.pipeline.run configs/john-smith.yaml
+	echo data/john-smith/original | python -m kba.pipeline.run configs/john-smith-with-labels-from-tsv.yaml
+
+	## compare dumps
+	python -m streamcorpus.dump data/john-smith/john-smith-0.sc      --field stream_id | sort > tmp/js-0.tsv
+	python -m streamcorpus.dump data/john-smith/john-smith-from-external-stage-0.sc  --field stream_id | sort > tmp/js-test-0.tsv
+
+	## verify that the ways of building JS create all the entries
+	diff tmp/js-0.tsv tmp/js-test-0.tsv
 
 john-smith-lingpipe: john-smith-simple
 	echo data/john-smith/original | python -m kba.pipeline.run configs/john-smith-lingpipe.yaml

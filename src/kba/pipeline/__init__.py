@@ -10,8 +10,8 @@ This software is released under an MIT/X11 open source license.
 
 Copyright 2012 Diffeo, Inc.
 '''
-__all__ = ['Pipeline', 'load', 'run']
+__all__ = ['Pipeline', 'load', 'run', 'cleanse']
 import run
 import load
 from _pipeline import Pipeline
-
+from _clean_visible import cleanse

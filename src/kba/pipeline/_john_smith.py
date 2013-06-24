@@ -18,7 +18,7 @@ that contain 'john' and 'smith' as substrings.
 The original data is stored in data/john-smith/original and the output
 of this file is in data/john-smith/john-smith.sc
 
-Copyright 2012 Diffeo, Inc.
+Copyright 2012-2013 Diffeo, Inc.
 '''
 
 ## this assumes that streamcorpus has been installed
@@ -31,18 +31,28 @@ def john_smith(config):
     '''
     Returns a kba.pipeline "extractor" that generates a single
     streamcorpus.Chunk file containing the John Smith corpus.
+
+    :param config: a dictionary of config info, which is pulled from
+    the input .yaml file based on the name of this stage.  In this
+    case, if the .yaml file contains an entry "john_smith" inside
+    kba.pipeline, then it is passed here as the config
+
+    :returns function:
     '''
-    def _john_smith(path_to_original):
-        return generate_john_smith_chunk(path_to_original)
-    
-    return _john_smith
+    ## This can be a closure around the config, or a class with a
+    ## __call__ method.  The returned object should be a callable,
+    ## e.g. a function, that expects a single string as its input
+    ## argument. 
+    return generate_john_smith_chunk
 
 def generate_john_smith_chunk(path_to_original):
     '''
     This _looks_ like a Chunk only in that it generates StreamItem
     instances when iterated upon.
     '''
-    ## assume JS corpus was created at one moment at the end of 1998
+    ## Every StreamItem has a stream_time property.  It usually comes
+    ## from the document creation time.  Here, we assume the JS corpus
+    ## was created at one moment at the end of 1998:
     creation_time = '1998-12-31T23:59:59.999999Z'
 
     if not path_to_original.startswith('/'):
@@ -101,14 +111,15 @@ def generate_john_smith_chunk(path_to_original):
             ## provide this stream_item to the pipeline
             yield stream_item
 
-
 if __name__ == '__main__':
+    ## this is a simple test of this extractor stage
     import argparse
     parser = argparse.ArgumentParser()
     parser.add_argument(
         'input_dir', 
         help='path to a directory containing the original John Smith corpus.')
-    parser.add_argument(
-        'output_file', 
-        help='file name for the output file to create -- must not exist yet.')
     args = parser.parse_args()
+    
+    john_smith_extractor_stage = john_smith({})
+    for si in john_smith_extractor_stage( args.input_dir ):
+        print len(si.body.clean_visible), si.stream_id
