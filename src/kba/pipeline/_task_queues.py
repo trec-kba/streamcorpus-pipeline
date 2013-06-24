@@ -591,7 +591,7 @@ class ZookeeperTaskQueue(object):
 
     def _make_key(self, i_str):
         '''construct a hash to use as the node name'''
-        return hashlib.md5(i_str).hexdigest()
+        return hashlib.md5(i_str).hexdigest() # pylint: disable=E1101
 
     def _make_new_data(self, i_str):
         ## construct a data payload

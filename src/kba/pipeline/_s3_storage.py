@@ -128,7 +128,7 @@ class from_s3_chunks(object):
                 i_content_md5 = key.key.split('.')[-4][-32:]
 
             ## verify the data matches expected md5
-            f_content_md5 = hashlib.md5(data).hexdigest()
+            f_content_md5 = hashlib.md5(data).hexdigest() # pylint: disable=E1101
             if i_content_md5 != f_content_md5:
                 msg = 'FAIL(%d): %s --> %s != %s' % (tries, key.key, i_content_md5, f_content_md5)
                 logger.critical(msg)
@@ -237,12 +237,12 @@ class to_s3_chunks(object):
         logger.info('fetching %r' % url)
         req = requests.get(url)
         errors, data = decrypt_and_uncompress(
-            req.content, 
+            req.content, # pylint: disable=E1103
             self.config['gpg_decryption_key_path'])
 
         logger.info( 'got back SIs: %d' % len( list( Chunk(data=data) ) ))
 
-        rec_md5 = hashlib.md5(data).hexdigest()
+        rec_md5 = hashlib.md5(data).hexdigest() # pylint: disable=E1101
         if md5 == rec_md5:
             return
         else:
@@ -275,7 +275,7 @@ class to_s3_tarballs(object):
         t_path2 = tarball_export(t_path, name_info)
 
         data = open(t_path2).read()
-        name_info['md5'] = hashlib.md5(data).hexdigest()
+        name_info['md5'] = hashlib.md5(data).hexdigest() # pylint: disable=E1101
 
         self.upload(o_path, data, name_info)
         self.cleanup(t_path)
@@ -340,9 +340,9 @@ class to_s3_tarballs(object):
             o_path = o_path)
         logger.info('fetching %r' % url)
         req = requests.get(url)
-        data = req.content
+        data = req.content # pylint: disable=E1103
 
-        rec_md5 = hashlib.md5(data).hexdigest()
+        rec_md5 = hashlib.md5(data).hexdigest() # pylint: disable=E1101
         if md5 == rec_md5:
             return
         else:
