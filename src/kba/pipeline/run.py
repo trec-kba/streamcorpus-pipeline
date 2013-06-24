@@ -10,8 +10,8 @@ import os
 import sys
 import copy
 import json
-import logging
 from _pipeline import Pipeline
+from _logging import logger, reset_log_level
 
 def make_absolute_paths( config ):
     ## remove the root_path, so it does not get extended itself
@@ -77,8 +77,6 @@ if __name__ == '__main__':
 
     make_absolute_paths(config)
 
-    print 'loaded config from %r' % args.config
-
     ## put info about the whole config in the extractor's config
     tq_name = config['kba.pipeline'].get('task_queue', 'no-task-queue')
     if tq_name not in config['kba.pipeline'] or config['kba.pipeline'][tq_name] is None:
@@ -87,19 +85,12 @@ if __name__ == '__main__':
     config['kba.pipeline'][tq_name]['config_json'] = json.dumps(config)
 
     ## setup loggers
-    log_level = getattr(logging, config['kba.pipeline']['log_level'])
+    reset_log_level( config['kba.pipeline'].get('log_level', 'DEBUG') )
 
-    logger = logging.getLogger('kba')
-    logger.setLevel( log_level )
-
-    ch = logging.StreamHandler()
-    ch.setLevel( log_level )
-    formatter = logging.Formatter('%(asctime)s %(process)d %(levelname)s: %(message)s')
-    ch.setFormatter(formatter)
-    logger.addHandler(ch)
-
-    logger.critical('running config: %s = %s' % (
+    logger.warn('running config: %s = %s' % (
             config['kba.pipeline'][tq_name]['config_hash'], args.config))
+
+    logger.info(json.dumps(config, indent=4, sort_keys=True))
 
     pipeline = Pipeline(config)
     pipeline.run()
