@@ -94,7 +94,7 @@ def test_random_available_task():
     assert zktq._num_available() == 0
 
 ## must fix this before using ZookeeperTaskQueue
-@pytest.mark.xfail
+@pytest.mark.xfail # pylint: disable=E1101
 def test_num_available():
     config = get_config(
         namespace = 'all_tasks',
