@@ -182,7 +182,7 @@ class hyperlink_labels(object):
         assert len(self.clean_html) == len(new_clean_html) - newlines_added
         self.clean_html = new_clean_html
 
-    def byte_href_anchors(self):
+    def byte_href_anchors(self, chars=False):
         '''
         simple, regex-based extractor of anchor tags, so we can
         compute BYTE offsets for anchor texts and associate them with
@@ -190,10 +190,13 @@ class hyperlink_labels(object):
         
         Generates tuple(href_string, first_byte, byte_length, anchor_text)
         '''
+        input_buffer = self.clean_html
+        if chars:
+            input_buffer = input_buffer.decode('utf8')
         idx = 0
         ## split doc up into pieces that end on an anchor tag
-        parts = self.clean_html.split('</a>')
-        assert len('</a>'.join(parts) ) == len(self.clean_html)
+        parts = input_buffer.split('</a>')
+        assert len('</a>'.join(parts) ) == len(input_buffer)
         for part in parts:
             ## try to get an A tag out:
             m = anchors_re.match(part)
@@ -219,7 +222,7 @@ class hyperlink_labels(object):
 
             yield m.group('href'), first, length, m.group('anchor')
 
-        assert idx - 4 == len(self.clean_html)
+        assert idx - 4 == len(input_buffer)
 
     def byte_href_anchors_state_machine(self):
         '''
