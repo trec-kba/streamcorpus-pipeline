@@ -3,3 +3,5 @@ include version.py
 recursive-include data/john-smith *
 recursive-include configs *.yaml
 recursive-include src/examples *.py
+include serif-2013-04-11.tar.gz
+include serif-2013-06-07.tar.gz
