@@ -30,8 +30,8 @@ def read_file(file_name):
 def recursive_glob(treeroot, pattern):
     results = []
     for base, dirs, files in os.walk(treeroot):
-      goodfiles = fnmatch.filter(files, pattern)
-      results.extend(os.path.join(base, f) for f in goodfiles)
+        goodfiles = fnmatch.filter(files, pattern)
+        results.extend(os.path.join(base, f) for f in goodfiles)
     return results
 
 class PyTest(Command):
@@ -87,5 +87,13 @@ setup(
         'chromium_compact_language_detector',
         'pytest',
         'pytest-capturelog',
-    ]
+    ],
+    data_files = [
+        ## this does not appear to actually put anything into the egg...
+        ('data/john-smith', recursive_glob('data/john-smith', '*.sc')),
+        ('data/john-smith', recursive_glob('data/john-smith', '*.sc.xz')),
+        ('data/john-smith/original', recursive_glob('data/john-smith/original', '*')),
+        ('examples', recursive_glob('src/examples/', '*.py$')),
+        ('configs', recursive_glob('configs/', '*.yaml$')),
+    ],
 )
