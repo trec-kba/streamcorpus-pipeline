@@ -34,6 +34,16 @@ def recursive_glob(treeroot, pattern):
         results.extend(os.path.join(base, f) for f in goodfiles)
     return results
 
+def recursive_glob_with_tree(treeroot, pattern):
+    results = []
+    for base, dirs, files in os.walk(treeroot):
+        goodfiles = fnmatch.filter(files, pattern)
+        one_dir_results = []
+        for f in goodfiles:
+            one_dir_results.append(os.path.join(base, f))
+        results.append((base, one_dir_results))
+    return results
+
 class PyTest(Command):
     '''run py.test'''
 
@@ -93,6 +103,5 @@ setup(
         ('examples', recursive_glob('src/examples', '*.py')),
         ('configs', recursive_glob('configs', '*.yaml')),
         ('data/john-smith', recursive_glob('data/john-smith', '*.*')),
-        ('data/john-smith/original', recursive_glob('data/john-smith/original', '*')),
-    ],
+    ] + recursive_glob_with_tree('data/john-smith/original', '*')
 )
