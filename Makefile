@@ -95,6 +95,7 @@ trec-kba-pipeline-$(VERSION)-$(RELEASE).iso: centos_rpm
 centos_iso: trec-kba-pipeline-$(VERSION)-$(RELEASE).iso
 
 register:
+        ## upload both source and binary
 	python setup.py sdist bdist_egg upload -r internal
 
 check:
