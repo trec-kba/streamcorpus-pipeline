@@ -58,7 +58,7 @@ john-smith-stanford: john-smith-simple
 	## build of Stanford CoreNLP
 	echo data/john-smith/john-smith-0.sc | python -m kba.pipeline.run configs/john-smith-stanford-from-chunk.yaml
 
-john-smith-all: clean install test john-smith-simple john-smith-lingpipe john-smith-serif
+john-smith-all: clean install john-smith-simple john-smith-lingpipe john-smith-serif
 
 
 clean: clean_js
