@@ -77,6 +77,16 @@ setup(
         'Topic :: Utilities',
         'License :: MIT',  ## MIT/X11 license http://opensource.org/licenses/MIT
     ],
+    tests_require=[
+        'pytest',
+        'ipdb',
+        'pytest-cov',
+        'pytest-xdist',
+        'pytest-timeout',
+        'pytest-incremental',
+        'pytest-capturelog',
+        'epydoc',
+    ],
     install_requires=[
         'thrift',
         'gevent',      ## required in .rpm
