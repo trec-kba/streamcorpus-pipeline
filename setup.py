@@ -3,6 +3,7 @@
 import os
 import sys
 import fnmatch
+import subprocess
 
 ## prepare to run PyTest as a command
 from distutils.core import Command
@@ -44,18 +45,56 @@ def recursive_glob_with_tree(treeroot, pattern):
         results.append((base, one_dir_results))
     return results
 
+
+class InstallTestDependencies(Command):
+    '''install test dependencies'''
+
+    description = 'installs all dependencies required to run all tests'
+
+    user_options = []
+
+    def initialize_options(self):
+        pass
+
+    def finalize_options(self):
+        pass
+
+    def easy_install(self, packages):
+        cmd = ['easy_install']
+        if packages:
+            cmd.extend(packages)
+            errno = subprocess.call(cmd)
+            if errno:
+                raise SystemExit(errno)
+
+    def run(self):
+        if self.distribution.install_requires:
+            self.easy_install(self.distribution.install_requires)
+        if self.distribution.tests_require:
+            self.easy_install(self.distribution.tests_require)
+
+
 class PyTest(Command):
     '''run py.test'''
 
     description = 'runs py.test to execute all tests'
 
     user_options = []
+
     def initialize_options(self):
         pass
+
     def finalize_options(self):
         pass
+
     def run(self):
-        import subprocess
+        if self.distribution.install_requires:
+            self.distribution.fetch_build_eggs(
+                self.distribution.install_requires)
+        if self.distribution.tests_require:
+            self.distribution.fetch_build_eggs(
+                self.distribution.tests_require)
+
         errno = subprocess.call([sys.executable, 'runtests.py'])
         raise SystemExit(errno)
 
@@ -70,7 +109,8 @@ setup(
     url='',
     packages = find_packages('src'),
     package_dir = {'': 'src'},
-    cmdclass = {'test': PyTest},
+    cmdclass={'test': PyTest,
+              'install_test': InstallTestDependencies},
     # We can select proper classifiers later
     classifiers=[
         'Development Status :: 3 - Alpha',
