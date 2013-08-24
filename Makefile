@@ -75,6 +75,7 @@ post-build-test:
 
 install: clean lxml
 	## might need to do this on mac: export C_INCLUDE_PATH=/usr/include:/usr/local/include:/opt/local/include
+	python setup.py install_test
 	python setup.py clean --all
 	python setup.py build
 	python setup.py install
