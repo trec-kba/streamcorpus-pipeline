@@ -130,6 +130,8 @@ setup(
     install_requires=[
         'thrift',
         'gevent',      ## required in .rpm
+        'kvlayer',
+        'redis',
         'protobuf',
         'requests',
         'streamcorpus-dev>=0.3.5',
