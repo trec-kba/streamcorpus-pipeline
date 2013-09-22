@@ -13,7 +13,7 @@ import contextlib
 from uuid import UUID
 from functools import wraps
 
-logger = logging.getLogger(__name__)
+logger = logging.getLogger('registry')
 
 class EnvironmentError(Exception):
     pass
@@ -22,6 +22,13 @@ class LockException(Exception):
     pass
 
 class Registry(object):
+    '''provides a centralized storage mechanism for managing groups of
+    workers.  These interfaces are defined:
+
+    * state is an application-specific string
+    * dictinaries: available, pending, finished
+
+    '''
 
     def __init__(self, config, renew=False):
         '''
@@ -39,12 +46,13 @@ class Registry(object):
         
         ## populated only when lock is acquired
         self._lock_name = None
-        self._identifier = None
+        self._session_lock_identifier = None
 
         if renew:
             self.delete_namespace()
         self._startup()
         atexit.register(self._exit)
+        logger.debug('worker_id=%r  starting up on hostname=%r' % (self.worker_id, socket.gethostbyname(socket.gethostname())))
 
     def _ipaddress(self, host, port):
         s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
@@ -57,13 +65,13 @@ class Registry(object):
         conn = redis.Redis(connection_pool=self.pool)
 
         ## Get a unique worker id from the registry
-        self._worker_id = conn.incrby(self._namespace('unique_worker_ids'), 1)
+        self.worker_id = conn.incrby(self._namespace('worker_ids'), 1)
 
         ## Add worker id to list of current workers
-        conn.sadd(self._namespace('cur_workers'), self._worker_id)
+        conn.sadd(self._namespace('cur_workers'), self.worker_id)
 
         ## store the local_ip of this worker for debugging
-        conn.set(self._namespace(self._worker_id) + '_ip', self._local_ip)
+        conn.set(self._namespace(self.worker_id) + '_ip', self._local_ip)
 
     def _exit(self):
         conn = redis.Redis(connection_pool=self.pool)
@@ -73,7 +81,8 @@ class Registry(object):
         #    session...
 
         ## Remove the worker from the list of workers
-        conn.srem(self._namespace('cur_workers'), self._worker_id)
+        conn.srem(self._namespace('cur_workers'), self.worker_id)
+        logger.critical('worker_id=%r closed registry client' % self.worker_id)
 
     def _all_workers(self):
         conn = redis.Redis(connection_pool=self.pool)
@@ -148,12 +157,12 @@ class Registry(object):
             raise LockException("could not acquire lock")
         try:
             self._lock_name = lock_name
-            self._identifier = identifier
+            self._session_lock_identifier = identifier
             yield self
         finally:
             self._release_lock(lock_name, identifier)
             self._lock_name = None
-            self._identifier = None
+            self._session_lock_identifier = None
 
     def _encode(self, data):
         '''
@@ -233,7 +242,7 @@ class Registry(object):
             items.append(value)
 
         conn = redis.Redis(connection_pool=self.pool)
-        res = conn.eval(script, 2, self._lock_name, dict_name, self._identifier, *items)
+        res = conn.eval(script, 2, self._lock_name, dict_name, self._session_lock_identifier, *items)
         if not res:
             # We either lost the lock or something else went wrong
             raise EnvironmentError(
@@ -264,7 +273,7 @@ class Registry(object):
         conn = redis.Redis(connection_pool=self.pool)
         encoded_items = [self._encode(item) for item in items]
         res = conn.eval(script, 2, self._lock_name, dict_name,
-                        self._identifier, *encoded_items)
+                        self._session_lock_identifier, *encoded_items)
         if len(items) > 0:
             if not res > 0:
                 # We either lost the lock or something else went wrong
@@ -299,8 +308,8 @@ class Registry(object):
             raise ProgrammerError('must acquire lock first')
         conn = redis.Redis(connection_pool=self.pool)
         logger.critical('popitem: %s %s %s' 
-                        % (self._lock_name, self._identifier, dict_name))
-        key_value = conn.eval(script, 2, self._lock_name, dict_name, self._identifier)
+                        % (self._lock_name, self._session_lock_identifier, dict_name))
+        key_value = conn.eval(script, 2, self._lock_name, dict_name, self._session_lock_identifier)
         if not key_value:
             raise KeyError(
                 'Registry failed to return an item from %s' % dict_name)
@@ -333,7 +342,7 @@ class Registry(object):
         key_value = conn.eval(script, 3, self._lock_name, 
                               self._namespace(from_dict), 
                               self._namespace(to_dict), 
-                              self._identifier)
+                              self._session_lock_identifier)
         if not key_value:
             raise KeyError(
                 'Registry.pop_move failed to return an item from %s' % from_dict)
@@ -380,7 +389,7 @@ class Registry(object):
         num_moved = conn.eval(script, 3, self._lock_name, 
                               self._namespace(from_dict), 
                               self._namespace(to_dict), 
-                              self._identifier, *items)
+                              self._session_lock_identifier, *items)
         if num_moved != len(items) / 2:
             raise EnvironmentError(
                 'Registry failed to move all: num_moved = %d != %d len(items)'

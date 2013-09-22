@@ -1,7 +1,6 @@
 '''
-Implements a redis-based TaskQueue that is better than the
-ZookeeperTaskQueue.  Refered to as a "registry" externally, instead of
-specifically mentioning redis.
+Implements a registry-based TaskQueue that is better than the
+ZookeeperTaskQueue.  
 
 This software is released under an MIT/X11 open source license.
 
@@ -12,7 +11,6 @@ import os
 import sys
 import time
 import uuid
-import redis
 import socket
 import signal
 import random
@@ -20,6 +18,7 @@ import kvlayer
 import hashlib
 import logging
 import _memory
+import registry
 import traceback
 import pkg_resources
 from streamcorpus import make_stream_time
@@ -28,31 +27,21 @@ from _exceptions import TaskQueueUnreachable, GracefulShutdown
 logger = logging.getLogger(__name__)
 
 class RegistryTaskQueue(object):
+    '''Organizes tasks in a globally accessible registry
+
+    Each task has a single entry in 'tasks' representing its
+    existence
+
+    State is shown by entries in 'available' and 'pending', which have the
+    same record key as a node in 'tasks'
+
+    When workers register with the registry, it creates a worker_id,
+    which this application uses as in reserving tasks
     '''
-    Organizes tasks in a globally accessible redis instance
-
-    Each task has a single node under 'tasks' representing its
-    existence, which carries the data ID of the current worker
-
-    State is shown by children of /{available,pending}/, which has the
-    same name as a node under /tasks/
-
-    When workers register, they get a sequential ephemeral node under
-    /workers/ and use that node name as their ID in reserving tasks
-    '''
-
     def __init__(self, config):
         self._config = config
-        self._namespace = config['namespace']
-        self.addresses = config['registry_addresses']
 
-        logger.debug('connecting to zookeeper at %r' % self.addresses)
-        self._zk = KazooClient(self.addresses,
-                               timeout = config['zookeeper_timeout'],
-                               )
-        self._zk.start(timeout = config['zookeeper_timeout'])
-        ## save the client_id for reconnect
-        self._zk.add_listener(self._restarter)
+        self._registry = registry.Registry(config)
 
         ## create any missing keys
         self.init_all()
@@ -60,94 +49,16 @@ class RegistryTaskQueue(object):
         self._pending_task_key = None
         self._continue_running = True
         
-        ## number of levels in the available hierarchy
-        self._available_levels = 2
-       
         self._sample_from_available = 1
 
-        ## make a unique ID for this worker that persists across
-        ## zookeeper sessions.  Could use a zookeeper generated
-        ## sequence number, but using this uuid approach let's us keep
-        ## nodes under worker ephemeral without reseting the worker_id
-        ## if we lose the zookeeper session.
-        self._worker_id = str(uuid.uuid1())
-
-        logger.debug('worker_id=%r zookeeper session_id=%r starting up on hostname=%r' % (self._worker_id, self._zk.client_id, socket.gethostbyname(socket.gethostname())))
-
         logger.debug('connecting to cassandra at %r' % config['storage_addresses'])
-        self._cassa = Cassa(config['namespace'], config['storage_addresses'])
+        self._storage = kvlayer.get_client(config)
 
     def shutdown(self):
-        logger.critical('worker_id=%r zookeeper session_id=%r ZookeeperTaskQueue.shutdown has been called')
+        logger.critical('worker_id=%r RegistryTaskQueue.shutdown has been called')
         self._continue_running = False
         self._return_task()
         self._unregister()
-        self._zk.stop()
-        logger.critical('worker_id=%r zookeeper session_id=%r closed zookeeper client' % (self._worker_id, self._zk.client_id))
-
-    def _restarter(self, state):
-        '''
-        If connection drops, restart it and keep going
-        '''
-        if state == KazooState.LOST:
-            logger.warn( 'creating new connection: %r' % state )
-            self._zk = KazooClient(self.addresses,
-                                   timeout=self._config['zookeeper_timeout'])
-            self._zk.start(timeout=self._config['zookeeper_timeout'])
-
-        elif state == KazooState.SUSPENDED:
-            logger.warn( 'state is currently suspended... attempting start(%d)' % (
-                    self._config['zookeeper_timeout']))
-
-            client_id = self._zk.client_id
-            self._zk = KazooClient(self.addresses,
-                                   timeout=self._config['zookeeper_timeout'],
-                                   client_id = client_id,
-                                   )
-            self._zk.start(timeout=self._config['zookeeper_timeout'])
-
-    def _path(self, *path_parts):
-        '''
-        Returns a path within our namespace.
-        namespace/path_parts[0]/parth_parts[1]/...
-        '''
-        return os.path.join(self._namespace, *path_parts)
-
-    def _available_path(self, task_key):
-        '''
-        Return path into available hierarchy for a given key.
-        '''
-        split_task_key = []
-        split_len = 2
-        for level in xrange(self._available_levels):
-            split_task_key.append(task_key[level * split_len: (level+1) * split_len])
-        else:
-            split_task_key.append(task_key)
-        return self._path('available', *split_task_key)
-
-    @_ensure_connection        
-    def _register(self):
-        '''
-        Get an ID for this worker process by creating a sequential
-        ephemeral node
-        '''
-        self._zk.create(
-            self._path('workers', self._worker_id), 
-            ephemeral=True,
-            makepath=True)
-
-    @_ensure_connection        
-    def _unregister(self):
-        '''
-        Get an ID for this worker process by creating a sequential
-        ephemeral node
-        '''
-        try:
-            self._zk.delete(self._path('workers', self._worker_id))
-        except kazoo.exceptions.NoNodeError:
-            logger.critical('attempted to _unregsiter node already gone: %r'\
-                                % self._path('workers', self._worker_id))
-            pass
 
     def _backoff(self, backoff_time):
         time.sleep(backoff_time)
@@ -156,7 +67,6 @@ class RegistryTaskQueue(object):
         '''
         This is the only external interface for getting tasks
         '''
-        self._register()
         ## loop until get a task
         task = None
 
@@ -169,37 +79,24 @@ class RegistryTaskQueue(object):
             if mode is self.TERMINATE:
                 break
 
-            ## get a task
-            task_key = self._random_available_task()
-
-            logger.critical('considering task_key=%r' % task_key)
-
-            ## happens once for each worker at the end
-            if mode is self.FINISH and task_key is None:
-                break
+            task_key, end_count, i_str = self._take_available_task()
 
             ## mode must be run forever
             if task_key is None:
                 assert mode == self.RUN_FOREVER
-                time.sleep(2)
+                sleep_time = min(sleep_time * 2, 128) 
+                self._backoff(sleep_time)
                 continue
 
-            logger.critical('attempting to win task')
-            ## attempt to win the task
+            else:
+                ## reset sleep time for next backoff
+                sleep_time = 1 
+
             end_count, i_str = self._win_task(task_key)
 
             ## if won it, yield
-            if i_str is not None:
-                logger.warn('won %d %r' % (end_count, i_str))
-                yield end_count, i_str, self.data
-
-                ## reset sleep time for next backoff loop
-                sleep_time = 1 
-
-            else:
-                ## backoff before trying again
-                sleep_time = min(sleep_time * 2, 128) 
-                self._backoff(sleep_time)
+            logger.warn('won %d %r' % (end_count, i_str))
+            yield self.data['end_count'], self.data['i_str'], self.data
 
         assert not self._pending_task_key, \
             'should never break out of worker loop with _pending_task_key=%r' \
@@ -221,13 +118,13 @@ class RegistryTaskQueue(object):
             self.data['owner'] = None
 
             ## remove the pending task
-            self._zk.delete(self._path('pending', self._pending_task_key))
+            self._registry.delete(self._path('pending', self._pending_task_key))
 
             ## set the data
-            self._cassa.put_task(self._pending_task_key, self.data)
+            self._storage.put_task(self._pending_task_key, self.data)
 
             #try:
-            #    self._zk.create(self._path('available', self._pending_task_key), makepath=True)
+            #    self._registry.create(self._path('available', self._pending_task_key), makepath=True)
             #except kazoo.exceptions.NodeExistsError:
             #    logger.critical('_return_task encountered NodeExistsError! on %s' % key)
              
@@ -239,7 +136,7 @@ class RegistryTaskQueue(object):
             self._pending_task_key = None
 
             logger.critical('worker_id=%r zookeeper session_id=%r _return_task succeeded on %s' \
-                                % (self._worker_id, self._zk.client_id, self.data['i_str']))
+                                % (self._worker_id, self._registry.client_id, self.data['i_str']))
 
     @_ensure_connection
     def commit(self, end_count=None, results=None, failure_log=''):
@@ -264,13 +161,13 @@ class RegistryTaskQueue(object):
                 self.data['results'] += results
 
             ## remove the pending task
-            self._zk.delete(self._path('pending', self._pending_task_key))
+            self._registry.delete(self._path('pending', self._pending_task_key))
 
             ## set the data
-            self._cassa.put_task(self._pending_task_key, self.data)
+            self._storage.put_task(self._pending_task_key, self.data)
 
             try:
-                self._zk.create(self._path('completed', self._pending_task_key))
+                self._registry.create(self._path('completed', self._pending_task_key))
             except kazoo.exceptions.NodeExistsError:
                 pass
 
@@ -296,14 +193,14 @@ class RegistryTaskQueue(object):
         self.data['zulu_timestamp'] = st.zulu_timestamp
 
         ## set the data
-        self._cassa.put_task(self._pending_task_key, self.data)
+        self._storage.put_task(self._pending_task_key, self.data)
 
     @_ensure_connection
     def _num_available(self):
         '''
         return estimated number of currently available tasks
         '''
-        available = self._zk.get_children(self._path('available'))
+        available = self._registry.get_children(self._path('available'))
         return self._sample_from_available * len(available) ** self._available_levels
 
 
@@ -312,7 +209,7 @@ class RegistryTaskQueue(object):
         ''' 
         pop a key into the zookeeper available set
         '''
-        self._zk.create(self._available_path(task_key), makepath=True)
+        self._registry.create(self._available_path(task_key), makepath=True)
     
     @_ensure_connection
     def _pop_available(self, task_key):
@@ -320,12 +217,12 @@ class RegistryTaskQueue(object):
         pop a key from the zookeeper available set
         '''
         path = self._available_path(task_key)
-        self._zk.delete(self._available_path(task_key))
+        self._registry.delete(self._available_path(task_key))
         for x in xrange(self._available_levels):
             path = path.rsplit('/', 1)[0]
             try:
                 logger.info( 'trying to delete: %r' % path )
-                self._zk.delete(path)
+                self._registry.delete(path)
             except kazoo.exceptions.NotEmptyError:
                 break
 
@@ -338,7 +235,7 @@ class RegistryTaskQueue(object):
 
         ## Path into available hierarchy
         path = self._path('available')
-        available = self._zk.get_children(path)
+        available = self._registry.get_children(path)
 
         ## descend into available hierarchy
         for level in xrange(self._available_levels):
@@ -353,7 +250,7 @@ class RegistryTaskQueue(object):
                 ## Someone could delete this path before
                 ## we descent into it.
                 try:
-                    available = self._zk.get_children(path)
+                    available = self._registry.get_children(path)
                 except kazoo.exceptions.NoNodeError:
                     ## Start over, caller will retry
                     return None
@@ -374,55 +271,24 @@ class RegistryTaskQueue(object):
             return None
 
     @_ensure_connection
-    def _random_available_task(self):
+    def _take_available_task(self):
         '''
-        get an available task -- selected at random
+        get an available task
         '''
-        logger.debug('attempting to find random available task')
-        num_workers = len(self._zk.get_children(self._path('workers')))
-        logger.debug('num_workers is %d' % num_workers)
-        num_available = self._num_available()
-        logger.debug('num_available is %d' % num_available)
-        if num_available < num_workers:
-            ## fewer tasks than workers
-            ## consider shutting down
-            mode = self._read_mode()
-            logger.debug('mode is %r' % mode)
-            do_shutdown = False
-            if mode == self.TERMINATE:
-                do_shutdown = True
-            elif mode == self.FINISH and \
-                    random.random() < self._config.get('finish_ramp_down_fraction', 0.1):
+        with self._registry.transaction() as reg:
+            task_id, task_time = reg.popitem_move('available', 'pending', set_time_as_value=True)
+        do_shutdown = False
+        if mode == self.TERMINATE:
+            do_shutdown = True
+        elif mode == self.FINISH and task_id is None:
+            do_shutdown = True
+        if do_shutdown:
+            raise GracefulShutdown('mode=%r' % mode)
 
-                if num_workers > self._config.get('min_workers', 0):
-                    logger.critical('num_workers=%d > %d=min_workers: %r' % (
-                            num_workers, self._config.get('min_workers', 0), self._config))
-                    do_shutdown = True
-
-            elif mode == self.RUN_FOREVER:
-                ## maybe backoff here?
-                pass
-            if do_shutdown:
-                raise GracefulShutdown('mode=%r num_workers=%d > %d=num_available' \
-                                           % (mode, num_workers, num_available))
-
-        ## if no tasks are available, the __iter__ loop will either
-        ## exit or sleep
-        if num_available == 0:
-            return None
-        else:
-            return self._get_random_available_hier()
-
-    @_ensure_connection        
-    def _win_task(self, task_key):
-        logger.debug('attempting to win %r' % task_key)
         assert not self._pending_task_key
-        try:
-            self._zk.create(self._path('pending', task_key), makepath=True)
-        except kazoo.exceptions.NodeExistsError:
-            return None, None
-        ## won it!
-        self.data = self._cassa.get_task(task_key)
+        self._pending_task_key = task_key
+
+        self.data = self._storage.get_task(task_key)
 
         ## verify payload
         assert self.data['state'] == 'available', self.data['state']
@@ -441,28 +307,25 @@ class RegistryTaskQueue(object):
         self.data['VmStk']  = _memory.stacksize()
 
         ## keep the value in the pending node for safe keeping
-        self._cassa.put_task(task_key, self.data)
-
-        ## remove it from the list of available tasks
-        self._pop_available(task_key)
-
-        self._pending_task_key = task_key
+        self._storage.put_task(task_key, self.data)
 
         ## could be getting a task that was partially committed
         ## previously, so use previous end_count as new start_count
-        return self.data['end_count'], self.data['i_str']
+        do something with task_time
+
+        return task_id, self.data['end_count'], self.data['i_str']
 
     @_ensure_connection        
     def delete_all(self):
-        self._zk.delete(self._path(), recursive=True)
-        self._cassa.delete_namespace()
+        self._registry.delete(self._path(), recursive=True)
+        self._storage.delete_namespace()
 
     @_ensure_connection        
     def init_all(self):
         for path in ['available', 'completed', 'pending', 'mode', 'workers']:
-            if not self._zk.exists(self._path(path)):
+            if not self._registry.exists(self._path(path)):
                 try:
-                    self._zk.create(self._path(path), makepath=True)
+                    self._registry.create(self._path(path), makepath=True)
                 except kazoo.exceptions.NodeExistsError, exc:
                     pass
 
@@ -474,7 +337,7 @@ class RegistryTaskQueue(object):
         i_str = i_str.strip()
         key = self._make_key( i_str )
         try:
-            self._cassa.pop_task(key)
+            self._storage.pop_task(key)
         except:
             pass
         try:
@@ -482,7 +345,7 @@ class RegistryTaskQueue(object):
         except:
             pass
         try:
-            self._zk.delete(self._path('pending', key))
+            self._registry.delete(self._path('pending', key))
         except:
             pass
             
@@ -538,26 +401,26 @@ class RegistryTaskQueue(object):
                 data['state'] = 'completed'                
 
             ## attempt to push it
-            created = self._cassa.put_task(key, data)
+            created = self._storage.put_task(key, data)
             if created and (completed or redo):
                 logger.critical('created %r: %r' % (data['state'], i_str))
                 ## must also remove it from available and pending
                 self._pop_available(key)
                 
                 try:
-                    self._zk.delete(self._path('pending', key))
+                    self._registry.delete(self._path('pending', key))
                 except:
                     pass
 
                 if completed:
                     try:
-                        self._zk.create(self._path('completed', key))
+                        self._registry.create(self._path('completed', key))
                     except kazoo.exceptions.NodeExistsError:
                         pass
 
                 else:
                     try:
-                        self._zk.delete(self._path('completed', key))
+                        self._registry.delete(self._path('completed', key))
                     except kazoo.exceptions.NoNodeError:
                         pass
 
@@ -579,30 +442,30 @@ class RegistryTaskQueue(object):
         return count
 
     def __len__(self):
-        return self._cassa.num_tasks()
+        return self._storage.num_tasks()
 
     def _len(self, state):
         try:
-            val, zstat = self._zk.get(self._path(state))
+            val, zstat = self._registry.get(self._path(state))
             return zstat.children_count
         except kazoo.exceptions.NoNodeError:
             return 0
 
     def details(self, i_str):
         key = self._make_key(i_str)
-        data = self._cassa.get_task(key)
+        data = self._storage.get_task(key)
         data['task_key'] = key
         return data
 
     @property
     def pending(self):
-        for task_key in self._zk.get_children(self._path('pending')):
-            data = self._cassa.get_task(task_key)
+        for task_key in self._registry.get_children(self._path('pending')):
+            data = self._storage.get_task(task_key)
             yield data
 
     @property
     def completed(self):
-        for data in self._cassa.tasks():
+        for data in self._storage.tasks():
             if not isinstance(data, dict):
                 logger.critical( 'whoa... how did we get a string here? %r' % data )
             if data['state'] == 'completed' or data['end_count'] > 0 \
@@ -611,17 +474,17 @@ class RegistryTaskQueue(object):
 
     @property
     def all_tasks(self):
-        return self._cassa.tasks()
+        return self._storage.tasks()
 
     def get_tasks_with_prefix(self, key_prefix=''):
         start_time = time.time()
         count = 0
         total_tasks = set()
-        for num, task_key in enumerate(self._cassa.task_keys):
+        for num, task_key in enumerate(self._storage.task_keys):
             if not task_key.startswith(key_prefix):
                 continue
 
-            data = self._cassa.get_task(task_key)
+            data = self._storage.get_task(task_key)
             if not isinstance(data, dict):
                 logger.critical( 'whoa... how did we get a string here? %r' % data )
             yield task_key, data
@@ -696,7 +559,7 @@ class RegistryTaskQueue(object):
         Signal to all workers how to behave
         '''
         assert hasattr(self, mode), mode
-        self._zk.set(self._path('mode'), mode)
+        self._registry.set_mode(mode)
 
     RUN_FOREVER = 'RUN_FOREVER'
     FINISH = 'FINISH'
@@ -705,15 +568,9 @@ class RegistryTaskQueue(object):
     @_ensure_connection
     def _read_mode(self):
         '''
-        Get the mode from ZK and convert back to a class property
+        Get mode from registry
         '''
-        mode, zstat = self._zk.get(self._path('mode'))
-        if not mode:
-            ## default to RUN_FOREVER
-            return self.RUN_FOREVER
-        else:
-            ## convert mode string into class property
-            return getattr(self, mode)
+        return getattr(self, self._registry.get_mode())
 
     def reset_all_to_available(self, key_prefix=''):
         '''
@@ -721,14 +578,14 @@ class RegistryTaskQueue(object):
 
         Probably only safe to run this if all workers are off.
         '''
-        pending = self._zk.get_children(self._path('pending'))
-        completed = self._zk.get_children(self._path('completed'))
+        pending = self._registry.get_children(self._path('pending'))
+        completed = self._registry.get_children(self._path('completed'))
 
-        approx_num_assigned_tasks = int(float(self._cassa.num_tasks()) / \
+        approx_num_assigned_tasks = int(float(self._storage.num_tasks()) / \
                                             max(1, 16 * len(key_prefix)))
         count = 0
         start_time = time.time()
-        for data in self._cassa.tasks(key_prefix):
+        for data in self._storage.tasks(key_prefix):
             count += 1
             if count % 100 == 0:
                 elapsed = time.time() - start_time
@@ -747,7 +604,7 @@ class RegistryTaskQueue(object):
                     or len(data['results']) > 0 or data.get('failure_log', ''):
                 ## recreate new record:
                 data = self._make_new_data(data['i_str'])
-                self._cassa.put_task(task_key, data)
+                self._storage.put_task(task_key, data)
 
             task_key = data['task_key']
 
@@ -757,12 +614,12 @@ class RegistryTaskQueue(object):
             ## make sure it is not in pending or completed
             if task_key in pending:
                 try:
-                    self._zk.delete(self._path('pending', task_key))
+                    self._registry.delete(self._path('pending', task_key))
                 except kazoo.exceptions.NoNodeError:
                     pass
             if task_key in completed:
                 try:
-                    self._zk.delete(self._path('completed', task_key))
+                    self._registry.delete(self._path('completed', task_key))
                 except kazoo.exceptions.NoNodeError:
                     pass
 
@@ -773,7 +630,7 @@ class RegistryTaskQueue(object):
         Probably only safe to run this if all workers are off.
         '''
         ## should assert that no workers are working
-        #workers = self._zk.get_children(self._path('workers'))
+        #workers = self._registry.get_children(self._path('workers'))
         #workers = set(workers)
         #print workers
         #workers.remove( self._worker_id )
@@ -782,23 +639,23 @@ class RegistryTaskQueue(object):
         start_time = time.time()
         count = 0
         total_pending = set()
-        pending = self._zk.get_children(self._path('pending'))
+        pending = self._registry.get_children(self._path('pending'))
         for task_key in pending:
             if task_key.startswith(key_prefix):
                 total_pending.add(task_key)
 
         for task_key in total_pending:
             ## put it back in available
-            data = self._cassa.get_task(task_key)
+            data = self._storage.get_task(task_key)
             data['state'] = 'available'
             data['owner'] = None
-            self._cassa.put_task(task_key, data)
+            self._storage.put_task(task_key, data)
             try:
                 self._put_available(task_key)
             except kazoo.exceptions.NodeExistsError:
                 pass
             try:
-                self._zk.delete(self._path('pending', task_key))
+                self._registry.delete(self._path('pending', task_key))
             except kazoo.exceptions.NoNodeError:
                 pass
             count += 1
@@ -816,20 +673,20 @@ class RegistryTaskQueue(object):
         Go through all the tasks and make sure that the 'available'
         and 'pending' queues match the tasks 'state' property
         '''
-        pending = self._zk.get_children(self._path('pending'))
-        completed = self._zk.get_children(self._path('completed'))
+        pending = self._registry.get_children(self._path('pending'))
+        completed = self._registry.get_children(self._path('completed'))
         start_time = time.time()
         count = 0
 
-        approx_num_assigned_tasks = int(float(self._cassa.num_tasks()) / (16 * len(key_prefix)))
+        approx_num_assigned_tasks = int(float(self._storage.num_tasks()) / (16 * len(key_prefix)))
 
-        for task_key in self._cassa.task_keys:
+        for task_key in self._storage.task_keys:
             if not task_key.startswith(key_prefix):
                 #logger.debug('skipping %s' % task_key)
                 continue
 
             logger.debug('evaluatinging %s' % task_key)
-            data = self._cassa.get_task(task_key)
+            data = self._storage.get_task(task_key)
 
             logger.debug('got data %r' % data)
 
@@ -846,27 +703,27 @@ class RegistryTaskQueue(object):
 
             if data['state'] == 'completed':
                 if task_key not in completed:
-                    self._zk.create(self._path('completed', task_key))
+                    self._registry.create(self._path('completed', task_key))
                 if task_key in pending:
-                    self._zk.delete(self._path('pending', task_key))
-                if self._cassa.in_available(task_key):
+                    self._registry.delete(self._path('pending', task_key))
+                if self._storage.in_available(task_key):
                     self._pop_available(task_key)
 
             elif data['state'] == 'pending':                    
                 if task_key in completed:
-                    self._zk.delete(self._path('completed', task_key))
+                    self._registry.delete(self._path('completed', task_key))
                 if task_key not in pending:
-                    self._zk.create(self._path('pending', task_key))
-                if self._cassa.in_available(task_key):
+                    self._registry.create(self._path('pending', task_key))
+                if self._storage.in_available(task_key):
                     self._pop_available(task_key)
 
             elif data['state'] == 'available':
                 logger.debug('handling state == %r' % data['state'])
                 if task_key in completed:
-                    self._zk.delete(self._path('completed', task_key))
+                    self._registry.delete(self._path('completed', task_key))
                 if task_key in pending:
-                    self._zk.delete(self._path('pending', task_key))
-                if self._cassa.in_available(task_key):
+                    self._registry.delete(self._path('pending', task_key))
+                if self._storage.in_available(task_key):
                     logger.debug('attempting to _put_available %r' % task_key)
                     self._put_available(task_key)
 
@@ -877,8 +734,8 @@ class RegistryTaskQueue(object):
         '''
         Delete every registered worker node
         '''
-        for worker_id in self._zk.get_children(self._path('workers')):
+        for worker_id in self._registry.get_children(self._path('workers')):
             try:
-                self._zk.delete(self._path('workers', worker_id))
+                self._registry.delete(self._path('workers', worker_id))
             except kazoo.exceptions.NoNodeError:
                 pass

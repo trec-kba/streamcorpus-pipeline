@@ -70,6 +70,10 @@ lxml:
 	## those lines
 	#sudo apt-get -y install libxml2-dev libxslt-dev  
 
+.PHONY : build
+build: clean
+	python setup.py bdist_egg sdist
+
 post-build-test:
 	echo data/john-smith/john-smith-0.sc | python -m kba.pipeline.run configs/john-smith-lingpipe-from-chunk.yaml
 

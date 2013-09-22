@@ -1,5 +1,6 @@
 include RELEASE-VERSION
 include version.py
+include LICENSE.txt
 recursive-include data/john-smith *
 recursive-include configs *.yaml
 recursive-include src/examples *.py
