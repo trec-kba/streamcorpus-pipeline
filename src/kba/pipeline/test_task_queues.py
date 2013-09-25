@@ -8,6 +8,7 @@ from _exceptions import GracefulShutdown
 
 logger = logging.getLogger('kba')
 
+@pytest.mark.skipif('True')  # pylint: disable=E1101
 def test_stdin():
     stdin = _init_stage('stdin', {})
     
@@ -26,7 +27,7 @@ def teardown_function(function):
     tq1.delete_all()    
     logger.info('deleting %r' % namespace)
 
-#@pytest.mark.skipif('True')  # pylint: disable=E1101
+@pytest.mark.skipif('True')  # pylint: disable=E1101
 def test_zk():
     config = get_config(
         namespace = namespace,
@@ -66,7 +67,7 @@ def test_zk():
 
     tq2.delete_all()
 
-#@pytest.mark.skipif('True')  # pylint: disable=E1101
+@pytest.mark.skipif('True')  # pylint: disable=E1101
 def test_zk_commit():
     config = get_config(
         namespace = namespace,
@@ -92,7 +93,7 @@ def test_zk_commit():
 
     tq1.delete_all()
 
-#@pytest.mark.skipif('True')  # pylint: disable=E1101
+@pytest.mark.skipif('True')  # pylint: disable=E1101
 def test_zk_partial_commit():
     config = get_config(
         namespace = namespace,
