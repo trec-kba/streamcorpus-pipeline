@@ -139,6 +139,7 @@ class ZookeeperTaskQueue(object):
     '''
 
     def __init__(self, config):
+        config = config['zookeeper']
         self._config = config
         self._namespace = config['namespace']
         if 'zookeeper_addresses' in config:

@@ -1,0 +1,5 @@
+# empty defaults!
+# TODO: write some reasonable defaults
+
+streamcorpus.pipeline:
+  placeholder: value

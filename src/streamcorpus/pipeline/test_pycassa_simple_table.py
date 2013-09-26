@@ -3,18 +3,30 @@ import pytest
 import random
 import getpass
 import hashlib
+import logging
 from _pycassa_simple_table import Cassa
 
 def mk(s):
     return hashlib.md5(str(s)).hexdigest()
 
-from config import get_config
 namespace = 'test_' + getpass.getuser().replace('-', '_')
 
-#@pytest.mark.xfail # pylint: disable=E1101
-def test_ranges():
 
-    config = get_config(namespace=namespace)
+import config
+_conf = config.get_config()
+_test_conf, _ = config.path_load_config(filename='configs/test.yaml')
+if _test_conf is not None:
+    _conf = config.deep_update(_conf, _test_conf)
+
+
+if 'storage_addresses' not in _conf:
+    logging.warn('not running pycassa tests without "storage_addresses" configure. You may add it ot configs/test.yaml')
+
+
+#@pytest.mark.xfail # pylint: disable=E1101
+@pytest.mark.skipif('_conf.get("storage_addresses", None) is None')
+def test_ranges():
+    config = _conf
 
     c = Cassa(namespace, server_list=config['storage_addresses'])
     c.delete_namespace()
@@ -52,8 +64,9 @@ def test_ranges():
     c.delete_namespace()
 
 
+@pytest.mark.skipif('_conf.get("storage_addresses", None) is None')
 def test_tasks():
-    config = get_config(namespace=namespace)
+    config = _conf
 
     c = Cassa(namespace, server_list=config['storage_addresses'])
     c.delete_namespace()
@@ -69,7 +82,7 @@ def test_tasks():
 
 @pytest.mark.xfail
 def test_available():
-    config = get_config(namespace=namespace)
+    config = _conf
 
     c = Cassa(namespace, server_list=config['storage_addresses'])
     c.delete_namespace()
@@ -86,8 +99,9 @@ def test_available():
     c.delete_namespace()
 
 
+@pytest.mark.skipif('_conf.get("storage_addresses", None) is None')
 def test_pop_available():
-    config = get_config(namespace=namespace)
+    config = _conf
 
     c = Cassa(namespace, server_list=config['storage_addresses'])
     c.delete_namespace()
@@ -100,8 +114,9 @@ def test_pop_available():
     c.delete_namespace()
 
 
+@pytest.mark.skipif('_conf.get("storage_addresses", None) is None')
 def test_lengths():
-    config = get_config(namespace=namespace)
+    config = _conf
 
     c = Cassa(namespace, server_list=config['storage_addresses'])
     c.delete_namespace()
@@ -117,8 +132,9 @@ def test_lengths():
     c.delete_namespace()
 
 
+@pytest.mark.skipif('_conf.get("storage_addresses", None) is None')
 def test_more_available_than():
-    config = get_config(namespace=namespace)
+    config = _conf
 
     c = Cassa(namespace, server_list=config['storage_addresses'])
     c.delete_namespace()
@@ -134,8 +150,9 @@ def test_more_available_than():
     c.delete_namespace()
 
 
+@pytest.mark.skipif('_conf.get("storage_addresses", None) is None')
 def test_available_iter():
-    config = get_config(namespace=namespace)
+    config = _conf
 
     c = Cassa(namespace, server_list=config['storage_addresses'])
     c.delete_namespace()
