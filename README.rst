@@ -167,15 +167,3 @@ and then  do these steps on the command line:
 Periodically check the --counts on the queue and see how fast it is
 going.  Do we need to turn off the lingpipe stage?
 
-
-
-Wikipedia Links Corpus (WLC)
-----------------------------
-
-First step: To make use of the WLC data released by Google, we
-transform the original inputs into 10888934 streamcorpus objects, and
-grab the raw from the 10833242 thrift messages provided by UMass Brian
-Martin's initial fetch.  This is implemented in
-trec-kba-data/import_wlc.py, which is run in Condor by
-run_import_wlc.{sh,submit}
-
