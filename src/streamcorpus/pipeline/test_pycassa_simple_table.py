@@ -14,6 +14,7 @@ namespace = 'test_' + getpass.getuser().replace('-', '_')
 
 import config
 _conf = config.get_config()
+# If available, load and merge in 'test.yaml' config
 _test_conf, _ = config.path_load_config(filename='configs/test.yaml')
 if _test_conf is not None:
     _conf = config.deep_update(_conf, _test_conf)

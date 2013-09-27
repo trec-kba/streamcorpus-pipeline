@@ -3,10 +3,10 @@ import pytest
 import random
 
 from _task_queues import ZookeeperTaskQueue
-from config import get_config
+import config
 
 def _test_config():
-    return get_config(
+    _conf = config.get_config(
         zookeeper = dict(
             namespace = 'random_available_task_test',
             config_hash = '',
@@ -14,9 +14,19 @@ def _test_config():
             min_workers = 1,
         )
     )
+    # If available, load and merge in 'test.yaml' config
+    _test_conf, _ = config.path_load_config(filename='configs/test.yaml')
+    if _test_conf is not None:
+        _conf = config.deep_update(_conf, _test_conf)
+    return _conf
+
+
+_conf = _test_config()
+
+_missing_zk_conf = not ZookeeperTaskQueue.valid_config(_conf)
 
 # TODO: needs a zookeeper server configured to run against. detect that?
-@pytest.mark.skipif('True')
+@pytest.mark.skipif('_missing_zk_conf')
 def test_available_path():
     config = _test_config()
    
@@ -36,7 +46,7 @@ def test_available_path():
                         '123456789') == zktq._available_path('123456789')
 
 # TODO: needs a zookeeper server configured to run against. detect that?
-@pytest.mark.skipif('True')
+@pytest.mark.skipif('_missing_zk_conf')
 def test_put_pop_available():
     config = _test_config()
  
@@ -47,7 +57,7 @@ def test_put_pop_available():
     zktq._pop_available('12345678')
 
 # TODO: needs a zookeeper server configured to run against. detect that?
-@pytest.mark.skipif('True')
+@pytest.mark.skipif('_missing_zk_conf')
 def test_get_random_available_task():
     config = _test_config()
     
@@ -63,7 +73,7 @@ def test_get_random_available_task():
     assert random_key in task_keys
 
 # TODO: needs a zookeeper server configured to run against. detect that?
-@pytest.mark.skipif('True')
+@pytest.mark.skipif('_missing_zk_conf')
 def test_random_available_task():
     config = _test_config()
     
@@ -94,7 +104,7 @@ def test_random_available_task():
 ## must fix this before using ZookeeperTaskQueue
 #@pytest.mark.xfail # pylint: disable=E1101
 # TODO: needs a zookeeper server configured to run against. detect that?
-@pytest.mark.skipif('True')
+@pytest.mark.skipif('_missing_zk_conf')
 def test_num_available():
     config = _test_config()
     

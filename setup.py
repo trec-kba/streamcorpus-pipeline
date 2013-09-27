@@ -95,8 +95,14 @@ class PyTest(Command):
             self.distribution.fetch_build_eggs(
                 self.distribution.tests_require)
 
-        errno = subprocess.call([sys.executable, 'runtests.py'])
-        raise SystemExit(errno)
+        # reload sys.path for any new libraries installed
+        import site
+        site.main()
+        print sys.path
+        # use pytest to run tests
+        pytest = __import__('pytest')
+        pytest.main(['-s', 'src'])
+
 
 setup(
     name=PROJECT,
@@ -110,6 +116,7 @@ setup(
     url='',
     packages = find_packages('src'),
     package_dir = {'': 'src'},
+    namespace_packages = ['streamcorpus.pipeline'],
     cmdclass={'test': PyTest,
               'install_test': InstallTestDependencies},
     # We can select proper classifiers later

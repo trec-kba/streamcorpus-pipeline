@@ -138,7 +138,28 @@ class ZookeeperTaskQueue(object):
     /workers/ and use that node name as their ID in reserving tasks
     '''
 
+    @classmethod
+    def valid_config(cls, config, raise_on_error=False):
+        config = config.get('zookeeper')
+        if not config:
+            if raise_on_error:
+                raise Exception('missing "zookeeper" section in config')
+            return False
+        if config.get('namespace') is None:
+            if raise_on_error:
+                raise Exception('"zookeeper" section missing "namspace" value')
+            return False
+        if 'zookeeper_addresses' in config:
+            return True
+        elif 'zookeeper_address' in config:
+            return True
+        else:
+            if raise_on_error:
+                raise Exception('"zookeeper" section needs zookeeper_address or zookeeper_addresses value')
+            return False
+
     def __init__(self, config):
+        self.valid_config(config, raise_on_error=True)
         config = config['zookeeper']
         self._config = config
         self._namespace = config['namespace']
