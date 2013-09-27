@@ -1,6 +1,6 @@
 
 import os
-from _stages import _init_stage
+from stages import _init_stage
 from streamcorpus import make_stream_item, ContentItem
 
 def test_langauge():

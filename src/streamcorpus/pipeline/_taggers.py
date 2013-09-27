@@ -10,7 +10,7 @@ import gc
 import os
 import sys
 import time
-import _stages
+import stages
 import _memory
 import logging
 import traceback
@@ -287,7 +287,7 @@ def align_labels(t_path1, config):
     logger.debug('done renaming')
 
 
-class TaggerBatchTransform(_stages.BatchTransform):
+class TaggerBatchTransform(stages.BatchTransform):
     '''
     kba.pipeline.TaggerBatchTransform provides a structure for
     aligning a taggers output with labels and generating

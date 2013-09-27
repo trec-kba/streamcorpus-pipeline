@@ -1,7 +1,7 @@
 import os
 import pytest
 import streamcorpus
-from _stages import _init_stage
+from stages import _init_stage
 
 def test_protection():
     with pytest.raises(streamcorpus.VersionMismatchError):  # pylint: disable=E1101

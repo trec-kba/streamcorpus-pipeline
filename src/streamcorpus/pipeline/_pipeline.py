@@ -22,7 +22,7 @@ import itertools
 import streamcorpus
 
 from _logging import log_full_file
-from _stages import _init_stage
+from stages import _init_stage
 from _exceptions import FailedExtraction, GracefulShutdown
 import _exceptions
 

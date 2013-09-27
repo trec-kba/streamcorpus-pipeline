@@ -4,7 +4,7 @@ import os
 import pytest
 
 from streamcorpus import StreamItem, ContentItem
-from _stages import _init_stage
+from stages import _init_stage
 from _clean_html import make_clean_html
 from _clean_visible import make_clean_visible
 
