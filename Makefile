@@ -17,11 +17,11 @@ test: clean
 	## it does not confuse py.test
 	rm -rf build
 	py.test --genscript=runtests.py
-	cd src && python ../runtests.py -vvs -n 8 kba
+	cd src && python ../runtests.py -vvs -n 8 streamcorpus
 
 john-smith-simple: 
-	echo data/john-smith/original | python -m kba.pipeline.run configs/john-smith.yaml
-	echo data/john-smith/original | python -m kba.pipeline.run configs/john-smith-with-labels-from-tsv.yaml
+	echo data/john-smith/original | python -m streamcorpus.pipeline.run configs/john-smith.yaml
+	echo data/john-smith/original | python -m streamcorpus.pipeline.run configs/john-smith-with-labels-from-tsv.yaml
 
 	## compare dumps
 	python -m streamcorpus.dump data/john-smith/john-smith-0.sc      --field stream_id | sort > tmp/js-0.tsv
@@ -31,8 +31,8 @@ john-smith-simple:
 	diff tmp/js-0.tsv tmp/js-test-0.tsv
 
 john-smith-lingpipe: john-smith-simple
-	echo data/john-smith/original | python -m kba.pipeline.run configs/john-smith-lingpipe.yaml
-	echo data/john-smith/john-smith-0.sc | python -m kba.pipeline.run configs/john-smith-lingpipe-from-chunk.yaml
+	echo data/john-smith/original | python -m streamcorpus.pipeline.run configs/john-smith-lingpipe.yaml
+	echo data/john-smith/john-smith-0.sc | python -m streamcorpus.pipeline.run configs/john-smith-lingpipe-from-chunk.yaml
 
 	## compare dumps
 	python -m streamcorpus.dump data/john-smith/john-smith-tagged-by-lingpipe-0.sc      --tokens > tmp/lp-0.tsv
@@ -42,9 +42,9 @@ john-smith-lingpipe: john-smith-simple
 	diff tmp/lp-0.tsv data/john-smith/john-smith-tagged-by-lingpipe-0.tsv
 
 john-smith-serif: john-smith-simple
-	echo data/john-smith/original | python -m kba.pipeline.run configs/john-smith-serif-streamcorpus_one_step.yaml
-	echo data/john-smith/john-smith-0.sc | python -m kba.pipeline.run configs/john-smith-serif-streamcorpus_generate_serifxml.yaml
-	echo data/john-smith/john-smith-tagged-by-serifxml-only.sc | python -m kba.pipeline.run configs/john-smith-serif-streamcorpus_read_serifxml.yaml
+	echo data/john-smith/original | python -m streamcorpus.pipeline.run configs/john-smith-serif-streamcorpus_one_step.yaml
+	echo data/john-smith/john-smith-0.sc | python -m streamcorpus.pipeline.run configs/john-smith-serif-streamcorpus_generate_serifxml.yaml
+	echo data/john-smith/john-smith-tagged-by-serifxml-only.sc | python -m streamcorpus.pipeline.run configs/john-smith-serif-streamcorpus_read_serifxml.yaml
 
 	## compare dumps
 	python -m streamcorpus.dump data/john-smith/john-smith-tagged-by-serif-0.sc      --tokens > tmp/serif-0.tsv
@@ -56,13 +56,13 @@ john-smith-serif: john-smith-simple
 john-smith-stanford: john-smith-simple
 	## this is so slow that there must be something wrong with our
 	## build of Stanford CoreNLP
-	echo data/john-smith/john-smith-0.sc | python -m kba.pipeline.run configs/john-smith-stanford-from-chunk.yaml
+	echo data/john-smith/john-smith-0.sc | python -m streamcorpus.pipeline.run configs/john-smith-stanford-from-chunk.yaml
 
 john-smith-all: clean install john-smith-simple john-smith-lingpipe john-smith-serif
 
 
 clean: clean_js
-	rm -rf build dist src/kba.pipeline.egg-info runtests.py *.iso
+	rm -rf build dist src/streamcorpus.pipeline.egg-info runtests.py *.iso
 
 .IGNORE: lxml
 lxml:
@@ -75,7 +75,7 @@ build: clean
 	python setup.py bdist_egg sdist
 
 post-build-test:
-	echo data/john-smith/john-smith-0.sc | python -m kba.pipeline.run configs/john-smith-lingpipe-from-chunk.yaml
+	echo data/john-smith/john-smith-0.sc | python -m streamcorpus.pipeline.run configs/john-smith-lingpipe-from-chunk.yaml
 
 install: clean lxml
 	## might need to do this on mac: export C_INCLUDE_PATH=/usr/include:/usr/local/include:/opt/local/include
@@ -93,7 +93,7 @@ centos_rpm:
 
 trec-kba-pipeline-$(VERSION)-$(RELEASE).iso: centos_rpm
 	cp diffeo-common/latest_rpm/* $(TMPISODIR)
-	cp dist/kba.pipeline-*noarch.*rpm $(TMPISODIR)
+	cp dist/streamcorpus.pipeline-*noarch.*rpm $(TMPISODIR)
 	genisoimage -R -J -o trec-kba-pipeline-$(VERSION)-$(RELEASE).iso $(TMPISODIR)
 	rm -fR $(TMPISODIR)
 

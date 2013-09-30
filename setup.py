@@ -16,10 +16,10 @@ from setuptools import setup, find_packages
 
 from version import get_git_version
 VERSION = get_git_version()
-PROJECT = 'kba.pipeline'
+PROJECT = 'streamcorpus.pipeline'
 AUTHOR = 'Diffeo, Inc.'
 AUTHOR_EMAIL = 'support@diffeo.com'
-DESC = 'Tools for building streamcorpus objects for particular collections of text used in TREC KBA.'
+DESC = 'Tools for building streamcorpus objects, such as those used in TREC.'
 
 def read_file(file_name):
     file_path = os.path.join(

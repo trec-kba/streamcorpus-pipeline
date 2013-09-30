@@ -38,6 +38,7 @@ _tryload_stage('_task_queues', 'itertq')
 
 # data source extractors
 _tryload_stage('_local_storage', 'from_local_chunks')
+_tryload_stage('_john_smith', 'john_smith')
 
 # StreamItem stages
 _tryload_stage('_clean_html', 'clean_html')
