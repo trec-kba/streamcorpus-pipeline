@@ -34,11 +34,14 @@ def _tryload_stage(moduleName, functionName, name=None):
 
 # task queues
 _tryload_stage('_task_queues', 'stdin')
+_tryload_stage('_task_queues', 'itertq')
 
 # data source extractors
 _tryload_stage('_local_storage', 'from_local_chunks')
 
 # StreamItem stages
+_tryload_stage('_clean_html', 'clean_html')
+_tryload_stage('_clean_visible', 'clean_visible')
 _tryload_stage('_dedup', 'dedup')
 _tryload_stage('_hyperlink_labels', 'hyperlink_labels')
 _tryload_stage('_language', 'language')

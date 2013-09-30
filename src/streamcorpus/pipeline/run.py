@@ -5,6 +5,9 @@ See help(Pipeline) for details on configuring a Pipeline.
 This software is released under an MIT/X11 open source license.
 
 Copyright 2012 Diffeo, Inc.
+
+usage:
+    python -m streamcorpus.pipeline.run ...
 '''
 import os
 import sys
@@ -13,9 +16,11 @@ import json
 from _pipeline import Pipeline
 from _logging import logger, reset_log_level
 
+from .config import deep_update
+
 def make_absolute_paths( config ):
     ## remove the root_path, so it does not get extended itself
-    root_path = config['kba.pipeline'].pop('root_path', None)
+    root_path = config['streamcorpus.pipeline'].pop('root_path', None)
     if not root_path:
         root_path = os.getcwd()
 
@@ -59,39 +64,78 @@ def make_hash(obj):
 
     return hash(tuple(frozenset(new_obj.items())))
 
-if __name__ == '__main__':
+def main():
     import yaml
     import argparse
     parser = argparse.ArgumentParser(
         description=Pipeline.__doc__,
-        usage='python -m kba.pipeline.run config.yaml')
-    parser.add_argument('config', metavar='config.yaml', 
-                        help='configuration parameters for a pipeline run')
+        usage='python -m streamcorpus.pipeline.run config.yaml')
+    parser.add_argument('-i', '--input', action='append',
+                        help='file paths to input (overrides configured task queue)')
+    parser.add_argument('config', metavar='config.yaml', nargs='+',
+                        help='configuration parameters for a pipeline run. many config yaml files may be specified, later values win.')
     args = parser.parse_args()
 
-    if not args.config.startswith('/'):
-        args.config = os.path.join(os.getcwd(), args.config)
+    config = {}
+    for configname in args.config:
+        tconf = yaml.load(open(configname, 'r'))
+        deep_update(config, tconf)
 
-    assert os.path.exists(args.config), '%s does not exist' % args.config
-    config = yaml.load(open(args.config))
+    if args.input:
+        ## Use specified input file paths as task queue
+        config['streamcorpus.pipeline']['task_queue'] = 'itertq'
+        itertq_conf = config['streamcorpus.pipeline'].get('itertq')
+        if itertq_conf is None:
+            itertq_conf = {}
+        itertq_conf.update(dict(inputs_path= args.input))
+        config['streamcorpus.pipeline']['itertq'] = itertq_conf
 
     make_absolute_paths(config)
 
+    pipeline_config = config['streamcorpus.pipeline']
+
+    tq_name = pipeline_config.get('task_queue', 'no-task-queue')
+    tq_conf = pipeline_config.get(tq_name)
+    if tq_conf is None:
+        tq_conf = {}
     ## put info about the whole config in the extractor's config
-    tq_name = config['kba.pipeline'].get('task_queue', 'no-task-queue')
-    if tq_name not in config['kba.pipeline'] or config['kba.pipeline'][tq_name] is None:
-        config['kba.pipeline'][tq_name] = {}
-    config['kba.pipeline'][tq_name]['config_hash'] = make_hash(config)
-    config['kba.pipeline'][tq_name]['config_json'] = json.dumps(config)
+    tq_conf['config_hash'] = make_hash(config)
+    tq_conf['config_json'] = json.dumps(config)
+    pipeline_config[tq_name] = tq_conf
 
     ## setup loggers
-    reset_log_level( config['kba.pipeline'].get('log_level', 'DEBUG') )
+    reset_log_level( pipeline_config.get('log_level', 'DEBUG') )
 
     logger.warn('running config: %s = %s' % (
-            config['kba.pipeline'][tq_name]['config_hash'], args.config))
+            tq_conf['config_hash'], args.config))
 
     logger.info(json.dumps(config, indent=4, sort_keys=True))
+
+    ## Load modules
+    # This is a method of using settings in yaml configs to load plugins.
+    die = False
+    for modname in pipeline_config.get('setup_modules', ()):
+        try:
+            m = __init__(modname)
+            if not m:
+                logger.error('could not load module %r', modname)
+                die = True
+                continue
+            if hasattr(m, 'setup'):
+                m.setup()
+                logger.debug('loaded and setup %r', modname)
+            else:
+                logger.debug('loaded %r', modname)
+        except:
+            logger.error('error loading and initting module %r', modname, exc_info=True)
+            die = True
+    if die:
+        sys.exit(1)
+        return
 
     pipeline = Pipeline(config)
     pipeline.run()
 
+
+if __name__ == '__main__':
+    main()

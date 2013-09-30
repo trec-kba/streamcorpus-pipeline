@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 '''
 Provides a data transformation pipeline for expanding the data in
-StreamItem instances from streamcorpus.Chunk files.  kba.pipeline.run
+StreamItem instances from streamcorpus.Chunk files.  streamcorpus.pipeline.run
 provides a command line interface to this functionality.
 
 This software is released under an MIT/X11 open source license.
@@ -17,12 +17,13 @@ import uuid
 import math
 import signal
 import logging
+import tempfile
 import traceback
 import itertools
 import streamcorpus
 
 from _logging import log_full_file
-from stages import _init_stage
+from stages import _init_stage, BatchTransform
 from _exceptions import FailedExtraction, GracefulShutdown
 import _exceptions
 
@@ -35,12 +36,17 @@ class Pipeline(object):
     files.  Requires a config dict, which is loaded from a yaml file.
     '''
     def __init__(self, config):
-        assert 'kba.pipeline' in config, \
-            '"kba.pipeline" missing from config: %r' % config
-        config = config['kba.pipeline']
+        assert 'streamcorpus.pipeline' in config, \
+            '"streamcorpus.pipeline" missing from config: %r' % config
+        config = config['streamcorpus.pipeline']
         self.config = config
 
         self._shutting_down = False
+
+        tmpdir = config.get('tmp_dir_path')
+        if tmpdir is None:
+            tmpdir = tempfile.gettempdir()
+            config['tmp_dir_path'] = tmpdir
 
         if not os.path.exists(config['tmp_dir_path']):
             try:
@@ -68,11 +74,15 @@ class Pipeline(object):
         logger.critical('starting a task_queue')
 
         ## load the one task queue
-        task_queue_name = config['task_queue']
-        self._task_queue = _init_stage(
-            task_queue_name,
-            config.get(task_queue_name, {}),
-            external_stages)
+        input_list = config.get('inputs_path')
+        if input_list:
+            self._task_queue = input_list
+        else:
+            task_queue_name = config['task_queue']
+            self._task_queue = _init_stage(
+                task_queue_name,
+                config.get(task_queue_name, {}),
+                external_stages)
 
         ## load the one extractor
         extractor_name = config['extractor']
@@ -90,10 +100,11 @@ class Pipeline(object):
 
         ## a list of transforms that take a chunk path as input and
         ## return a path to a new chunk
-        self._batch_transforms = [
-            _init_stage(name, config.get(name, {}),
-                        external_stages)
-            for name in config['batch_transforms']]
+        self._batch_transforms = []
+        for name in config['batch_transforms']:
+            bt = _init_stage(name, config.get(name, {}), external_stages)
+            assert isinstance(bt, BatchTransform), '%s is not a BatchTransform, got %r' % (name, bt)
+            self._batch_transforms.append(bt)
 
         ## a list of transforms that take a chunk path as input and
         ## return a path to a new chunk
@@ -319,18 +330,18 @@ class Pipeline(object):
                    
                     for loader in self._loaders:
                         try:
-                            logger.debug('running %r on %r: %r' % (loader, i_str, name_info))
+                            logger.debug('running %r on %r: %r', loader, i_str, name_info)
                             o_path = loader(t_path, name_info, i_str)                        
                         except OSError, exc:
                             if exc.errno == 12:
                                 logger.critical('caught OSError 12 in loader, so shutting down')
                                 self.shutdown( msg=traceback.format_exc(exc) )
                             else:
-                                logger.critical(traceback.format_exc(exc))
-                                raise exc
+                                logger.critical('loader (%r, %r) failed', loader, i_str, exc_info=True)
+                                raise
 
-                        logger.debug('loaded (%d, %d) of %r into %r' % (
-                                start_count, next_idx - 1, i_str, o_path))
+                        logger.debug('loaded (%d, %d) of %r into %r',
+                                start_count, next_idx - 1, i_str, o_path)
                         if o_path:
                             o_paths.append( o_path )
 
@@ -342,7 +353,7 @@ class Pipeline(object):
 
                 if not hit_last:
                     ## commit the paths saved so far
-                    logger.debug('partial_commit( %d, %d, %r )' % (start_count, next_idx, o_paths))
+                    logger.debug('partial_commit( %d, %d, %r )', start_count, next_idx, o_paths)
                     self._task_queue.partial_commit( start_count, next_idx, o_paths )
 
                     ## reset t_path, so we get it again
@@ -351,17 +362,18 @@ class Pipeline(object):
                     elapsed = time.time() - start_chunk_time
                     if elapsed > 0:
                         rate = float(next_idx) / elapsed
-                        logger.info('%d more of %d in %.1f --> %.1f per sec on (post-partial_commit) %s' % (
-                            next_idx - start_count, next_idx, elapsed, rate, i_str))
+                        logger.info(
+                            '%d more of %d in %.1f --> %.1f per sec on (post-partial_commit) %s',
+                            next_idx - start_count, next_idx, elapsed, rate, i_str)
 
                     ## advance start_count for next loop
-                    logger.info('advancing start_count from %d to %d' % (start_count, next_idx))
+                    logger.info('advancing start_count from %d to %d', start_count, next_idx)
                     start_count = next_idx
 
                 else:
                     ## put the o_paths into the task_queue, and set
                     ## the task to 'completed'
-                    logger.debug('commit( %d, %r )' % (next_idx, o_paths))
+                    logger.debug('commit( %d, %r )', next_idx, o_paths)
                     self._task_queue.commit( next_idx, o_paths )
 
             ## record elapsed time

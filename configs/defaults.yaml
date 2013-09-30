@@ -3,3 +3,6 @@
 
 streamcorpus.pipeline:
   placeholder: value
+
+  incremental_transforms: []
+  batch_transforms: []

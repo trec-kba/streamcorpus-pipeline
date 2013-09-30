@@ -84,9 +84,18 @@ class stdin(TaskQueue):
     def __iter__(self):
         data = {}
         for i_str in sys.stdin:
-            ## remove trailing newlines
-            if i_str.endswith('\n'):
-                i_str = i_str[:-1]
+            i_str = i_str.strip()
+            ## yield the start position of zero, because we have not
+            ## persistence mechanism in this queue for partial_commit
+            yield 0, i_str, data
+
+class itertq(TaskQueue):
+    '''
+    A task_queue-type stage that wraps an iterable
+    '''
+    def __iter__(self):
+        data = {}
+        for i_str in self.config['inputs_path']:
             ## yield the start position of zero, because we have not
             ## persistence mechanism in this queue for partial_commit
             yield 0, i_str, data

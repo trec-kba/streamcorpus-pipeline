@@ -93,6 +93,17 @@ def patient_move(path1, path2, max_tries=30):
     raise exc
 
 class to_local_chunks(object):
+    '''
+    uses config dict parts:
+    output_name: name of file to write to. may be 'input' to derive name from source path
+    output_type:
+      'samedir' place files next to input
+      'inplace' replace input file with output
+      'otherdir' place output files according to config['output_path']
+    output_path: where to put output files
+    compress: bool() True append '.xz' to output file name and compress output
+    '''
+
     def __init__(self, config):
         self.config = config
 
@@ -150,7 +161,7 @@ class to_local_chunks(object):
 
         if compress:
             assert o_path.endswith('.xz'), o_path
-            logger.info('compress_and_encrypt_path(%r)' % t_path)
+            logger.info('compress_and_encrypt_path(%r)', t_path)
 
             ## forcibly collect dereferenced objects
             #gc.collect()
@@ -159,30 +170,29 @@ class to_local_chunks(object):
             assert not errors
             try:
                 os.rename(t_path2, t_path)
-                logger.debug('renamed %r --> %r' % (t_path2, t_path))
+                logger.debug('renamed %r --> %r', t_path2, t_path)
             except OSError, exc:                
                 if exc.errno==18:
                     patient_move(t_path2, t_path)
                 else:
-                    logger.critical(traceback.format_exc(exc))
-                    raise exc
+                    logger.critical('rename failed (%r -> %r)', t_path2, t_path, exc_info=True)
+                    raise
 
         ## do an atomic renaming    
         try:
-            logger.debug('attemping os.rename(%r, %r)' % (t_path, o_path))
+            logger.debug('attemping os.rename(%r, %r)', t_path, o_path)
             os.rename(t_path, o_path)
         except OSError, exc:                
             if exc.errno==18:
                 patient_move(t_path, o_path)
             else:
-                msg = 'failed shutil.copy2(%r, %r) and/or os.remove(t_path)\n%s'\
-                    % (t_path, o_path, traceback.format_exc(exc))
-                logger.critical(traceback.format_exc(exc))
-                raise exc
+                logger.critical(
+                    'failed shutil.copy2(%r, %r) and/or os.remove(t_path)',
+                    t_path, o_path, exc_info=True)
+                raise
         except Exception, exc:
-            msg = 'failed os.rename(%r, %r) -- %s' % (t_path, o_path, traceback.format_exc(exc))
-            logger.critical(msg)
-            raise exc
+            logger.critical('failed os.rename(%r, %r)', t_path, o_path, exc_info=True)
+            raise
 
         ## return the final output path
         return o_path
