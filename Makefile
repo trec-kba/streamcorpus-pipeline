@@ -17,7 +17,7 @@ test: clean
 	## it does not confuse py.test
 	rm -rf build
 	py.test --genscript=runtests.py
-	cd src && python ../runtests.py -vvs -n 8 kba
+	cd src && python ../runtests.py -vvs -n 8 streamcorpus
 
 john-smith-simple: 
 	echo data/john-smith/original | python -m streamcorpus.pipeline.run configs/john-smith.yaml
