@@ -9,6 +9,7 @@ Copyright 2012 Diffeo, Inc.
 usage:
     python -m streamcorpus.pipeline.run ...
 '''
+import importlib
 import os
 import sys
 import copy
@@ -114,9 +115,12 @@ def main():
     ## Load modules
     # This is a method of using settings in yaml configs to load plugins.
     die = False
-    for modname in pipeline_config.get('setup_modules', ()):
+    for pathstr in pipeline_config.get('pythonpath', {}).itervalues():
+        if pathstr not in sys.path:
+            sys.path.append(pathstr)
+    for modname in pipeline_config.get('setup_modules', {}).itervalues():
         try:
-            m = __init__(modname)
+            m = importlib.import_module(modname)
             if not m:
                 logger.error('could not load module %r', modname)
                 die = True

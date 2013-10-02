@@ -20,7 +20,7 @@ if __name__ == '__main__':
     import argparse
     parser = argparse.ArgumentParser(
         description='',
-        usage='python -m kba.pipeline.load config.yaml')
+        usage='python -m streamcorpus.pipeline.load config.yaml')
     parser.add_argument(
         'config', metavar='config.yaml', 
         help='configuration parameters for a pipeline run')
@@ -129,7 +129,7 @@ if __name__ == '__main__':
     if args.verbosity:
         log_level = args.verbosity
     else:
-        log_level = config['kba.pipeline']['log_level']
+        log_level = config['streamcorpus.pipeline']['log_level']
     log_level = getattr(logging, log_level)
 
     logger = logging.getLogger('kba')
@@ -140,8 +140,8 @@ if __name__ == '__main__':
     #ch.setFormatter(formatter)
     logger.addHandler(ch)
 
-    tq = ZookeeperTaskQueue(config['kba.pipeline']['zookeeper'])
-    namespace = config['kba.pipeline']['zookeeper']['namespace']
+    tq = ZookeeperTaskQueue(config['streamcorpus.pipeline']['zookeeper'])
+    namespace = config['streamcorpus.pipeline']['zookeeper']['namespace']
 
     if args.delete_all:
         sys.stdout.write('Are you sure you want to delete everything in %r?  (y/N): ' \

@@ -1,10 +1,23 @@
 #!python
 
+from abc import ABCMeta, abstractmethod
 import logging
+import threading
 
 logger = logging.getLogger(__name__)
 
 class BatchTransform(object):
+    __metaclass__ = ABCMeta
+
+    @abstractmethod
+    def process_path(self, chunk_path):
+        '''
+        process streamcorpus chunk file at chunk_path.
+        work in place with results at same path (with tempfile and rename if needed)
+        '''
+        raise NotImplementedError('BatchTransform.process_path not implemented')
+
+    @abstractmethod
     def shutdown(self):
         '''
         gracefully exit the transform immediately, kill any child processes
@@ -19,38 +32,84 @@ Stages = {}
 
 
 def register_stage(name, constructor):
+    _load_default_stages()
     Stages[name] = constructor
 
 
 def _tryload_stage(moduleName, functionName, name=None):
-    "If loading a module fails because of some subordinate load fail (package not available) move on"
+    "If loading a module fails because of some subordinate load fail just warn and move on"
+    # e.g. if someone doesn't have boto installed and doesn't care about s3 storage, that should be fine
+    logger.debug('_tryload_stage(%r, %r, %r)', moduleName, functionName, name)
     try:
         x = __import__(moduleName, globals(), locals(), [functionName])
         if name is None:
             name = functionName
-        register_stage(name, getattr(x, functionName))
+        #logger.debug('_tryload __import__ got %r', x)
+        if not hasattr(x, functionName):
+            logger.error('module %r missing function %r', moduleName, functionName)
+            return
+        # this would be theoretically cleaner, but there's a nasty reentrency that way I want to skip
+        #register_stage(name, getattr(x, functionName))
+        Stages[name] = getattr(x, functionName)
+        #logger.debug('_tryload successfully registered stage %r', name)
     except:
         logger.warn('failed on "from %r load %r" stage load', moduleName, functionName, exc_info=True)
 
-# task queues
-_tryload_stage('_task_queues', 'stdin')
-_tryload_stage('_task_queues', 'itertq')
 
-# data source extractors
-_tryload_stage('_local_storage', 'from_local_chunks')
-_tryload_stage('_john_smith', 'john_smith')
+_default_stages_loaded = []
+_load_lock = threading.Lock()
 
-# StreamItem stages
-_tryload_stage('_clean_html', 'clean_html')
-_tryload_stage('_clean_visible', 'clean_visible')
-_tryload_stage('_dedup', 'dedup')
-_tryload_stage('_hyperlink_labels', 'hyperlink_labels')
-_tryload_stage('_language', 'language')
-_tryload_stage('_upgrade_streamcorpus_v0_3_0', 'upgrade_streamcorpus_v0_3_0')
 
-# 'loaders' move data out of the pipeline
-_tryload_stage('_local_storage', 'to_local_chunks')
+def _load_default_stages():
+    if _default_stages_loaded:
+        return
+    with _load_lock:
+        if _default_stages_loaded:
+            return
 
+        # task queues
+        _tryload_stage('_task_queues', 'itertq')
+        _tryload_stage('_task_queues', 'stdin')
+
+        # data source extractors (read data from somewhere into pipeline)
+        _tryload_stage('_convert_kba_json', 'convert_kba_json')
+        _tryload_stage('_local_storage', 'from_local_chunks')
+        _tryload_stage('_s3_storage', 'from_s3_chunks')
+        _tryload_stage('_john_smith', 'john_smith')
+
+        # StreamItem stages
+        # (alphabetical by stage name)
+        _tryload_stage('_clean_html', 'clean_html')
+        _tryload_stage('_clean_visible', 'clean_visible')
+        _tryload_stage('_filters', 'debug_filter')
+        _tryload_stage('_dedup', 'dedup')
+        _tryload_stage('_dump_label_stats', 'dump_label_stats')
+        _tryload_stage('_filters', 'exclusion_filter')
+        _tryload_stage('_guess_media_type', 'file_type_stats')
+        _tryload_stage('_filters', 'filter_languages')
+        _tryload_stage('_find', 'find')
+        _tryload_stage('_find', 'find_doc_ids')
+        _tryload_stage('_guess_media_type', 'guess_media_type')
+        _tryload_stage('_handle_unconvertible_spinn3r', 'handle_unconvertible_spinn3r')
+        _tryload_stage('_hyperlink_labels', 'hyperlink_labels')
+        _tryload_stage('_upgrade_streamcorpus', 'keep_annotatoted', 'keep_annotated')
+        _tryload_stage('_upgrade_streamcorpus', 'keep_annotatoted', 'keep_annotatoted')
+        _tryload_stage('_language', 'language')
+        _tryload_stage('_filters', 'remove_raw')
+        _tryload_stage('_upgrade_streamcorpus', 'upgrade_streamcorpus')
+        _tryload_stage('_upgrade_streamcorpus_v0_3_0', 'upgrade_streamcorpus_v0_3_0')
+
+        # BatchTransform
+        # TODO: make standard/example BatchTransform implementations
+        #_tryload_stage('', '')
+
+        # 'loaders' move data out of the pipeline
+        _tryload_stage('_local_storage', 'to_local_chunks')
+        _tryload_stage('_local_storage', 'to_local_tarballs')
+        _tryload_stage('_s3_storage', 'to_s3_chunks')
+        _tryload_stage('_s3_storage', 'to_s3_tarballs')
+
+        _default_stages_loaded.append(len(_default_stages_loaded) + 1)
 
 
 def _init_stage(name, config, external_stages=None):
@@ -71,6 +130,8 @@ def _init_stage(name, config, external_stages=None):
 
        4) loaders: take Chunk and push it somewhere
     '''
+    _load_default_stages()
+
     if external_stages:
         Stages.update( external_stages )
 
@@ -89,6 +150,6 @@ def _init_stage(name, config, external_stages=None):
     ## must be a function.  The contents of fromlist is not
     ## considered; it just cannot be empty:
     ## http://stackoverflow.com/questions/2724260/why-does-pythons-import-require-fromlist
-    #trans = __import__('clean_html', fromlist=['kba.pipeline'])
+    #trans = __import__('clean_html', fromlist=['streamcorpus.pipeline'])
 
     return stage

@@ -120,6 +120,16 @@ def deep_update(d, u, existing_keys=False, ignore_none=False):
         sys.exit(msg)
     return d
 
+
+def load_layered_configs(configlist):
+    "Read listed configs, layer them (later values win), return unified config dict"
+    config = {}
+    for configname in configlist:
+        tconf = yaml.load(open(configname, 'r'))
+        deep_update(config, tconf)
+    return config
+
+
 def get_config(**kwargs):
     '''
     convert kwargs into a valid config dict by filling in missing

@@ -389,18 +389,17 @@ class Pipeline(object):
     def _run_batch_transforms(self, chunk_path):
         for transform in self._batch_transforms:
             try:
-                transform(chunk_path)
+                transform.process_path(chunk_path)
             except _exceptions.PipelineOutOfMemory, exc:
                 logger.critical('caught PipelineOutOfMemory, so shutting down')
                 self.shutdown( msg=traceback.format_exc(exc) )
             except Exception, exc:
                 if self._shutting_down:
-                    logger.critical('ignoring exception while shutting down: %s' % \
-                                        traceback.format_exc(exc))
+                    logger.critical('ignoring exception while shutting down', exc_info=True)
                 else:
                     ## otherwise, let it bubble up and kill this process
-                    logger.critical(traceback.format_exc(exc))
-                    raise exc
+                    logger.critical('batch transform %r failed', transform, exc_info=True)
+                    raise
 
     def _run_incremental_transforms(self, si, transforms):
         ## operate each transform on this one StreamItem

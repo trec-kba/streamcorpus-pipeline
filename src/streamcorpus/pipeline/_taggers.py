@@ -289,7 +289,7 @@ def align_labels(t_path1, config):
 
 class TaggerBatchTransform(stages.BatchTransform):
     '''
-    kba.pipeline.TaggerBatchTransform provides a structure for
+    streamcorpus.pipeline.TaggerBatchTransform provides a structure for
     aligning a taggers output with labels and generating
     stream_item.sentences[tagger_id] = [Sentence]
     '''
@@ -299,7 +299,7 @@ class TaggerBatchTransform(stages.BatchTransform):
         self.config = config
         self._child = None
 
-    def __call__(self, chunk_path):
+    def process_path(self, chunk_path):
         ## make temporary file paths based on chunk_path
         clean_visible_path = chunk_path + '-clean_visible.xml'
         ner_xml_path       = chunk_path + '-ner.xml'
