@@ -100,8 +100,9 @@ def _load_default_stages():
         _tryload_stage('_upgrade_streamcorpus_v0_3_0', 'upgrade_streamcorpus_v0_3_0')
 
         # BatchTransform
-        # TODO: make standard/example BatchTransform implementations
-        #_tryload_stage('', '')
+        _tryload_stage('_taggers', 'byte_offset_align_labels')
+        _tryload_stage('_taggers', 'line_offset_align_labels')
+        _tryload_stage('_taggers', 'name_align_labels')
 
         # 'loaders' move data out of the pipeline
         _tryload_stage('_local_storage', 'to_local_chunks')
