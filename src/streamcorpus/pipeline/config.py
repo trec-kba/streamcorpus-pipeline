@@ -130,6 +130,10 @@ def load_layered_configs(configlist):
     return config
 
 
+def config_to_string(config):
+    return yaml.dump(config)
+
+
 def get_config(**kwargs):
     '''
     convert kwargs into a valid config dict by filling in missing

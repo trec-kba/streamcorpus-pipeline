@@ -17,7 +17,7 @@ import json
 from _pipeline import Pipeline
 from _logging import logger, reset_log_level
 
-from .config import deep_update
+from .config import load_layered_configs, config_to_string
 
 def make_absolute_paths( config ):
     ## remove the root_path, so it does not get extended itself
@@ -66,7 +66,6 @@ def make_hash(obj):
     return hash(tuple(frozenset(new_obj.items())))
 
 def main():
-    import yaml
     import argparse
     parser = argparse.ArgumentParser(
         description=Pipeline.__doc__,
@@ -77,10 +76,10 @@ def main():
                         help='configuration parameters for a pipeline run. many config yaml files may be specified, later values win.')
     args = parser.parse_args()
 
-    config = {}
-    for configname in args.config:
-        tconf = yaml.load(open(configname, 'r'))
-        deep_update(config, tconf)
+    config = load_layered_configs(args.config)
+    if len(args.config) > 1:
+        print '# net config:'
+        print config_to_string(config)
 
     if args.input:
         ## Use specified input file paths as task queue
