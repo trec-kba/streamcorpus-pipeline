@@ -8,15 +8,11 @@ import subprocess
 ## prepare to run PyTest as a command
 from distutils.core import Command
 
-## explain this...
-#from distribute_setup import use_setuptools
-#use_setuptools()
-
 from setuptools import setup, find_packages
 
 from version import get_git_version
 VERSION = get_git_version()
-PROJECT = 'streamcorpus.pipeline'
+PROJECT = 'streamcorpus_pipeline'
 AUTHOR = 'Diffeo, Inc.'
 AUTHOR_EMAIL = 'support@diffeo.com'
 DESC = 'Tools for building streamcorpus objects, such as those used in TREC.'
@@ -44,6 +40,13 @@ def recursive_glob_with_tree(treeroot, pattern):
             one_dir_results.append(os.path.join(base, f))
         results.append((base, one_dir_results))
     return results
+
+
+def _myinstall(pkgspec):
+    setup(
+        script_args = ['-q', 'easy_install', '-v', pkgspec],
+        script_name = 'easy_install'
+    )
 
 
 class InstallTestDependencies(Command):
@@ -88,12 +91,10 @@ class PyTest(Command):
         pass
 
     def run(self):
+        _myinstall('pytest>2.3')
         if self.distribution.install_requires:
-            self.distribution.fetch_build_eggs(
-                self.distribution.install_requires)
-        if self.distribution.tests_require:
-            self.distribution.fetch_build_eggs(
-                self.distribution.tests_require)
+            for ir in self.distribution.install_requires:
+                _myinstall(ir)
 
         # reload sys.path for any new libraries installed
         import site
@@ -116,7 +117,6 @@ setup(
     url='',
     packages = find_packages('src'),
     package_dir = {'': 'src'},
-    namespace_packages = ['streamcorpus', 'streamcorpus.pipeline'],
     cmdclass={'test': PyTest,
               'install_test': InstallTestDependencies},
     # We can select proper classifiers later
@@ -124,16 +124,6 @@ setup(
         'Development Status :: 3 - Alpha',
         'Topic :: Utilities',
         'License :: MIT',  ## MIT/X11 license http://opensource.org/licenses/MIT
-    ],
-    tests_require=[
-        'pytest',
-        'ipdb',
-        'pytest-cov',
-        'pytest-xdist',
-        'pytest-timeout',
-        'pytest-incremental',
-        'pytest-capturelog',
-        'epydoc',
     ],
     install_requires=[
         'thrift',
@@ -157,6 +147,7 @@ setup(
         'chromium_compact_language_detector',
         'pytest',
         'pytest-capturelog',
+        'sortedcollection',
     ],
     data_files = [
         ## this does not appear to actually put anything into the egg...

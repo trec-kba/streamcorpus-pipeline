@@ -2,14 +2,15 @@ import os
 import pytest
 import streamcorpus
 from stages import _init_stage
+from ._test_data import _TEST_DATA_ROOT
 
 def test_protection():
     with pytest.raises(streamcorpus.VersionMismatchError):  # pylint: disable=E1101
         for si in streamcorpus.Chunk(
             os.path.join(
                 os.path.dirname(__file__),
-                '../../../data/test/MAINSTREAM_NEWS-15-9d6218f0aa7c9585cda12a10d642a8b3-41600ffca7703f7914102da5256233ce.sc.xz'),
-            #'../../../data/john-smith/john-smith-tagged-by-lingpipe-0.sc'),
+                _TEST_DATA_ROOT,
+                'test/MAINSTREAM_NEWS-15-9d6218f0aa7c9585cda12a10d642a8b3-41600ffca7703f7914102da5256233ce.sc.xz'),
             message=streamcorpus.StreamItem
             ):
             pass
@@ -22,7 +23,8 @@ def test_upgrade_streamcorpus_v0_3_0():
     for si in streamcorpus.Chunk(
         os.path.join(
             os.path.dirname(__file__),
-            '../../../data/test/WEBLOG-100-fd5f05c8a680faa2bf8c55413e949bbf.sc'),
+            _TEST_DATA_ROOT,
+            'test/WEBLOG-100-fd5f05c8a680faa2bf8c55413e949bbf.sc'),
         message=streamcorpus.StreamItem_v0_2_0
         ):
         
@@ -45,8 +47,8 @@ def test_upgrade_streamcorpus_v0_3_0_check_mention_ids():
     for si in streamcorpus.Chunk(
         os.path.join(
             os.path.dirname(__file__),
-            '../../../data/test/MAINSTREAM_NEWS-15-9d6218f0aa7c9585cda12a10d642a8b3-41600ffca7703f7914102da5256233ce.sc.xz'),
-            #'../../../data/john-smith/john-smith-tagged-by-lingpipe-0.sc'),
+            _TEST_DATA_ROOT,
+            'test/MAINSTREAM_NEWS-15-9d6218f0aa7c9585cda12a10d642a8b3-41600ffca7703f7914102da5256233ce.sc.xz'),
         message=streamcorpus.StreamItem_v0_2_0
         ):
         

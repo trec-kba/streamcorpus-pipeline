@@ -1,5 +1,5 @@
 '''
-Logging utilities for the kba.pipeline
+Logging utilities for the streamcorpus_pipeline
 
 This software is released under an MIT/X11 open source license.
 
@@ -48,13 +48,17 @@ class FixedWidthFormatter(logging.Formatter):
         record.fixed_width_levelname = levelname + levelname_padding
         return super(FixedWidthFormatter, self).format(record)
 
+
+_log_level = logging.DEBUG
+
+
 ch = logging.StreamHandler()
 formatter = FixedWidthFormatter('%(asctime)s pid=%(process)d %(fixed_width_filename_lineno)s %(fixed_width_levelname)s %(message)s')
-ch.setLevel('DEBUG')
+ch.setLevel(_log_level)
 ch.setFormatter(formatter)
 
-logger = logging.getLogger('kba')
-logger.setLevel('DEBUG')
+logger = logging.getLogger('streamcorpus_pipeline')
+logger.setLevel(_log_level)
 logger.handlers = []
 logger.addHandler(ch)
 
@@ -62,12 +66,27 @@ kazoo_log = logging.getLogger('kazoo')
 #kazoo_log.setLevel(logging.DEBUG)
 kazoo_log.addHandler(ch)
 
+
+_known_loggers = [logger, kazoo_log]
+
+
+def configure_logger(xlogger):
+    '''
+    for instance from loggign.getLogger(), configure it.
+    '''
+    xlogger.handlers = []
+    xlogger.addHandler(ch)
+    xlogger.setLevel(_log_level)
+    _known_loggers.append(xlogger)
+
+
 def reset_log_level( log_level ):
     '''
     set logging framework to log_level
 
     initial default is DEBUG
     '''
-    global ch, logger
-    ch.setLevel( log_level )
-    logger.setLevel( log_level )
+    global _log_level
+    _log_level = log_level
+    for l in _known_loggers:
+        l.setLevel(log_level)

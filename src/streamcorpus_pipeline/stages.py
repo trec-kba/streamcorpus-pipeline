@@ -4,10 +4,18 @@ from abc import ABCMeta, abstractmethod
 import logging
 import threading
 
+import pkg_resources
+
 logger = logging.getLogger(__name__)
 
 class BatchTransform(object):
     __metaclass__ = ABCMeta
+    '''
+    Transform that acts on a streamcorpus chunk file.
+    '''
+
+    def __init__(self, config):
+        self.config = config
 
     @abstractmethod
     def process_path(self, chunk_path):
@@ -23,6 +31,41 @@ class BatchTransform(object):
         gracefully exit the transform immediately, kill any child processes
         '''
         raise NotImplementedError('shutdown is a required method for all BatchTransforms')
+
+
+# TODO: there are no current implementations of IncrementalTransform
+# This is a proposed interface for the near future -- bolson 2013-10-03
+#
+# Current incremental transform implementations are a function which
+# takes (config), possibly a constructor, which returns a callable
+# (lambda, local function, __call__ method) which takes (stream_item, context)
+class IncrementalTransform(object):
+    __metaclass__ = ABCMeta
+    '''
+    Transform that acts on streamcorpus StreamItem objects.
+    '''
+    def __init__(self, config):
+        self.config = config
+
+    @abstractmethod
+    def process_item(self, stream_item, context):
+        '''
+        process streamcorpus StreamItem object.
+        context dict contains {
+          'i_str': path or other work spec returned by task queue
+          'data': aux data returned by task queue
+        }
+        return modified or copy object, or None if item was filtered out.
+        '''
+        raise NotImplementedError('BatchTransform.process_path not implemented')
+
+    def shutdown(self):
+        '''
+        gracefully exit the transform immediately, kill any child processes
+        '''
+        # no-op default implementation.
+        # Most IncrementalTransform implementations are pure python and have no associated daemon.
+        pass
 
 
 # map from stage name to constructor for stage.
@@ -137,6 +180,18 @@ def _init_stage(name, config, external_stages=None):
         Stages.update( external_stages )
 
     stage_constructor = Stages.get(name, None)
+    if stage_constructor is None:
+        #stage_constructor = pkg_resources.load_entry_point('streamcorpus.pipeline.stages', name)
+        entries = pkg_resources.iter_entry_points('streamcorpus.pipeline.stages', name)
+        entries = list(entries)
+        if not entries:
+            pass
+        elif len(entries) > 1:
+            logger.error('multiple entry_points for pipeline stage %r: %r', name, entries)
+        else:
+            stage_constructor = entries[0].load()
+        if stage_constructor is not None:
+            Stages[name] = stage_constructor
     if stage_constructor is None:
         raise Exception('unknown stage %r' % (name,))
     stage = stage_constructor(config)
