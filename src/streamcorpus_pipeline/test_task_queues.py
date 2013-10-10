@@ -2,7 +2,7 @@ import time
 import json
 import pytest
 import logging
-from _stages import _init_stage
+from stages import _init_stage
 from operator import itemgetter
 from _exceptions import GracefulShutdown
 

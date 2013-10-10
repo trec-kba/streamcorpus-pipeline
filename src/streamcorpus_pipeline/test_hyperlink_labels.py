@@ -4,16 +4,16 @@ import uuid
 import pytest 
 from streamcorpus import make_stream_item, StreamItem, ContentItem, OffsetType, Chunk
 from _hyperlink_labels import anchors_re, hyperlink_labels
-from _stages import _init_stage
+from stages import _init_stage
 from _logging import logger
+from ._test_data import _TEST_DATA_ROOT
 
 def make_test_stream_item():
     stream_item = make_stream_item(None, 'http://nytimes.com/')
     stream_item.body = ContentItem()
     path = os.path.dirname(__file__)
-    path = os.path.join( path, '../../../data/test/' )
-    stream_item.body.clean_html = open(
-        os.path.join(path, 'nytimes-index-clean.html')).read()
+    path = os.path.join( path, _TEST_DATA_ROOT, 'test', 'nytimes-index-clean.html')
+    stream_item.body.clean_html = open(path).read()
     return stream_item
 
 def make_hyperlink_labeled_test_stream_item():
@@ -38,7 +38,7 @@ def make_hyperlink_labeled_test_chunk():
     o_chunk = Chunk(tpath, mode='wb')
 
     dpath = os.path.dirname(__file__)
-    ipath = os.path.join( dpath, '../../../data/test/WEBLOG-100-fd5f05c8a680faa2bf8c55413e949bbf.sc' )
+    ipath = os.path.join( dpath, _TEST_DATA_ROOT, 'test/WEBLOG-100-fd5f05c8a680faa2bf8c55413e949bbf.sc' )
 
     cv = _init_stage('clean_visible', {})
     hl = hyperlink_labels(
@@ -113,7 +113,7 @@ def test_speed(parser_type):
         stream_item = StreamItem()
         stream_item.body = ContentItem()
         path = os.path.dirname(__file__)
-        path = os.path.join( path, '../../../data/test/' )
+        path = os.path.join( path, _TEST_DATA_ROOT, 'test' )
         stream_item.body.clean_html = open(
             os.path.join(path, 'nytimes-index-clean.html')).read()
         stream_items.append( stream_item )
@@ -177,7 +177,7 @@ def test_long_doc(parser_type):
     stream_item = StreamItem()
     stream_item.body = ContentItem()
     path = os.path.dirname(__file__)
-    path = os.path.join( path, '../../../data/test/' )
+    path = os.path.join( path, _TEST_DATA_ROOT, 'test' )
     stream_item.body.clean_html = open(
         os.path.join(path, 'company-test.html')).read()
 

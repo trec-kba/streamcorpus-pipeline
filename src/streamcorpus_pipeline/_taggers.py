@@ -10,7 +10,7 @@ import gc
 import os
 import sys
 import time
-import _stages
+import stages
 import _memory
 import logging
 import traceback
@@ -272,12 +272,14 @@ def align_labels(t_path1, config):
         return
     assert 'aligner_data' in config, 'config missing "aligner_data"'
     aligner = AlignmentStrategies[ config['align_labels_by'] ]
-    
+    _aligner_core(t_path1, aligner, config['aligner_data'])
+
+def _aligner_core(t_path1, aligner, aligner_data):
     t_chunk1 = Chunk(t_path1, mode='rb')
     t_path2 = t_path1 + '-tmp-aligning'
     t_chunk2 = Chunk(t_path2, mode='wb')
     for si in t_chunk1:
-        aligner( si, config['aligner_data'] )
+        aligner( si, aligner_data )
         t_chunk2.add(si)
     t_chunk1.close()
     t_chunk2.close()
@@ -287,9 +289,55 @@ def align_labels(t_path1, config):
     logger.debug('done renaming')
 
 
-class TaggerBatchTransform(_stages.BatchTransform):
+class _aligner_batch_transform(stages.BatchTransform):
+    # aligner needs to be a single element tuple containing a function pointer,
+    # because otherwise a function pointer assigned at class definition scope becomes
+    # "bound" to the class and will be called with a suprious first 'self' argument.
+    aligner = None
+    config_require = ()
+
+    def __init__(self, config):
+        self.config = config
+        for k in self.config_require:
+            assert k in self.config
+
+    def process_path(self, chunk_path):
+        _aligner_core(chunk_path, self.aligner[0], self.config)
+
+    def shutdown(self):
+        pass
+
+
+class name_align_labels(_aligner_batch_transform):
     '''
-    kba.pipeline.TaggerBatchTransform provides a structure for
+    requires config['chain_selector'] = ALL | ANY
+    requires config['annotator_id'] (which person/org did manual labelling)
+    '''
+    aligner = (names_in_chains,)
+    config_require = ('chain_selector', 'annotator_id')
+
+
+class line_offset_align_labels(_aligner_batch_transform):
+    '''
+    requires config['annotator_id'] (which person/org did manual labelling)
+    requires config['tagger_id'] (which software did tagging to process)
+    '''
+    aligner = (line_offset_labels,)
+    config_require = ('annotator_id', 'tagger_id')
+
+
+class byte_offset_align_labels(_aligner_batch_transform):
+    '''
+    requires config['annotator_id'] (which person/org did manual labelling)
+    requires config['tagger_id'] (which software did tagging to process)
+    '''
+    aligner = (byte_offset_labels,)
+    config_require = ('annotator_id', 'tagger_id')
+
+
+class TaggerBatchTransform(stages.BatchTransform):
+    '''
+    streamcorpus.pipeline.TaggerBatchTransform provides a structure for
     aligning a taggers output with labels and generating
     stream_item.sentences[tagger_id] = [Sentence]
     '''
@@ -299,7 +347,7 @@ class TaggerBatchTransform(_stages.BatchTransform):
         self.config = config
         self._child = None
 
-    def __call__(self, chunk_path):
+    def process_path(self, chunk_path):
         ## make temporary file paths based on chunk_path
         clean_visible_path = chunk_path + '-clean_visible.xml'
         ner_xml_path       = chunk_path + '-ner.xml'

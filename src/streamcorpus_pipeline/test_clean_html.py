@@ -4,13 +4,15 @@ import os
 import pytest
 
 from streamcorpus import StreamItem, ContentItem
-from _stages import _init_stage
+from stages import _init_stage
 from _clean_html import make_clean_html
 from _clean_visible import make_clean_visible
+from ._test_data import _TEST_DATA_ROOT
+
 
 def test_make_clean_html_nyt():
     path = os.path.dirname(__file__)
-    path = os.path.join( path, '../../../data/test/' )
+    path = os.path.join( path, _TEST_DATA_ROOT, 'test' )
     open(os.path.join(path, 'nytimes-index-clean.html'), 'wb').write(
         make_clean_html(open(os.path.join(path, 'nytimes-index.html')).read().decode('utf8')))
 
@@ -40,7 +42,7 @@ id="comments-template"><h3 id="comments">4 Responses to &#822050+ Years of Digis
 
 def test_target_parsing():
     path = os.path.dirname(__file__)
-    path = os.path.join( path, '../../../data/test/' )
+    path = os.path.join( path, _TEST_DATA_ROOT, 'test' )
     test_html = open(os.path.join(path, 'target-test.html')).read()
 
     html = make_clean_html( test_html )
@@ -76,7 +78,7 @@ def test_target_parsing():
 @pytest.mark.xfail  # pylint: disable=E1101
 def test_unicode_conversion():
     path = os.path.dirname(__file__)
-    path = os.path.join( path, '../../../data/test/' )
+    path = os.path.join( path, _TEST_DATA_ROOT, 'test' )
     test_html = open(os.path.join(path, 'raw-unicode-issues.html')).read()
 
     print type(test_html)
