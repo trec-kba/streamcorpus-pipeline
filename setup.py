@@ -11,7 +11,7 @@ from distutils.core import Command
 from setuptools import setup, find_packages
 
 from version import get_git_version
-VERSION = get_git_version()
+VERSION, SOURCE_LABEL = get_git_version()
 PROJECT = 'streamcorpus_pipeline'
 AUTHOR = 'Diffeo, Inc.'
 AUTHOR_EMAIL = 'support@diffeo.com'
@@ -110,6 +110,7 @@ setup(
     version=VERSION,
     description=DESC,
     license='MIT/X11 license http://opensource.org/licenses/MIT',
+    source_label=SOURCE_LABEL,
     #long_description=read_file('README.md'),
     long_description="",
     author=AUTHOR,
@@ -143,7 +144,7 @@ setup(
         'jellyfish',
         'nilsimsa>=0.2',
         'pytest',       ## required in .rpm
-        'pycassa', 
+        'pycassa',
         'chromium_compact_language_detector',
         'pytest',
         'pytest-capturelog',
