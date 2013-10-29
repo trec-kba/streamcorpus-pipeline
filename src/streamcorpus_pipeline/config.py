@@ -14,20 +14,13 @@ from _exceptions import ConfigurationError
 
 import pdb
 
-import logging
-log_level = 'DEBUG'
-logger = logging.getLogger('streamcorpus.pipeline')
-logger.setLevel( log_level )
-ch = logging.StreamHandler()
-ch.setLevel( log_level )
-#ch.setFormatter(formatter)
-logger.addHandler(ch)
+from ._logging import logger, configure_logger
 
 possible_root_paths = [
     os.getcwd(),
     os.path.abspath(os.path.join(os.getcwd(), '..')),
-    # if this file is src/streamcorpus/pipline/config.py then ../../../configs/*yaml
-    os.path.abspath(os.path.join(os.path.dirname(__file__), '../../..')),
+    # if this file is src/streamcorpus_pipline/config.py then ../../configs/*yaml
+    os.path.abspath(os.path.join(os.path.dirname(__file__), '../..')),
     '/opt/diffeo'
 ]
 
@@ -128,6 +121,10 @@ def load_layered_configs(configlist):
         tconf = yaml.load(open(configname, 'r'))
         deep_update(config, tconf)
     return config
+
+
+def config_to_string(config):
+    return yaml.dump(config)
 
 
 def get_config(**kwargs):

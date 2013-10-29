@@ -29,6 +29,11 @@ _message_versions = {
 
 
 class from_local_chunks(object):
+    '''
+    may use config['max_retries'] (default 1)
+    may use config['max_backoff'] (seconds, default 300)
+    may use config['streamcorpus_version'] (default 'v0_3_0')
+    '''
     def __init__(self, config):
         self.config = config
 
@@ -36,29 +41,35 @@ class from_local_chunks(object):
         backoff = 0.1
         start_time = time.time()
         tries = 0
-        while tries < self.config['max_retries']:
+        max_retries = int(self.config.get('max_retries', 1))
+        last_exc = None
+        while tries < max_retries:
             try:
                 message = _message_versions[ self.config.get('streamcorpus_version', 'v0_3_0') ]
                 chunk = streamcorpus.Chunk(path=i_str, mode='rb', message=message)
                 return chunk
             except IOError, exc:
                 if exc.errno == errno.ENOENT:
-                    logger.critical('File is missing?  Assume is slow NFS, try %d more times'\
-                                        % (self.config['max_retries'] - tries))
+                    logger.critical('File is missing?  Assume is slow NFS, try %d more times',
+                                    max_retries - tries)
                     backoff *= 2
                     tries += 1
                     elapsed = time.time() - start_time
                     if elapsed > self.config.get('max_backoff', 300):
                         ## give up after five minutes of retries
-                        break
+                        logger.critical('File %r not found after %d retries', i_str, tries)
+                        raise
                     time.sleep(backoff)
-                    
+                    last_exc = exc
                 else:
-                    logger.critical(traceback.format_exc(exc))
-                    raise exc
+                    logger.critical('failed loading %r', i_str, exc_info=True)
+                    raise
+
         ## exceeded max_retries
-        logger.critical('File not found after %d retries' % tries)
-        raise exc
+        logger.critical('File %r not found after %d retries', i_str, tries)
+        if last_exc:
+            raise last_exc
+        raise IOError('File %r not found after %d retries' % (i_str, tries))
 
 
 def patient_move(path1, path2, max_tries=30):
@@ -69,28 +80,30 @@ def patient_move(path1, path2, max_tries=30):
             shutil.copy2(path1, path2)
         except IOError, exc:
             if exc.errno == 2:
-                logger.critical('attempting retry on shutil.copy2(%r, %r)' % (path1, path2))
                 tries += 1
+                if tries > max_tries:
+                    logger.critical('%d tries failed copying %r to %r', tries, path1, path2, exc_info=True)
+                    raise
+                logger.critical('attempting retry on shutil.copy2(%r, %r)', path1, path2)
                 backoff *= 2
                 time.sleep(backoff)
                 continue
             else:
-                logger.critical(traceback.format_exc(exc))
-                raise exc
+                logger.critical('failed copy %r -> %r', path1, path2, exc_info=True)
+                raise
 
         try:
             os.remove(path1)
         except Exception, exc:
-            logger.critical('ignoring failure to os.remove(%r)' % path1)
+            logger.critical('ignoring failure to os.remove(%r)', path1)
             pass
 
         ## if we get here, we succeeded
         return
 
-    ## if we get here, we hit max_tries
-    logger.critical('retried %d times' % tries)
-    logger.critical(traceback.format_exc(exc))
-    raise exc
+    # should never get here
+    raise Exception('weird error inside patient_move(%r, %r)' % (path1, path2))
+
 
 class to_local_chunks(object):
     '''
@@ -230,11 +243,11 @@ class to_local_tarballs(object):
                 msg = 'failed shutil.copy2(%r, %r) and/or os.remove(t_path)\n%s'\
                     % (t_path2, o_path, traceback.format_exc(exc))
                 logger.critical(traceback.format_exc(exc))
-                raise exc
+                raise
         except Exception, exc:
             msg = 'failed os.rename(%r, %r) -- %s' % (t_path, o_path, traceback.format_exc(exc))
             logger.critical(msg)
-            raise exc
+            raise
 
         try:
             os.remove(t_path)
