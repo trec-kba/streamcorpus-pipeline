@@ -13,11 +13,12 @@ clean_js:
 	rm -rf tmp
 
 test: clean
-	## clean does not always get called!?  Must remove "build" so
-	## it does not confuse py.test
-	rm -rf build
 	py.test --genscript=runtests.py
-	cd src && python ../runtests.py -vvs -n 8 streamcorpus
+	python setup.py install_test > /dev/null
+	## TODO: make `python setup.py test` do the same as the next
+	## line, i.e. ensure that collectonly passes before running,
+	## and runs in parallel
+	cd src && py.test --collectonly && py.test -n 8
 
 john-smith-simple: 
 	echo data/john-smith/original | python -m streamcorpus.pipeline.run configs/john-smith.yaml
