@@ -175,7 +175,7 @@ def make_clean_visible_file(i_chunk, clean_visible_path):
 whitespace = re.compile('''(\s|\n)+''', re.UNICODE)
 strip_punctuation = {ord(c): u' ' for c in string.punctuation}
 
-def cleanse(span):
+def cleanse(span, lower=True):
     '''Convert a unicode string into a lowercase string with no
 punctuation and only spaces for whitespace.
 
@@ -184,7 +184,8 @@ punctuation and only spaces for whitespace.
     assert isinstance(span, unicode), \
         'got non-unicode string %r' % span
     ## lowercase, strip punctuation, and shrink all whitespace
-    span = span.lower()
+    if lower:
+        span = span.lower()
     span = span.translate(strip_punctuation)
     span = whitespace.sub(' ', span)
     ## trim any leading or trailing whitespace
