@@ -49,6 +49,16 @@ def _myinstall(pkgspec):
     )
 
 
+def _test_install(distribution):
+    _myinstall('pytest>2.3')
+    if distribution.install_requires:
+        for ir in distribution.install_requires:
+            _myinstall(ir)
+    if distribution.tests_require:
+        for ir in distribution.tests_require:
+            _myinstall(ir)
+
+
 class InstallTestDependencies(Command):
     '''install test dependencies'''
 
@@ -62,19 +72,8 @@ class InstallTestDependencies(Command):
     def finalize_options(self):
         pass
 
-    def easy_install(self, packages):
-        cmd = ['easy_install']
-        if packages:
-            cmd.extend(packages)
-            errno = subprocess.call(cmd)
-            if errno:
-                raise SystemExit(errno)
-
     def run(self):
-        if self.distribution.install_requires:
-            self.easy_install(self.distribution.install_requires)
-        if self.distribution.tests_require:
-            self.easy_install(self.distribution.tests_require)
+        _test_install(self.distribution)
 
 
 class PyTest(Command):
@@ -91,10 +90,7 @@ class PyTest(Command):
         pass
 
     def run(self):
-        _myinstall('pytest>2.3')
-        if self.distribution.install_requires:
-            for ir in self.distribution.install_requires:
-                _myinstall(ir)
+        _test_install(self.distribution)
 
         # reload sys.path for any new libraries installed
         import site
