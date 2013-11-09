@@ -9,15 +9,16 @@ Copyright 2012 Diffeo, Inc.
 usage:
     python -m streamcorpus.pipeline.run ...
 '''
-import importlib
+from __future__ import absolute_import
 import os
 import sys
 import copy
 import json
-from _pipeline import Pipeline
-from _logging import logger, reset_log_level
+import importlib
+from streamcorpus_pipeline._pipeline import Pipeline
+from streamcorpus_pipeline._logging import logger, reset_log_level
 
-from .config import load_layered_configs, config_to_string
+from streamcorpus_pipeline.config import load_layered_configs, config_to_string
 
 def make_absolute_paths( config ):
     ## remove the root_path, so it does not get extended itself
