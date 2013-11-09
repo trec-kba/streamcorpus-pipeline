@@ -26,7 +26,7 @@ import os
 import hashlib
 import fnmatch
 import logging
-from streamcorpus.pipeline._clean_visible import cleanse
+from streamcorpus_pipeline._clean_visible import cleanse
 
 logger = logging.getLogger('kba.pipeline.john_smith_custom_extractor')
 

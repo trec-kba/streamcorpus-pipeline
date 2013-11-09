@@ -21,8 +21,8 @@ test: clean
 	cd src && py.test --collectonly && py.test -n 8
 
 john-smith-simple: 
-	echo data/john-smith/original | python -m streamcorpus.pipeline.run configs/john-smith.yaml
-	echo data/john-smith/original | python -m streamcorpus.pipeline.run configs/john-smith-with-labels-from-tsv.yaml
+	echo data/john-smith/original | python -m streamcorpus_pipeline.run configs/john-smith.yaml
+	echo data/john-smith/original | python -m streamcorpus_pipeline.run configs/john-smith-with-labels-from-tsv.yaml
 
 	## compare dumps
 	python -m streamcorpus.dump data/john-smith/john-smith-0.sc      --field stream_id | sort > tmp/js-0.tsv
