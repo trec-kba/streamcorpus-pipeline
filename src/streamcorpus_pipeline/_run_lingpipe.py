@@ -11,6 +11,10 @@ This is designed to run in Condor, which means that it needs to be
 ready to get killed and moved to a new compute slot at any time.  To
 cope with this, it finishes each step in temp files before doing an
 atomic move to put the final product into position.
+
+This software is released under an MIT/X11 open source license.
+
+Copyright 2012-2013 Diffeo, Inc.
 '''
 
 import streamcorpus

@@ -1,4 +1,9 @@
-#!python
+#!/usr/bin/env python
+'''
+This software is released under an MIT/X11 open source license.
+
+Copyright 2012-2013 Diffeo, Inc.
+'''
 
 from abc import ABCMeta, abstractmethod
 import logging

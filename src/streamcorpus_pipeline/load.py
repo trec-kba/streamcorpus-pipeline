@@ -4,7 +4,7 @@ See help(Pipeline) for details on configuring a Pipeline.
 
 This software is released under an MIT/X11 open source license.
 
-Copyright 2012 Diffeo, Inc.
+Copyright 2012-2013 Diffeo, Inc.
 '''
 import os
 import re

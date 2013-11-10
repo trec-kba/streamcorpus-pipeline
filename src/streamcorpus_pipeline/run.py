@@ -1,13 +1,13 @@
-#!/usr/bin/python
+#!/usr/bin/env python
 '''
 See help(Pipeline) for details on configuring a Pipeline.
 
 This software is released under an MIT/X11 open source license.
 
-Copyright 2012 Diffeo, Inc.
+Copyright 2012-2013 Diffeo, Inc.
 
 usage:
-    python -m streamcorpus.pipeline.run ...
+    python -m streamcorpus_pipeline.run ...
 '''
 from __future__ import absolute_import
 import os

@@ -2,6 +2,9 @@
 Simple dedup tools that rejects StreamItems with a previously seen
 doc_id or have similar nilsimsa hashes.
 
+This software is released under an MIT/X11 open source license.
+
+Copyright 2012-2013 Diffeo, Inc.
 '''
 import os
 import sys
