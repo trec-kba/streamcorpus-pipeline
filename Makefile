@@ -1,7 +1,4 @@
 export PATH := /opt/diffeo/bin:$(PATH)
-VERSION:=$(shell grep ^VERSION setup.py | cut -d\' -f2)
-RELEASE:=2
-TMPISODIR:=$(shell mktemp --tmpdir=/var/tmp -d)
 
 clean_js:
 	## to make real tests, we need to dump a non-time-sensitive
@@ -73,21 +70,6 @@ install: clean lxml
 	python setup.py clean --all
 	python setup.py build
 	python setup.py install
-
-egg: 
-	python setup.py bdist_egg
-	echo "Newly build egg can be found in the dist/ directory"
-
-centos_rpm:
-	python setup.py bdist_rpm --requires=diffeo-common
-
-trec-kba-pipeline-$(VERSION)-$(RELEASE).iso: centos_rpm
-	cp diffeo-common/latest_rpm/* $(TMPISODIR)
-	cp dist/streamcorpus.pipeline-*noarch.*rpm $(TMPISODIR)
-	genisoimage -R -J -o trec-kba-pipeline-$(VERSION)-$(RELEASE).iso $(TMPISODIR)
-	rm -fR $(TMPISODIR)
-
-centos_iso: trec-kba-pipeline-$(VERSION)-$(RELEASE).iso
 
 register:
         ## upload both source and binary
