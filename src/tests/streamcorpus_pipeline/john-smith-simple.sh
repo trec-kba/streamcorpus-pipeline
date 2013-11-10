@@ -14,4 +14,5 @@ python -m streamcorpus.dump data/john-smith/john-smith-from-external-stage-0.sc 
 ## verify that the ways of building JS create all the entries
 diff js-0.tsv js-test-0.tsv && rm js-0.tsv js-test-0.tsv || { echo 'failed!'; exit 1; }
 
+rm data/john-smith/john-smith-from-external-stage-0.sc
 
