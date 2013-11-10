@@ -1,19 +1,19 @@
+from __future__ import absolute_import
 import time
 import json
 import pytest
 import logging
-from stages import _init_stage
+from streamcorpus_pipeline.stages import _init_stage
 from operator import itemgetter
-from _exceptions import GracefulShutdown
+from streamcorpus_pipeline._exceptions import GracefulShutdown
+from streamcorpus_pipeline.config import get_config
+namespace = 'streamcorpus_pipeline_task_queue_test'
 
-logger = logging.getLogger('kba')
+logger = logging.getLogger('streamcorpus')
 
-@pytest.mark.skipif('True')  # pylint: disable=E1101
 def test_stdin():
     stdin = _init_stage('stdin', {})
     
-from config import get_config
-namespace = 'kba_pipeline_task_queue_test'
 
 def teardown_function(function):
     #print ("teardown_function function:%s" % function.__name__)
@@ -23,8 +23,12 @@ def teardown_function(function):
         config_json = '',
         min_workers = 4,
         )
-    tq1 = _init_stage('zookeeper', config)
-    tq1.delete_all()    
+    try:
+        tq1 = _init_stage('zookeeper', config)
+        tq1.delete_all()    
+    except Exception, exc:
+        logger.critical('ignoring', exc_info=True)
+        pass
     logger.info('deleting %r' % namespace)
 
 @pytest.mark.skipif('True')  # pylint: disable=E1101

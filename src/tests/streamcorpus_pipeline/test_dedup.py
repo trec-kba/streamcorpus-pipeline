@@ -5,8 +5,8 @@ import yaml
 import pytest
 from cStringIO import StringIO
 from streamcorpus import Chunk
-from _pipeline import Pipeline
-from _dedup import dedup
+from streamcorpus_pipeline import Pipeline
+from streamcorpus_pipeline._dedup import dedup
 
 import logging
 logger = logging.getLogger('kba')

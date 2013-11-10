@@ -6,13 +6,13 @@ import gevent
 import signal
 import logging
 from cStringIO import StringIO
-from _pipeline import Pipeline
+from streamcorpus_pipeline import Pipeline
 
 from _test_data import get_test_chunk_path, get_test_chunk, \
     get_test_v0_3_0_chunk_path, \
     get_test_v0_3_0_chunk_tagged_by_serif_path
 
-logger = logging.getLogger('kba')
+logger = logging.getLogger('streamcorpus_pipeline')
 logger.setLevel( logging.DEBUG )
 
 ch = logging.StreamHandler()

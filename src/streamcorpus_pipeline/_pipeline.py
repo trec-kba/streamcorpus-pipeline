@@ -6,7 +6,7 @@ provides a command line interface to this functionality.
 
 This software is released under an MIT/X11 open source license.
 
-Copyright 2012 Diffeo, Inc.
+Copyright 2012-2013 Diffeo, Inc.
 '''
 
 import os

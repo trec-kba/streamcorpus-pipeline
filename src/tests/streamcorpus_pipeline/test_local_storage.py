@@ -1,7 +1,7 @@
 import time
 import errno
 import pytest
-from _local_storage import from_local_chunks
+from streamcorpus_pipeline._local_storage import from_local_chunks
 
 def test_max_retries():
     config = dict(
