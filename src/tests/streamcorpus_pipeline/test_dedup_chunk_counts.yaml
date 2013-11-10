@@ -1,6 +1,6 @@
 ## YAML kba.pipeline config for testing dedup
 
-streamcorpus.pipeline:
+streamcorpus_pipeline:
   ## root path for all things that are called *_path in this file and
   ## are not an absolute path, i.e. start with '/'
   root_path: 

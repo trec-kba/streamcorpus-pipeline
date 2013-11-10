@@ -22,7 +22,7 @@ from streamcorpus_pipeline.config import load_layered_configs, config_to_string
 
 def make_absolute_paths( config ):
     ## remove the root_path, so it does not get extended itself
-    root_path = config['streamcorpus.pipeline'].pop('root_path', None)
+    root_path = config['streamcorpus_pipeline'].pop('root_path', None)
     if not root_path:
         root_path = os.getcwd()
 
@@ -93,7 +93,7 @@ def main():
 
     make_absolute_paths(config)
 
-    pipeline_config = config['streamcorpus.pipeline']
+    pipeline_config = config['streamcorpus_pipeline']
 
     tq_name = pipeline_config.get('task_queue', 'no-task-queue')
     tq_conf = pipeline_config.get(tq_name)

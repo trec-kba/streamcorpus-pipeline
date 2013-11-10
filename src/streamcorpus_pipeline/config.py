@@ -38,7 +38,7 @@ def _try_load_config(default_config_path):
     #logger.info('found %r', default_config_path)
     full_config = yaml.load(open(default_config_path))
     # grab just our block, other parts of the system could use different sections of the config yaml
-    return full_config.get('streamcorpus.pipeline', None)
+    return full_config.get('streamcorpus_pipeline', None)
 
 
 def path_load_config(path=None, filename='configs/defaults.yaml'):

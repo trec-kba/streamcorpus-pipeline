@@ -1,7 +1,7 @@
 # YAML kba.pipeline config for generating clean_visible and then
 ## operating lingpipe
 
-kba.pipeline:
+steamcorpus_pipeline:
   ## root path for all things that are called *_path in this file and
   ## are not an absolute path, i.e. start with '/'
   root_path: 

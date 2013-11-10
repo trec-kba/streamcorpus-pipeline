@@ -4,22 +4,13 @@ import yaml
 import pytest
 import gevent
 import signal
-import logging
 from cStringIO import StringIO
 from streamcorpus_pipeline import Pipeline
+from streamcorpus_pipeline._logging import logger
 
 from _test_data import get_test_chunk_path, get_test_chunk, \
     get_test_v0_3_0_chunk_path, \
     get_test_v0_3_0_chunk_tagged_by_serif_path
-
-logger = logging.getLogger('streamcorpus_pipeline')
-logger.setLevel( logging.DEBUG )
-
-ch = logging.StreamHandler()
-ch.setLevel( logging.DEBUG )
-formatter = logging.Formatter('%(asctime)s %(process)d %(levelname)s: %(message)s')
-ch.setFormatter(formatter)
-logger.addHandler(ch)
 
 class SuccessfulExit(Exception):
     pass

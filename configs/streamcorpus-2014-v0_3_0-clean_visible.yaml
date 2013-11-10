@@ -1,4 +1,5 @@
-kba.pipeline:
+
+streamcorpus_pipeline:
   root_path: /home/ubuntu 
 
   embedded_logs: false

@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 '''
 Provides a data transformation pipeline for expanding the data in
-StreamItem instances from streamcorpus.Chunk files.  streamcorpus.pipeline.run
+StreamItem instances from streamcorpus.Chunk files.  streamcorpus_pipeline.run
 provides a command line interface to this functionality.
 
 This software is released under an MIT/X11 open source license.
@@ -42,9 +42,9 @@ class Pipeline(object):
     files.  Requires a config dict, which is loaded from a yaml file.
     '''
     def __init__(self, config):
-        assert 'streamcorpus.pipeline' in config, \
-            '"streamcorpus.pipeline" missing from config: %r' % config
-        config = config['streamcorpus.pipeline']
+        assert 'streamcorpus_pipeline' in config, \
+            '"streamcorpus_pipeline" missing from config: %r' % config
+        config = config['streamcorpus_pipeline']
         self.config = config
 
         self._shutting_down = False
