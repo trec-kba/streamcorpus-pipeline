@@ -81,15 +81,11 @@ class Pipeline(object):
         logger.critical('starting a task_queue')
 
         ## load the one task queue
-        input_list = config.get('inputs_path')
-        if input_list:
-            self._task_queue = input_list
-        else:
-            task_queue_name = config['task_queue']
-            self._task_queue = _init_stage(
-                task_queue_name,
-                config.get(task_queue_name, {}),
-                external_stages)
+        task_queue_name = config['task_queue']
+        self._task_queue = _init_stage(
+            task_queue_name,
+            config.get(task_queue_name, {}),
+            external_stages)
 
         ## load the one extractor
         extractor_name = config['extractor']
