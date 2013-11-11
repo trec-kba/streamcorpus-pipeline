@@ -95,6 +95,9 @@ class PyTest(Command):
         if self.distribution.install_requires:
             for ir in self.distribution.install_requires:
                 _myinstall(ir)
+        if self.distribution.tests_require:
+            for ir in self.distribution.tests_require:
+                _myinstall(ir)
 
         # reload sys.path for any new libraries installed
         import site
@@ -102,7 +105,7 @@ class PyTest(Command):
         print sys.path
         # use pytest to run tests
         pytest = __import__('pytest')
-        pytest.main(['-s', 'src'])
+        pytest.main(['-n', '8', '-s', 'src'])
 
 
 setup(
@@ -126,6 +129,16 @@ setup(
         'Topic :: Utilities',
         'License :: MIT',  ## MIT/X11 license http://opensource.org/licenses/MIT
     ],
+    tests_require=[
+        'pytest',
+        'ipdb',
+        'pytest-cov',
+        'pytest-xdist',
+        'pytest-timeout',
+        'pytest-incremental',
+        'pytest-capturelog',
+        'epydoc',
+    ],
     install_requires=[
         'thrift',
         'gevent',      ## required in .rpm
@@ -146,8 +159,6 @@ setup(
         'pytest',       ## required in .rpm
         'pycassa',
         'chromium_compact_language_detector',
-        'pytest',
-        'pytest-capturelog',
         'sortedcollection',
     ],
     data_files = [

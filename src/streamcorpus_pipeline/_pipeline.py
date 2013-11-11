@@ -135,6 +135,7 @@ class Pipeline(object):
             logger.debug('setting signal handler for %r' % sig)
             signal.signal(sig, self.shutdown)
 
+        self.work_unit = None
         self._cleanup_done = False
         atexit.register(self._cleanup)
 
