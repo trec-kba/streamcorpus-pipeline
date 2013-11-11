@@ -15,9 +15,9 @@ import sys
 import time
 import uuid
 import math
+import atexit
 import signal
 import logging
-import tempfile
 import traceback
 import itertools
 import streamcorpus
@@ -30,7 +30,7 @@ except:
 
 from _logging import log_full_file
 from stages import _init_stage, BatchTransform
-from _exceptions import FailedExtraction, GracefulShutdown
+from _exceptions import FailedExtraction, GracefulShutdown, ConfigurationError
 import _exceptions
 
 logger = logging.getLogger(__name__)
@@ -52,14 +52,15 @@ class Pipeline(object):
 
         tmpdir = config.get('tmp_dir_path')
         if tmpdir is None:
-            tmpdir = tempfile.gettempdir()
-            config['tmp_dir_path'] = tmpdir
+            ## if someone wants to use /tmp, it should be explicit
+            raise ConfigurationError('tmp_dir_path required parameter')
+        config['tmp_dir_path'] = os.path.join(tmpdir, uuid.uuid4().hex)
 
         if not os.path.exists(config['tmp_dir_path']):
             try:
                 os.makedirs(config['tmp_dir_path'])
             except Exception, exc:
-                logger.debug('tmp_dir_path already there? %r' % exc)
+                logger.debug('tmp_dir_path already there?', exc_info=True)
                 pass
 
         if 'rate_log_interval' in self.config:
@@ -134,15 +135,33 @@ class Pipeline(object):
             logger.debug('setting signal handler for %r' % sig)
             signal.signal(sig, self.shutdown)
 
+        self._cleanup_done = False
+        atexit.register(self._cleanup)
+
+    def _cleanup(self):
+        '''shutdown all the stages, terminate the work_unit, remove tmp dir
+
+        This is idempotent.
+        '''
+        if self._cleanup_done:
+            return
+        if self.work_unit:
+            self.work_unit.terminate()
+        for transform in self._batch_transforms:
+            transform.shutdown()
+        try:
+            shutil.rmtree(self.config['tmp_dir_path'], ignore_errors=True)
+        except Exception, exc:
+            logger.debug('trapped exception from cleaning up tmp_dir_path', exc_info=True)
+        self._cleanup_done = True
+
     def shutdown(self, sig=None, frame=None, msg=None, exit_code=None):
         if sig:
             logger.critical('shutdown inititated by signal: %r' % sig)
         elif msg:
             logger.critical('shutdown inititated, msg: %s' % msg)
         self._shutting_down = True
-        self._task_queue.shutdown()
-        for transform in self._batch_transforms:
-            transform.shutdown()
+        self._cleanup()
         if exit_code is None:
             if msg:
                 exit_code = -1
