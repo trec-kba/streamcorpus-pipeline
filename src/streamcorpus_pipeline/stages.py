@@ -117,6 +117,7 @@ def _load_default_stages():
         # data source extractors (read data from somewhere into pipeline)
         _tryload_stage('_convert_kba_json', 'convert_kba_json')
         _tryload_stage('_local_storage', 'from_local_chunks')
+        _tryload_stage('_kvlayer', 'from_kvlayer')
         _tryload_stage('_s3_storage', 'from_s3_chunks')
         _tryload_stage('_john_smith', 'john_smith')
 
@@ -150,6 +151,7 @@ def _load_default_stages():
         # 'loaders' move data out of the pipeline
         _tryload_stage('_local_storage', 'to_local_chunks')
         _tryload_stage('_local_storage', 'to_local_tarballs')
+        _tryload_stage('_kvlayer', 'to_kvlayer')
         _tryload_stage('_s3_storage', 'to_s3_chunks')
         _tryload_stage('_s3_storage', 'to_s3_tarballs')
 
