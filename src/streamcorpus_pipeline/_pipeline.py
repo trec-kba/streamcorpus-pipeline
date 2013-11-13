@@ -15,6 +15,7 @@ import sys
 import time
 import uuid
 import math
+import shutil
 import atexit
 import signal
 import logging
