@@ -3,6 +3,7 @@
 set -e
 
 cd $(dirname $0)/../../..
+export PYTHONPATH=$(dirname $0)/../..:$PYTHONPATH
 
 echo data/john-smith/original | python -m streamcorpus_pipeline.run configs/john-smith.yaml
 echo data/john-smith/original | python -m streamcorpus_pipeline.run configs/john-smith-with-labels-from-tsv.yaml

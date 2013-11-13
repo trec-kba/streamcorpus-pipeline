@@ -4,6 +4,8 @@ set -e
 
 cd $(dirname $0)/../../..
 
+export PYTHONPATH=$(dirname $0)/../..:$PYTHONPATH
+
 ## to make real tests, we need to dump a non-time-sensitive
 ## extract from these Chunk files and compare it to a stored
 ## copy of what is expected.

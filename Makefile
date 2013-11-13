@@ -1,13 +1,6 @@
-export PATH := /opt/diffeo/bin:$(PATH)
 
 test: clean
-	py.test --genscript=runtests.py
-	python setup.py install_test > /dev/null
-	## TODO: make `python setup.py test` do the same as the next
-	## line, i.e. ensure that collectonly passes before running,
-	## and runs in parallel
-	cd src && py.test --collectonly && py.test -n 8
-
+	python setup.py test
 
 clean: 
 	rm -rf build dist src/streamcorpus.pipeline.egg-info runtests.py *.iso
@@ -34,7 +27,7 @@ install: clean lxml
 
 register:
         ## upload both source and binary
-	python setup.py sdist bdist_egg upload -r internal
+	python setup.py sdist bdist_egg upload 
 
 check:
 	pylint -i y --output-format=parseable src/`git remote -v | grep origin | head -1 | cut -d':' -f 2 | cut -d'.' -f 1`

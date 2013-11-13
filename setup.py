@@ -11,7 +11,7 @@ from distutils.core import Command
 from setuptools import setup, find_packages
 
 from version import get_git_version
-VERSION = get_git_version()
+VERSION, SOURCE_LABEL = get_git_version()
 PROJECT = 'streamcorpus_pipeline'
 AUTHOR = 'Diffeo, Inc.'
 AUTHOR_EMAIL = 'support@diffeo.com'
@@ -92,11 +92,19 @@ class PyTest(Command):
 
     def run(self):
         if self.distribution.install_requires:
-            self.distribution.fetch_build_eggs(
-                self.distribution.install_requires)
+            for ir in self.distribution.install_requires:
+                _myinstall(ir)
         if self.distribution.tests_require:
-            self.distribution.fetch_build_eggs(
-                self.distribution.tests_require)
+            for ir in self.distribution.tests_require:
+                _myinstall(ir)
+
+        # reload sys.path for any new libraries installed
+        import site
+        site.main()
+        print sys.path
+        # use pytest to run tests
+        pytest = __import__('pytest')
+        pytest.main(['-n', '8', '-s', 'src'])
 
         errno = subprocess.call([sys.executable, 'runtests.py'])
         raise SystemExit(errno)
@@ -107,6 +115,7 @@ setup(
     description=DESC,
     license='MIT/X11 license http://opensource.org/licenses/MIT',
     long_description=read_file('README.rst'),
+    source_label=SOURCE_LABEL,
     author=AUTHOR,
     author_email=AUTHOR_EMAIL,
     url='',
@@ -117,7 +126,7 @@ setup(
     classifiers=[
         'Development Status :: 3 - Alpha',
         'Topic :: Utilities',
-        'License :: MIT',  ## MIT/X11 license http://opensource.org/licenses/MIT
+        'License :: OSI Approved :: MIT License',  ## MIT/X11 license http://opensource.org/licenses/MIT
     ],
     tests_require=[
         'pytest',
