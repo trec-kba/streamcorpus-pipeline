@@ -127,10 +127,12 @@ class Pipeline(object):
 
         ## a list of transforms that take a chunk path as input and
         ## return a path to a new chunk
-        self._loaders  = [
-            _init_stage(name, config.get(name, {}),
-                        external_stages)
-            for name in config['loaders']]
+        self._loaders  = [] 
+        for name in config['loaders']:
+            _loader_config = config.get(name, {})
+            _loader_config['tmp_dir_path'] = config.get('tmp_dir_path')
+            self._loaders.append( 
+                _init_stage(name, _loader_config, external_stages))
 
         for sig in [signal.SIGTERM, signal.SIGABRT, signal.SIGHUP, signal.SIGINT]:
             logger.debug('setting signal handler for %r' % sig)
@@ -152,7 +154,7 @@ class Pipeline(object):
         for transform in self._batch_transforms:
             transform.shutdown()
         try:
-            shutil.rmtree(self.config['tmp_dir_path'], ignore_errors=True)
+            shutil.rmtree(self.config['tmp_dir_path'])
         except Exception, exc:
             logger.debug('trapped exception from cleaning up tmp_dir_path', exc_info=True)
         self._cleanup_done = True
