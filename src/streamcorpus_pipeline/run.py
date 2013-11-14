@@ -14,6 +14,7 @@ import os
 import sys
 import copy
 import json
+import time
 import importlib
 from streamcorpus_pipeline._pipeline import Pipeline
 from streamcorpus_pipeline._logging import logger, reset_log_level
@@ -138,7 +139,30 @@ def main():
         return
 
     pipeline = Pipeline(config)
-    pipeline.run()
+
+    for i_str in sys.stdin:
+        work_unit = SimpleWorkUnit(i_str.strip())
+        work_unit.data['start_chunk_time'] = time.time()
+        work_unit.data['start_count'] = 0
+        pipeline._process_task(work_unit)
+
+class SimpleWorkUnit(object):
+    '''partially duck-typed rejester.WorkUnit that wraps strings from
+    stdin and provides only the methods used by the Pipeline
+
+    '''
+    def __init__(self, i_str):
+        self.key = i_str
+        self.data = dict()
+
+    def update(self):
+        ## a real WorkUnit would send self.data to the registry and
+        ## renew the lease time
+        pass
+
+    def terminate(self):
+        pass
+
 
 
 if __name__ == '__main__':

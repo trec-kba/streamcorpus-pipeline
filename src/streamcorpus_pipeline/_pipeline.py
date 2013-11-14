@@ -80,15 +80,6 @@ class Pipeline(object):
         else:
             external_stages = None
 
-        logger.critical('starting a task_queue')
-
-        ## load the one task queue
-        task_queue_name = config['task_queue']
-        self._task_queue = _init_stage(
-            task_queue_name,
-            config.get(task_queue_name, {}),
-            external_stages)
-
         ## load the one extractor
         extractor_name = config['extractor']
         self._extractor = _init_stage(
@@ -171,61 +162,15 @@ class Pipeline(object):
         logging.shutdown()
         sys.exit(exit_code)
 
-
-    def run(self):
-        '''
-        operate pipeline on chunks loaded from task_queue
-        '''
-        start_processing_time = time.time()
-
-        # context passed to incremental transforms
-        self.context = dict(
-            i_str = None,
-            data = None, 
-            )
-
-        ## iterate over input strings from the specified task_queue
-        tasks = iter(self._task_queue)
-        while 1:
-            # Weird non-idiomatic loop would otherwise be
-            # "for a,b,c in self._task_queue" except that we want
-            # iterator to be able to raise GracefulShutdown.
-            try:
-                start_count, i_str, data = tasks.next()
-
-                self.context['i_str'] = i_str
-                self.context['data'] = data
-
-            except StopIteration:
-                break
-            except GracefulShutdown, exc:
-                ## do a graceful shutdown instead of just a simple
-                ## clean exit, because we want to do the various
-                ## .shutdown() calls, e.g. to the task_queue itself
-                exit_code = 0
-                self.shutdown(
-                    exit_code=exit_code,
-                    msg='executing %r, exit_code=%d' % (exc, exit_code))
-
-            if self._shutting_down:
-                break
-
-            start_chunk_time = time.time()
-            next_idx = self._process_task(start_count, i_str, start_chunk_time)
-            ## record elapsed time
-            elapsed = time.time() - start_chunk_time
-            if elapsed > 0:
-                rate = float(next_idx) / elapsed
-                logger.info('%d in %.1f sec --> %.1f per sec on (completed) %s' % (
-                        next_idx, elapsed, rate, i_str))
-
-            ## loop to next i_str
-        logger.critical('exiting Pipeline.run')
-
-    def _process_task(self, start_count, i_str, start_chunk_time):
+    def _process_task(self, work_unit):
         '''
         returns number of stream items processed
         '''
+        self.work_unit = work_unit
+        i_str = work_unit.key
+        start_count = work_unit.data['start_count']
+        start_chunk_time = work_unit.data['start_chunk_time']
+
         ## the extractor returns generators of StreamItems
         try:
             i_chunk = self._extractor(i_str)
@@ -234,7 +179,7 @@ class Pipeline(object):
             ## and gave up, so record it in task_queue as failed
             logger.critical('committing failure_log on %s: %r' % (
                     i_str, str(exc)))
-            self._task_queue.commit(0, [], failure_log=str(exc))
+            work_unit.fail(exc)
             return 0
 
         ## t_path points to the currently in-progress temp chunk
@@ -337,7 +282,9 @@ class Pipeline(object):
         ## put the o_paths into the task_queue, and set
         ## the task to 'completed'
         logger.debug('commit( %d, %r )', next_idx, o_paths)
-        self._task_queue.commit( next_idx, o_paths )
+        work_unit.data['start_count'] = next_idx
+        work_unit.data['o_paths'] = o_paths
+        work_unit.update()
 
         # return how many stream items we processed
         return next_idx

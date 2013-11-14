@@ -1,6 +1,7 @@
 import os
 import sys
 import yaml
+import time
 import pytest
 import gevent
 import signal
@@ -33,7 +34,12 @@ def test_pipeline(monkeypatch):
 
     ## run the pipeline
     p = Pipeline( config )
-    g = gevent.spawn(p.run)
+
+    from streamcorpus_pipeline.run import SimpleWorkUnit
+    work_unit = SimpleWorkUnit('long string indicating source of text')
+    work_unit.data['start_chunk_time'] = time.time()
+    work_unit.data['start_count'] = 0
+    g = gevent.spawn(p._process_task, work_unit)
 
     gevent.sleep(5)
 

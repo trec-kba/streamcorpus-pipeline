@@ -115,10 +115,6 @@ def _load_default_stages():
         if _default_stages_loaded:
             return
 
-        # task queues
-        _tryload_stage('_task_queues', 'itertq')
-        _tryload_stage('_task_queues', 'stdin')
-
         # data source extractors (read data from somewhere into pipeline)
         _tryload_stage('_convert_kba_json', 'convert_kba_json')
         _tryload_stage('_local_storage', 'from_local_chunks')
