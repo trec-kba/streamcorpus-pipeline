@@ -106,9 +106,6 @@ class PyTest(Command):
         pytest = __import__('pytest')
         pytest.main(['-n', '8', '-s', 'src'])
 
-        errno = subprocess.call([sys.executable, 'runtests.py'])
-        raise SystemExit(errno)
-
 setup(
     name=PROJECT,
     version=VERSION,
