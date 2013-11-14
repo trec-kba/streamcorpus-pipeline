@@ -89,7 +89,8 @@ def read_release_version():
  
         try:
             version = f.readlines()[0]
-            return version.strip().split(',')
+            release_version, release_source_hash = version.strip().split(',')
+            return release_version, release_source_hash
  
         finally:
             f.close()
