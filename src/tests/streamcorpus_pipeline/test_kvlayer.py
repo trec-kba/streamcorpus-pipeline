@@ -5,8 +5,8 @@ import pytest
 import kvlayer
 import streamcorpus
 from _test_data import get_test_v0_3_0_chunk_path
-from _kvlayer import from_kvlayer, to_kvlayer
-from _logging import logger
+from streamcorpus_pipeline._kvlayer import from_kvlayer, to_kvlayer
+from streamcorpus_pipeline._logging import logger
 
 @pytest.fixture(scope='function')
 def config(request):
