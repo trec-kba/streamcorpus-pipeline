@@ -182,7 +182,9 @@ class to_s3_chunks(object):
         _errors, t_path2 = compress_and_encrypt_path(
             t_path, 
             self.config['gpg_encryption_key_path'],
-            gpg_recipient=self.config['gpg_recipient'])
+            gpg_recipient=self.config['gpg_recipient'],
+            tmp_dir=self.config['tmp_dir_path'],
+            )
         logger.info( '\n'.join(_errors) )
 
         data = open(t_path2).read()
