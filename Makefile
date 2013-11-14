@@ -1,5 +1,5 @@
 
-test: clean
+test: install
 	python setup.py test
 
 clean: 
