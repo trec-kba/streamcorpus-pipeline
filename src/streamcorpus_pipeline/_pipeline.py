@@ -125,6 +125,12 @@ class Pipeline(object):
             logger.debug('setting signal handler for %r' % sig)
             signal.signal(sig, self.shutdown)
 
+        ## context allows stages to communicate with later stages
+        self.context = dict(
+            i_str = None,
+            data = None, 
+            )
+
         self.work_unit = None
         self._cleanup_done = False
         atexit.register(self._cleanup)
