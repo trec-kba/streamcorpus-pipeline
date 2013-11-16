@@ -104,7 +104,8 @@ class PyTest(Command):
         print sys.path
         # use pytest to run tests
         pytest = __import__('pytest')
-        pytest.main(['-n', '8', '-s', 'src'])
+        if pytest.main(['-n', '8', '-s', 'src']):
+            sys.exit(1)
 
 setup(
     name=PROJECT,
