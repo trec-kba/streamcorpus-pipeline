@@ -72,8 +72,8 @@ def main():
     parser = argparse.ArgumentParser(
         description=Pipeline.__doc__,
         usage='python -m streamcorpus.pipeline.run config.yaml')
-    parser.add_argument('-i', '--input', action='append',
-                        help='file paths to input (overrides configured task queue)')
+    parser.add_argument('-i', '--input', action='append', 
+                        help='file paths to input instead of reading from stdin')
     parser.add_argument('config', metavar='config.yaml', nargs='+',
                         help='configuration parameters for a pipeline run. many config yaml files may be specified, later values win.')
     args = parser.parse_args()
@@ -82,15 +82,6 @@ def main():
     if len(args.config) > 1:
         print '# net config:'
         print config_to_string(config)
-
-    if args.input:
-        ## Use specified input file paths as task queue
-        config['streamcorpus.pipeline']['task_queue'] = 'itertq'
-        itertq_conf = config['streamcorpus.pipeline'].get('itertq')
-        if itertq_conf is None:
-            itertq_conf = {}
-        itertq_conf.update(dict(inputs_path= args.input))
-        config['streamcorpus.pipeline']['itertq'] = itertq_conf
 
     make_absolute_paths(config)
 
@@ -140,7 +131,12 @@ def main():
 
     pipeline = Pipeline(config)
 
-    for i_str in sys.stdin:
+    if args.input:
+        input_paths = args.input
+    else:
+        input_paths = sys.stdin
+
+    for i_str in input_paths:
         work_unit = SimpleWorkUnit(i_str.strip())
         work_unit.data['start_chunk_time'] = time.time()
         work_unit.data['start_count'] = 0
