@@ -118,7 +118,9 @@ class from_s3_chunks(object):
             data = fh.getvalue()
             _errors, data = decrypt_and_uncompress(
                 data, 
-                self.config['gpg_decryption_key_path'])
+                self.config['gpg_decryption_key_path'],
+                tmp_dir=self.config['tmp_dir_path'],
+                )
             logger.info( '\n'.join(_errors) )
             if self.config['input_format'] == 'streamitem' and \
                     self.config['streamcorpus_version'] == 'v0_1_0':
@@ -240,7 +242,9 @@ class to_s3_chunks(object):
         req = requests.get(url)
         errors, data = decrypt_and_uncompress(
             req.content, # pylint: disable=E1103
-            self.config['gpg_decryption_key_path'])
+            self.config['gpg_decryption_key_path'],
+            tmp_dir=self.config['tmp_dir_path'],
+            )
 
         logger.info( 'got back SIs: %d' % len( list( Chunk(data=data) ) ))
 
