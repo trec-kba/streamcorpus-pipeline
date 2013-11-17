@@ -11,7 +11,7 @@ streamcorpus_pipeline:
 
   log_level: DEBUG
 
-  output_chunk_max_count: 500
+  output_chunk_max_count: 50
 
   ## gets cleaned up when pipeline exits
   tmp_dir_path: tmp
@@ -28,6 +28,6 @@ streamcorpus_pipeline:
   to_local_chunks:
     #output_type: inplace
     output_type: otherdir
-    output_path: data/john-smith/
+    output_path: tmp  ## which will get cleaned up
     output_name: john-smith-%(first)s
 

@@ -182,10 +182,10 @@ class Pipeline(object):
             i_chunk = self._extractor(i_str)
         except FailedExtraction, exc:
             ## means that task is invalid, extractor did its best
-            ## and gave up, so record it in task_queue as failed
+            ## and gave up, so fail the work_unit
             logger.critical('committing failure_log on %s: %r' % (
                     i_str, str(exc)))
-            work_unit.fail(exc)
+            self.work_unit.fail(exc)
             return 0
 
         ## t_path points to the currently in-progress temp chunk
@@ -285,25 +285,28 @@ class Pipeline(object):
         else:
             o_paths = None
 
-        ## put the o_paths into the task_queue, and set
-        ## the task to 'completed'
-        logger.debug('commit( %d, %r )', next_idx, o_paths)
-        work_unit.data['start_count'] = next_idx
-        work_unit.data['o_paths'] = o_paths
-        work_unit.update()
+        ## set start_count and o_paths in work_unit and updated
+        data = dict(start_count=next_idx, o_paths=o_paths)
+        logger.debug('WorkUnit.update() data=%r', data)
+        self.work_unit.data.update(data)
+        self.work_unit.update()
 
         # return how many stream items we processed
         return next_idx
 
     def _intermediate_output_chunk(self, start_count, next_idx, sources, i_str, t_path):
+        '''save a chunk that is smaller than the input chunk
+        '''
         o_paths = self._process_output_chunk(start_count, next_idx, sources, i_str, t_path)
 
         if self._shutting_down:
             return
 
-        ## commit the paths saved so far
-        logger.debug('partial_commit( %d, %d, %r )', start_count, next_idx, o_paths)
-        self._task_queue.partial_commit( start_count, next_idx, o_paths )
+        ## set start_count and o_paths in work_unit and updated
+        data = dict(start_count=next_idx, o_paths=o_paths)
+        logger.debug('WorkUnit.update() data=%r', data)
+        self.work_unit.data.update(data)
+        self.work_unit.update()
 
         ## reset t_chunk, so we get it again
         self.t_chunk = None
@@ -433,16 +436,13 @@ class Pipeline(object):
 
             except _exceptions.TransformGivingUp:
                 ## do nothing
-                logger.info('transform %r giving up on %r' % (transform, si.stream_id))
+                logger.info('transform %r giving up on %r',
+                            transform, si.stream_id)
 
             except Exception, exc:
-                logger.critical('incremental transform failed: %r', transform, exc_info=True)
-
-                if self.config.get('embedded_logs', None):
-                    si.body.logs.append( traceback.format_exc(exc) )
-
-                if self.config.get('log_dir_path', None):
-                    log_full_file(si, 'fallback-givingup', self.config['log_dir_path'])
+                logger.critical('transform %r failed on %r from i_str=%r', 
+                                transform, si.stream_id, self.context.get('i_str'),
+                                exc_info=True)
 
         assert si is not None
 
