@@ -12,21 +12,6 @@ import logging
 import traceback
 import streamcorpus
 
-def log_full_file(stream_item, extension, log_path=None):
-    '''
-    Saves a full stream_item to a one-file-long chunk with a name
-    'extension' added to help explain why it was saved.
-    '''
-    if log_path and stream_item and extension:
-        fname = '%s-%s.sc' % (stream_item.stream_id, extension)
-        fpath = os.path.join(log_path, fname)
-        if os.path.exists(fpath):
-            os.remove(fpath)
-        l_chunk = streamcorpus.Chunk(path=fpath, mode='wb')
-        l_chunk.add(stream_item)
-        l_chunk.close()
-
-        print 'created %s' % fpath
 
 class FixedWidthFormatter(logging.Formatter):
     '''
@@ -49,36 +34,18 @@ class FixedWidthFormatter(logging.Formatter):
         return super(FixedWidthFormatter, self).format(record)
 
 
-_log_level = logging.DEBUG
-
-
-ch = logging.StreamHandler()
-formatter = FixedWidthFormatter('%(asctime)s pid=%(process)d %(fixed_width_filename_lineno)s %(fixed_width_levelname)s %(message)s')
-ch.setLevel(_log_level)
-ch.setFormatter(formatter)
-
-logger = logging.getLogger('streamcorpus_pipeline')
-logger.setLevel(_log_level)
-logger.handlers = []
-logger.addHandler(ch)
-
-kazoo_log = logging.getLogger('kazoo')
-#kazoo_log.setLevel(logging.DEBUG)
-kazoo_log.addHandler(ch)
-
-
-_known_loggers = [logger, kazoo_log]
-
-
-def configure_logger(xlogger):
+def configure_logger(name):
     '''
-    for instance from loggign.getLogger(), configure it.
+    for instance from logging.getLogger(), configure it.
     '''
+    xlogger = logging.getLogger(name)
     xlogger.handlers = []
-    xlogger.addHandler(ch)
+    for handler in _known_handlers:
+        xlogger.addHandler(handler)
     xlogger.setLevel(_log_level)
+    global _known_loggers
     _known_loggers.append(xlogger)
-
+    return xlogger
 
 def reset_log_level( log_level ):
     '''
@@ -90,3 +57,17 @@ def reset_log_level( log_level ):
     _log_level = log_level
     for l in _known_loggers:
         l.setLevel(log_level)
+
+
+_log_level = logging.DEBUG
+
+ch = logging.StreamHandler()
+formatter = FixedWidthFormatter('%(asctime)s pid=%(process)d %(fixed_width_filename_lineno)s %(fixed_width_levelname)s %(message)s')
+ch.setLevel(_log_level)
+ch.setFormatter(formatter)
+
+_known_handlers = [ch]
+_known_loggers = []
+
+configure_logger('streamcorpus')
+logger = configure_logger('streamcorpus_pipeline')

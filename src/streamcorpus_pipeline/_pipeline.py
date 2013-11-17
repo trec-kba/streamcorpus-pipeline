@@ -29,7 +29,6 @@ except:
     ## only load gevent if it is available :-)
     gevent = None
 
-from _logging import log_full_file
 from stages import _init_stage, BatchTransform
 from _exceptions import FailedExtraction, GracefulShutdown, ConfigurationError
 import _exceptions
