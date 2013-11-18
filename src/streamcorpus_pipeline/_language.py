@@ -4,7 +4,7 @@ StreamItem.body.language
 
 This software is released under an MIT/X11 open source license.
 
-Copyright 2012 Diffeo, Inc.
+Copyright 2012-2013 Diffeo, Inc.
 '''
 
 import cld

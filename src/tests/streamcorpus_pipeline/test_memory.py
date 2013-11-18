@@ -1,5 +1,5 @@
 
-from . import _memory
+from streamcorpus_pipeline import _memory
 
 def test_memory():
     print 'VmSize: %d bytes' % _memory.memory()

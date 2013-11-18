@@ -3,10 +3,10 @@ import time
 import uuid
 import pytest 
 from streamcorpus import make_stream_item, StreamItem, ContentItem, OffsetType, Chunk
-from _hyperlink_labels import anchors_re, hyperlink_labels
-from stages import _init_stage
-from _logging import logger
-from ._test_data import _TEST_DATA_ROOT
+from streamcorpus_pipeline._hyperlink_labels import anchors_re, hyperlink_labels
+from streamcorpus_pipeline.stages import _init_stage
+from streamcorpus_pipeline._logging import logger
+from tests.streamcorpus_pipeline._test_data import _TEST_DATA_ROOT
 
 def make_test_stream_item():
     stream_item = make_stream_item(None, 'http://nytimes.com/')

@@ -18,6 +18,8 @@ that contain 'john' and 'smith' as substrings.
 The original data is stored in data/john-smith/original and the output
 of this file is in data/john-smith/john-smith.sc
 
+This software is released under an MIT/X11 open source license.
+
 Copyright 2012-2013 Diffeo, Inc.
 '''
 

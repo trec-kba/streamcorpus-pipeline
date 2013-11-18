@@ -1,27 +1,29 @@
-#!/usr/bin/python
+#!/usr/bin/env python
 '''
 See help(Pipeline) for details on configuring a Pipeline.
 
 This software is released under an MIT/X11 open source license.
 
-Copyright 2012 Diffeo, Inc.
+Copyright 2012-2013 Diffeo, Inc.
 
 usage:
-    python -m streamcorpus.pipeline.run ...
+    python -m streamcorpus_pipeline.run ...
 '''
-import importlib
+from __future__ import absolute_import
 import os
 import sys
 import copy
 import json
-from _pipeline import Pipeline
-from _logging import logger, reset_log_level
+import time
+import importlib
+from streamcorpus_pipeline._pipeline import Pipeline
+from streamcorpus_pipeline._logging import logger, reset_log_level
 
-from .config import load_layered_configs, config_to_string
+from streamcorpus_pipeline.config import load_layered_configs, config_to_string
 
 def make_absolute_paths( config ):
     ## remove the root_path, so it does not get extended itself
-    root_path = config['streamcorpus.pipeline'].pop('root_path', None)
+    root_path = config['streamcorpus_pipeline'].pop('root_path', None)
     if not root_path:
         root_path = os.getcwd()
 
@@ -70,8 +72,8 @@ def main():
     parser = argparse.ArgumentParser(
         description=Pipeline.__doc__,
         usage='python -m streamcorpus.pipeline.run config.yaml')
-    parser.add_argument('-i', '--input', action='append',
-                        help='file paths to input (overrides configured task queue)')
+    parser.add_argument('-i', '--input', action='append', 
+                        help='file paths to input instead of reading from stdin')
     parser.add_argument('config', metavar='config.yaml', nargs='+',
                         help='configuration parameters for a pipeline run. many config yaml files may be specified, later values win.')
     args = parser.parse_args()
@@ -81,18 +83,9 @@ def main():
         print '# net config:'
         print config_to_string(config)
 
-    if args.input:
-        ## Use specified input file paths as task queue
-        config['streamcorpus.pipeline']['task_queue'] = 'itertq'
-        itertq_conf = config['streamcorpus.pipeline'].get('itertq')
-        if itertq_conf is None:
-            itertq_conf = {}
-        itertq_conf.update(dict(inputs_path= args.input))
-        config['streamcorpus.pipeline']['itertq'] = itertq_conf
-
     make_absolute_paths(config)
 
-    pipeline_config = config['streamcorpus.pipeline']
+    pipeline_config = config['streamcorpus_pipeline']
 
     tq_name = pipeline_config.get('task_queue', 'no-task-queue')
     tq_conf = pipeline_config.get(tq_name)
@@ -137,7 +130,35 @@ def main():
         return
 
     pipeline = Pipeline(config)
-    pipeline.run()
+
+    if args.input:
+        input_paths = args.input
+    else:
+        input_paths = sys.stdin
+
+    for i_str in input_paths:
+        work_unit = SimpleWorkUnit(i_str.strip())
+        work_unit.data['start_chunk_time'] = time.time()
+        work_unit.data['start_count'] = 0
+        pipeline._process_task(work_unit)
+
+class SimpleWorkUnit(object):
+    '''partially duck-typed rejester.WorkUnit that wraps strings from
+    stdin and provides only the methods used by the Pipeline
+
+    '''
+    def __init__(self, i_str):
+        self.key = i_str
+        self.data = dict()
+
+    def update(self):
+        ## a real WorkUnit would send self.data to the registry and
+        ## renew the lease time
+        pass
+
+    def terminate(self):
+        pass
+
 
 
 if __name__ == '__main__':

@@ -1,25 +1,17 @@
 import os
 import sys
 import yaml
+import time
 import pytest
 import gevent
 import signal
-import logging
 from cStringIO import StringIO
-from _pipeline import Pipeline
+from streamcorpus_pipeline import Pipeline
+from streamcorpus_pipeline._logging import logger
 
 from _test_data import get_test_chunk_path, get_test_chunk, \
     get_test_v0_3_0_chunk_path, \
     get_test_v0_3_0_chunk_tagged_by_serif_path
-
-logger = logging.getLogger('kba')
-logger.setLevel( logging.DEBUG )
-
-ch = logging.StreamHandler()
-ch.setLevel( logging.DEBUG )
-formatter = logging.Formatter('%(asctime)s %(process)d %(levelname)s: %(message)s')
-ch.setFormatter(formatter)
-logger.addHandler(ch)
 
 class SuccessfulExit(Exception):
     pass
@@ -42,7 +34,12 @@ def test_pipeline(monkeypatch):
 
     ## run the pipeline
     p = Pipeline( config )
-    g = gevent.spawn(p.run)
+
+    from streamcorpus_pipeline.run import SimpleWorkUnit
+    work_unit = SimpleWorkUnit('long string indicating source of text')
+    work_unit.data['start_chunk_time'] = time.time()
+    work_unit.data['start_count'] = 0
+    g = gevent.spawn(p._process_task, work_unit)
 
     gevent.sleep(5)
 

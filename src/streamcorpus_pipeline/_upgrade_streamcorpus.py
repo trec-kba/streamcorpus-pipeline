@@ -4,7 +4,7 @@ kba.pipeline Transform for converting v0_1_0 StreamItems to v0_2_0
 
 This software is released under an MIT/X11 open source license.
 
-Copyright 2012 Diffeo, Inc.
+Copyright 2012-2013 Diffeo, Inc.
 '''
 
 from streamcorpus import make_stream_item, make_stream_time, ContentItem, Tagging, Rating, Target, Annotator

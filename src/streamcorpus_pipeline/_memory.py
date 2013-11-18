@@ -1,3 +1,8 @@
+'''
+This software is released under an MIT/X11 open source license.
+
+Copyright 2012-2013 Diffeo, Inc.
+'''
 ## {{{ http://code.activestate.com/recipes/286222/ (r1)
 import os
 

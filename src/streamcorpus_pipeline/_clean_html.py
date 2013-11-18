@@ -4,7 +4,7 @@ Pipeline "transform" for converting raw text into clean_html
 
 This software is released under an MIT/X11 open source license.
 
-Copyright 2012 Diffeo, Inc.
+Copyright 2012-2013 Diffeo, Inc.
 '''
 import re
 import os
@@ -20,7 +20,6 @@ from BeautifulSoup import UnicodeDammit
 logger = logging.getLogger(__name__)
 
 if __name__ != '__main__':
-    from _logging import log_full_file
     import _exceptions
 
 encoding_re = re.compile(
@@ -119,7 +118,6 @@ def make_clean_html_super(raw, stream_item=None, log_dir_path=None):
                 if log_dir_path and stream_item:
                     stream_item.body.clean_html = fixed_html.encode('utf8')
                     stream_item.body.logs.append( make_traceback_log(all_exc) )
-                    log_full_file(stream_item, 'fallback-UnicodeDammit', log_dir_path)
 
             except Exception, exc:
                 ## UnicodeDammit failed
@@ -142,7 +140,7 @@ def make_clean_html_super(raw, stream_item=None, log_dir_path=None):
                 if log_dir_path and stream_item:
                     stream_item.body.clean_html = fixed_html.encode('utf8')
                     stream_item.body.logs.append( make_traceback_log(all_exc) )
-                    log_full_file(stream_item, 'fallback-soupparser', log_dir_path)
+
             except Exception, exc:
                 ## soupparser failed
                 all_exc.append(exc)

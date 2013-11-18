@@ -3,6 +3,10 @@
 Converts HTML-escaped and XML-escaped characters into their simple
 character equivalents.  Borrows heavily from the BeautifulSoup
 library, which has an MIT/X11 License.
+
+This software is released under an MIT/X11 open source license.
+
+Copyright 2012-2013 Diffeo, Inc.
 '''
 import re
 import sys

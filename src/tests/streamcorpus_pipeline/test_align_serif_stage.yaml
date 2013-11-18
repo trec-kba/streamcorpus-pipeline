@@ -1,9 +1,12 @@
-## YAML kba.pipeline config for testing dedup
+## YAML streamcorpus.pipeline config for testing dedup
 
-streamcorpus.pipeline:
+streamcorpus_pipeline:
   ## root path for all things that are called *_path in this file and
   ## are not an absolute path, i.e. start with '/'
   root_path: 
+
+  ## thrift version of the streamitems
+  streamcorpus_version: v0_3_0
 
   ## put logs inside each chunk file
   embedded_logs: false
@@ -34,42 +37,23 @@ streamcorpus.pipeline:
   ## hyperlink_labels must run after clean_html and before
   ## clean_visible in order for the newlines that it inserted to get
   ## into the clean_visible that lingpipe will operate on.
-  incremental_transforms: [dedup]
+  incremental_transforms: []
   batch_transforms: []
+  post_batch_incremental_transforms: [align_serif]
 
   ## to_local_chunks must be last, because *moves* the tmp file away
   loaders: [to_local_chunks]
 
   from_local_chunks:
-    max_retries: 1
+    max_retries: 30
+    streamcorpus_version: v0_3_0
 
   to_local_chunks:
     output_type: otherdir
     output_name: "%(source)s-%(num)d-%(md5)s"
     output_path: tmp/test-output-data
 
-  dedup:
-    ## operate on which part of si.body
-    content_form: clean_visible
-
-    ## set this to false for N^2 comparison within each chunk
-    require_same_doc_id: false
-
-    use_nilsimsa: false
-
-    ## must be greater than or equal to this
-    exactness_nilsimsa_threshold: 128
-
-    ## docs shorter than this are not rejected even if they have
-    ## higher than exactness_nilsimsa_threshold with another doc
-    min_clean_length: 500
-
-    ## docs with same doc_id that pass exactness_nilsimsa_threshold
-    ## are KEPT if the two docs have lengths that differ by more than
-    ## this fraction (relative to the longer of the two, measured in
-    ## thousandths):
-    min_len_sim_thousandths_clean: 850
-    min_len_sim_thousandths_raw:   850
-
-    log_nilsimsa_threshold: 100
-    log_dir_path: /tmp/foo
+  align_serif:
+    aligner_data:
+      annotator_id: author
+      tagger_id: serif

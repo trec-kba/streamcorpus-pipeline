@@ -4,7 +4,7 @@ putting them out into local storage.
 
 This software is released under an MIT/X11 open source license.
 
-Copyright 2012 Diffeo, Inc.
+Copyright 2012-2013 Diffeo, Inc.
 '''
 import os
 import sys
@@ -136,7 +136,7 @@ class to_local_chunks(object):
 
         ## prepare to compress the output
         compress = self.config.get('compress', None)
-        assert compress in [None, 'xz']
+        assert compress in [None, 'xz'], compress
 
         if o_type == 'samedir':
             ## assume that i_str was a local path
@@ -174,19 +174,25 @@ class to_local_chunks(object):
 
         if compress:
             assert o_path.endswith('.xz'), o_path
-            logger.info('compress_and_encrypt_path(%r)', t_path)
+            logger.info('compress_and_encrypt_path(%r, tmp_dir=%r)', 
+                        t_path, self.config['tmp_dir_path'])
 
             ## forcibly collect dereferenced objects
             #gc.collect()
 
-            errors, t_path2 = streamcorpus.compress_and_encrypt_path(t_path)
-            assert not errors
+            errors, t_path2 = streamcorpus.compress_and_encrypt_path(
+                t_path, tmp_dir=self.config['tmp_dir_path'])
+            assert not errors, errors
             try:
+                logger.debug('attempting renamed(%r, %r)', t_path2, t_path)
                 os.rename(t_path2, t_path)
-                logger.debug('renamed %r --> %r', t_path2, t_path)
+                logger.debug('renamed(%r, %r)', t_path2, t_path)
             except OSError, exc:                
                 if exc.errno==18:
+                    logger.debug('resorting to patient_move(%r, %r)', 
+                                 t_path2, t_path, exc_info=True)
                     patient_move(t_path2, t_path)
+                    logger.debug('patient_move succeeded')
                 else:
                     logger.critical('rename failed (%r -> %r)', t_path2, t_path, exc_info=True)
                     raise

@@ -1,10 +1,11 @@
+from __future__ import absolute_import
 import shutil
 import tempfile
 
 import pytest
 
-from ._taggers import name_align_labels, line_offset_align_labels, byte_offset_align_labels
-from ._test_data import get_john_smith_tagged_by_lingpipe_path
+from streamcorpus_pipeline._taggers import name_align_labels, line_offset_align_labels, byte_offset_align_labels
+from tests.streamcorpus_pipeline._test_data import get_john_smith_tagged_by_lingpipe_path
 
 
 def _test_config():

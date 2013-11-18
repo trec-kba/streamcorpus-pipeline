@@ -1,12 +1,12 @@
 #!/usr/bin/env python
 '''
 Provides a data transformation pipeline for expanding the data in
-StreamItem instances from streamcorpus.Chunk files.  streamcorpus.pipeline.run
+StreamItem instances from streamcorpus.Chunk files.  streamcorpus_pipeline.run
 provides a command line interface to this functionality.
 
 This software is released under an MIT/X11 open source license.
 
-Copyright 2012 Diffeo, Inc.
+Copyright 2012-2013 Diffeo, Inc.
 '''
 
 import os
@@ -15,9 +15,10 @@ import sys
 import time
 import uuid
 import math
+import shutil
+import atexit
 import signal
 import logging
-import tempfile
 import traceback
 import itertools
 import streamcorpus
@@ -28,9 +29,8 @@ except:
     ## only load gevent if it is available :-)
     gevent = None
 
-from _logging import log_full_file
 from stages import _init_stage, BatchTransform
-from _exceptions import FailedExtraction, GracefulShutdown
+from _exceptions import FailedExtraction, GracefulShutdown, ConfigurationError
 import _exceptions
 
 logger = logging.getLogger(__name__)
@@ -42,9 +42,9 @@ class Pipeline(object):
     files.  Requires a config dict, which is loaded from a yaml file.
     '''
     def __init__(self, config):
-        assert 'streamcorpus.pipeline' in config, \
-            '"streamcorpus.pipeline" missing from config: %r' % config
-        config = config['streamcorpus.pipeline']
+        assert 'streamcorpus_pipeline' in config, \
+            '"streamcorpus_pipeline" missing from config: %r' % config
+        config = config['streamcorpus_pipeline']
         self.config = config
 
         self._shutting_down = False
@@ -52,14 +52,15 @@ class Pipeline(object):
 
         tmpdir = config.get('tmp_dir_path')
         if tmpdir is None:
-            tmpdir = tempfile.gettempdir()
-            config['tmp_dir_path'] = tmpdir
+            ## if someone wants to use /tmp, it should be explicit
+            raise ConfigurationError('tmp_dir_path required parameter')
+        config['tmp_dir_path'] = os.path.join(tmpdir, uuid.uuid4().hex)
 
         if not os.path.exists(config['tmp_dir_path']):
             try:
                 os.makedirs(config['tmp_dir_path'])
             except Exception, exc:
-                logger.debug('tmp_dir_path already there? %r' % exc)
+                logger.debug('tmp_dir_path already there?', exc_info=True)
                 pass
 
         if 'rate_log_interval' in self.config:
@@ -77,19 +78,6 @@ class Pipeline(object):
             external_stages = external_stages.Stages
         else:
             external_stages = None
-
-        logger.critical('starting a task_queue')
-
-        ## load the one task queue
-        input_list = config.get('inputs_path')
-        if input_list:
-            self._task_queue = input_list
-        else:
-            task_queue_name = config['task_queue']
-            self._task_queue = _init_stage(
-                task_queue_name,
-                config.get(task_queue_name, {}),
-                external_stages)
 
         ## load the one extractor
         extractor_name = config['extractor']
@@ -125,14 +113,43 @@ class Pipeline(object):
 
         ## a list of transforms that take a chunk path as input and
         ## return a path to a new chunk
-        self._loaders  = [
-            _init_stage(name, config.get(name, {}),
-                        external_stages)
-            for name in config['loaders']]
+        self._loaders  = [] 
+        for name in config['loaders']:
+            _loader_config = config.get(name, {})
+            _loader_config['tmp_dir_path'] = config.get('tmp_dir_path')
+            self._loaders.append( 
+                _init_stage(name, _loader_config, external_stages))
 
         for sig in [signal.SIGTERM, signal.SIGABRT, signal.SIGHUP, signal.SIGINT]:
             logger.debug('setting signal handler for %r' % sig)
             signal.signal(sig, self.shutdown)
+
+        ## context allows stages to communicate with later stages
+        self.context = dict(
+            i_str = None,
+            data = None, 
+            )
+
+        self.work_unit = None
+        self._cleanup_done = False
+        atexit.register(self._cleanup)
+
+    def _cleanup(self):
+        '''shutdown all the stages, terminate the work_unit, remove tmp dir
+
+        This is idempotent.
+        '''
+        if self._cleanup_done:
+            return
+        if self.work_unit:
+            self.work_unit.terminate()
+        for transform in self._batch_transforms:
+            transform.shutdown()
+        try:
+            shutil.rmtree(self.config['tmp_dir_path'])
+        except Exception, exc:
+            logger.debug('trapped exception from cleaning up tmp_dir_path', exc_info=True)
+        self._cleanup_done = True
 
     def shutdown(self, sig=None, frame=None, msg=None, exit_code=None):
         if sig:
@@ -140,9 +157,7 @@ class Pipeline(object):
         elif msg:
             logger.critical('shutdown inititated, msg: %s' % msg)
         self._shutting_down = True
-        self._task_queue.shutdown()
-        for transform in self._batch_transforms:
-            transform.shutdown()
+        self._cleanup()
         if exit_code is None:
             if msg:
                 exit_code = -1
@@ -152,70 +167,24 @@ class Pipeline(object):
         logging.shutdown()
         sys.exit(exit_code)
 
-
-    def run(self):
-        '''
-        operate pipeline on chunks loaded from task_queue
-        '''
-        start_processing_time = time.time()
-
-        # context passed to incremental transforms
-        self.context = dict(
-            i_str = None,
-            data = None, 
-            )
-
-        ## iterate over input strings from the specified task_queue
-        tasks = iter(self._task_queue)
-        while 1:
-            # Weird non-idiomatic loop would otherwise be
-            # "for a,b,c in self._task_queue" except that we want
-            # iterator to be able to raise GracefulShutdown.
-            try:
-                start_count, i_str, data = tasks.next()
-
-                self.context['i_str'] = i_str
-                self.context['data'] = data
-
-            except StopIteration:
-                break
-            except GracefulShutdown, exc:
-                ## do a graceful shutdown instead of just a simple
-                ## clean exit, because we want to do the various
-                ## .shutdown() calls, e.g. to the task_queue itself
-                exit_code = 0
-                self.shutdown(
-                    exit_code=exit_code,
-                    msg='executing %r, exit_code=%d' % (exc, exit_code))
-
-            if self._shutting_down:
-                break
-
-            start_chunk_time = time.time()
-            next_idx = self._process_task(start_count, i_str, start_chunk_time)
-            ## record elapsed time
-            elapsed = time.time() - start_chunk_time
-            if elapsed > 0:
-                rate = float(next_idx) / elapsed
-                logger.info('%d in %.1f sec --> %.1f per sec on (completed) %s' % (
-                        next_idx, elapsed, rate, i_str))
-
-            ## loop to next i_str
-        logger.critical('exiting Pipeline.run')
-
-    def _process_task(self, start_count, i_str, start_chunk_time):
+    def _process_task(self, work_unit):
         '''
         returns number of stream items processed
         '''
+        self.work_unit = work_unit
+        i_str = work_unit.key
+        start_count = work_unit.data['start_count']
+        start_chunk_time = work_unit.data['start_chunk_time']
+
         ## the extractor returns generators of StreamItems
         try:
             i_chunk = self._extractor(i_str)
         except FailedExtraction, exc:
             ## means that task is invalid, extractor did its best
-            ## and gave up, so record it in task_queue as failed
+            ## and gave up, so fail the work_unit
             logger.critical('committing failure_log on %s: %r' % (
                     i_str, str(exc)))
-            self._task_queue.commit(0, [], failure_log=str(exc))
+            self.work_unit.fail(exc)
             return 0
 
         ## t_path points to the currently in-progress temp chunk
@@ -315,23 +284,28 @@ class Pipeline(object):
         else:
             o_paths = None
 
-        ## put the o_paths into the task_queue, and set
-        ## the task to 'completed'
-        logger.debug('commit( %d, %r )', next_idx, o_paths)
-        self._task_queue.commit( next_idx, o_paths )
+        ## set start_count and o_paths in work_unit and updated
+        data = dict(start_count=next_idx, o_paths=o_paths)
+        logger.debug('WorkUnit.update() data=%r', data)
+        self.work_unit.data.update(data)
+        self.work_unit.update()
 
         # return how many stream items we processed
         return next_idx
 
     def _intermediate_output_chunk(self, start_count, next_idx, sources, i_str, t_path):
+        '''save a chunk that is smaller than the input chunk
+        '''
         o_paths = self._process_output_chunk(start_count, next_idx, sources, i_str, t_path)
 
         if self._shutting_down:
             return
 
-        ## commit the paths saved so far
-        logger.debug('partial_commit( %d, %d, %r )', start_count, next_idx, o_paths)
-        self._task_queue.partial_commit( start_count, next_idx, o_paths )
+        ## set start_count and o_paths in work_unit and updated
+        data = dict(start_count=next_idx, o_paths=o_paths)
+        logger.debug('WorkUnit.update() data=%r', data)
+        self.work_unit.data.update(data)
+        self.work_unit.update()
 
         ## reset t_chunk, so we get it again
         self.t_chunk = None
@@ -461,16 +435,13 @@ class Pipeline(object):
 
             except _exceptions.TransformGivingUp:
                 ## do nothing
-                logger.info('transform %r giving up on %r' % (transform, si.stream_id))
+                logger.info('transform %r giving up on %r',
+                            transform, si.stream_id)
 
             except Exception, exc:
-                logger.critical('incremental transform failed: %r', transform, exc_info=True)
-
-                if self.config.get('embedded_logs', None):
-                    si.body.logs.append( traceback.format_exc(exc) )
-
-                if self.config.get('log_dir_path', None):
-                    log_full_file(si, 'fallback-givingup', self.config['log_dir_path'])
+                logger.critical('transform %r failed on %r from i_str=%r', 
+                                transform, si.stream_id, self.context.get('i_str'),
+                                exc_info=True)
 
         assert si is not None
 

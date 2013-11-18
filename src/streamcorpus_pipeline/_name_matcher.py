@@ -1,10 +1,11 @@
 '''
-A kba.pipeline stage that detects when a StreamItem contains an exact
-or fuzzy match to a name in a list of names
+A streamcorpus_pipeline stage that detects when a StreamItem
+contains an exact or fuzzy match to a name in a list of names
 
 This software is released under an MIT/X11 open source license.
 
-Copyright 2012 Diffeo, Inc.
+Copyright 2012-2013 Diffeo, Inc.
+
 '''
 import re
 import os

@@ -90,7 +90,12 @@ class PyTest(Command):
         pass
 
     def run(self):
-        _test_install(self.distribution)
+        if self.distribution.install_requires:
+            for ir in self.distribution.install_requires:
+                _myinstall(ir)
+        if self.distribution.tests_require:
+            for ir in self.distribution.tests_require:
+                _myinstall(ir)
 
         # reload sys.path for any new libraries installed
         import site
@@ -98,17 +103,16 @@ class PyTest(Command):
         print sys.path
         # use pytest to run tests
         pytest = __import__('pytest')
-        pytest.main(['-s', 'src'])
-
+        if pytest.main(['-n', '8', '-s', 'src']):
+            sys.exit(1)
 
 setup(
     name=PROJECT,
     version=VERSION,
     description=DESC,
     license='MIT/X11 license http://opensource.org/licenses/MIT',
+    long_description=read_file('README.rst'),
     source_label=SOURCE_LABEL,
-    #long_description=read_file('README.md'),
-    long_description="",
     author=AUTHOR,
     author_email=AUTHOR_EMAIL,
     url='',
@@ -116,17 +120,26 @@ setup(
     package_dir = {'': 'src'},
     cmdclass={'test': PyTest,
               'install_test': InstallTestDependencies},
-    # We can select proper classifiers later
     classifiers=[
         'Development Status :: 3 - Alpha',
         'Topic :: Utilities',
-        'License :: MIT',  ## MIT/X11 license http://opensource.org/licenses/MIT
+        'License :: OSI Approved :: MIT License',  ## MIT/X11 license http://opensource.org/licenses/MIT
+    ],
+    tests_require=[
+        'pytest',
+        'ipdb',
+        'pytest-cov',
+        'pytest-xdist',
+        'pytest-timeout',
+        'pytest-incremental',
+        'pytest-capturelog',
+        'epydoc',
     ],
     install_requires=[
         'thrift',
         'gevent',      ## required in .rpm
         'kvlayer',
-        'redis',
+        'rejester',
         'protobuf',
         'requests',
         'streamcorpus-dev>=0.3.5',
@@ -135,15 +148,9 @@ setup(
         'lxml',
         'BeautifulSoup',
         'boto',
-        'kazoo',
-        #'marisa-trie',
         'jellyfish',
         'nilsimsa>=0.2',
-        'pytest',       ## required in .rpm
-        'pycassa',
         'chromium_compact_language_detector',
-        'pytest',
-        'pytest-capturelog',
         'sortedcollection',
     ],
     data_files = [

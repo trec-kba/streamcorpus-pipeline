@@ -1,7 +1,7 @@
 # empty defaults!
 # TODO: write some reasonable defaults
 
-streamcorpus.pipeline:
+streamcorpus_pipeline:
   placeholder: value
 
   incremental_transforms: []

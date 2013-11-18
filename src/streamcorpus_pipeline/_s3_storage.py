@@ -5,7 +5,7 @@ putting them out into local storage.
 
 This software is released under an MIT/X11 open source license.
 
-Copyright 2012 Diffeo, Inc.
+Copyright 2012-2013 Diffeo, Inc.
 '''
 import os
 import sys
@@ -118,7 +118,9 @@ class from_s3_chunks(object):
             data = fh.getvalue()
             _errors, data = decrypt_and_uncompress(
                 data, 
-                self.config['gpg_decryption_key_path'])
+                self.config['gpg_decryption_key_path'],
+                tmp_dir=self.config['tmp_dir_path'],
+                )
             logger.info( '\n'.join(_errors) )
             if self.config['input_format'] == 'streamitem' and \
                     self.config['streamcorpus_version'] == 'v0_1_0':
@@ -182,7 +184,9 @@ class to_s3_chunks(object):
         _errors, t_path2 = compress_and_encrypt_path(
             t_path, 
             self.config['gpg_encryption_key_path'],
-            gpg_recipient=self.config['gpg_recipient'])
+            gpg_recipient=self.config['gpg_recipient'],
+            tmp_dir=self.config['tmp_dir_path'],
+            )
         logger.info( '\n'.join(_errors) )
 
         data = open(t_path2).read()
@@ -238,7 +242,9 @@ class to_s3_chunks(object):
         req = requests.get(url)
         errors, data = decrypt_and_uncompress(
             req.content, # pylint: disable=E1103
-            self.config['gpg_decryption_key_path'])
+            self.config['gpg_decryption_key_path'],
+            tmp_dir=self.config['tmp_dir_path'],
+            )
 
         logger.info( 'got back SIs: %d' % len( list( Chunk(data=data) ) ))
 
