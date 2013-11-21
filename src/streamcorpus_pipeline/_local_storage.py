@@ -130,6 +130,8 @@ class to_local_chunks(object):
 
         if 'input' in self.config['output_name']:
             i_fname = i_str.split('/')[-1]
+            if i_fname.endswith('.xz'):
+                i_fname = i_fname[:-3]
             if i_fname.endswith('.sc'):
                 i_fname = i_fname[:-3]
             name_info['input_fname'] = i_fname 
