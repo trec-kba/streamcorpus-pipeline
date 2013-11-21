@@ -1,5 +1,9 @@
 
-test: install
+third/lingpipe-4.1.0:
+	mkdir -p third
+	cd third && wget -O - "http://lingpipe-download.s3.amazonaws.com/lingpipe-4.1.0.tar.gz" | tar xzf - 
+
+test: install third/lingpipe-4.1.0
 	python setup.py test
 
 clean: 
