@@ -16,7 +16,6 @@ content_item_attrs = ['raw', 'encoding', 'media_type', 'clean_html', 'clean_visi
 class upgrade_streamcorpus_v0_3_0(object):
     def __init__(self, config):
         self._config = config
-        self.stream_id_replacements = dict()
 
     def __call__(self, si, context=None):
         if si.version == streamcorpus.Versions.v0_3_0:
