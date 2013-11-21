@@ -3,7 +3,7 @@ test: install
 	python setup.py test
 
 clean: 
-	rm -rf build dist src/streamcorpus.pipeline.egg-info
+	rm -rf build dist src/streamcorpus_pipeline.egg-info
 
 .IGNORE: lxml
 lxml:
