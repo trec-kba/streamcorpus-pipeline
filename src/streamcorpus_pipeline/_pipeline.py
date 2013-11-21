@@ -35,6 +35,13 @@ import _exceptions
 
 logger = logging.getLogger(__name__)
 
+
+def run_pipeline(config, work_unit):
+    'function that can be run by a rejester worker'
+    pipeline = Pipeline(config)
+    pipeline._process_task(work_unit)
+
+
 class Pipeline(object):
     '''    
     configurable pipeline for extracting data into StreamItem
@@ -250,7 +257,9 @@ class Pipeline(object):
             ## insist that every chunk has only one source string
             if si:
                 sources.add( si.source )
-                assert len(sources) == 1, sources
+                if self.config.get('assert_single_source', True) and len(sources) != 1:
+                    raise _exceptions.PipelineBaseException(
+                        'assert_single_source, but %r' % sources)
 
             if si and si.body and si.body.clean_visible:
                 len_clean_visible += len(si.body.clean_visible)
