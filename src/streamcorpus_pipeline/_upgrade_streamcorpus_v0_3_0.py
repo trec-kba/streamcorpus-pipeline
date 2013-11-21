@@ -82,6 +82,7 @@ class upgrade_streamcorpus_v0_3_0(object):
                     if token.entity_type in [3, 4]:
                         ## convert FEMALE/MALE_PRONOUN
                         new_token.mention_type = streamcorpus.MentionType.PRO
+                        new_token.entity_type  = streamcorpus.EntityType.PER
                         
                         if token.entity_type == 3:
                             gender_value = 1
