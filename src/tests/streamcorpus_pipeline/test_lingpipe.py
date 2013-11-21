@@ -28,7 +28,7 @@ def test_aligner():
     #for x in si.body.labels['author']:
     #    print x.offsets[OffsetType.BYTES].first, x.offsets[OffsetType.BYTES].value, x.target.target_id
 
-    path = os.path.join('/tmp', str(uuid.uuid1()))
+    path = os.path.join('/tmp', str(uuid.uuid4()))
     chunk = streamcorpus.Chunk(path, mode='wb')
     chunk.add(si)
     chunk.close()
@@ -48,6 +48,10 @@ def test_aligner():
 
     print path
     lp.process_path(path)
+
+    for si in streamcorpus.Chunk(path):
+        logger.critical('%d sentences for %s', len(si.body.sentences['lingpipe']), si.stream_id)
+        assert len(si.body.sentences['lingpipe']) == 41
 
     os.unlink(path)
 
