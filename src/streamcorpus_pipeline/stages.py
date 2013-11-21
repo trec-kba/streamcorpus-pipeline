@@ -184,18 +184,6 @@ def _init_stage(name, config, external_stages=None):
 
     stage_constructor = Stages.get(name, None)
     if stage_constructor is None:
-        #stage_constructor = pkg_resources.load_entry_point('streamcorpus.pipeline.stages', name)
-        entries = pkg_resources.iter_entry_points('streamcorpus.pipeline.stages', name)
-        entries = list(entries)
-        if not entries:
-            pass
-        elif len(entries) > 1:
-            logger.error('multiple entry_points for pipeline stage %r: %r', name, entries)
-        else:
-            stage_constructor = entries[0].load()
-        if stage_constructor is not None:
-            Stages[name] = stage_constructor
-    if stage_constructor is None:
         raise Exception('unknown stage %r' % (name,))
     stage = stage_constructor(config)
 
