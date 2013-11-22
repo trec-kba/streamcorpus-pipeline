@@ -16,12 +16,16 @@ import copy
 import json
 import time
 import importlib
+from streamcorpus_pipeline._exceptions import ConfigurationError
 from streamcorpus_pipeline._pipeline import Pipeline
 from streamcorpus_pipeline._logging import logger, reset_log_level
 
 from streamcorpus_pipeline.config import load_layered_configs, config_to_string
 
 def make_absolute_paths( config ):
+    if not 'streamcorpus_pipeline' in config:
+        logger.critical('bad config: %r', config)
+        raise ConfigurationError('missing "streamcorpus_pipeline" from config')
     ## remove the root_path, so it does not get extended itself
     root_path = config['streamcorpus_pipeline'].pop('root_path', None)
     if not root_path:
