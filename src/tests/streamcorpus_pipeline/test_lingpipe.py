@@ -22,13 +22,20 @@ def test_only_whitespace():
     assert not only_whitespace.match(u'\u200b foo')
     assert not only_whitespace.match('\n\nh  ')
 
-def test_aligner():
+@pytest.fixture(scope='function')
+def path(request):
+    path = os.path.join('/tmp', str(uuid.uuid4()))
+    def fin():
+        os.unlink(path)
+    request.addfinalizer(fin)
+    return path
+
+def test_aligner(path):
 
     si = make_hyperlink_labeled_test_stream_item()
     #for x in si.body.labels['author']:
     #    print x.offsets[OffsetType.BYTES].first, x.offsets[OffsetType.BYTES].value, x.target.target_id
 
-    path = os.path.join('/tmp', str(uuid.uuid4()))
     chunk = streamcorpus.Chunk(path, mode='wb')
     chunk.add(si)
     chunk.close()
@@ -39,7 +46,7 @@ def test_aligner():
             pipeline_root_path=os.path.join(os.path.dirname(__file__), '../../../third/'),
             offset_types = ['BYTES'],
             offset_debugging = True,
-            cleanup_tmp_files = False,
+            cleanup_tmp_files = True,
             align_labels_by = 'byte_offset_labels',
             aligner_data = dict(
                 annotator_id = 'author',
@@ -53,7 +60,6 @@ def test_aligner():
         logger.critical('%d sentences for %s', len(si.body.sentences['lingpipe']), si.stream_id)
         assert len(si.body.sentences['lingpipe']) == 41
 
-    os.unlink(path)
 
 @pytest.mark.xfail  # pylint: disable=E1101
 def test_aligner_bulk():
