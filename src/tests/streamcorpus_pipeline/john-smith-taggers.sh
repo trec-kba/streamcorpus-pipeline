@@ -25,16 +25,16 @@ python -m streamcorpus.dump data/john-smith/john-smith-tagged-by-lingpipe-test-0
 diff tmp/lp-0.tsv tmp/lp-test-0.tsv || { echo 'failed!'; exit 1; }
 diff tmp/lp-0.tsv data/john-smith/john-smith-tagged-by-lingpipe-0.tsv || { echo 'failed!'; exit 1; }
 
-echo data/john-smith/original | python -m streamcorpus_pipeline.run configs/john-smith-serif-streamcorpus_one_step.yaml
-echo data/john-smith/john-smith-0.sc | python -m streamcorpus_pipeline.run configs/john-smith-serif-streamcorpus_generate_serifxml.yaml
-echo data/john-smith/john-smith-tagged-by-serifxml-only.sc | python -m streamcorpus_pipeline.run configs/john-smith-serif-streamcorpus_read_serifxml.yaml
+#echo data/john-smith/original | python -m streamcorpus_pipeline.run configs/john-smith-serif-streamcorpus_one_step.yaml
+#echo data/john-smith/john-smith-0.sc | python -m streamcorpus_pipeline.run configs/john-smith-serif-streamcorpus_generate_serifxml.yaml
+#echo data/john-smith/john-smith-tagged-by-serifxml-only.sc | python -m streamcorpus_pipeline.run configs/john-smith-serif-streamcorpus_read_serifxml.yaml
 
 ## compare dumps
-python -m streamcorpus.dump data/john-smith/john-smith-tagged-by-serif-0.sc      --tokens > tmp/serif-0.tsv
-python -m streamcorpus.dump data/john-smith/john-smith-tagged-by-serif-via-serifxml-0.sc    --tokens > tmp/serif-test-0.tsv
+#python -m streamcorpus.dump data/john-smith/john-smith-tagged-by-serif-0.sc      --tokens > tmp/serif-0.tsv
+#python -m streamcorpus.dump data/john-smith/john-smith-tagged-by-serif-via-serifxml-0.sc    --tokens > tmp/serif-test-0.tsv
 
-diff tmp/serif-0.tsv data/john-smith/john-smith-tagged-by-serif-0.tsv	
-diff tmp/serif-0.tsv tmp/serif-test-0.tsv || { echo 'failed!'; exit 1; }
+#diff tmp/serif-0.tsv data/john-smith/john-smith-tagged-by-serif-0.tsv	
+#diff tmp/serif-0.tsv tmp/serif-test-0.tsv || { echo 'failed!'; exit 1; }
 
 ## this is so slow that there must be something wrong with our
 ## build of Stanford CoreNLP

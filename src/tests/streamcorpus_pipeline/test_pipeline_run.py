@@ -9,7 +9,7 @@ from streamcorpus_pipeline._logging import logger
         ('john-smith-simple.sh', True), 
         ('john-smith-small-chunks.sh', True), 
         ('john-smith-broken-for-test.sh', False), 
-        ('john-smith-taggers.sh', False)
+        ('john-smith-taggers.sh', True)
     ], 
 )
 def test_pipeline_run(script_path, expect_success):
