@@ -11,8 +11,7 @@ clean:
 
 .IGNORE: lxml
 lxml:
-	## this should be done by cloudinit/puppet or something along
-	## those lines
+	## use saltstack to get these install first
 	#sudo apt-get -y install libxml2-dev libxslt-dev  
 
 .PHONY : build
@@ -24,7 +23,6 @@ post-build-test:
 
 install: clean lxml
 	## might need to do this on mac: export C_INCLUDE_PATH=/usr/include:/usr/local/include:/opt/local/include
-	python setup.py install_test
 	python setup.py clean --all
 	python setup.py build
 	python setup.py install

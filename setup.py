@@ -41,41 +41,11 @@ def recursive_glob_with_tree(treeroot, pattern):
         results.append((base, one_dir_results))
     return results
 
-
 def _myinstall(pkgspec):
     setup(
         script_args = ['-q', 'easy_install', '-v', pkgspec],
         script_name = 'easy_install'
     )
-
-
-class InstallTestDependencies(Command):
-    '''install test dependencies'''
-
-    description = 'installs all dependencies required to run all tests'
-
-    user_options = []
-
-    def initialize_options(self):
-        pass
-
-    def finalize_options(self):
-        pass
-
-    def easy_install(self, packages):
-        cmd = ['easy_install']
-        if packages:
-            cmd.extend(packages)
-            errno = subprocess.call(cmd)
-            if errno:
-                raise SystemExit(errno)
-
-    def run(self):
-        if self.distribution.install_requires:
-            self.easy_install(self.distribution.install_requires)
-        if self.distribution.tests_require:
-            self.easy_install(self.distribution.tests_require)
-
 
 class PyTest(Command):
     '''run py.test'''
@@ -104,7 +74,7 @@ class PyTest(Command):
         print sys.path
         # use pytest to run tests
         pytest = __import__('pytest')
-        if pytest.main(['-n', '8', '-s', 'src']):
+        if pytest.main(['-n', '8', '-vvs', 'src']):
             sys.exit(1)
 
 setup(
@@ -120,7 +90,7 @@ setup(
     packages = find_packages('src'),
     package_dir = {'': 'src'},
     cmdclass={'test': PyTest,
-              'install_test': InstallTestDependencies},
+    },
     classifiers=[
         'Development Status :: 3 - Alpha',
         'Topic :: Utilities',
