@@ -35,7 +35,7 @@ class from_kvlayer(object):
             key1 = (epoch_ticks_1, )
             key2 = (epoch_ticks_2, )
 
-        for key, data in self.client.get( 'stream_items', (key1, key2) ):
+        for key, data in self.client.scan( 'stream_items', (key1, key2) ):
             errors, data = streamcorpus.decrypt_and_uncompress(data)
             yield streamcorpus.deserialize(data)
 
