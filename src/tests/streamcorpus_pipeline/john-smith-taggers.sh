@@ -12,8 +12,7 @@ export PYTHONPATH=$(dirname $0)/../..:$PYTHONPATH
 git checkout -- data/john-smith/john-smith-0.sc
 git checkout -- data/john-smith/john-smith-tagged-by-lingpipe-0.sc
 rm -f data/john-smith/john-smith-tagged-by-lingpipe-test-0.sc
-rm -rf tmp
-mkdir tmp
+mkdir -p tmp
 
 echo data/john-smith/original | python -m streamcorpus_pipeline.run configs/john-smith-lingpipe.yaml
 echo data/john-smith/john-smith-0.sc | python -m streamcorpus_pipeline.run configs/john-smith-lingpipe-from-chunk.yaml
@@ -40,4 +39,3 @@ diff tmp/lp-0.tsv data/john-smith/john-smith-tagged-by-lingpipe-0.tsv || { echo 
 ## build of Stanford CoreNLP
 #echo data/john-smith/john-smith-0.sc | python -m streamcorpus.pipeline.run configs/john-smith-stanford-from-chunk.yaml
 
-rm -rf tmp
