@@ -153,6 +153,7 @@ class Pipeline(object):
         for transform in self._batch_transforms:
             transform.shutdown()
         try:
+            logger.info('attempting rm -rf %s' % self.config['tmp_dir_path'])
             shutil.rmtree(self.config['tmp_dir_path'])
         except Exception, exc:
             logger.debug('trapped exception from cleaning up tmp_dir_path', exc_info=True)
