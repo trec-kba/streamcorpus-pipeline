@@ -124,6 +124,11 @@ setup(
         'chromium_compact_language_detector',
         'sortedcollection',
     ],
+    entry_points={
+        'console_scripts': [
+            'streamcorpus_pipeline = streamcorpus_pipeline.run:main',
+        ]
+    },
     data_files = [
         ## this does not appear to actually put anything into the egg...
         ('examples', recursive_glob('src/examples', '*.py')),
