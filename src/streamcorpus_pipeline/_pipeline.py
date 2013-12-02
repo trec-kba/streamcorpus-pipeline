@@ -95,16 +95,21 @@ class Pipeline(object):
 
         ## a list of transforms that take StreamItem instances as
         ## input and emit modified StreamItem instances
-        self._incremental_transforms = [
-            _init_stage(name, config.get(name, {}),
-                        external_stages)
-            for name in config['incremental_transforms']]
+        self._incremental_transforms = []
+        for name in config['incremental_transforms']:
+            _inc_trans_config = config.get(name, {})
+            _inc_trans_config['tmp_dir_path'] = config.get('tmp_dir_path')
+            it = _init_stage(name, _inc_trans_config, external_stages)
+            self._incremental_transforms.append(it)
 
         ## a list of transforms that take a chunk path as input and
         ## return a path to a new chunk
         self._batch_transforms = []
         for name in config['batch_transforms']:
-            bt = _init_stage(name, config.get(name, {}), external_stages)
+            ## give it the global tmp_dir_path
+            _batch_trans_config = config.get(name, {})
+            _batch_trans_config['tmp_dir_path'] = config.get('tmp_dir_path')
+            bt = _init_stage(name, _batch_trans_config, external_stages)
             assert isinstance(bt, BatchTransform), '%s is not a BatchTransform, got %r' % (name, bt)
             self._batch_transforms.append(bt)
 

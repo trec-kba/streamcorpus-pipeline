@@ -149,6 +149,7 @@ def _load_default_stages():
         _tryload_stage('_taggers', 'line_offset_align_labels')
         _tryload_stage('_taggers', 'name_align_labels')
         _tryload_stage('_lingpipe', 'lingpipe')
+        _tryload_stage('_serif', 'serif')
 
         # 'loaders' move data out of the pipeline
         _tryload_stage('_local_storage', 'to_local_chunks')
