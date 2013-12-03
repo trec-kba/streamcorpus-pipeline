@@ -15,12 +15,15 @@ def test_tokenizer():
         t = nltk_tokenizer(dict(annotator_id='author'))
         t.process_item(si)
 
+    assert num > 0
+
     ## if something changes, then need to save new test data
     #open(path, 'wb').write(serialize(si))
     #return
-    #if 1:
+    if 1:
 
         #assert si.body.sentences['nltk_tokenizer'] == sentences
+        num = 0
         for i in range(len(si.body.sentences['nltk_tokenizer'])):
             for j in range(len(si.body.sentences['nltk_tokenizer'][i].tokens)):
                 tok_t = si.body.sentences['nltk_tokenizer'][i].tokens[j]
@@ -29,8 +32,8 @@ def test_tokenizer():
                     ## printing for diagnostics when things change
                     #print 'checking ', attr
                     assert getattr(tok_t, attr)  == getattr(sentences[i].tokens[j], attr)
-                    
+                    num += 1
+
+        assert num > 0
 
         ## check something about mention_id?
-
-    assert num > 0
