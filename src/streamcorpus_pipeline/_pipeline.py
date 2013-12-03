@@ -88,9 +88,11 @@ class Pipeline(object):
 
         ## load the one extractor
         extractor_name = config['extractor']
+        _extractor_config = config.get(extractor_name, {})
+        _extractor_config['tmp_dir_path'] = config.get('tmp_dir_path')
         self._extractor = _init_stage(
             extractor_name,
-            config.get(extractor_name, {}),
+            _extractor_config,
             external_stages)
 
         ## a list of transforms that take StreamItem instances as
@@ -250,6 +252,7 @@ class Pipeline(object):
                 # TODO: make this EVEN LAZIER by not opening the t_chunk until inside _run_incremental_transforms whe the first output si is ready
                 t_path = os.path.join(self.config['tmp_dir_path'], 'trec-kba-pipeline-tmp-%s' % str(uuid.uuid4()))
                 self.t_chunk = streamcorpus.Chunk(path=t_path, mode='wb')
+            assert self.t_chunk.message == streamcorpus.StreamItem_v0_3_0, self.t_chunk.message
 
             # TODO: a set of incremental transforms is equivalent to a batch transform.
             # Make the pipeline explicitly configurable as such:
@@ -471,6 +474,7 @@ class Pipeline(object):
             return None
 
         ## put the StreamItem into the output
+        assert type(si) == streamcorpus.StreamItem_v0_3_0, type(si)
         self.t_chunk.add(si)
 
         return si

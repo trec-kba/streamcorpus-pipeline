@@ -143,6 +143,7 @@ def _load_default_stages():
         _tryload_stage('_filters', 'remove_raw')
         _tryload_stage('_upgrade_streamcorpus', 'upgrade_streamcorpus')
         _tryload_stage('_upgrade_streamcorpus_v0_3_0', 'upgrade_streamcorpus_v0_3_0')
+        _tryload_stage('_tokenizer', 'nltk_tokenizer')
 
         # BatchTransform
         _tryload_stage('_taggers', 'byte_offset_align_labels')
