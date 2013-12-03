@@ -46,6 +46,7 @@ class from_local_chunks(object):
         while tries < max_retries:
             try:
                 message = _message_versions[ self.config.get('streamcorpus_version', 'v0_3_0') ]
+                logger.debug('reading from %r' % i_str)
                 chunk = streamcorpus.Chunk(path=i_str, mode='rb', message=message)
                 return chunk
             except IOError, exc:
