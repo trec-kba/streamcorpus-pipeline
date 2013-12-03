@@ -39,11 +39,20 @@ class nltk_tokenizer(IncrementalTransform):
 
     def _sentences(self, clean_visible):
         'generate strings identified as sentences'
+        previous_end = 0
+        clean_visible = clean_visible.decode('utf8')
+        assert isinstance(clean_visible, unicode)
         for start, end in self.sentence_tokenizer.span_tokenize(clean_visible):
             ## no need to check start, because the first byte of text
             ## is always first byte of first sentence, and we will
             ## have already made the previous sentence longer on the
             ## end if there was an overlap.
+            if  start < previous_end:
+                start = previous_end
+                if start > end:
+                    ## skip this sentence... because it was eaten by
+                    ## an earlier sentence with a label
+                    continue
             try:
                 label = self.label_index.find_le(end)
             except ValueError:
@@ -51,7 +60,9 @@ class nltk_tokenizer(IncrementalTransform):
             if label:
                 off = label.offsets[OffsetType.BYTES]
                 end = max(off.first + off.length, end)
-            yield start, end, clean_visible[start:end]
+            previous_end = end
+            sent_str = clean_visible[start:end]
+            yield start, end, sent_str
 
     def make_label_index(self, stream_item):
         'make a sortedcollection on body.labels'
@@ -70,13 +81,25 @@ class nltk_tokenizer(IncrementalTransform):
         token_num = 0
         new_mention_id = 0
         for sent_start, sent_end, sent_str in self._sentences(stream_item.body.clean_visible):
+            assert isinstance(sent_str, unicode)
             sent = Sentence()
             sentence_pos = 0
             for start, end in self.word_tokenizer.span_tokenize(sent_str):
+                try:
+                    token_str = sent_str[start:end].encode('utf8')
+                except Exception, exc:
+                    logger.critical("died on sent_str[%d:%d].encode('utf8')",
+                                    start, end, exc_info=True)
+                    sys.exit('failed to cope with %r in %r' % (sent_str[start:end], sent_str))
                 tok = Token(
                     token_num=token_num,
-                    token=sent_str[start:end],
+                    token=token_str,
                     sentence_pos=sentence_pos,
+                )
+                tok.offsets[OffsetType.BYTES] = Offset(
+                    type=OffsetType.BYTES, 
+                    first=sent_start + start,
+                    length = end - start,
                 )
                 ## whitespace tokenizer will never get a token
                 ## boundary in the middle of an 'author' label
