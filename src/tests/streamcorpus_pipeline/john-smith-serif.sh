@@ -13,6 +13,13 @@ cd $(dirname $0)/../../..
 
 export PYTHONPATH=$(dirname $0)/../..:$PYTHONPATH
 
+serif_third=third/serif
+
+if [ ! -d "$serif_third" ]; then
+    echo "serif_third $serif_third is missing!"
+    exit 0
+fi
+
 ## to make real tests, we need to dump a non-time-sensitive
 ## extract from these Chunk files and compare it to a stored
 ## copy of what is expected.
