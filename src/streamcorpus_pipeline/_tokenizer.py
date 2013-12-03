@@ -113,6 +113,10 @@ class nltk_tokenizer(IncrementalTransform):
         stream_item.body.sentences[self.tagger_id] = self.make_sentences(stream_item)
 
         return stream_item
+
+    def __call__(self, stream_item, context=None):
+        ## support the legacy callable API
+        self.process_item(stream_item, context)
         
 if __name__ == '__main__':
     import argparse
