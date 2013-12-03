@@ -19,6 +19,8 @@ def test_make_clean_html_nyt():
     stable    = open(os.path.join(path, 'nytimes-index-clean-stable.html')).read()
     assert generated == stable
 
+    assert '<script' not in generated
+
 
 def test_make_clean_html():
     test_bad_html = '''
