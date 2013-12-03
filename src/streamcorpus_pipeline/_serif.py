@@ -65,8 +65,8 @@ log_threshold: ERROR
 
     streamcorpus_one_step = '''
 
-### WARNING: this was written by the kba.pipeline, and will be
-### overwritten the next time the kba.pipeline runs.
+### WARNING: this was written by the streamcorpus_pipeline, and will be
+### overwritten the next time the streamcorpus_pipeline runs.
 
 # Usage: Serif streamcorpus_one_step.par CHUNK_FILES -o OUT_DIR
 #
@@ -89,13 +89,20 @@ OVERRIDE start_stage:                         START
 OVERRIDE end_stage:                           output
 OVERRIDE kba_write_results_to_chunk:          true
 OVERRIDE parser_skip_unimportant_sentences:   false
+
 OVERRIDE input_type:                          rawtext
+OVERRIDE source_format:            sgm
+
+OVERRIDE document_split_strategy: region
+OVERRIDE document_splitter_max_size: 20000
+#OVERRIDE log_force: kba-stream-corpus,profiling
+#OVERRIDE kba_skip_docs_with_empty_language_code: false
 '''
 
     streamcorpus_read_serifxml = '''
 
-### WARNING: this was written by the kba.pipeline, and will be
-### overwritten the next time the kba.pipeline runs.
+### WARNING: this was written by the streamcorpus_pipeline, and will be
+### overwritten the next time the streamcorpus_pipeline runs.
 
 # Usage: Serif streamcorpus_read_serifxml.par CHUNK_FILES -o OUT_DIR
 #
@@ -128,8 +135,8 @@ OVERRIDE source_format:                       serifxml
 
     streamcorpus_generate_serifxml = '''
 
-### WARNING: this was written by the kba.pipeline, and will be
-### overwritten the next time the kba.pipeline runs.
+### WARNING: this was written by the streamcorpus_pipeline, and will be
+### overwritten the next time the streamcorpus_pipeline runs.
 
 # Usage: Serif streamcorpus_generate_serifxml.par CHUNK_FILES -o OUT_DIR
 #
@@ -155,17 +162,17 @@ OVERRIDE kba_write_serifxml_to_chunk:         true
     def __init__(self, config):
         self.config = config
         self._child = None
+        logger.info('writing Serif parameter files to: %s/par', config['pipeline_root_path'])
         for param_fname in self.special_param_files:
             param_fpath = os.path.join(config['pipeline_root_path'],
-                                       '../par/',
+                                       'par',
                                        param_fname + '.par')
             open(param_fpath, 'wb').write(
                 getattr(self, param_fname))
             logger.info('created %r' % param_fpath)
 
     template = \
-        '''cd %(pipeline_root_path)s && ''' + \
-        '''x86_64/Serif ../par/%(par_file)s.par ''' + \
+        '''%(pipeline_root_path)s/bin/x86_64/Serif %(pipeline_root_path)s/par/%(par_file)s.par ''' + \
         ''' -o %(tmp_dir)s %(chunk_path)s'''
 
     def process_path(self, chunk_path):

@@ -17,8 +17,9 @@ streamcorpus_pipeline:
     output_name: "john-smith-tagged-by-serif-%(first)s-%(num)s"
 
   serif:
-    pipeline_root_path: third
+    pipeline_root_path: third/serif
     cleanup_tmp_files: true
+    par: streamcorpus_one_step
     align_labels_by: names_in_chains
     aligner_data:
       ## apply Label to each Token in any chain for which ALL|ANY of
