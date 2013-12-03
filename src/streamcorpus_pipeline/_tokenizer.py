@@ -54,6 +54,7 @@ class nltk_tokenizer(IncrementalTransform):
             yield start, end, clean_visible[start:end]
 
     def make_label_index(self, stream_item):
+        'make a sortedcollection on body.labels'
         labels = stream_item.body.labels.get(self.config.get('annotator_id'))
         if not labels:
             labels = []
@@ -63,6 +64,7 @@ class nltk_tokenizer(IncrementalTransform):
             key=lambda label: label.offsets[OffsetType.BYTES].first)
 
     def make_sentences(self, stream_item):
+        'assemble Sentence and Token objects'
         self.make_label_index(stream_item)
         sentences = []
         token_num = 0
@@ -79,14 +81,18 @@ class nltk_tokenizer(IncrementalTransform):
                 ## whitespace tokenizer will never get a token
                 ## boundary in the middle of an 'author' label
                 try:
+                    #logger.debug('searching for %d in %r', sent_start + start, self.label_index._keys)
                     label = self.label_index.find_le(sent_start + start)
                 except ValueError:
                     label = None
                 if label:
                     off = label.offsets[OffsetType.BYTES]
                     if off.first + off.length > sent_start + start:
+                        logger.info('overlapping label: %r' % label.target.target_id)
                         ## overlaps
                         streamcorpus.add_annotation(tok, label)
+                        assert label.annotator.annotator_id in tok.labels
+
                         logger.info('adding label to tok: %r has %r',
                                      tok.token, label.target.target_id)
 
@@ -98,6 +104,7 @@ class nltk_tokenizer(IncrementalTransform):
                             self.label_to_mention_id[label] = mention_id
 
                         tok.mention_id = mention_id
+
                 token_num += 1
                 sentence_pos += 1
                 sent.tokens.append(tok)
