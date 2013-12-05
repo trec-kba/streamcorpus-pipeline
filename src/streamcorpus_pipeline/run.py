@@ -121,7 +121,7 @@ def main():
         usage='python -m streamcorpus.pipeline.run config.yaml')
     parser.add_argument('-i', '--input', action='append', 
                         help='file paths to input instead of reading from stdin')
-    parser.add_argument('config', metavar='config.yaml', nargs='+', dest='config_pathes',
+    parser.add_argument('config', metavar='config.yaml', nargs='+', 
                         help='configuration parameters for a pipeline run. many config yaml files may be specified, later values win.')
     args = parser.parse_args()
 
