@@ -85,7 +85,7 @@ def instantiate_config(config):
     reset_log_level( pipeline_config.get('log_level', 'DEBUG') )
 
     logger.warn('running config: %s = %s' % (
-            pipeline_config['config_hash'], args.config))
+            pipeline_config['config_hash'], config))
 
     logger.info(json.dumps(config, indent=4, sort_keys=True))
 
