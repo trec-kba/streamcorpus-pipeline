@@ -70,4 +70,5 @@ _known_handlers = [ch]
 _known_loggers = []
 
 configure_logger('streamcorpus')
+configure_logger('kvlayer')
 logger = configure_logger('streamcorpus_pipeline')

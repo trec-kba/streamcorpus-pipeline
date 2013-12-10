@@ -41,40 +41,11 @@ def recursive_glob_with_tree(treeroot, pattern):
         results.append((base, one_dir_results))
     return results
 
-
 def _myinstall(pkgspec):
     setup(
         script_args = ['-q', 'easy_install', '-v', pkgspec],
         script_name = 'easy_install'
     )
-
-
-def _test_install(distribution):
-    _myinstall('pytest>2.3')
-    if distribution.install_requires:
-        for ir in distribution.install_requires:
-            _myinstall(ir)
-    if distribution.tests_require:
-        for ir in distribution.tests_require:
-            _myinstall(ir)
-
-
-class InstallTestDependencies(Command):
-    '''install test dependencies'''
-
-    description = 'installs all dependencies required to run all tests'
-
-    user_options = []
-
-    def initialize_options(self):
-        pass
-
-    def finalize_options(self):
-        pass
-
-    def run(self):
-        _test_install(self.distribution)
-
 
 class PyTest(Command):
     '''run py.test'''
@@ -103,7 +74,7 @@ class PyTest(Command):
         print sys.path
         # use pytest to run tests
         pytest = __import__('pytest')
-        if pytest.main(['-n', '8', '-s', 'src']):
+        if pytest.main(['-n', '8', '-vvs', 'src']):
             sys.exit(1)
 
 setup(
@@ -119,7 +90,7 @@ setup(
     packages = find_packages('src'),
     package_dir = {'': 'src'},
     cmdclass={'test': PyTest,
-              'install_test': InstallTestDependencies},
+    },
     classifiers=[
         'Development Status :: 3 - Alpha',
         'Topic :: Utilities',
@@ -142,7 +113,7 @@ setup(
         'rejester',
         'protobuf',
         'requests',
-        'streamcorpus-dev>=0.3.5',
+        'streamcorpus>=0.3.23',
         'pyyaml',
         'nltk',
         'lxml',
@@ -153,6 +124,12 @@ setup(
         'chromium_compact_language_detector',
         'sortedcollection',
     ],
+    entry_points={
+        'console_scripts': [
+            'streamcorpus_pipeline = streamcorpus_pipeline.run:main',
+            'streamcorpus_pipeline_work_units = streamcorpus_pipeline._rejester:make_work_units',
+        ]
+    },
     data_files = [
         ## this does not appear to actually put anything into the egg...
         ('examples', recursive_glob('src/examples', '*.py')),

@@ -16,12 +16,16 @@ import copy
 import json
 import time
 import importlib
+from streamcorpus_pipeline._exceptions import ConfigurationError
 from streamcorpus_pipeline._pipeline import Pipeline
 from streamcorpus_pipeline._logging import logger, reset_log_level
 
 from streamcorpus_pipeline.config import load_layered_configs, config_to_string
 
 def make_absolute_paths( config ):
+    if not 'streamcorpus_pipeline' in config:
+        logger.critical('bad config: %r', config)
+        raise ConfigurationError('missing "streamcorpus_pipeline" from config')
     ## remove the root_path, so it does not get extended itself
     root_path = config['streamcorpus_pipeline'].pop('root_path', None)
     if not root_path:
@@ -67,40 +71,21 @@ def make_hash(obj):
 
     return hash(tuple(frozenset(new_obj.items())))
 
-def main():
-    import argparse
-    parser = argparse.ArgumentParser(
-        description=Pipeline.__doc__,
-        usage='python -m streamcorpus.pipeline.run config.yaml')
-    parser.add_argument('-i', '--input', action='append', 
-                        help='file paths to input instead of reading from stdin')
-    parser.add_argument('config', metavar='config.yaml', nargs='+',
-                        help='configuration parameters for a pipeline run. many config yaml files may be specified, later values win.')
-    args = parser.parse_args()
-
-    config = load_layered_configs(args.config)
-    if len(args.config) > 1:
-        print '# net config:'
-        print config_to_string(config)
-
+def instantiate_config(config):
+    '''setup the config and load external modules
+    '''
     make_absolute_paths(config)
 
     pipeline_config = config['streamcorpus_pipeline']
 
-    tq_name = pipeline_config.get('task_queue', 'no-task-queue')
-    tq_conf = pipeline_config.get(tq_name)
-    if tq_conf is None:
-        tq_conf = {}
-    ## put info about the whole config in the extractor's config
-    tq_conf['config_hash'] = make_hash(config)
-    tq_conf['config_json'] = json.dumps(config)
-    pipeline_config[tq_name] = tq_conf
+    pipeline_config['config_hash'] = make_hash(config)
+    pipeline_config['config_json'] = json.dumps(config)
 
     ## setup loggers
     reset_log_level( pipeline_config.get('log_level', 'DEBUG') )
 
     logger.warn('running config: %s = %s' % (
-            tq_conf['config_hash'], args.config))
+            pipeline_config['config_hash'], config))
 
     logger.info(json.dumps(config, indent=4, sort_keys=True))
 
@@ -127,7 +112,26 @@ def main():
             die = True
     if die:
         sys.exit(1)
-        return
+
+
+def main():
+    import argparse
+    parser = argparse.ArgumentParser(
+        description=Pipeline.__doc__,
+        usage='python -m streamcorpus.pipeline.run config.yaml')
+    parser.add_argument('-i', '--input', action='append', 
+                        help='file paths to input instead of reading from stdin')
+    parser.add_argument('config', metavar='config.yaml', nargs='+', 
+                        help='configuration parameters for a pipeline run. many config yaml files may be specified, later values win.')
+    args = parser.parse_args()
+
+    ## layered configs is a feature only of the CLI
+    config = load_layered_configs(args.config)
+    if len(args.config) > 1:
+        print '# net config:'
+        print config_to_string(config)
+
+    instantiate_config(config)
 
     pipeline = Pipeline(config)
 

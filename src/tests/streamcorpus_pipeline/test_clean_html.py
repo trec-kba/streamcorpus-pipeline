@@ -15,6 +15,12 @@ def test_make_clean_html_nyt():
     path = os.path.join( path, _TEST_DATA_ROOT, 'test' )
     open(os.path.join(path, 'nytimes-index-clean.html'), 'wb').write(
         make_clean_html(open(os.path.join(path, 'nytimes-index.html')).read().decode('utf8')))
+    generated = open(os.path.join(path, 'nytimes-index-clean.html')).read()
+    stable    = open(os.path.join(path, 'nytimes-index-clean-stable.html')).read()
+    assert generated == stable
+
+    assert '<script' not in generated
+
 
 def test_make_clean_html():
     test_bad_html = '''

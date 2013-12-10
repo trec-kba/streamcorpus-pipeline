@@ -1,14 +1,17 @@
 
-test: install
+third/lingpipe-4.1.0:
+	mkdir -p third
+	cd third && wget -O - "http://lingpipe-download.s3.amazonaws.com/lingpipe-4.1.0.tar.gz" | tar xzf - 
+
+test: install third/lingpipe-4.1.0
 	python setup.py test
 
 clean: 
-	rm -rf build dist src/streamcorpus.pipeline.egg-info
+	rm -rf build dist src/streamcorpus_pipeline.egg-info
 
 .IGNORE: lxml
 lxml:
-	## this should be done by cloudinit/puppet or something along
-	## those lines
+	## use saltstack to get these install first
 	#sudo apt-get -y install libxml2-dev libxslt-dev  
 
 .PHONY : build
@@ -20,7 +23,6 @@ post-build-test:
 
 install: clean lxml
 	## might need to do this on mac: export C_INCLUDE_PATH=/usr/include:/usr/local/include:/opt/local/include
-	python setup.py install_test
 	python setup.py clean --all
 	python setup.py build
 	python setup.py install

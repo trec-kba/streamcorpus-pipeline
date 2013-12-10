@@ -143,11 +143,14 @@ def _load_default_stages():
         _tryload_stage('_filters', 'remove_raw')
         _tryload_stage('_upgrade_streamcorpus', 'upgrade_streamcorpus')
         _tryload_stage('_upgrade_streamcorpus_v0_3_0', 'upgrade_streamcorpus_v0_3_0')
+        _tryload_stage('_tokenizer', 'nltk_tokenizer')
 
         # BatchTransform
         _tryload_stage('_taggers', 'byte_offset_align_labels')
         _tryload_stage('_taggers', 'line_offset_align_labels')
         _tryload_stage('_taggers', 'name_align_labels')
+        _tryload_stage('_lingpipe', 'lingpipe')
+        _tryload_stage('_serif', 'serif')
 
         # 'loaders' move data out of the pipeline
         _tryload_stage('_local_storage', 'to_local_chunks')
@@ -183,18 +186,6 @@ def _init_stage(name, config, external_stages=None):
         Stages.update( external_stages )
 
     stage_constructor = Stages.get(name, None)
-    if stage_constructor is None:
-        #stage_constructor = pkg_resources.load_entry_point('streamcorpus.pipeline.stages', name)
-        entries = pkg_resources.iter_entry_points('streamcorpus.pipeline.stages', name)
-        entries = list(entries)
-        if not entries:
-            pass
-        elif len(entries) > 1:
-            logger.error('multiple entry_points for pipeline stage %r: %r', name, entries)
-        else:
-            stage_constructor = entries[0].load()
-        if stage_constructor is not None:
-            Stages[name] = stage_constructor
     if stage_constructor is None:
         raise Exception('unknown stage %r' % (name,))
     stage = stage_constructor(config)

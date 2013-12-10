@@ -35,6 +35,13 @@ import _exceptions
 
 logger = logging.getLogger(__name__)
 
+
+def run_pipeline(config, work_unit):
+    'function that can be run by a rejester worker'
+    pipeline = Pipeline(config)
+    pipeline._process_task(work_unit)
+
+
 class Pipeline(object):
     '''    
     configurable pipeline for extracting data into StreamItem
@@ -81,23 +88,30 @@ class Pipeline(object):
 
         ## load the one extractor
         extractor_name = config['extractor']
+        _extractor_config = config.get(extractor_name, {})
+        _extractor_config['tmp_dir_path'] = config.get('tmp_dir_path')
         self._extractor = _init_stage(
             extractor_name,
-            config.get(extractor_name, {}),
+            _extractor_config,
             external_stages)
 
         ## a list of transforms that take StreamItem instances as
         ## input and emit modified StreamItem instances
-        self._incremental_transforms = [
-            _init_stage(name, config.get(name, {}),
-                        external_stages)
-            for name in config['incremental_transforms']]
+        self._incremental_transforms = []
+        for name in config['incremental_transforms']:
+            _inc_trans_config = config.get(name, {})
+            _inc_trans_config['tmp_dir_path'] = config.get('tmp_dir_path')
+            it = _init_stage(name, _inc_trans_config, external_stages)
+            self._incremental_transforms.append(it)
 
         ## a list of transforms that take a chunk path as input and
         ## return a path to a new chunk
         self._batch_transforms = []
         for name in config['batch_transforms']:
-            bt = _init_stage(name, config.get(name, {}), external_stages)
+            ## give it the global tmp_dir_path
+            _batch_trans_config = config.get(name, {})
+            _batch_trans_config['tmp_dir_path'] = config.get('tmp_dir_path')
+            bt = _init_stage(name, _batch_trans_config, external_stages)
             assert isinstance(bt, BatchTransform), '%s is not a BatchTransform, got %r' % (name, bt)
             self._batch_transforms.append(bt)
 
@@ -146,6 +160,7 @@ class Pipeline(object):
         for transform in self._batch_transforms:
             transform.shutdown()
         try:
+            logger.info('attempting rm -rf %s' % self.config['tmp_dir_path'])
             shutil.rmtree(self.config['tmp_dir_path'])
         except Exception, exc:
             logger.debug('trapped exception from cleaning up tmp_dir_path', exc_info=True)
@@ -237,6 +252,7 @@ class Pipeline(object):
                 # TODO: make this EVEN LAZIER by not opening the t_chunk until inside _run_incremental_transforms whe the first output si is ready
                 t_path = os.path.join(self.config['tmp_dir_path'], 'trec-kba-pipeline-tmp-%s' % str(uuid.uuid4()))
                 self.t_chunk = streamcorpus.Chunk(path=t_path, mode='wb')
+            assert self.t_chunk.message == streamcorpus.StreamItem_v0_3_0, self.t_chunk.message
 
             # TODO: a set of incremental transforms is equivalent to a batch transform.
             # Make the pipeline explicitly configurable as such:
@@ -250,7 +266,9 @@ class Pipeline(object):
             ## insist that every chunk has only one source string
             if si:
                 sources.add( si.source )
-                assert len(sources) == 1, sources
+                if self.config.get('assert_single_source', True) and len(sources) != 1:
+                    raise _exceptions.PipelineBaseException(
+                        'assert_single_source, but %r' % sources)
 
             if si and si.body and si.body.clean_visible:
                 len_clean_visible += len(si.body.clean_visible)
@@ -456,6 +474,7 @@ class Pipeline(object):
             return None
 
         ## put the StreamItem into the output
+        assert type(si) == streamcorpus.StreamItem_v0_3_0, type(si)
         self.t_chunk.add(si)
 
         return si

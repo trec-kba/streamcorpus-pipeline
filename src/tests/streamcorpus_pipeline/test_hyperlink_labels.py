@@ -12,13 +12,15 @@ def make_test_stream_item():
     stream_item = make_stream_item(None, 'http://nytimes.com/')
     stream_item.body = ContentItem()
     path = os.path.dirname(__file__)
-    path = os.path.join( path, _TEST_DATA_ROOT, 'test', 'nytimes-index-clean.html')
+    path = os.path.join( path, _TEST_DATA_ROOT, 'test', 
+                         'nytimes-index-clean-stable.html')
     stream_item.body.clean_html = open(path).read()
     return stream_item
 
 def make_hyperlink_labeled_test_stream_item():
     context = {}
     si = make_test_stream_item()
+    assert len(si.body.clean_html) > 200
     hyperlink_labels(
         {'require_abs_url': True, 
          'all_domains': True,
@@ -27,6 +29,7 @@ def make_hyperlink_labeled_test_stream_item():
 
     cv = _init_stage('clean_visible', {})
     cv(si, context)
+    assert len(si.body.clean_visible) > 200
 
     return si
     

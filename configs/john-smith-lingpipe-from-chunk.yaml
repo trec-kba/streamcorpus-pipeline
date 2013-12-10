@@ -1,7 +1,7 @@
 # YAML kba.pipeline config for generating clean_visible and then
 ## operating lingpipe
 
-steamcorpus_pipeline:
+streamcorpus_pipeline:
   ## root path for all things that are called *_path in this file and
   ## are not an absolute path, i.e. start with '/'
   root_path: 
@@ -9,7 +9,7 @@ steamcorpus_pipeline:
   ## pipeline expects strings over stdin, which are typically paths to
   ## streamcorpus.Chunk files.  They can also be some other kind of
   ## opaque byte strings delimited by newlines that your particular
-  ## 'loader' is expecting.
+  ## 'extractor' is expecting.
 
   ## put logs inside each chunk file
   embedded_logs: true
@@ -53,7 +53,7 @@ steamcorpus_pipeline:
 
   lingpipe:
     exit_code_on_out_of_memory: 1
-    pipeline_root_path: ../third/
+    pipeline_root_path: third
     offset_types: [BYTES]
     offset_debugging: false
     cleanup_tmp_files: false

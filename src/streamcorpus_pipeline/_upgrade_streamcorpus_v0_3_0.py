@@ -10,8 +10,19 @@ import streamcorpus
 logger = logging.getLogger(__name__)
 
 content_item_attrs = ['raw', 'encoding', 'media_type', 'clean_html', 'clean_visible', 'logs', 
-                      'taggings', 'labels', 'language', 
+                      'taggings', 'language', 
                       ]
+
+def upgrade_labels(old_obj, new_obj):
+    for annotator_id, labels in old_obj.labels.iteritems():
+        new_obj.labels[annotator_id] = []
+        for label in labels:
+            new_label = streamcorpus.Label(
+                annotator=label.annotator,
+                target=label.target,
+                positive=True, ## this is the reason we have to create new_labels
+                offsets=label.offsets)
+            new_obj.labels[annotator_id].append(new_label)
 
 class upgrade_streamcorpus_v0_3_0(object):
     def __init__(self, config):
@@ -28,6 +39,9 @@ class upgrade_streamcorpus_v0_3_0(object):
             zulu_timestamp=si.stream_time.zulu_timestamp,
             abs_url=si.abs_url)
 
+        if si3.stream_id != si.stream_id:
+            si3.external_ids['kba-2013'] = {si3.stream_id: si.stream_id}
+
         ## copy everything 
         for attr in ['original_url', 'ratings', 'schost', 'source', 'source_metadata',
                      'ratings', ]:
@@ -40,9 +54,12 @@ class upgrade_streamcorpus_v0_3_0(object):
             si3.other_content[name] = ci3
             for attr in content_item_attrs:
                 setattr(ci3, attr, copy.deepcopy(getattr(ci, attr)))
+            upgrade_labels(ci, ci3)
 
         for attr in content_item_attrs:
             setattr(si3.body, attr, copy.deepcopy(getattr(si.body, attr)))
+
+        upgrade_labels(si.body, si3.body)
 
         ## fix the body.sentences['lingpipe'] mention_id ranges
         next_global_mention_id = 0
@@ -58,8 +75,10 @@ class upgrade_streamcorpus_v0_3_0(object):
                 new_token = streamcorpus.Token()
                 new_sent.tokens.append(new_token)
 
-                for attr in ['token_num', 'token', 'offsets', 'sentence_pos', 'lemma', 'pos', 'entity_type', 'mention_id', 'equiv_id', 'parent_id', 'dependency_path', 'labels']:
+                for attr in ['token_num', 'token', 'offsets', 'sentence_pos', 'lemma', 'pos', 'entity_type', 'mention_id', 'equiv_id', 'parent_id', 'dependency_path']:
                     setattr(new_token, attr, copy.deepcopy(getattr(token, attr)))
+
+                upgrade_labels(token, new_token)
 
                 if token.mention_id not in [-1, None]:
                     key = (sentence_id, token.mention_id)
@@ -79,6 +98,7 @@ class upgrade_streamcorpus_v0_3_0(object):
                     if token.entity_type in [3, 4]:
                         ## convert FEMALE/MALE_PRONOUN
                         new_token.mention_type = streamcorpus.MentionType.PRO
+                        new_token.entity_type  = streamcorpus.EntityType.PER
                         
                         if token.entity_type == 3:
                             gender_value = 1

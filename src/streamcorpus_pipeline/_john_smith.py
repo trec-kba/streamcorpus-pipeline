@@ -25,6 +25,7 @@ Copyright 2012-2013 Diffeo, Inc.
 
 ## this assumes that streamcorpus has been installed
 import streamcorpus
+from streamcorpus_pipeline._exceptions import PipelineBaseException
 
 import os
 import hashlib
@@ -56,6 +57,7 @@ def generate_john_smith_chunk(path_to_original):
     ## from the document creation time.  Here, we assume the JS corpus
     ## was created at one moment at the end of 1998:
     creation_time = '1998-12-31T23:59:59.999999Z'
+    correct_time = 915148799
 
     if not path_to_original.startswith('/'):
         path_to_original = os.path.join(os.getcwd(), path_to_original)
@@ -73,6 +75,11 @@ def generate_john_smith_chunk(path_to_original):
                 ## make up an abs_url
                 os.path.join(
                     'john-smith-corpus', str(label_id), fname))
+
+            if int(stream_item.stream_time.epoch_ticks) != correct_time:
+                raise PipelineBaseException('wrong stream_time construction: %r-->%r != %r'\
+                                            % (creation_time, stream_item.stream_time.epoch_ticks,
+                                               correct_time))
 
             ## These docs came from the authors of the paper cited above.
             stream_item.source = 'bagga-and-baldwin'

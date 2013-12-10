@@ -46,6 +46,7 @@ class from_local_chunks(object):
         while tries < max_retries:
             try:
                 message = _message_versions[ self.config.get('streamcorpus_version', 'v0_3_0') ]
+                logger.debug('reading from %r' % i_str)
                 chunk = streamcorpus.Chunk(path=i_str, mode='rb', message=message)
                 return chunk
             except IOError, exc:
@@ -130,6 +131,10 @@ class to_local_chunks(object):
 
         if 'input' in self.config['output_name']:
             i_fname = i_str.split('/')[-1]
+            if i_fname.endswith('.gpg'):
+                i_fname = i_fname[:-4]
+            if i_fname.endswith('.xz'):
+                i_fname = i_fname[:-3]
             if i_fname.endswith('.sc'):
                 i_fname = i_fname[:-3]
             name_info['input_fname'] = i_fname 
