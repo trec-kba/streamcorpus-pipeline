@@ -395,7 +395,7 @@ class Pipeline(object):
 
             self.t_chunk.close()
 
-            os.rename(t_path2, tpath)
+            os.rename(t_path2, t_path)
 
     def _run_loaders(self, start_count, next_idx, sources, i_str, t_path, o_paths):
         ## loaders put the chunk somewhere, and could delete it
