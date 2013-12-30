@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 '''
-kba.pipeline.TaggerBatchTransform for Serif
+streamcorpus_pipeline.BatchTransform for Serif
 
 This software is released under an MIT/X11 open source license.
 
@@ -29,7 +29,7 @@ class serif(BatchTransform):
     '''
     tagger_id = 'serif'
 
-    ## These two serif parameter files came from Ed Loper via email,
+    ## These two serif parameter files came from BBN via email,
     ## the full docs are in ../../../docs/serif*txt
 
     serif_global_config = '''

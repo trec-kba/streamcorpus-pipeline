@@ -1,0 +1,387 @@
+KBA/StreamCorpus specific parameters:
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+use_feature_module_KbaStreamCorpus [default=false]
+
+    This parameter loads the KBA StreamCorpus "feature module".  It
+    must be enabled in order to read from or write to KBA streamcorpus
+    chunks.
+
+use_stream_corpus_driver [default=false]
+
+    This parameter indicates that SERIF should use a custom driver that
+    can read from or write to KBA streamcorpus chunks.
+
+kba_skip_docs_with_empty_language_code [default=false]
+
+    If true, then SERIF will only process StreamItems whose language
+    code matches the currently loaded language module (default is 
+    English; code="en").  If false, then SERIF will also process any
+    StreamItems whose language code is the empty string.
+
+kba_stream_item_sources [default=clean_html,clean_visible]
+
+    An ordered list, specifying which fields should be used to read
+    the contents of each StreamItem.  Each of the specified fields
+    are tried in order, and the first field that contains a non-empty
+    value is used.  A different document reader may be specified for
+    each source type; see the "kba_*_document_reader" parameters,
+    described below.  The value of this parameter should be a comma-
+    separated list, where values can be any of: "raw", "clean_html",
+    "clean_visible".  Note: if the kba_read_serifxml_from_chunk 
+    parameter is true, then the input will be read from the serif
+    raw_tagging, and this parameter will be effectively ignored.
+
+kba_clean_html_document_reader [default=html]
+
+    Specifies which SERIF document reader is used to read from the
+    StreamItem's body.clean_html field.  The default value for this
+    parameter is "html" if the HTMLDocumentReader feature module has
+    been loaded; and NONE otherwise (which will cause SERIF to never
+    read from the clean_html field).
+
+kba_clean_visible_document_reader [default=sgm] 
+
+    Specifies which SERIF document reader is used to read from the
+    StreamItem's body.clean_visible field.
+
+kba_raw_document_reader [default=sgm] 
+
+    Specifies which SERIF document reader is used to read from the
+    StreamItem's body.raw field.
+
+kba_read_serifxml_from_chunk [default=false]
+
+    If true, then StreamItem.body.taggings['serif'].raw_tagging must
+    contain a valid SerifXML string for each stream item; and this
+    string will be used to load pre-processed serif output.
+    Typically, this parameter should be paired with a value for
+    "end_stage", indicating what information is contained in the
+    SerifXML string.  For example, if the SerifXML string contains the
+    final SERIF output for a given document, then the "end_stage"
+    parameter should be set to "output".  When using this parameter,
+    you should also override the "source_format" parameter's value to
+    be "serifxml"
+
+kba_write_serifxml_to_chunk [default=false]
+
+    If true, then SERIF will generate SerifXML output, and store it in
+    the StreamItem.body.taggings['serif'].raw_tagging field for each
+    document it processes.
+
+kba_write_results_to_chunk [default=false*]
+
+    If true, then SERIF will generate annotation output, and store it
+    in the fields StreamItem.body.taggings['serif'], StreamItem.
+    body.sentences['serif'] and StreamItem.body.relations['serif'].
+    This parameter defaults to true if the end_stage parameter is set
+    to "output", and the kba_wirte_serifxml_to_chunk parameter is
+    false; and to false otherwise.
+
+serifxml_input_directory
+
+    This parameter is required if the start_stage parameter is given
+    an overridden value, and the kba_read_serifxml_from_chunk
+    parameter is false.  In this case, this parameter is used to point
+    to the output directory of a previous SERIF session that did partial
+    processing.  This output directory will contain SerifXML files for
+    the partially processed Streamitems.
+
+Other Important Parameters
+~~~~~~~~~~~~~~~~~~~~~~~~~~
+use_feature_module_HTMLDocumentReader [default=false]
+
+    This parameter must be set to 'true' in order to load the HTML
+    document reader.  Note that the HTML document reader is currently
+    only available in IDX/Serif, and not in the Government version of
+    SERIF.
+
+parser_skip_unimportant_sentences [default=true]
+
+    This causes SERIF to skip processing certain sentences; it should
+    be overridden to false for KBA/TAC documents.
+
+start_stage, end_stage
+
+    The range of processing stages that SERIF should run.  Both values
+    are inclusive.  Run "Serif --stages" for a list of processing
+    stages in SERIF's pipeline.  You can use "+1" or "-1" suffixes to
+    indicate the stage immediately before or after a given stage.  The
+    first stage in the pipeline is named "start", and the last stage
+    is "output".  (Note: there's actually an "end" stage that comes
+    after the "output" stage; but you should not use that stage,
+    because it also comes after a special "score" stage that attempts
+    to score the output, and requires gold-standard output files for
+    that purpose.)
+
+ignore_errors
+
+    If true, then if SERIF encounters an error while processing a
+    stream item, then it will skip over that item and move on to the
+    next one.  If false, then SERIF will immediately exit when it
+    encounters an error.
+
+input_type
+
+    Should generally be set to "rawtext".  If you wish to read LDC sgm
+    files, then you may want to set this to "sgm" or "auto" instead.
+    If the LDC sgm files are stored in the clean_html field, then you'll
+    also need to set kba_clean_html_document_reader=sgm.
+
+source_format
+
+    Should be set to "serifxml" if kba_read_serifxml_from_chunk is true.
+
+max_splits_to_process (default 0, which disables the limit)
+
+    When kba-stream-corpus is enabled in log_force, such truncations
+    will be logged.  You'll probably need to play around with this
+    value to find a good number that keeps usage under 4 GB without
+    truncating too many long documents.
+
+max_splits_to_process: 0
+
+    GB
+4.412^                                #
+     |                                #
+     |                                #
+     |                             @::#                   :::
+     |                           ::@: #               ::::: :
+     |                         ::: @: #              ::: :: :
+     |                       ::: : @: #            ::::: :: :
+     |    :::   :::::::::::::::: : @: #::::::::::::: ::: :: :
+     |   ::: :::: : : : ::: :::: : @: #:: : : : :: : ::: :: :   :::::::::::  @
+     |:::::: :: : : : : ::: :::: : @: #:: : : : :: : ::: :: ::::::: :: : : ::@
+     |: :::: :: : : : : ::: :::: : @: #:: : : : :: : ::: :: :: :::: :: : : ::@
+     |: :::: :: : : : : ::: :::: : @: #:: : : : :: : ::: :: :: :::: :: : : ::@
+     |: :::: :: : : : : ::: :::: : @: #:: : : : :: : ::: :: :: :::: :: : : ::@
+     |: :::: :: : : : : ::: :::: : @: #:: : : : :: : ::: :: :: :::: :: : : ::@
+     |: :::: :: : : : : ::: :::: : @: #:: : : : :: : ::: :: :: :::: :: : : ::@
+     |: :::: :: : : : : ::: :::: : @: #:: : : : :: : ::: :: :: :::: :: : : ::@
+     |: :::: :: : : : : ::: :::: : @: #:: : : : :: : ::: :: :: :::: :: : : ::@
+     |: :::: :: : : : : ::: :::: : @: #:: : : : :: : ::: :: :: :::: :: : : ::@
+     |: :::: :: : : : : ::: :::: : @: #:: : : : :: : ::: :: :: :::: :: : : ::@
+     |: :::: :: : : : : ::: :::: : @: #:: : : : :: : ::: :: :: :::: :: : : ::@
+   0 +----------------------------------------------------------------------->Ti
+     0                                                                   9.991
+
+max_splits_to_process: 20
+
+    GB
+3.187^                             ##
+     |                             #                 :
+     |          :::::::::::::::::@@# :::::::::::::::::
+     |     :::: : :::: :::: : : :@ # :::: : : :::: : :::::::::              :@
+     | ::::: : :: :::: :::: : : :@ # :::: : : :::: : ::: :::: :::::::::::::::@
+     | : ::: : :: :::: :::: : : :@ # :::: : : :::: : ::: :::: ::: : :: : :: :@
+     | : ::: : :: :::: :::: : : :@ # :::: : : :::: : ::: :::: ::: : :: : :: :@
+     | : ::: : :: :::: :::: : : :@ # :::: : : :::: : ::: :::: ::: : :: : :: :@
+     | : ::: : :: :::: :::: : : :@ # :::: : : :::: : ::: :::: ::: : :: : :: :@
+     | : ::: : :: :::: :::: : : :@ # :::: : : :::: : ::: :::: ::: : :: : :: :@
+     | : ::: : :: :::: :::: : : :@ # :::: : : :::: : ::: :::: ::: : :: : :: :@
+     | : ::: : :: :::: :::: : : :@ # :::: : : :::: : ::: :::: ::: : :: : :: :@
+     | : ::: : :: :::: :::: : : :@ # :::: : : :::: : ::: :::: ::: : :: : :: :@
+     | : ::: : :: :::: :::: : : :@ # :::: : : :::: : ::: :::: ::: : :: : :: :@
+     | : ::: : :: :::: :::: : : :@ # :::: : : :::: : ::: :::: ::: : :: : :: :@
+     | : ::: : :: :::: :::: : : :@ # :::: : : :::: : ::: :::: ::: : :: : :: :@
+     | : ::: : :: :::: :::: : : :@ # :::: : : :::: : ::: :::: ::: : :: : :: :@
+     | : ::: : :: :::: :::: : : :@ # :::: : : :::: : ::: :::: ::: : :: : :: :@
+     | : ::: : :: :::: :::: : : :@ # :::: : : :::: : ::: :::: ::: : :: : :: :@
+     | : ::: : :: :::: :::: : : :@ # :::: : : :::: : ::: :::: ::: : :: : :: :@
+   0 +----------------------------------------------------------------------->Ti
+     0                                                                   7.012
+
+
+
+log_force
+
+        The very high memory usage (say, 50 GB) was due to storing
+        local copies of entities from previous sentences, an
+        assumption that breaks down when the number of sentences gets
+        large.
+
+
+num_docs_per_cleanup
+max_symbol_table_size
+
+	Cache cleaning can be logged by adding "cache-cleanup" to
+	log_force, and controlled by num_docs_per_cleanup (default
+	every 1000 subdocuments) and max_symbol_table_size (default
+	2000000).
+
+
+check_memory
+
+	Heap checking is enabled by setting check_memory to true and
+	logged under "kba-stream-corpus" or for even more detail
+	"kba-stream-corpus-item".  This goes out to read info from
+	/proc/ so might be slow
+
+
+Example Parameter Files
+~~~~~~~~~~~~~~~~~~~~~~~
+
+================== streamcorpus_one_step.par ======================
+# Usage: Serif streamcorpus_one_step.par CHUNK_FILES -o OUT_DIR
+#
+# This parameter file is used for running SERIF from start-to-end on
+# streamcorpus chunk files.
+#
+# Using this parameter file, SERIF will read each of the specified
+# chunk files, and will generate corresponding chunk files in the
+# directory OUT_DIR/output.  Stream items whose language is English
+# (or unspecified) will be augmented with SERIF annotations.  The
+# input text for SERIF will be read from clean_html (when non-empty)
+# or from clean_visible (otherwise).
+
+INCLUDE ./config.par
+INCLUDE ./master.english.par
+INCLUDE ./master.english-speed.par
+OVERRIDE use_feature_module_KbaStreamCorpus:  true
+OVERRIDE use_stream_corpus_driver:            true
+OVERRIDE start_stage:                         START
+OVERRIDE end_stage:                           output
+OVERRIDE kba_write_results_to_chunk:          true
+OVERRIDE parser_skip_unimportant_sentences:   false
+OVERRIDE input_type:                          rawtext
+
+================== streamcorpus_read_serifxml.par =================
+# Usage: Serif streamcorpus_read_serifxml.par CHUNK_FILES -o OUT_DIR
+#
+# This parameter file is used in cases where SERIF has already been 
+# run on each stream item, and the SerifXML is stored in the tagging.
+# This version does not need to load any SERIF models, since it
+# expects that all serif processing has already been done.
+#
+# Using this parameter file, SERIF will read each of the specified
+# chunk files, and will generate corresponding chunk files in the
+# directory OUT_DIR/output.  Stream items whose language is English
+# (or unspecified) are expected to contain a value for the field
+# StreamItem.body.taggings['serif'].raw_tagging, containing fully
+# processed SerifXML output for that item.  This SerifXML output will
+# be read, and then corresponding sentence and relation annotations
+# will be added to the output files.
+
+INCLUDE ./config.par
+INCLUDE ./master.english.par
+INCLUDE ./master.english-speed.par
+OVERRIDE use_feature_module_KbaStreamCorpus:  true
+OVERRIDE use_stream_corpus_driver:            true
+OVERRIDE start_stage:                         output
+OVERRIDE end_stage:                           output
+OVERRIDE kba_read_serifxml_from_chunk:        true
+OVERRIDE kba_write_results_to_chunk:          true
+OVERRIDE parser_skip_unimportant_sentences:   false
+OVERRIDE source_format:                       serifxml
+
+================== streamcorpus_generate_serifxml.par =================
+# Usage: Serif streamcorpus_generate_serifxml.par CHUNK_FILES -o OUT_DIR
+#
+# This parameter file is identical to streamcorpus_one_step.par, except
+# that: (1) it saves the serifxml output to the stream items; and (2)
+# it does *not* save the sentence & relation annotations.  I used this
+# parameter file to generate test inputs for the 
+# streamcorpus_read_serifxml.par parameter file.
+
+# (streamcorpus_one_step.par is defined above)
+INCLUDE ./streamcorpus_one_step.par
+OVERRIDE kba_write_results_to_chunk:          false
+OVERRIDE kba_write_serifxml_to_chunk:         true
+
+================== streamcorpus_step1.par =================
+# Usage: Serif streamcorpus_step1.par CHUNK_FILES -o OUT_DIR_1
+#
+# This parameter file is the first in a three-step pipeline.  Unlike
+# the pipelined version used our previous release (which stored
+# SerifXML in external files), this version saves the intermediate
+# SerifXML in the StreamItem.body.taggings['serif'].raw_tagging field.
+# Thus, the output is a set of chunk files that differ from their
+# inputs in that this raw_tagging field has been populated.
+# Subsequent stages in the pipleine read from this field.  The
+# advantage of running SERIF in a three-step pipeline is that it
+# reduces memory consumption (since each stage only needs to load a
+# subset of the models).  This step runs all stages before the parser.
+
+INCLUDE ./config.par
+INCLUDE ./master.english.par
+INCLUDE ./master.english-speed.par
+OVERRIDE use_feature_module_KbaStreamCorpus:  true
+OVERRIDE use_stream_corpus_driver:            true
+OVERRIDE start_stage:                         START
+OVERRIDE end_stage:                           parse-1
+OVERRIDE kba_write_serifxml_to_chunk:         true
+OVERRIDE kba_write_results_to_chunk:          false
+OVERRIDE parser_skip_unimportant_sentences:   false
+OVERRIDE input_type:                          rawtext
+
+================== streamcorpus_step2.par =================
+# Usage: Serif streamcorpus_step1.par OUT_DIR_1/output/*.sc -o OUT_DIR_2
+#
+# This parameter file is the second step in the three-step pipeline.
+# It reads its input from the output of the first step, and overwrites
+# the StreamItem.body.taggings['serif'].raw_tagging field with new
+# serifxml strings that include parse information.
+
+INCLUDE ./config.par
+INCLUDE ./master.english.par
+INCLUDE ./master.english-speed.par
+OVERRIDE use_feature_module_KbaStreamCorpus:  true
+OVERRIDE use_stream_corpus_driver:            true
+OVERRIDE start_stage:                         parse
+OVERRIDE end_stage:                           parse
+OVERRIDE kba_read_serifxml_from_chunk:        true
+OVERRIDE kba_write_serifxml_to_chunk:         true
+OVERRIDE kba_write_results_to_chunk:          false
+OVERRIDE parser_skip_unimportant_sentences:   false
+OVERRIDE source_format:                       serifxml
+
+================== streamcorpus_step3.par =================
+# Usage: Serif streamcorpus_step1.par OUT_DIR_2/output/*.sc -o OUT_DIR
+#
+# This parameter file is the final step in the three-step pipeline.
+# It reads its input from the output of the second step, finishes
+# processing, and uses SERIF's final output to populate the StreamItem
+# sentence and relation annotation fields.
+
+INCLUDE ./config.par
+INCLUDE ./master.english.par
+INCLUDE ./master.english-speed.par
+OVERRIDE use_feature_module_KbaStreamCorpus:  true
+OVERRIDE use_stream_corpus_driver:            true
+OVERRIDE start_stage:                         parse+1
+OVERRIDE end_stage:                           output
+OVERRIDE kba_read_serifxml_from_chunk:        true
+OVERRIDE kba_write_serifxml_to_chunk:         true
+OVERRIDE kba_write_results_to_chunk:          true
+OVERRIDE parser_skip_unimportant_sentences:   false
+OVERRIDE source_format:                       serifxml
+
+================== streamcorpus_tac.par ======================
+# Usage: Serif streamcorpus_tac.par CHUNK_FILES -o OUT_DIR
+#
+# This parameter file is used for running SERIF from start-to-end on
+# streamcorpus chunk files for TAC, where each streamitem's "raw"
+# contains data of type "text/xml/ldc".  (Documents whose "raw" field
+# does not contain appropriate data will be skipped if
+# ignore_errors=true, or will cause Serif to exit with an error if
+# ignore_errors=false.)
+#
+# Using this parameter file, SERIF will read each of the specified
+# chunk files, and will generate corresponding chunk files in the
+# directory OUT_DIR/output.  Stream items whose language is English
+# (or unspecified) will be augmented with SERIF annotations.  The
+# input text for SERIF will be read from raw, using the "sgm"
+# document reader with the "sgm" input_type.
+
+INCLUDE ./config.par
+INCLUDE ./master.english.par
+INCLUDE ./master.english-speed.par
+OVERRIDE use_feature_module_KbaStreamCorpus:  true
+OVERRIDE use_stream_corpus_driver:            true
+OVERRIDE start_stage:                         START
+OVERRIDE end_stage:                           output
+OVERRIDE kba_write_results_to_chunk:          true
+OVERRIDE parser_skip_unimportant_sentences:   false
+OVERRIDE kba_stream_item_sources:             raw
+OVERRIDE input_type:                          sgm
+
