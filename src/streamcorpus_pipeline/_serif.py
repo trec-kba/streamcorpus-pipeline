@@ -80,9 +80,9 @@ log_threshold: ERROR
 # input text for SERIF will be read from clean_html (when non-empty)
 # or from clean_visible (otherwise).
 
-INCLUDE ./config.par
-INCLUDE ./master.english.par
-INCLUDE ./master.english-speed.par
+INCLUDE {serif_home_par}/config.par
+INCLUDE {serif_home_par}/master.english.par
+INCLUDE {serif_home_par}/master.english-speed.par
 OVERRIDE use_feature_module_KbaStreamCorpus:  true
 OVERRIDE use_stream_corpus_driver:            true
 OVERRIDE start_stage:                         START
@@ -120,9 +120,9 @@ OVERRIDE document_splitter_max_size: 20000
 # be read, and then corresponding sentence and relation annotations
 # will be added to the output files.
 
-INCLUDE ./config.par
-INCLUDE ./master.english.par
-INCLUDE ./master.english-speed.par
+INCLUDE {serif_home_par}/config.par
+INCLUDE {serif_home_par}/master.english.par
+INCLUDE {serif_home_par}/master.english-speed.par
 OVERRIDE use_feature_module_KbaStreamCorpus:  true
 OVERRIDE use_stream_corpus_driver:            true
 OVERRIDE start_stage:                         output
@@ -152,32 +152,34 @@ OVERRIDE kba_write_results_to_chunk:          false
 OVERRIDE kba_write_serifxml_to_chunk:         true
 '''
 
-    special_param_files = [
-        'serif_global_config',
-        'streamcorpus_one_step',
-        'streamcorpus_read_serifxml',
-        'streamcorpus_generate_serifxml',
-        ]
-
     def __init__(self, config):
         self.config = config
         self._child = None
-        logger.info('writing Serif parameter files to: %s/par', config['pipeline_root_path'])
-        for param_fname in self.special_param_files:
-            param_fpath = os.path.join(config['pipeline_root_path'],
-                                       'par',
-                                       param_fname + '.par')
-            open(param_fpath, 'wb').write(
-                getattr(self, param_fname))
-            logger.info('created %r' % param_fpath)
 
-    template = \
-        '''%(pipeline_root_path)s/bin/x86_64/Serif %(pipeline_root_path)s/par/%(par_file)s.par ''' + \
-        ''' -o %(tmp_dir)s %(chunk_path)s'''
+    def _write_config_par(self, tmp_dir, par_file, pipeline_root_path):
+        if par_file == 'streamcorpus_generate_serifxml':
+            # streamcorpus_generate_serifxml INCLUDEs streamcorpus_one_step
+            self._write_config_par(tmp_dir, 'streamcorpus_one_step', pipeline_root_path)
+        par_data = getattr(self, par_file)
+        fpath = os.path.join(tmp_dir, par_file + '.par')
+        fout = open(fpath, 'wb')
+        fout.write(
+            par_data.format(
+                serif_home_par=os.path.join(pipeline_root_path, 'par')
+            )
+        )
+        fout.close()
+        logger.debug('wrote %s (%s bytes) to %r', par_file, len(par_data), fpath)
+        return fpath
 
     def process_path(self, chunk_path):
 
         tmp_dir = os.path.join(self.config['tmp_dir_path'], str(uuid.uuid4()))
+        os.mkdir(tmp_dir)
+        par_file = self.config['par']
+        pipeline_root_path = self.config['pipeline_root_path']
+
+        par_path = self._write_config_par(tmp_dir, par_file, pipeline_root_path)
 
         tagger_config = dict(
             pipeline_root_path=self.config['pipeline_root_path'],
@@ -188,19 +190,25 @@ OVERRIDE kba_write_serifxml_to_chunk:         true
 
         tmp_chunk_path = os.path.join(tmp_dir, 'output', os.path.basename(chunk_path))
 
-        cmd = self.template % tagger_config
+        cmd = [
+            os.path.join(pipeline_root_path, 'bin/x86_64/Serif'),
+            par_path,
+            '-o', tmp_dir,
+            chunk_path,
+        ]
 
-        logger.critical( cmd )
+        logger.info('serif cmd: %r', cmd)
 
         start_time = time.time()
         ## make sure we are using as little memory as possible
         gc.collect()
         try:
-            self._child = subprocess.Popen(cmd, stderr=subprocess.PIPE, shell=True)
+            self._child = subprocess.Popen(cmd, stderr=subprocess.PIPE, shell=False)
         except OSError, exc:
+            logger.error('error running serif cmd %r', cmd, exc_info=True)
             msg = traceback.format_exc(exc) 
             msg += make_memory_info_msg()
-            raise PipelineOutOfMemory(msg)
+            raise PipelineOutOfMemory(msg, exc)
 
         s_out, errors = self._child.communicate()
 
@@ -211,6 +219,7 @@ OVERRIDE kba_write_serifxml_to_chunk:         true
                 # maybe get a tail of /var/log/messages
                 raise PipelineOutOfMemory(msg)
             elif 'Exception' in errors:
+                logger.error('child code %s errorlen=%s', self._child.returncode, len(errors))
                 raise PipelineBaseException(errors)
             else:
                 raise PipelineBaseException('tagger exited with %r' % self._child.returncode)
@@ -218,13 +227,19 @@ OVERRIDE kba_write_serifxml_to_chunk:         true
         ## generated new tokens, so align labels with them
         align_labels(tmp_chunk_path, self.config)
 
-        logger.info('atomic rename: %r --> %r' % (tmp_chunk_path, chunk_path))
-        os.rename(tmp_chunk_path, chunk_path)
-        logger.debug('done renaming')
-
-        ## cleanup tmp directory
-        if self.config.get('cleanup_tmp_files', False):
+        if self.config.get('cleanup_tmp_files', True):
+            ## default: cleanup tmp directory
+            logger.info('atomic rename: %r --> %r', tmp_chunk_path, chunk_path)
+            os.rename(tmp_chunk_path, chunk_path)
+            logger.debug('done renaming, rm tmp_dir %r', tmp_dir)
             shutil.rmtree(tmp_dir)
+        else:
+            ## for development, no cleanup, leave tmp_file
+            chunk_path_save = '{0}_pre_serif_{1}'.format(chunk_path, os.path.getmtime(chunk_path))
+            logger.debug('save tmp %r -> %r', chunk_path, chunk_path_save)
+            os.rename(chunk_path, chunk_path_save)
+            logger.info('copy %r -> %r', tmp_chunk_path, chunk_path)
+            shutil.copy(tmp_chunk_path, chunk_path)
 
         elapsed = time.time() - start_time
         logger.info('finished tagging in %.1f seconds' % elapsed)

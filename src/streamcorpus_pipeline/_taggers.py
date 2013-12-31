@@ -10,6 +10,7 @@ import gc
 import os
 import sys
 import time
+import shutil
 import stages
 import _memory
 import logging
@@ -284,9 +285,14 @@ def _aligner_core(t_path1, aligner, aligner_data):
     t_chunk1.close()
     t_chunk2.close()
 
-    logger.info('atomic rename: %r --> %r' % (t_path2, t_path1))
-    os.rename(t_path2, t_path1)
-    logger.debug('done renaming')
+    if aligner_data.get('cleanup_tmp_files', True):
+        logger.info('atomic rename: %r --> %r', t_path2, t_path1)
+        os.rename(t_path2, t_path1)
+        logger.debug('done renaming')
+    else:
+        # for development, leave intermediate tmp file
+        shutil.copy(t_path2, t_path1)
+        logger.info('copied %r -> %r', t_path2, t_path1)
 
 
 class _aligner_batch_transform(stages.BatchTransform):

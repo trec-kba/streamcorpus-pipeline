@@ -188,35 +188,49 @@ class to_local_chunks(object):
             errors, t_path2 = streamcorpus.compress_and_encrypt_path(
                 t_path, tmp_dir=self.config['tmp_dir_path'])
             assert not errors, errors
+
+            if self.config.get('cleanup_tmp_files', True):
+                # default action, move tmp file to output position
+                try:
+                    logger.debug('attempting renamed(%r, %r)', t_path2, o_path)
+                    os.rename(t_path2, o_path)
+                    logger.debug('renamed(%r, %r)', t_path2, o_path)
+                except OSError, exc:
+                    if exc.errno==18:
+                        logger.debug('resorting to patient_move(%r, %r)',
+                                     t_path2, o_path, exc_info=True)
+                        patient_move(t_path2, o_path)
+                        logger.debug('patient_move succeeded')
+                    else:
+                        logger.critical('rename failed (%r -> %r)', t_path2, o_path, exc_info=True)
+                        raise
+                return o_path
+            else:
+                # for debugging, leave temp file, copy to output
+                shutil.copy(t_path2, o_path)
+                logger.info('copied %r -> %r', t_path2, o_path)
+                return o_path
+
+        if self.config.get('cleanup_tmp_files', True):
+            ## do an atomic renaming
             try:
-                logger.debug('attempting renamed(%r, %r)', t_path2, t_path)
-                os.rename(t_path2, t_path)
-                logger.debug('renamed(%r, %r)', t_path2, t_path)
+                logger.debug('attemping os.rename(%r, %r)', t_path, o_path)
+                os.rename(t_path, o_path)
             except OSError, exc:                
                 if exc.errno==18:
-                    logger.debug('resorting to patient_move(%r, %r)', 
-                                 t_path2, t_path, exc_info=True)
-                    patient_move(t_path2, t_path)
-                    logger.debug('patient_move succeeded')
+                    patient_move(t_path, o_path)
                 else:
-                    logger.critical('rename failed (%r -> %r)', t_path2, t_path, exc_info=True)
+                    logger.critical(
+                        'failed shutil.copy2(%r, %r) and/or os.remove(t_path)',
+                        t_path, o_path, exc_info=True)
                     raise
-
-        ## do an atomic renaming    
-        try:
-            logger.debug('attemping os.rename(%r, %r)', t_path, o_path)
-            os.rename(t_path, o_path)
-        except OSError, exc:                
-            if exc.errno==18:
-                patient_move(t_path, o_path)
-            else:
-                logger.critical(
-                    'failed shutil.copy2(%r, %r) and/or os.remove(t_path)',
-                    t_path, o_path, exc_info=True)
+            except Exception, exc:
+                logger.critical('failed os.rename(%r, %r)', t_path, o_path, exc_info=True)
                 raise
-        except Exception, exc:
-            logger.critical('failed os.rename(%r, %r)', t_path, o_path, exc_info=True)
-            raise
+        else:
+            # for debugging, leave the tmp file, copy to output position
+            shutil.copy(t_path, o_path)
+            ogger.info('copied %r -> %r', t_path, o_path)
 
         ## return the final output path
         return o_path

@@ -13,6 +13,7 @@ from __future__ import absolute_import
 import os
 import sys
 import copy
+import glob
 import json
 import time
 import importlib
@@ -121,6 +122,7 @@ def main():
         usage='python -m streamcorpus.pipeline.run config.yaml')
     parser.add_argument('-i', '--input', action='append', 
                         help='file paths to input instead of reading from stdin')
+    parser.add_argument('--inglob', action='append', default=[], help='path glob specifying input files')
     parser.add_argument('config', metavar='config.yaml', nargs='+', 
                         help='configuration parameters for a pipeline run. many config yaml files may be specified, later values win.')
     args = parser.parse_args()
@@ -135,9 +137,13 @@ def main():
 
     pipeline = Pipeline(config)
 
+    input_paths = []
+    if args.inglob:
+        for pattern in args.inglob:
+            input_paths.extend(glob.glob(pattern))
     if args.input:
-        input_paths = args.input
-    else:
+        input_paths.extend(args.input)
+    if not input_paths:
         input_paths = sys.stdin
 
     for i_str in input_paths:

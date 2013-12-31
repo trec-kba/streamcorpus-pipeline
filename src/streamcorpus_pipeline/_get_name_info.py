@@ -4,6 +4,8 @@ This software is released under an MIT/X11 open source license.
 Copyright 2012-2013 Diffeo, Inc.
 '''
 
+import random
+
 from streamcorpus import Chunk
 
 def get_name_info(chunk_path, assert_one_date_hour=False, i_str=None):
@@ -20,6 +22,9 @@ def get_name_info(chunk_path, assert_one_date_hour=False, i_str=None):
 
     name_info['input_md5'] = i_fname.split('-')[-1]
 
+    # TODO: return a dict-like object that does the expensive
+    # calculation lazily, the name format might not even need that
+    # value.
     ch = Chunk(path=chunk_path, mode='rb')
     date_hours = set()
     target_names = set()
@@ -53,5 +58,10 @@ def get_name_info(chunk_path, assert_one_date_hour=False, i_str=None):
         assert count == 0, (date_hours, count)
         date_hour = None
     name_info['date_hour'] = date_hour
+
+    # TODO: in future lazy evaluation world, rand8 should return a
+    # different value every time it is accessed so that a format could
+    # be 'foo-{rand8}{rand8}'
+    name_info['rand8'] = '%08x' % (random.randint(0, 0x7fffffff),)
 
     return name_info

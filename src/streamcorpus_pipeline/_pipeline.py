@@ -159,6 +159,10 @@ class Pipeline(object):
             self.work_unit.terminate()
         for transform in self._batch_transforms:
             transform.shutdown()
+        if not self.config.get('cleanup_tmp_files', True):
+            logger.info('skipping cleanup due to config.cleanup_tmp_files=False')
+            self._cleanup_done = True
+            return
         try:
             logger.info('attempting rm -rf %s' % self.config['tmp_dir_path'])
             shutil.rmtree(self.config['tmp_dir_path'])
@@ -299,6 +303,7 @@ class Pipeline(object):
         if self.t_chunk:
             self.t_chunk.close()
             o_paths = self._process_output_chunk(start_count, next_idx, sources, i_str, t_path)
+            self.t_chunk = None
         else:
             o_paths = None
 
