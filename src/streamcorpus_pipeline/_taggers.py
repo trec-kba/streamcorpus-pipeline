@@ -34,8 +34,8 @@ def make_chains_with_names(sentences):
     their cleansed name strings
 
     :param sentences: iterator over token generators
-    :returns dict:  
-        keys are equiv_ids, 
+    :returns dict:
+        keys are equiv_ids,
         values are tuple(concatentated name string, list of tokens)
     '''
     ## if an equiv_id is -1, then the token is classified into some
@@ -44,7 +44,7 @@ def make_chains_with_names(sentences):
     ## equiv_id other than -1 -- counting negatively to avoid
     ## collisions with "real" equiv_ids
     fake_equiv_ids = -2
-    
+
     ## use a default dictionary
     equiv_ids = collections.defaultdict(lambda: (set(), set()))
 
@@ -77,7 +77,7 @@ def ALL_mentions(target_mentions, chain_mentions):
 
     :type target_mentions: list of basestring
     :type chain_mentions: list of basestring
-    
+
     :returns bool:
     '''
     found_all = True
@@ -92,6 +92,26 @@ def ALL_mentions(target_mentions, chain_mentions):
             break
     return found_all
 
+
+def ANY_MULTI_TOKEN_mentions(multi_token_target_mentions, chain_mentions):
+    '''
+    For each name string (potentially consisting of multiple tokens) in the
+    target_mentions list, searches through all chain_mentions looking for any
+    cleansed Token.token that contains all the tokens in the name.  Returns
+    True only if all of the target_mention strings appeared as substrings of at
+    least one cleansed Token.token.  Otherwise, returns False.
+
+    :type target_mentions: list of basestring
+    :type chain_mentions: list of basestring
+
+    :returns bool:
+    '''
+    for multi_token_name in multi_token_target_mentions:
+        if ALL_mentions(multi_token_name.split(), chain_mentions):
+            return True
+    return False
+
+
 def ANY_mentions(target_mentions, chain_mentions):
     '''
     For each name string in the target_mentions list, searches through
@@ -102,7 +122,7 @@ def ANY_mentions(target_mentions, chain_mentions):
 
     :type target_mentions: list of basestring
     :type chain_mentions: list of basestring
-    
+
     :returns bool:
     '''
     for name in target_mentions:
@@ -114,6 +134,7 @@ def ANY_mentions(target_mentions, chain_mentions):
 _CHAIN_SELECTORS = dict(
     ALL = ALL_mentions,
     ANY = ANY_mentions,
+    ANY_MULTI_TOKEN = ANY_MULTI_TOKEN_mentions,
     )
 
 def names_in_chains(stream_item, aligner_data):
@@ -134,6 +155,10 @@ def names_in_chains(stream_item, aligner_data):
     If chain_selector==ANY, then apply Label to chains in which any of
     the Rating.mentions strings appear as a substring within at least
     one of the Token.token strings.
+
+    If chain_selector==ANY_MULTI_TOKEN, then apply Label to chains in which all
+    the names in any of the Rating.mentions strings appear as a substring within at least
+    one of the Token.token strings.
     '''
     chain_selector = aligner_data.get('chain_selector', '')
     assert chain_selector in _CHAIN_SELECTORS, \
@@ -145,7 +170,7 @@ def names_in_chains(stream_item, aligner_data):
     ## make inverted index equiv_id --> (names, tokens)
     equiv_ids = make_chains_with_names( stream_item.body.sentences )
 
-    for annotator_id, ratings in stream_item.ratings.items():        
+    for annotator_id, ratings in stream_item.ratings.items():
         if annotator_id == aligner_data['annotator_id']:
             for rating in ratings:
                 label = Label(annotator=rating.annotator,
@@ -174,7 +199,7 @@ def line_offset_labels(stream_item, aligner_data):
             label_off = label.offsets.pop(OffsetType.LINES)
 
             assert label_off.length == len(label_off.value.split('\n'))
-            #print 'L: %d\t%r\t%r' % (label_off.first, label_off.value, 
+            #print 'L: %d\t%r\t%r' % (label_off.first, label_off.value,
             #    '\n'.join(hope_original.split('\n')[label_off.first:
             #         label_off.first+label_off.length]))
 
@@ -195,8 +220,8 @@ def line_offset_labels(stream_item, aligner_data):
                 ## only for debugging
                 if not tok.token or tok.token not in label_off.value:
                     sys.exit('%r not in %r' % \
-                        ([(t.offsets[OffsetType.LINES].first, t.token) 
-                          for t in toks], 
+                        ([(t.offsets[OffsetType.LINES].first, t.token)
+                          for t in toks],
                          label_off.value))
 
 def byte_offset_labels(stream_item, aligner_data):
@@ -223,8 +248,8 @@ def byte_offset_labels(stream_item, aligner_data):
             label_off = label.offsets.pop( OffsetType.BYTES )
 
             assert label_off.length == len(label_off.value)
-            
-            #print 'L: %d\t%r\t%r' % (label_off.first, label_off.value, 
+
+            #print 'L: %d\t%r\t%r' % (label_off.first, label_off.value,
             #                         '\n'.join(hope_original.split('\n')[label_off.first:label_off.first+label_off.length]))
 
             #print 'tc %d %r' % (len(token_collection), token_collection._keys)
@@ -246,8 +271,8 @@ def byte_offset_labels(stream_item, aligner_data):
 
                 if not tok.token in label_off.value:
                     sys.exit('%r not in %r' % \
-                        ([(t.offsets[OffsetType.BYTES].first, t.token) 
-                          for t in toks], 
+                        ([(t.offsets[OffsetType.BYTES].first, t.token)
+                          for t in toks],
                          label_off.value))
 
 def make_memory_info_msg(clean_visible_path=None, ner_xml_path=None):
@@ -411,7 +436,7 @@ the output path to create.
         try:
             self._child = subprocess.Popen(cmd, stderr=subprocess.PIPE, shell=True)
         except OSError, exc:
-            msg = traceback.format_exc(exc) 
+            msg = traceback.format_exc(exc)
             msg += make_memory_info_msg(clean_visible_path, ner_xml_path)
             # instead of sys.ext, do proper shutdown
             #sys.exit(int(self.config['exit_code_on_out_of_memory']))
@@ -427,7 +452,7 @@ the output path to create.
                 msg = 'tagger returncode = 137\n' + errors
                 msg += make_memory_info_msg(clean_visible_path, ner_xml_path)
                 # maybe get a tail of /var/log/messages
-                raise PipelineOutOfMemory(msg)                
+                raise PipelineOutOfMemory(msg)
             elif 'Exception' in errors:
                 raise PipelineBaseException(errors)
             else:
@@ -494,7 +519,7 @@ the output path to create.
             sentences, relations, attributes = self.get_sentences(ner_dom)
             stream_item.body.sentences[self.tagger_id] = sentences    # pylint: disable=E1101
             stream_item.body.relations[self.tagger_id] = relations    # pylint: disable=E1101
-            stream_item.body.attributes[self.tagger_id] = attributes  # pylint: disable=E1101 
+            stream_item.body.attributes[self.tagger_id] = attributes  # pylint: disable=E1101
 
             logger.debug('finished aligning tokens %s' % stream_item.stream_id)
 

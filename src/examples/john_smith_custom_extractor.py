@@ -75,7 +75,7 @@ class john_smith_custom_extractor(object):
         creation_time = '1998-12-31T23:59:59.999999Z'
 
         stream_item = streamcorpus.make_stream_item(
-            creation_time, 
+            creation_time,
             ## make up an abs_url
             os.path.join(
                 'john-smith-corpus', target_id, fname))
@@ -136,10 +136,10 @@ if __name__ == '__main__':
     import argparse
     parser = argparse.ArgumentParser()
     parser.add_argument(
-        'input_dir', 
+        'input_dir',
         help='path to a directory containing the original John Smith corpus.')
     args = parser.parse_args()
-    
+
     john_smith_custom_extractor_instance = Stages["john_smith_custom_extractor"](
         dict(ground_truth_path='data/john-smith/ground-truth.tsv'))
 
