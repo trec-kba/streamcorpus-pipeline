@@ -251,7 +251,7 @@ def byte_offset_labels(stream_item, aligner_data):
                          label_off.value))
 
 def make_memory_info_msg(clean_visible_path=None, ner_xml_path=None):
-    msg = 'out of memory on:\n%r\n%r' % (clean_visible_path, ner_xml_path)
+    msg = 'reporting memory while running on:\n%r\n%r' % (clean_visible_path, ner_xml_path)
     msg += 'VmSize: %d bytes' % _memory.memory()
     msg += 'VmRSS:  %d bytes' % _memory.resident()
     msg += 'VmStk:  %d bytes' % _memory.stacksize()

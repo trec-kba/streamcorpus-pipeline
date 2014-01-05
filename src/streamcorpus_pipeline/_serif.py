@@ -208,7 +208,8 @@ OVERRIDE kba_write_serifxml_to_chunk:         true
             logger.error('error running serif cmd %r', cmd, exc_info=True)
             msg = traceback.format_exc(exc) 
             msg += make_memory_info_msg()
-            raise PipelineOutOfMemory(msg, exc)
+            logger.critical(msg)
+            raise
 
         s_out, errors = self._child.communicate()
 
