@@ -17,7 +17,7 @@ streamcorpus_pipeline:
     output_name: "john-smith-tagged-by-serif-%(first)s-%(num)s"
 
   serif:
-    pipeline_root_path: third/serif
+    pipeline_root_path: /opt/diffeo/third/serif/serif-latest
     cleanup_tmp_files: true
     par: streamcorpus_one_step
     align_labels_by: names_in_chains

@@ -21,7 +21,7 @@ streamcorpus_pipeline:
 
   serif:
     exit_code_on_out_of_memory: 1
-    pipeline_root_path: third/serif
+    pipeline_root_path: /opt/diffeo/third/serif/serif-latest
     offset_types: [CHARS]
     offset_debugging: true
     cleanup_tmp_files: true
