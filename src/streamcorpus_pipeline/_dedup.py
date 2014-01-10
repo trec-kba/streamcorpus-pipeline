@@ -9,7 +9,7 @@ Copyright 2012-2013 Diffeo, Inc.
 import os
 import sys
 import logging
-import nilsimsa
+#import nilsimsa
 
 logger = logging.getLogger(__name__)
 

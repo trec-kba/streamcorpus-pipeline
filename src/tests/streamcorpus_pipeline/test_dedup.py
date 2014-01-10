@@ -19,6 +19,7 @@ logger.addHandler(ch)
 
 from _test_data import get_test_chunk_path, get_test_chunk
 
+@pytest.mark.xfail
 def test_dedup_debugging_config(tmpdir):
     
     ## first test the debugging config
