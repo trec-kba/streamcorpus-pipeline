@@ -121,6 +121,7 @@ def _load_default_stages():
         _tryload_stage('_kvlayer', 'from_kvlayer')
         _tryload_stage('_s3_storage', 'from_s3_chunks')
         _tryload_stage('_john_smith', 'john_smith')
+        _tryload_stage('_tsv_files_list', 'tsv_files_list')
 
         # StreamItem stages
         # (alphabetical by stage name)
