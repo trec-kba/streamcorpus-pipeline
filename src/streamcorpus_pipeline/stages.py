@@ -128,6 +128,7 @@ def _load_default_stages():
         _tryload_stage('_clean_html', 'clean_html')
         _tryload_stage('_clean_visible', 'clean_visible')
         _tryload_stage('_pdf_to_text', 'pdf_to_text')
+        _tryload_stage('_docx_to_text', 'docx_to_text')
         _tryload_stage('_filters', 'debug_filter')
         _tryload_stage('_dedup', 'dedup')
         _tryload_stage('_dump_label_stats', 'dump_label_stats')
