@@ -15,6 +15,7 @@ VERSION, SOURCE_LABEL = get_git_version()
 PROJECT = 'streamcorpus_pipeline'
 AUTHOR = 'Diffeo, Inc.'
 AUTHOR_EMAIL = 'support@diffeo.com'
+URL = 'http://github.com/trec-kba/streamcorpus-pipeline'
 DESC = 'Tools for building streamcorpus objects, such as those used in TREC.'
 
 def read_file(file_name):
@@ -81,12 +82,12 @@ setup(
     name=PROJECT,
     version=VERSION,
     description=DESC,
-    license='MIT/X11 license http://opensource.org/licenses/MIT',
+    license=license,
     long_description=read_file('README.rst'),
-    source_label=SOURCE_LABEL,
+    #source_label=SOURCE_LABEL,
     author=AUTHOR,
     author_email=AUTHOR_EMAIL,
-    url='',
+    url=URL,
     packages = find_packages('src'),
     package_dir = {'': 'src'},
     cmdclass={'test': PyTest,
