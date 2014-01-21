@@ -17,7 +17,7 @@ import traceback
 
 def convert_kba_json(config):
     '''
-    Returns a kba.pipeline "extractor" that generates a single
+    Returns a streamcorpus_pipeline "reader" that generates a single
     streamcorpus.Chunk file containing the John Smith corpus.
     '''
     def _convert_kba_json(path_to_original):

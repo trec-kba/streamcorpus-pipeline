@@ -9,7 +9,7 @@ streamcorpus_pipeline:
   ## pipeline expects strings over stdin, which are typically paths to
   ## streamcorpus.Chunk files.  They can also be some other kind of
   ## opaque byte strings delimited by newlines that your particular
-  ## 'extractor' is expecting.
+  ## 'reader' is expecting.
 
   ## put logs inside each chunk file
   embedded_logs: true
@@ -21,25 +21,25 @@ streamcorpus_pipeline:
   ## the main pipeline log_dir_path can trigger similar log chunk
   log_dir_path: data/john-smith/
 
-  ## tmp_dir_path, some extractors and loaders require this dir to be in
+  ## tmp_dir_path, some readers and writers require this dir to be in
   ## the same file system as their output.  This is also where the
   ## batch_transforms operate.
   tmp_dir_path: tmp
 
-  ## task_queue specifies the strings that are passed to an extractor
+  ## task_queue specifies the strings that are passed to an reader
   ## to obtain a Chunk.  The strings might be paths in a file system
   ## or some other source of data.  The task_queue might simply be
   ## stdin, or it might be a more sophisticated shared queue.
   task_queue: stdin
 
   ## generator of StreamItems
-  extractor: from_local_chunks
+  reader: from_local_chunks
 
   incremental_transforms: []
 
   batch_transforms: [lingpipe]
 
-  loaders: [to_local_chunks]
+  writers: [to_local_chunks]
 
   from_local_chunks:
     max_retries: 30

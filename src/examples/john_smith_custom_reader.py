@@ -2,7 +2,7 @@
 Example of how to transform a corpus into the streamcorpus format.
 
 This does the same thing as the regular kba.pipeline's john_smith
-extractor with these differences:
+reader with these differences:
 
 1) this is run as an "external stage" by
 configs/john-smith-with-labels-from-tsv.yaml
@@ -28,9 +28,9 @@ import fnmatch
 import logging
 from streamcorpus_pipeline._clean_visible import cleanse
 
-logger = logging.getLogger('kba.pipeline.john_smith_custom_extractor')
+logger = logging.getLogger('kba.pipeline.john_smith_custom_reader')
 
-class john_smith_custom_extractor(object):
+class john_smith_custom_reader(object):
     def __init__(self, config):
         self.config = config
 
@@ -127,12 +127,12 @@ class john_smith_custom_extractor(object):
 ## this map allows this file to be specified in a config.yaml file as
 ## an external_stages_path
 Stages = {
-    'john_smith_custom_extractor': john_smith_custom_extractor,
+    'john_smith_custom_reader': john_smith_custom_reader,
     }
 
 
 if __name__ == '__main__':
-    ## this is a simple test of this extractor stage
+    ## this is a simple test of this reader stage
     import argparse
     parser = argparse.ArgumentParser()
     parser.add_argument(
@@ -140,8 +140,8 @@ if __name__ == '__main__':
         help='path to a directory containing the original John Smith corpus.')
     args = parser.parse_args()
 
-    john_smith_custom_extractor_instance = Stages["john_smith_custom_extractor"](
+    john_smith_custom_reader_instance = Stages["john_smith_custom_reader"](
         dict(ground_truth_path='data/john-smith/ground-truth.tsv'))
 
-    for si in john_smith_custom_extractor_instance( args.input_dir ):
+    for si in john_smith_custom_reader_instance( args.input_dir ):
         print len(si.body.clean_visible), si.stream_id

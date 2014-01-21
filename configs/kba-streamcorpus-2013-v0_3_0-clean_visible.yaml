@@ -15,7 +15,7 @@ streamcorpus_pipeline:
 
   output_chunk_max_count: 10000
 
-  ## tmp_dir, some extractors and loaders require this dir to be in
+  ## tmp_dir, some readers and writers require this dir to be in
   ## the same file system as their output.  This is also where the
   ## batch_transforms operate.
   tmp_dir_path:  tmp
@@ -28,7 +28,7 @@ streamcorpus_pipeline:
     storage_addresses: ["cass-1.diffeo.com:9160"]
 
   ## generator of StreamItems
-  extractor: from_s3_chunks
+  reader: from_s3_chunks
 
   incremental_transforms: [
     upgrade_streamcorpus_v0_3_0,
@@ -42,7 +42,7 @@ streamcorpus_pipeline:
   batch_transforms: []
 
   ## to_local_chunks must be last, because *moves* the tmp file away
-  loaders: [to_s3_chunks, to_local_tarballs]
+  writers: [to_s3_chunks, to_local_tarballs]
 
   from_s3_chunks:
     aws_access_key_id_path:     keys/trec-aws-s3.aws_access_key_id

@@ -21,7 +21,7 @@ from streamcorpus_pipeline._exceptions import ConfigurationError
 from streamcorpus_pipeline._pipeline import Pipeline
 from streamcorpus_pipeline._logging import logger, reset_log_level
 
-from streamcorpus_pipeline.config import load_layered_configs, config_to_string
+from yakonfig import set_global_config
 
 def make_absolute_paths( config ):
     if not 'streamcorpus_pipeline' in config:
@@ -123,15 +123,11 @@ def main():
     parser.add_argument('-i', '--input', action='append', 
                         help='file paths to input instead of reading from stdin')
     parser.add_argument('--inglob', action='append', default=[], help='path glob specifying input files')
-    parser.add_argument('config', metavar='config.yaml', nargs='+', 
-                        help='configuration parameters for a pipeline run. many config yaml files may be specified, later values win.')
+    parser.add_argument('config', metavar='config.yaml', help='yakonfig YAML file')
     args = parser.parse_args()
 
     ## layered configs is a feature only of the CLI
-    config = load_layered_configs(args.config)
-    if len(args.config) > 1:
-        print '# net config:'
-        print config_to_string(config)
+    config = set_global_config(path=args.config)
 
     instantiate_config(config)
 

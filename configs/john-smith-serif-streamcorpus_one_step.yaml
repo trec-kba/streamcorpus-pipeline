@@ -3,7 +3,7 @@ streamcorpus_pipeline:
   log_level: DEBUG
   output_chunk_max_count: 200
   tmp_dir_path: tmp
-  extractor: john_smith
+  reader: john_smith
 
   ## expected this input:
   #echo data/john-smith/original | python -m kba.pipeline.run configs/john-smith-serif-streamcorpus_one_step.yaml
@@ -12,7 +12,7 @@ streamcorpus_pipeline:
 
   batch_transforms: [serif]
 
-  loaders: [to_local_chunks]
+  writers: [to_local_chunks]
 
   to_local_chunks:
     output_type: otherdir
