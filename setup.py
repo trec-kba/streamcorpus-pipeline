@@ -82,7 +82,7 @@ setup(
     name=PROJECT,
     version=VERSION,
     description=DESC,
-    license=license,
+    license=read_file('LICENSE.txt'),
     long_description=read_file('README.rst'),
     #source_label=SOURCE_LABEL,
     author=AUTHOR,
@@ -108,8 +108,9 @@ setup(
         'epydoc',
     ],
     install_requires=[
+        'yakonfig',
         'thrift',
-        'gevent',      ## required in .rpm
+        'gevent',
         'kvlayer',
         'rejester',
         'protobuf',
