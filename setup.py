@@ -136,6 +136,6 @@ setup(
         ## this does not appear to actually put anything into the egg...
         ('examples', recursive_glob('src/examples', '*.py')),
         ('configs', recursive_glob('configs', '*.yaml')),
-        ('data/john-smith', recursive_glob('data/john-smith', '*.*')),
+        #('data/john-smith', recursive_glob('data/john-smith', '*.*')),
     ] + recursive_glob_with_tree('data/john-smith/original', '*')
 )
