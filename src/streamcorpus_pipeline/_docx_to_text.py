@@ -28,8 +28,12 @@ def docx_to_text(config):
             logger.debug('converting docx to text for %s',
                          stream_item.stream_id)
 
-            stream_item.body.clean_visible = \
-                extract_text(stream_item.body.raw)
+            try:
+                stream_item.body.clean_visible = \
+                    extract_text(stream_item.body.raw)
+            except Exception as exc:
+                logger.exception('failed to convert %s from docx',
+                                 stream_item.stream_id)
 
         return stream_item
 

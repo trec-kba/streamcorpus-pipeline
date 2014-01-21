@@ -46,8 +46,12 @@ def pdf_to_text(config):
             logger.debug('converting pdf to text for %s',
                          stream_item.stream_id)
 
-            stream_item.body.clean_visible = \
-                convert_pdf_to_text(stream_item.body.raw)
+            try:
+                stream_item.body.clean_visible = \
+                    convert_pdf_to_text(stream_item.body.raw)
+            except Exception as exc:
+                logger.exception('failed to convert %s from pdf',
+                                 stream_item.stream_id)
 
         return stream_item
 
