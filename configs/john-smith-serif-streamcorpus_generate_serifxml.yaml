@@ -5,13 +5,13 @@ streamcorpus_pipeline:
   tmp_dir_path: tmp
 
   ## generator of StreamItems
-  extractor: from_local_chunks
+  reader: from_local_chunks
 
   incremental_transforms: []
 
   batch_transforms: [serif]
 
-  loaders: [to_local_chunks]
+  writers: [to_local_chunks]
 
   to_local_chunks:
     output_type: otherdir

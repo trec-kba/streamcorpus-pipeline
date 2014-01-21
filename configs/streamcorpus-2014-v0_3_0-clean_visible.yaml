@@ -18,7 +18,7 @@ streamcorpus_pipeline:
     storage_addresses: ["prod-cassandra-1.diffeo.com:9160"]
 
   ## generator of StreamItems
-  extractor: from_s3_chunks
+  reader: from_s3_chunks
 
   incremental_transforms: [
     language, 
@@ -31,7 +31,7 @@ streamcorpus_pipeline:
   batch_transforms: []
 
   ## to_local_* must be last, because *moves* the tmp file away
-  loaders: [to_s3_chunks, to_local_tarballs]
+  writers: [to_s3_chunks, to_local_tarballs]
 
   from_s3_chunks:
     aws_access_key_id_path:     keys/trec-aws-s3.aws_access_key_id

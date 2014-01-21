@@ -11,7 +11,7 @@ The corpus consists of 35 directories with files inside each
 directory.  The documents in each directory all refer to the same
 entity named John Smith, so the directory names are document-level
 labels.  First, we store these doc-level labels and then later, when
-we have extractor output from LingPipe or Stanford CoreNLP, we coerce
+we have reader output from LingPipe or Stanford CoreNLP, we coerce
 these doc-level labels into labels on individual in-doc coref chains
 that contain 'john' and 'smith' as substrings.
 
@@ -32,7 +32,7 @@ import hashlib
 
 def john_smith(config):
     '''
-    Returns a kba.pipeline "extractor" that generates a single
+    Returns a kba.pipeline "reader" that generates a single
     streamcorpus.Chunk file containing the John Smith corpus.
 
     :param config: a dictionary of config info, which is pulled from
@@ -121,7 +121,7 @@ def generate_john_smith_chunk(path_to_original):
             yield stream_item
 
 if __name__ == '__main__':
-    ## this is a simple test of this extractor stage
+    ## this is a simple test of this reader stage
     import argparse
     parser = argparse.ArgumentParser()
     parser.add_argument(
@@ -129,6 +129,6 @@ if __name__ == '__main__':
         help='path to a directory containing the original John Smith corpus.')
     args = parser.parse_args()
     
-    john_smith_extractor_stage = john_smith({})
-    for si in john_smith_extractor_stage( args.input_dir ):
+    john_smith_reader_stage = john_smith({})
+    for si in john_smith_reader_stage( args.input_dir ):
         print len(si.body.clean_visible), si.stream_id

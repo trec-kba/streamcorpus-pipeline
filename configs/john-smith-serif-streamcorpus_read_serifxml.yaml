@@ -3,13 +3,13 @@ streamcorpus_pipeline:
   log_level: DEBUG
   output_chunk_max_count: 200
   tmp_dir_path: tmp
-  extractor: from_local_chunks
+  reader: from_local_chunks
 
   incremental_transforms: []
 
   batch_transforms: [serif]
 
-  loaders: [to_local_chunks]
+  writers: [to_local_chunks]
 
   to_local_chunks:
     output_type: otherdir

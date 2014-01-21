@@ -86,13 +86,13 @@ class Pipeline(object):
         else:
             external_stages = None
 
-        ## load the one extractor
-        extractor_name = config['extractor']
-        _extractor_config = config.get(extractor_name, {})
-        _extractor_config['tmp_dir_path'] = config.get('tmp_dir_path')
-        self._extractor = _init_stage(
-            extractor_name,
-            _extractor_config,
+        ## load the one reader
+        reader_name = config['reader']
+        _reader_config = config.get(reader_name, {})
+        _reader_config['tmp_dir_path'] = config.get('tmp_dir_path')
+        self._reader = _init_stage(
+            reader_name,
+            _reader_config,
             external_stages)
 
         ## a list of transforms that take StreamItem instances as
@@ -127,12 +127,12 @@ class Pipeline(object):
 
         ## a list of transforms that take a chunk path as input and
         ## return a path to a new chunk
-        self._loaders  = [] 
-        for name in config['loaders']:
-            _loader_config = config.get(name, {})
-            _loader_config['tmp_dir_path'] = config.get('tmp_dir_path')
-            self._loaders.append( 
-                _init_stage(name, _loader_config, external_stages))
+        self._writers  = [] 
+        for name in config['writers']:
+            _writer_config = config.get(name, {})
+            _writer_config['tmp_dir_path'] = config.get('tmp_dir_path')
+            self._writers.append( 
+                _init_stage(name, _writer_config, external_stages))
 
         for sig in [signal.SIGTERM, signal.SIGABRT, signal.SIGHUP, signal.SIGINT]:
             logger.debug('setting signal handler for %r' % sig)
@@ -195,11 +195,11 @@ class Pipeline(object):
         start_count = work_unit.data['start_count']
         start_chunk_time = work_unit.data['start_chunk_time']
 
-        ## the extractor returns generators of StreamItems
+        ## the reader returns generators of StreamItems
         try:
-            i_chunk = self._extractor(i_str)
+            i_chunk = self._reader(i_str)
         except FailedExtraction, exc:
-            ## means that task is invalid, extractor did its best
+            ## means that task is invalid, reader did its best
             ## and gave up, so fail the work_unit
             logger.critical('committing failure_log on %s: %r' % (
                     i_str, str(exc)))
@@ -350,10 +350,10 @@ class Pipeline(object):
         for the current output chunk (which should be closed):
           1. run batch transforms
           2. run post-batch incremental transforms
-          3. run 'loaders' to load-out the data to files or other storage
-        return list of paths that loaders wrote to
+          3. run 'writers' to load-out the data to files or other storage
+        return list of paths that writers wrote to
         '''
-        ## gather the paths as the loaders run
+        ## gather the paths as the writers run
         o_paths = []
         if len(self.t_chunk) > 0:
             ## only batch transform and load if the chunk
@@ -367,7 +367,7 @@ class Pipeline(object):
 
             # only proceed if above transforms left us with something
             if (self.t_chunk) and (len(self.t_chunk) >= 0):
-                self._run_loaders(start_count, next_idx, sources, i_str, t_path, o_paths)
+                self._run_writers(start_count, next_idx, sources, i_str, t_path, o_paths)
         return o_paths
 
     def _run_batch_transforms(self, chunk_path):
@@ -402,24 +402,24 @@ class Pipeline(object):
 
             os.rename(t_path2, t_path)
 
-    def _run_loaders(self, start_count, next_idx, sources, i_str, t_path, o_paths):
-        ## loaders put the chunk somewhere, and could delete it
+    def _run_writers(self, start_count, next_idx, sources, i_str, t_path, o_paths):
+        ## writers put the chunk somewhere, and could delete it
         name_info = dict(
             first = start_count,
-            #num and md5 computed in each loaders
+            #num and md5 computed in each writers
             source = sources.pop(),
             )
 
-        for loader in self._loaders:
+        for writer in self._writers:
             try:
-                logger.debug('running %r on %r: %r', loader, i_str, name_info)
-                o_path = loader(t_path, name_info, i_str)                        
+                logger.debug('running %r on %r: %r', writer, i_str, name_info)
+                o_path = writer(t_path, name_info, i_str)                        
             except OSError, exc:
                 if exc.errno == 12:
-                    logger.critical('caught OSError 12 in loader, so shutting down')
+                    logger.critical('caught OSError 12 in writer, so shutting down')
                     self.shutdown( msg=traceback.format_exc(exc) )
                 else:
-                    logger.critical('loader (%r, %r) failed', loader, i_str, exc_info=True)
+                    logger.critical('writer (%r, %r) failed', writer, i_str, exc_info=True)
                     raise
 
             logger.debug('loaded (%d, %d) of %r into %r',

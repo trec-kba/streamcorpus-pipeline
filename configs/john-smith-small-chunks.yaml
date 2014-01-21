@@ -7,7 +7,7 @@ streamcorpus_pipeline:
   ## pipeline expects strings over stdin, which are typically paths to
   ## streamcorpus.Chunk files.  They can also be some other kind of
   ## opaque byte strings delimited by newlines that your particular
-  ## 'extractor' is expecting.
+  ## 'reader' is expecting.
 
   log_level: DEBUG
 
@@ -17,13 +17,13 @@ streamcorpus_pipeline:
   tmp_dir_path: tmp
 
   ## generator of StreamItems
-  extractor: john_smith
+  reader: john_smith
 
   incremental_transforms: []
 
   batch_transforms: []
 
-  loaders: [to_local_chunks]
+  writers: [to_local_chunks]
 
   to_local_chunks:
     #output_type: inplace

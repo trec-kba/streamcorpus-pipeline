@@ -75,7 +75,7 @@ class IncrementalTransform(object):
 
 # map from stage name to constructor for stage.
 # stage constructor should take a config dict and return an callable of appropriate signature.
-# TODO? Separate collections of extractors/StreamItem/Chunk file/loader operations?
+# TODO? Separate collections of readers/StreamItem/Chunk file/writer operations?
 Stages = {}
 
 
@@ -115,7 +115,7 @@ def _load_default_stages():
         if _default_stages_loaded:
             return
 
-        # data source extractors (read data from somewhere into pipeline)
+        # data source readers (read data from somewhere into pipeline)
         _tryload_stage('_convert_kba_json', 'convert_kba_json')
         _tryload_stage('_local_storage', 'from_local_chunks')
         _tryload_stage('_kvlayer', 'from_kvlayer')
@@ -152,7 +152,7 @@ def _load_default_stages():
         _tryload_stage('_lingpipe', 'lingpipe')
         _tryload_stage('_serif', 'serif')
 
-        # 'loaders' move data out of the pipeline
+        # 'writers' move data out of the pipeline
         _tryload_stage('_local_storage', 'to_local_chunks')
         _tryload_stage('_local_storage', 'to_local_tarballs')
         _tryload_stage('_kvlayer', 'to_kvlayer')
@@ -172,13 +172,13 @@ def _init_stage(name, config, external_stages=None):
 
     :returns callable: one of four possible types:
 
-       1) extractors: take byte strings as input and emit StreamItems
+       1) readers: take byte strings as input and emit StreamItems
 
        2) incremental transforms: take StreamItem and emit StreamItem
        
        3) batch transforms: take Chunk and emit Chunk
 
-       4) loaders: take Chunk and push it somewhere
+       4) writers: take Chunk and push it somewhere
     '''
     _load_default_stages()
 
