@@ -151,7 +151,7 @@ class tsv_files_list(object):
         return stream_item
 
 if __name__ == '__main__':
-    ## this is a simple test of this extractor stage
+    ## this is a simple test of this reader stage
     import argparse
     parser = argparse.ArgumentParser()
     parser.add_argument(
