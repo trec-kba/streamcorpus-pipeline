@@ -36,7 +36,7 @@ streamcorpus_pipeline:
   external_stages_path: src/examples/john_smith_custom_reader.py
 
   ## generator of StreamItems
-  reader: john_smith_custom_extractor
+  reader: john_smith_custom_reader
 
   incremental_transforms: []
 
