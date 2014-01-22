@@ -6,6 +6,7 @@ Copyright 2012-2013 Diffeo, Inc.
 import sys
 import json
 import argparse
+import time
 from streamcorpus_pipeline.run import instantiate_config
 from streamcorpus_pipeline._pipeline import Pipeline
 from streamcorpus_pipeline._exceptions import ConfigurationError
@@ -13,8 +14,8 @@ from streamcorpus_pipeline._exceptions import ConfigurationError
 
 def rejester_run_function(work_unit):
 
-    config = work_unit.spec.get('streamcorpus_pipeline')
-    if not config:
+    config = work_unit.spec.get('config')
+    if not config or 'streamcorpus_pipeline' not in config:
         raise ConfigurationError('spec is missing streamcorpus_pipeline: %r' % work_unit.spec)
 
     instantiate_config(config)
