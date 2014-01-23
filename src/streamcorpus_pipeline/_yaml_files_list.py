@@ -53,6 +53,13 @@ class yaml_files_list(object):
 
         base_dir = os.path.dirname(path_to_input_file)
 
+        if 'root_path' in metadata:
+            root_path = metadata['root_path']
+            if os.path.isabs(root_path):
+                base_dir = root_path
+            else:
+                base_dir = os.path.join(base_dir, root_path)
+
         if 'abs_url_base' not in metadata:
             metadata['abs_url_base'] = path_to_input_file
             logger.warn('abs_url_base not set, defaulting to %s' % path_to_input_file)
@@ -67,7 +74,7 @@ class yaml_files_list(object):
 
         for entry in entries:
             ## get list of file paths to look at
-            paths = entry['doc_paths']
+            paths = entry['doc_path']
             if not isinstance(paths, list):
                 paths = [paths]
 
