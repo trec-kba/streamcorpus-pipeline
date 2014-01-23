@@ -115,7 +115,7 @@ class yaml_files_list(object):
 
         ## Every StreamItem has a stream_time property.  It usually comes
         ## from the document creation time.
-        creation_time = datetime.datetime.fromtimestamp(os.path.getctime(path)).isoformat()
+        creation_time = os.path.getctime(path)
 
         ## construct abs_url
         abs_url = os.path.join(
