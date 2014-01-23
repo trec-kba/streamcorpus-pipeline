@@ -1,18 +1,20 @@
 '''
 Transforms a corpus into the streamcorpus format.
 
-Data is loaded from a file specifying the documents in the corpus. The
-file should have a yaml metadata "header" and a tab-separated-values
-list of documents in the body. The header should be delimited by lines
-containing "---" by itself. Example:
+Data is loaded from a yaml file specifying the documents in the
+corpus. The file should contain metadat and a list of documents in the
+body. Example:
 
----
 abs_url_base: <abs_url_base>
 source: <source>
 annotator_id: <annotator_id>
----
-<target_id>	<mention>	<document_path>
-<target_id>	<mention>	<document_path>
+entries:
+  - target_id: <target_id>
+    documents: <directory_path_or_list_of_files>
+    mention_tokens:
+      - <token>
+      - <token>
+  - [...]
 
 Copyright 2012-2013 Diffeo, Inc.
 '''
@@ -25,15 +27,15 @@ import logging
 
 import os
 import re
+import datetime
 import logging
-import csv
 import yaml
 import magic
 from streamcorpus_pipeline._clean_visible import cleanse
 
 logger = logging.getLogger(__name__)
 
-class tsv_files_list(object):
+class yaml_files_list(object):
     def __init__(self, config):
         self.config = config
 
@@ -45,18 +47,9 @@ class tsv_files_list(object):
         path_to_input_file = os.path.abspath(path_to_input_file)
 
         with open(path_to_input_file) as f:
-            ## read yaml metadata
-            lines = []
-            for line in f:
-                if line == '---\n' and lines != []:
-                    break
-                lines.append(line)
-            metadata = yaml.load(''.join(lines))
-
-            ## read tsv entries
-            entries = []
-            for row in csv.reader(f, delimiter='\t'):
-                entries.append(row)
+            ## read yaml data
+            metadata = yaml.load(f)
+            entries = metadata.pop('entries')
 
         base_dir = os.path.dirname(path_to_input_file)
 
@@ -72,19 +65,25 @@ class tsv_files_list(object):
             metadata['annotator_id'] = 'unknown'
             logger.warn('annotator_id not set, defaulting to unknown')
 
-        for target_id, mention, path in entries:
-            ## normalize path
-            if not os.path.isabs(path):
-                path = os.path.join(base_dir, path)
+        for entry in entries:
+            ## get list of file paths to look at
+            paths = entry['doc_paths']
+            if not isinstance(paths, list):
+                paths = [paths]
 
-            ## recurse through directories
-            if os.path.isdir(path):
-                for dirpath, dirnames, filenames in os.walk(path):
-                    for fname in filenames:
-                        fpath = os.path.join(base_dir, dirpath, fname)
-                        yield self._make_stream_item(fpath, target_id, mention, metadata)
-            else:
-                yield self._make_stream_item(path, target_id, mention, metadata)
+            for path in paths:
+                ## normalize path
+                if not os.path.isabs(path):
+                    path = os.path.join(base_dir, path)
+
+                ## recurse through directories
+                if os.path.isdir(path):
+                    for dirpath, dirnames, filenames in os.walk(path):
+                        for fname in filenames:
+                            fpath = os.path.join(base_dir, dirpath, fname)
+                            yield self._make_stream_item(fpath, entry, metadata)
+                else:
+                    yield self._make_stream_item(path, entry, metadata)
 
     def _ensure_unique(self, sym):
         ## Generate a unique identifier by appending a numeric suffix
@@ -102,12 +101,14 @@ class tsv_files_list(object):
         self._sym_cache.add(sym)
         return sym
 
-    def _make_stream_item(self, path, target_id, mention, metadata):
+    def _make_stream_item(self, path, entry, metadata):
+        ## pull out target id and mention tokens
+        target_id = entry['target_id']
+        mentions = entry['mentions']
 
         ## Every StreamItem has a stream_time property.  It usually comes
-        ## from the document creation time.  Here, we assume the JS corpus
-        ## was created at one moment at the end of 1998:
-        creation_time = '1998-12-31T23:59:59.999999Z'
+        ## from the document creation time.
+        creation_time = datetime.datetime.fromtimestamp(os.path.getctime(path)).isoformat()
 
         ## construct abs_url
         abs_url = os.path.join(
@@ -142,7 +143,7 @@ class tsv_files_list(object):
 
         ## heuristically split the mentions string on white space and
         ## use each token as a separate mention.
-        rating.mentions = map(cleanse, mention.decode('utf-8').split())
+        rating.mentions = [cleanse(unicode(mention, 'utf-8')) for mention in mentions]
 
         ## put this one label in the array of labels
         streamcorpus.add_annotation(stream_item, rating)
@@ -156,10 +157,10 @@ if __name__ == '__main__':
     parser = argparse.ArgumentParser()
     parser.add_argument(
         'input_dir',
-        help='path to a yaml/tsv file with a specification of the corpus.')
+        help='path to a yaml file with a specification of the corpus.')
     args = parser.parse_args()
 
-    tsv_files_list_instance = tsv_files_list({})
+    yaml_files_list_instance = yaml_files_list({})
 
-    for si in tsv_files_list_instance( args.input_dir ):
+    for si in yaml_files_list_instance( args.input_dir ):
         print len(si.body.raw), si.stream_id
