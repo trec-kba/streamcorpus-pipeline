@@ -111,7 +111,7 @@ setup(
         'yakonfig',
         'thrift',
         'gevent',
-        'kvlayer',
+        'kvlayer >= 0.2.7',
         'rejester',
         'protobuf',
         'requests',
