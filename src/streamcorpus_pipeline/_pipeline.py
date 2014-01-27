@@ -130,6 +130,8 @@ class Pipeline(object):
         self._writers  = [] 
         for name in config['writers']:
             _writer_config = config.get(name, {})
+            if _writer_config is None:
+                _writer_config = dict()
             _writer_config['tmp_dir_path'] = config.get('tmp_dir_path')
             self._writers.append( 
                 _init_stage(name, _writer_config, external_stages))
