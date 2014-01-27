@@ -6,12 +6,14 @@ This software is released under an MIT/X11 open source license.
 Copyright 2012-2013 Diffeo, Inc.
 '''
 from collections import deque
+import logging
 import os
 import sys
 import uuid
+
 import kvlayer
-import logging
 import streamcorpus
+import yakonfig
 
 logger = logging.getLogger(__name__)
 
@@ -28,7 +30,8 @@ class from_kvlayer(object):
     '''
     def __init__(self, config):
         self.config = config
-        self.client = kvlayer.client(config)
+        kvlayer_config = yakonfig.get_global_config('kvlayer')
+        self.client = kvlayer.client(kvlayer_config)
         self.client.setup_namespace(
             dict(stream_items=2))
 
@@ -72,7 +75,8 @@ class to_kvlayer(object):
     '''
     def __init__(self, config):
         self.config = config
-        self.client = kvlayer.client(config)
+        kvlayer_config = yakonfig.get_global_config('kvlayer')
+        self.client = kvlayer.client(kvlayer_config)
         self.client.setup_namespace(
             dict(stream_items=2,
                  stream_items_doc_id_epoch_ticks=2))

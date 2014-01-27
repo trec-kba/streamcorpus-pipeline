@@ -1,29 +1,35 @@
 #!/usr/bin/env python
 '''
-See help(Pipeline) for details on configuring a Pipeline.
+See help(streamcorpus_pipeline.Pipeline) for details on configuration.
 
 This software is released under an MIT/X11 open source license.
 
-Copyright 2012-2013 Diffeo, Inc.
-
-usage:
-    python -m streamcorpus_pipeline.run ...
+Copyright 2012-2014 Diffeo, Inc.
 '''
 from __future__ import absolute_import
-import os
-import sys
 import copy
 import glob
-import json
-import time
 import importlib
+import json
+import os
+import sys
+import time
+
+import kvlayer
+from yakonfig import set_global_config, set_runtime_args_object
+
 from streamcorpus_pipeline._exceptions import ConfigurationError
 from streamcorpus_pipeline._pipeline import Pipeline
 from streamcorpus_pipeline._logging import logger, reset_log_level
 
-from yakonfig import set_global_config
 
 def make_absolute_paths( config ):
+    '''
+    given a config dict with streamcorpus_pipeline as a key, find all
+    keys under streamcorpus_pipeline that end with "_path" and if the
+    value of that key is a relative path, convert it to an absolute
+    path using the value provided by root_path
+    '''
     if not 'streamcorpus_pipeline' in config:
         logger.critical('bad config: %r', config)
         raise ConfigurationError('missing "streamcorpus_pipeline" from config')
@@ -119,28 +125,42 @@ def main():
     import argparse
     parser = argparse.ArgumentParser(
         description=Pipeline.__doc__,
-        usage='python -m streamcorpus.pipeline.run config.yaml')
+        usage='streamcorpus_pipeline config.yaml')
     parser.add_argument('-i', '--input', action='append', 
                         help='file paths to input instead of reading from stdin')
-    parser.add_argument('--inglob', action='append', default=[], help='path glob specifying input files')
+    parser.add_argument('--in-glob', action='append', default=[], help='path glob specifying input files')
     parser.add_argument('config', metavar='config.yaml', help='yakonfig YAML file')
+
+    ## get kvlayer command line arguments
+    kvlayer.add_arguments(
+        parser, 
+        defaults=dict(
+            app_name='streamcorpus_pipeline',
+            ),
+        include_app_name=True,
+        include_namespace=True,
+        )
+
     args = parser.parse_args()
 
-    ## layered configs is a feature only of the CLI
+    ## use yakonfig to provide a globally accessible configuration
+    set_runtime_args_object(args)
     config = set_global_config(path=args.config)
 
+    ## this modifies the global config, passed by reference
     instantiate_config(config)
 
-    pipeline = Pipeline(config)
-
     input_paths = []
-    if args.inglob:
-        for pattern in args.inglob:
+    if args.in_glob:
+        for pattern in args.in_glob:
             input_paths.extend(glob.glob(pattern))
     if args.input:
         input_paths.extend(args.input)
     if not input_paths:
         input_paths = sys.stdin
+
+    ## get a Pipeline instance, so we can use it below
+    pipeline = Pipeline(config)
 
     for i_str in input_paths:
         work_unit = SimpleWorkUnit(i_str.strip())

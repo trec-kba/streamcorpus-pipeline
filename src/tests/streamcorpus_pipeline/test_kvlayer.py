@@ -2,15 +2,18 @@
 import time
 import errno
 import pytest
+from cStringIO import StringIO
+
 import kvlayer
 import streamcorpus
-from _test_data import get_test_v0_3_0_chunk_path
 from streamcorpus_pipeline._kvlayer import from_kvlayer, to_kvlayer
 from streamcorpus_pipeline._logging import logger
+from _test_data import get_test_v0_3_0_chunk_path
+import yakonfig
 
 @pytest.fixture(scope='function')
 def config(request):
-    config = dict(
+    args_dict = dict(
         namespace='tests',
         app_name='streamcorpus_pipeline',
         storage_type='cassandra',
@@ -20,10 +23,14 @@ def config(request):
         replication_factor=1,
         thrift_framed_transport_size_in_mb=15,
     )
+    yakonfig.set_runtime_args_dict(args_dict)
+    fh = StringIO('''kvlayer: !include_func kvlayer.default_yaml''')
+    kvlayer_config = yakonfig.set_global_config(stream=fh)
     def fin():
-        client = kvlayer.client(config)
+        client = kvlayer.client(kvlayer_config['kvlayer'])
         client.delete_namespace()
     request.addfinalizer(fin)
+    config = dict()
     return config
 
 def test_kvlayer_reader_and_writer(config):
