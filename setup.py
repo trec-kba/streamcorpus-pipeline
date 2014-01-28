@@ -113,7 +113,7 @@ setup(
         'python-docx',
         'thrift',
         'gevent',
-        'kvlayer >= 0.2.7',
+        'kvlayer >= 0.2.8',
         'rejester',
         'protobuf',
         'requests',
