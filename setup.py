@@ -125,6 +125,8 @@ setup(
         'nilsimsa>=0.2',
         'chromium_compact_language_detector',
         'sortedcollection',
+        'python-docx',
+        'pdfminer',
     ],
     entry_points={
         'console_scripts': [

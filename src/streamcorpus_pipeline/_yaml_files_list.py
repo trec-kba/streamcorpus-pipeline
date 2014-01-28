@@ -80,6 +80,7 @@ class yaml_files_list(object):
 
             for path in paths:
                 ## normalize path
+                path = str(path)
                 if not os.path.isabs(path):
                     path = os.path.join(base_dir, path)
 
@@ -110,12 +111,12 @@ class yaml_files_list(object):
 
     def _make_stream_item(self, path, entry, metadata):
         ## pull out target id and mention tokens
-        target_id = entry['target_id']
+        target_id = str(entry['target_id'])
         mentions = entry['mentions']
 
         ## Every StreamItem has a stream_time property.  It usually comes
         ## from the document creation time.
-        creation_time = datetime.datetime.fromtimestamp(os.path.getctime(path)).isoformat()
+        creation_time = os.path.getctime(path)
 
         ## construct abs_url
         abs_url = os.path.join(
