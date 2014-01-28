@@ -109,6 +109,8 @@ setup(
     ],
     install_requires=[
         'yakonfig',
+        'python-magic',
+        'python-docx',
         'thrift',
         'gevent',
         'kvlayer >= 0.2.7',
