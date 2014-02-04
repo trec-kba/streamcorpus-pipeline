@@ -122,6 +122,7 @@ def _load_default_stages():
         _tryload_stage('_s3_storage', 'from_s3_chunks')
         _tryload_stage('_john_smith', 'john_smith')
         _tryload_stage('_yaml_files_list', 'yaml_files_list')
+        _tryload_stage('_spinn3r_feed_storage', 'from_spinn3r_feed')
 
         # StreamItem stages
         # (alphabetical by stage name)

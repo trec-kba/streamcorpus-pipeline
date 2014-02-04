@@ -14,13 +14,13 @@ import logging
 import hashlib
 import requests
 import traceback
-import _extract_spinn3r
 import streamcorpus
 from _get_name_info import get_name_info
 from streamcorpus import decrypt_and_uncompress, compress_and_encrypt_path, Chunk
 from cStringIO import StringIO
 from _exceptions import FailedExtraction
 from _tarball_export import tarball_export
+from streamcorpus_pipeline._spinn3r_feed_storage import _generate_stream_items
 
 logger = logging.getLogger(__name__)
 
@@ -144,7 +144,7 @@ class from_s3_chunks(object):
 
             if self.config['input_format'] == 'spinn3r':
                 ## convert the data from spinn3r's protostream format
-                return _extract_spinn3r._generate_stream_items( data )
+                return _generate_stream_items( data )
 
             elif self.config['input_format'] == 'streamitem':
                 message = _message_versions[ self.config['streamcorpus_version'] ]
