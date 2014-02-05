@@ -4,7 +4,7 @@ streamcorpus_pipeline:
   output_chunk_max_count: 500
   log_dir_path: tmp
   tmp_dir_path: tmp
-  reader: john_smith
+  reader: yaml_files_list
 
   incremental_transforms: []
   batch_transforms: [serif]
@@ -18,7 +18,7 @@ streamcorpus_pipeline:
 
   serif:
     pipeline_root_path: /opt/diffeo/third/serif/serif-latest
-    cleanup_tmp_files: true
+    cleanup_tmp_files: false
     par: streamcorpus_one_step
     align_labels_by: names_in_chains
     aligner_data:
