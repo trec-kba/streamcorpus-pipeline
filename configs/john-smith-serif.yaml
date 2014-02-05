@@ -4,9 +4,12 @@ streamcorpus_pipeline:
   output_chunk_max_count: 500
   log_dir_path: tmp
   tmp_dir_path: tmp
-  reader: john_smith
+  ## old way: custom code that reads data to chunks.
+  #reader: john_smith
+  ## new way: a little script makes a list of files for common code to read.
+  reader: yaml_files_list
 
-  incremental_transforms: []
+  incremental_transforms: [clean_html, clean_visible]
   batch_transforms: [serif]
   writers: [to_local_chunks]
 

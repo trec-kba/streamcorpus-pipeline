@@ -115,12 +115,16 @@ def clean_visible(config):
 
     ## make a closure around config
     def _make_clean_visible(stream_item, context):
-        if stream_item.body and stream_item.body.clean_html:
-            stream_item.body.clean_visible = \
-                make_clean_visible(stream_item.body.clean_html)
-            logger.debug('generated %d bytes of clean_visible from %d bytes of clean_html',
-                         len(stream_item.body.clean_visible), 
-                         len(stream_item.body.clean_html))
+        if stream_item.body:
+            if stream_item.body.clean_html:
+                stream_item.body.clean_visible = \
+                    make_clean_visible(stream_item.body.clean_html)
+                logger.debug('generated %d bytes of clean_visible from %d bytes of clean_html',
+                             len(stream_item.body.clean_visible),
+                             len(stream_item.body.clean_html))
+            elif stream_item.body.raw and stream_item.body.media_type == 'text/plain':
+                stream_item.body.clean_visible = stream_item.body.raw
+                logger.debug('text plain raw copied to clean_visible')
         return stream_item
 
     return _make_clean_visible
