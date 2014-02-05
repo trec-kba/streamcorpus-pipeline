@@ -4,9 +4,6 @@ streamcorpus_pipeline:
   output_chunk_max_count: 500
   log_dir_path: tmp
   tmp_dir_path: tmp
-  ## old way: custom code that reads data to chunks.
-  #reader: john_smith
-  ## new way: a little script makes a list of files for common code to read.
   reader: yaml_files_list
 
   incremental_transforms: [clean_html, clean_visible]
@@ -21,7 +18,7 @@ streamcorpus_pipeline:
 
   serif:
     pipeline_root_path: /opt/diffeo/third/serif/serif-latest
-    cleanup_tmp_files: true
+    cleanup_tmp_files: false
     par: streamcorpus_one_step
     align_labels_by: names_in_chains
     aligner_data:
