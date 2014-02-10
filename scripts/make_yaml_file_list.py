@@ -48,7 +48,7 @@ def main():
             entry = {
                 'target_id': fname,
                 'doc_path': fname + '/',
-                'mentions': ['John Smith'],
+                'mentions': ['John', 'Smith'],
                 }
             entries.append(entry)
     metadata['entries'] = entries
