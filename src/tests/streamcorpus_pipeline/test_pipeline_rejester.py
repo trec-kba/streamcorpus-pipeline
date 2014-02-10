@@ -7,11 +7,10 @@ import time
 import yaml
 
 import streamcorpus
-from streamcorpus_pipeline._logging import configure_logger
 from streamcorpus_pipeline._rejester import rejester_run_function
 from rejester.workers import run_worker, MultiWorker
 
-logger = configure_logger(__name__)
+logger = logging.getLogger(__name__)
 
 @pytest.fixture(scope="function") # (scope="module")
 def root_path(request):

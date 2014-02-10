@@ -1,3 +1,4 @@
+import logging
 import os
 import sys
 import yaml
@@ -7,22 +8,19 @@ import gevent
 import signal
 from cStringIO import StringIO
 from streamcorpus_pipeline import Pipeline
-from streamcorpus_pipeline._logging import logger
 
 from _test_data import get_test_chunk_path, get_test_chunk, \
     get_test_v0_3_0_chunk_path, \
     get_test_v0_3_0_chunk_tagged_by_serif_path
 
+logger = logging.getLogger(__name__)
+
 class SuccessfulExit(Exception):
     pass
 
-def log(msg):
-    print msg
-    sys.stdout.flush()
-
 def test_pipeline(monkeypatch):
     def mockexit(status=0):
-        log( ' sys.exit(%d) ' % status )
+        logger.debug('sys.exit({})'.format(status))
         raise SuccessfulExit()
     monkeypatch.setattr(sys, 'exit', mockexit)
     path = os.path.dirname(__file__)
@@ -46,7 +44,7 @@ def test_pipeline(monkeypatch):
     with pytest.raises(SuccessfulExit):  # pylint: disable=E1101
         p.shutdown(sig=signal.SIGTERM)
 
-    log( 'now joining...' )
+    logger.debug('now joining...')
     timeout = gevent.Timeout(1)
     g.join(timeout=timeout)
 

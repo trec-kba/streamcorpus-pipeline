@@ -1,10 +1,12 @@
+import logging
 import os
 import time
 import uuid
 import shutil
 import pytest
 import subprocess
-from streamcorpus_pipeline._logging import logger
+
+logger = logging.getLogger(__name__)
 
 @pytest.fixture(
     scope = 'function',
@@ -28,7 +30,7 @@ def cmd_expect_success(request):
 
 def test_pipeline_run(cmd_expect_success):
     cmd, expect_success = cmd_expect_success    
-    logger.critical(cmd)
+    logger.info(cmd)
     p = subprocess.Popen(cmd, stderr=subprocess.PIPE, stdout=subprocess.PIPE, shell=True)
     ret = None
     start_time = time.time()
@@ -40,8 +42,8 @@ def test_pipeline_run(cmd_expect_success):
         if ret is not None:
             break
         out, err = p.communicate()
-        logger.critical( out )
-        logger.critical( err )
+        logger.info( out )
+        logger.info( err )
 
     if elapsed >= max_time:
         raise Exception('timed out after %d seconds' % (time.time() - start_time))

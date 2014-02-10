@@ -1,3 +1,4 @@
+import logging
 import os
 import time
 import uuid
@@ -5,8 +6,9 @@ import pytest
 from streamcorpus import make_stream_item, StreamItem, ContentItem, OffsetType, Chunk
 from streamcorpus_pipeline._hyperlink_labels import anchors_re, hyperlink_labels
 from streamcorpus_pipeline.stages import _init_stage
-from streamcorpus_pipeline._logging import logger
 from tests.streamcorpus_pipeline._test_data import _TEST_DATA_ROOT
+
+logger = logging.getLogger(__name__)
 
 def make_test_stream_item():
     stream_item = make_stream_item(None, 'http://nytimes.com/')
@@ -102,7 +104,8 @@ def test_basics():
             line_labels.add(label.target.target_id)
 
     assert line_labels == byte_labels
-    print '\n\n%.5f bytes,\n %.5f lines' % (elapsed_bytes, elapsed_lines)
+    logger.info('{:.5f} bytes, {:.5f} lines'
+                .format(elapsed_bytes, elapsed_lines))
 
 
 
@@ -135,8 +138,8 @@ def test_speed(parser_type):
     
     rate = len(stream_items) / elapsed
 
-    print OffsetType
-    print '\n\n%.1f per second for %s' % (rate, parser_type)
+    logger.debug('OffsetType: {}'.format(OffsetType))
+    logger.info('{:.1f} per second for {}'.format(rate, parser_type))
 
 
 sample_text = u'''
@@ -167,7 +170,7 @@ def test_anchors_re():
         posthref = m.group('posthref')
         preequals = m.group('preequals')
         postequals = m.group('postequals')
-        #print m.groups('href')
+        # logger.debug(m.groups('href')
 
     assert sum(map(int, map(bool, matches))) == 3
 

@@ -10,18 +10,20 @@ from __future__ import absolute_import
 import copy
 import glob
 import importlib
+import logging
 import json
 import os
 import sys
 import time
 
+import dblogger
 import kvlayer
 from yakonfig import set_global_config, set_runtime_args_object
 
 from streamcorpus_pipeline._exceptions import ConfigurationError
 from streamcorpus_pipeline._pipeline import Pipeline
-from streamcorpus_pipeline._logging import logger, reset_log_level
 
+logger = logging.getLogger(__name__)
 
 def make_absolute_paths( config ):
     '''
@@ -89,12 +91,11 @@ def instantiate_config(config):
     pipeline_config['config_json'] = json.dumps(config)
 
     ## setup loggers
-    reset_log_level( pipeline_config.get('log_level', 'DEBUG') )
+    if 'log_level' in pipeline_config:
+        logging.getLogger().setLevel(pipeline_config['log_level'])
 
-    logger.warn('running config: %s = %s' % (
-            pipeline_config['config_hash'], config))
-
-    logger.info(json.dumps(config, indent=4, sort_keys=True))
+    logger.debug('running config: {} = {!r}'
+                 .format(pipeline_config['config_hash'], config))
 
     ## Load modules
     # This is a method of using settings in yaml configs to load plugins.
@@ -106,7 +107,7 @@ def instantiate_config(config):
         try:
             m = importlib.import_module(modname)
             if not m:
-                logger.error('could not load module %r', modname)
+                logger.critical('could not load module %r', modname)
                 die = True
                 continue
             if hasattr(m, 'setup'):
@@ -114,8 +115,8 @@ def instantiate_config(config):
                 logger.debug('loaded and setup %r', modname)
             else:
                 logger.debug('loaded %r', modname)
-        except:
-            logger.error('error loading and initting module %r', modname, exc_info=True)
+        except Exception:
+            logger.critical('error loading and initting module %r', modname, exc_info=True)
             die = True
     if die:
         sys.exit(1)
@@ -146,6 +147,7 @@ def main():
     ## use yakonfig to provide a globally accessible configuration
     set_runtime_args_object(args)
     config = set_global_config(path=args.config)
+    dblogger.configure_logging(config)
 
     ## this modifies the global config, passed by reference
     instantiate_config(config)

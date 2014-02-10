@@ -108,6 +108,7 @@ setup(
         'epydoc',
     ],
     install_requires=[
+        'dblogger',
         'yakonfig',
         'python-magic',
         'python-docx',

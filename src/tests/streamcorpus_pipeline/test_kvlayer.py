@@ -1,4 +1,4 @@
-
+import logging
 import time
 import errno
 import pytest
@@ -7,9 +7,10 @@ from cStringIO import StringIO
 import kvlayer
 import streamcorpus
 from streamcorpus_pipeline._kvlayer import from_kvlayer, to_kvlayer
-from streamcorpus_pipeline._logging import logger
 from _test_data import get_test_v0_3_0_chunk_path
 import yakonfig
+
+logger = logging.getLogger(__name__)
 
 @pytest.fixture(scope='function')
 def config(request):
