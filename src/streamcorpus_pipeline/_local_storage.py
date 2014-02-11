@@ -172,6 +172,9 @@ class to_local_chunks(object):
             if compress:
                 o_path += '.xz'
 
+        logger.info('writing chunk file to {}'.format(o_path))
+        logger.debug('temporary chunk in {}'.format(t_path))
+
         ## if dir is missing make it
         dirname = os.path.dirname(o_path)
         if dirname and not os.path.exists(dirname):

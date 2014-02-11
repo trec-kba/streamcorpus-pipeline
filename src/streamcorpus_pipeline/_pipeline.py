@@ -53,6 +53,7 @@ class Pipeline(object):
             '"streamcorpus_pipeline" missing from config: %r' % config
         config = config['streamcorpus_pipeline']
         self.config = config
+        logger.debug('pipeline configuration: {!r}'.format(self.config))
 
         self._shutting_down = False
         self.t_chunk = None  # current Chunk output file for incremental transforms
@@ -236,7 +237,6 @@ class Pipeline(object):
             ## ZookeeperTaskQueue may need to do a monkey
             ## patch before this gets imported:
             if gevent:
-                logger.debug('pipeline yielded to gevent hub')
                 gevent.sleep(0)
 
             ## skip forward until we reach start_count
