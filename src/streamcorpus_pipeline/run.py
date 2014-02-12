@@ -146,7 +146,7 @@ def main():
 
     ## use yakonfig to provide a globally accessible configuration
     set_runtime_args_object(args)
-    config = set_global_config(path=args.config)
+    config = set_global_config(args.config)
     dblogger.configure_logging(config)
 
     ## this modifies the global config, passed by reference
