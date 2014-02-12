@@ -1,0 +1,48 @@
+
+streamcorpus_pipeline:
+  root_path: 
+  log_level: INFO 
+  output_chunk_max_count: 500
+  tmp_dir_path:  tmp
+
+  ## generator of StreamItems
+  reader: from_s3_chunks
+
+  incremental_transforms: [
+    upgrade_streamcorpus_v0_3_0,
+    language, 
+    guess_media_type, 
+    clean_html, 
+    hyperlink_labels, 
+    clean_visible
+    ]
+
+  batch_transforms: []
+
+  writers: [to_local_chunks]
+
+  from_s3_chunks:
+    aws_access_key_id_path:     keys/aws_access_key_id
+    aws_secret_access_key_path: keys/aws_secret_access_key
+    bucket: aws-publicdatasets
+    tries: 10
+    input_format: streamitem
+    streamcorpus_version: v0_2_0
+    gpg_decryption_key_path: keys/trec-kba-rsa.gpg-key.private
+
+  clean_html:
+    included_language_codes: ["en", ""]
+
+  hyperlink_labels:
+    require_clean_html: true
+    require_abs_url: true
+    all_domains: true
+    offset_types: [BYTES, CHARS]
+
+  clean_visible:
+    require_clean_html: true
+
+  to_local_chunks:
+    output_type: otherdir
+    output_path: data/trec-kba
+    output_name: "%(date_hour)s/%(source)s-%(num)d-%(input_md5)s-%(md5)s"
