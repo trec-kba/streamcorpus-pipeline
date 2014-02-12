@@ -1,0 +1,41 @@
+streamcorpus_pipeline:
+  root_path:
+  tmp_dir_path:  tmp
+  reader: from_local_chunks
+
+  log_level: DEBUG
+
+  from_local_chunks:
+    streamcorpus_version: v0_2_0
+
+  incremental_transforms: [
+    upgrade_streamcorpus_v0_3_0,
+    language, 
+    guess_media_type, 
+    clean_html, 
+    hyperlink_labels, 
+    clean_visible
+    ]
+
+  batch_transforms: []
+
+  ## to_local_chunks must be last, because *moves* the tmp file away
+  writers: [to_local_chunks]
+
+  clean_html:
+    require_language_code: en
+    included_language_codes: ["en", ""]
+
+  hyperlink_labels:
+    require_clean_html: true
+    require_abs_url: true
+    all_domains: true
+    offset_types: [BYTES]
+
+  clean_visible:
+    require_clean_html: true
+
+  to_local_chunks:
+    output_type: otherdir
+    output_path: simulated_data
+    output_name: "%(source)s-%(num)d-%(input_md5)s-%(md5)s"
