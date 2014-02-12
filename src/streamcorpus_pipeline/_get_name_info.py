@@ -29,8 +29,11 @@ def get_name_info(chunk_path, assert_one_date_hour=False, i_str=None):
     date_hours = set()
     target_names = set()
     doc_ids = set()
+    epoch_ticks = None
     count = 0
     for si in ch:
+        if epoch_ticks is None:
+            epoch_ticks = si.stream_time.epoch_ticks
         date_hours.add( si.stream_time.zulu_timestamp[:13] )
         doc_ids.add( si.doc_id )
         for annotator_id, ratings in si.ratings.items():
@@ -42,6 +45,7 @@ def get_name_info(chunk_path, assert_one_date_hour=False, i_str=None):
     ## create the md5 property, so we can use it in the filename
     name_info['md5'] = ch.md5_hexdigest
     name_info['num'] = count
+    name_info['epoch_ticks'] = epoch_ticks
 
     name_info['target_names'] = '-'.join( target_names )
     name_info['doc_ids_8'] = '-'.join( [di[:8] for di in doc_ids] )
