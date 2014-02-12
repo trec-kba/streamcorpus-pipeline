@@ -166,6 +166,9 @@ class from_spinn3r_feed(object):
     ``use_prefetched``
       If set to a boolean value, always/never use prefetched data
       (default: unset; use prefetched data if present)
+    ``publisher_type``
+      If set, only return stream items whose publisher type in the
+      spinn3r feed exactly matches this string
 
     There is a class-level field, ``_prefetched``, which is a
     dictionary from input location to prefetched data.  It can be set
@@ -197,7 +200,11 @@ class from_spinn3r_feed(object):
             
         try:
             count = 0
+            # spinn3r publisher type == streamitem source
+            source = self.config.get('publisher_type')
             for si in _make_stream_items(stream):
+                if source is not None and si.source != source:
+                    continue
                 count += 1
                 yield si
             logger.info('produced {} stream items'.format(count))

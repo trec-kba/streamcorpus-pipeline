@@ -164,3 +164,32 @@ def test_spinn3r_pipeline_ignore_prefetched(filename, urls, pipeline_config, out
     with Chunk(path=output_file, mode='rb') as chunk:
         assert [si.abs_url for si in chunk] == urls
     
+def test_spinn3r_pipeline_filter_matches(filename, urls, pipeline_config, output_file):
+    """set a publisher_type filter that matches everything in the feed"""
+    pipeline_config['streamcorpus_pipeline']['from_spinn3r_feed'] = {
+        'publisher_type': 'WEBLOG'
+    }
+    instantiate_config(pipeline_config)
+    pipeline = Pipeline(pipeline_config)
+    work_unit = SimpleWorkUnit(str(filename))
+    work_unit.data['start_chunk_time'] = 0
+    work_unit.data['start_count'] = 0
+    pipeline._process_task(work_unit)
+
+    with Chunk(path=output_file, mode='rb') as chunk:
+        assert [si.abs_url for si in chunk] == urls
+
+def test_spinn3r_pipeline_filter_no_matches(filename, pipeline_config, output_file):
+    """set a publisher_type filter that matches nothing in the feed"""
+    pipeline_config['streamcorpus_pipeline']['from_spinn3r_feed'] = {
+        'publisher_type': 'MICROBLOG'
+    }
+    instantiate_config(pipeline_config)
+    pipeline = Pipeline(pipeline_config)
+    work_unit = SimpleWorkUnit(str(filename))
+    work_unit.data['start_chunk_time'] = 0
+    work_unit.data['start_count'] = 0
+    pipeline._process_task(work_unit)
+
+    # no chunks means the output file won't actually get written
+    assert not os.path.exists(output_file)
