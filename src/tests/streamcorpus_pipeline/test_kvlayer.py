@@ -26,7 +26,7 @@ def config(request):
     )
     yakonfig.set_runtime_args_dict(args_dict)
     fh = StringIO('''kvlayer: !include_func kvlayer.default_yaml''')
-    kvlayer_config = yakonfig.set_global_config(stream=fh)
+    kvlayer_config = yakonfig.set_global_config(fh)
     def fin():
         client = kvlayer.client(kvlayer_config['kvlayer'])
         client.delete_namespace()
