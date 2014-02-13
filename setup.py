@@ -43,10 +43,7 @@ def recursive_glob_with_tree(treeroot, pattern):
     return results
 
 def _myinstall(pkgspec):
-    setup(
-        script_args = ['-q', 'easy_install', '-v', pkgspec],
-        script_name = 'easy_install'
-    )
+    subprocess.check_call(['pip', 'install', pkgspec])
 
 class PyTest(Command):
     '''run py.test'''
