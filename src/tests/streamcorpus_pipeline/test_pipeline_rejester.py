@@ -44,9 +44,8 @@ def jobs_status(master, jobs):
     return '; '.join(['{0}: {1}'.format(j, job_status(master, j))
                       for j in jobs])
 
-def test_rejester_john_smith_simple(root_path, task_master):
+def test_rejester_john_smith_simple(root_path, task_master, tmpdir):
 
-    os.chdir(root_path)
     configs = [ 'john-smith', 'john-smith-with-labels-from-tsv' ]
     inputs = [ 'data/john-smith/original' ]
 
@@ -56,20 +55,29 @@ def test_rejester_john_smith_simple(root_path, task_master):
     for c in configs:
         fn = os.path.join(root_path, 'configs', c + '.yaml')
         with open(fn, 'r') as f:
-            work_specs[c] = {
-                'name': c,
-                'desc': 'test_pipeline_rejester for {0}'.format(c),
-                'min_gb': 0,
-                'config': yaml.load(f),
-                'module': 'streamcorpus_pipeline._rejester',
-                'run_function': 'rejester_run_function',
-                'terminate_function': 'rejester_terminate_function'
-            }
-            units[c] = {
-                os.path.join(root_path, i): dict(start_chunk_time=0)
-                for i in inputs
-            }
-            task_master.update_bundle(work_specs[c], units[c])
+            config = yaml.load(f)
+        assert 'streamcorpus_pipeline' in config
+        config['streamcorpus_pipeline']['root_path'] = root_path
+        assert 'writers' in config['streamcorpus_pipeline']
+        assert 'to_local_chunks' in config['streamcorpus_pipeline']['writers']
+        assert 'to_local_chunks' in config['streamcorpus_pipeline']
+        tlc = config['streamcorpus_pipeline']['to_local_chunks']
+        tlc['output_type'] = 'otherdir'
+        tlc['output_path'] = str(tmpdir)
+        work_specs[c] = {
+            'name': c,
+            'desc': 'test_pipeline_rejester for {0}'.format(c),
+            'min_gb': 0,
+            'config': config,
+            'module': 'streamcorpus_pipeline._rejester',
+            'run_function': 'rejester_run_function',
+            'terminate_function': 'rejester_terminate_function'
+        }
+        units[c] = {
+            os.path.join(root_path, i): dict(start_chunk_time=0)
+            for i in inputs
+        }
+        task_master.update_bundle(work_specs[c], units[c])
 
     # kick everything off
     task_master.set_mode(task_master.RUN)
