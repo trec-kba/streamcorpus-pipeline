@@ -10,27 +10,26 @@ source: <source>
 annotator_id: <annotator_id>
 entries:
   - target_id: <target_id>
-    documents: <directory_path_or_list_of_files>
+    profile_path:
+        - <file>
+        - <file>
+        - <directory>
+        - <directory>
+    doc_path: <directory_path_or_list_of_files>
     mention_tokens:
+      - slot-name: slot_value
       - <token>
-      - <token>
+      - <token> ... <token>
   - [...]
 
 Copyright 2012-2013 Diffeo, Inc.
 '''
 
-## this assumes that streamcorpus has been installed
-import streamcorpus
-from streamcorpus_pipeline._exceptions import ConfigurationError
-
-import logging
-
 import os
-import re
-import datetime
-import logging
 import yaml
 import magic
+import logging
+import streamcorpus
 from streamcorpus_pipeline._clean_visible import cleanse
 
 logger = logging.getLogger(__name__)
@@ -78,6 +77,15 @@ class yaml_files_list(object):
             if not isinstance(paths, list):
                 paths = [paths]
 
+            ## For now just treat profiles the same as all other
+            ## documents about an entity. Eventually we will
+            ## somehow use the designated profiles differently.
+            if 'profile_path' in entry:
+                profile_paths = entry['profile_path']
+                if not isinstance(profile_paths, list):
+                    profile_paths = [profile_paths]
+                paths.extend(profile_paths)
+
             for path in paths:
                 ## normalize path
                 path = str(path)
@@ -109,10 +117,29 @@ class yaml_files_list(object):
         self._sym_cache.add(sym)
         return sym
 
+    def _parse_mentions(self, raw_mentions):
+        ## raw_mentions is a list containing either dictionaries
+        ## or strings.
+        ## Example:
+        ## - slot-name: slot_value
+        ## - name: APT1
+        ## - APT1
+
+        mentions = []
+        for mention in raw_mentions:
+            if isinstance(mention, dict):
+                mentions.extend(mention.iteritems())
+            else:
+                mentions.append(('name', mention))
+        return mentions
+
+
     def _make_stream_item(self, path, entry, metadata):
         ## pull out target id and mention tokens
         target_id = str(entry['target_id'])
-        mentions = entry['mentions']
+
+        ## parse mentions in yaml file
+        mentions = self._parse_mentions(entry['mentions'])
 
         ## Every StreamItem has a stream_time property.  It usually comes
         ## from the document creation time.
@@ -151,7 +178,7 @@ class yaml_files_list(object):
 
         ## heuristically split the mentions string on white space and
         ## use each token as a separate mention.
-        rating.mentions = [cleanse(unicode(mention, 'utf-8')) for mention in mentions]
+        rating.mentions = [cleanse(unicode(mention[1], 'utf-8')) for mention in mentions]
 
         ## put this one label in the array of labels
         streamcorpus.add_annotation(stream_item, rating)

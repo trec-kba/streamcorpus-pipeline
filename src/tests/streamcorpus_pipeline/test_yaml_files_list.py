@@ -1,6 +1,5 @@
 # import time
 # import errno
-import pytest
 import os
 from streamcorpus_pipeline._yaml_files_list import yaml_files_list
 
@@ -11,3 +10,11 @@ def test_parse_file():
     for si in yfl(input_file):
         assert si.stream_id
         assert si.body.raw
+
+def test_parse_mentions():
+    raw_mentions = ['John Smith', {'name': 'John Smith'}, {'ip_address': '10.0.0.1'}]
+    yfl = yaml_files_list({})
+    mentions = yfl._parse_mentions(raw_mentions)
+
+    assert len(mentions) == len(raw_mentions)
+    assert mentions == [('name', 'John Smith'), ('name', 'John Smith'), ('ip_address', '10.0.0.1')]
