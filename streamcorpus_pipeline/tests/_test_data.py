@@ -4,7 +4,7 @@ from streamcorpus import Chunk, StreamItem_v0_2_0, add_annotation
 from StringIO import StringIO
 
 
-_TEST_DATA_ROOT = '../../../data'
+_TEST_DATA_ROOT = '../../data'
 
 
 def get_test_chunk_path():

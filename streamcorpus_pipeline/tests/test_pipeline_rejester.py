@@ -8,21 +8,11 @@ import yaml
 
 import streamcorpus
 from streamcorpus_pipeline._rejester import rejester_run_function
+from streamcorpus_pipeline.tests._test_data import _TEST_DATA_ROOT
 from rejester.workers import run_worker, MultiWorker
 
 logger = logging.getLogger(__name__)
 pytest_plugins = 'rejester.tests.fixtures'
-
-@pytest.fixture(scope="function") # (scope="module")
-def root_path(request):
-    """The root path of the streamcorpus-pipeline tree."""
-    here = os.path.dirname(__file__)
-    # note assertions about source tree layout
-    # we are in streamcorpus-pipeline/src/tests/streamcorpus_pipeline
-    tests = os.path.dirname(here)
-    src = os.path.dirname(tests)
-    scp = os.path.dirname(src)
-    return scp
 
 def job_status(master, name):
     """Get a quick summary of the status of 'name' as a (printable)
@@ -35,7 +25,7 @@ def job_status(master, name):
     f = master.num_finished(name)
     if f > 0: parts.append("{0} finished".format(f))
     z = master.num_failed(name)
-    if z > 0: parts.append("{0} failed".format(f))
+    if z > 0: parts.append("{0} failed".format(z))
     if len(parts) == 0: parts.append("no status")
     return ', '.join(parts)
 
@@ -45,20 +35,22 @@ def jobs_status(master, jobs):
     return '; '.join(['{0}: {1}'.format(j, job_status(master, j))
                       for j in jobs])
 
-def test_rejester_john_smith_simple(root_path, task_master, tmpdir):
+def test_rejester_john_smith_simple(task_master, tmpdir):
 
     configs = [ 'john-smith', 'john-smith-with-labels-from-tsv' ]
-    inputs = [ 'data/john-smith/original' ]
+    inputs = [ 'john-smith/original' ]
 
     # set up the job specs:
     work_specs = {}
     units = {}
+    root = os.path.join(os.path.dirname(__file__), _TEST_DATA_ROOT)
+    treeroot = os.path.join(root, '..')
     for c in configs:
-        fn = os.path.join(root_path, 'configs', c + '.yaml')
+        fn = os.path.join(treeroot, 'configs', c + '.yaml')
         with open(fn, 'r') as f:
             config = yaml.load(f)
         assert 'streamcorpus_pipeline' in config
-        config['streamcorpus_pipeline']['root_path'] = root_path
+        config['streamcorpus_pipeline']['root_path'] = treeroot
         assert 'writers' in config['streamcorpus_pipeline']
         assert 'to_local_chunks' in config['streamcorpus_pipeline']['writers']
         assert 'to_local_chunks' in config['streamcorpus_pipeline']
@@ -75,7 +67,7 @@ def test_rejester_john_smith_simple(root_path, task_master, tmpdir):
             'terminate_function': 'rejester_terminate_function'
         }
         units[c] = {
-            os.path.join(root_path, i): dict(start_chunk_time=0)
+            os.path.join(root, i): dict(start_chunk_time=0)
             for i in inputs
         }
         task_master.update_bundle(work_specs[c], units[c])
@@ -133,7 +125,7 @@ def test_rejester_john_smith_simple(root_path, task_master, tmpdir):
     # fetch back all of the work units and verify they succeeded
     for c in configs:
         for i in inputs:
-            ii = os.path.join(root_path, i)
+            ii = os.path.join(root, i)
             assert units[c][ii].get('traceback') is None
         assert task_master.num_failed(c) == 0
         assert task_master.num_finished(c) == len(inputs)

@@ -7,7 +7,7 @@ from streamcorpus import StreamItem, ContentItem
 from streamcorpus_pipeline.stages import _init_stage
 from streamcorpus_pipeline._clean_html import make_clean_html
 from streamcorpus_pipeline._clean_visible import make_clean_visible
-from tests.streamcorpus_pipeline._test_data import _TEST_DATA_ROOT
+from streamcorpus_pipeline.tests._test_data import _TEST_DATA_ROOT
 
 
 def test_make_clean_html_nyt():

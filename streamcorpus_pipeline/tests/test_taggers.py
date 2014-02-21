@@ -4,7 +4,7 @@ import tempfile
 from streamcorpus import Chunk
 
 from streamcorpus_pipeline._taggers import name_align_labels, line_offset_align_labels, byte_offset_align_labels
-from tests.streamcorpus_pipeline._test_data import get_john_smith_tagged_by_lingpipe_without_labels_data
+from streamcorpus_pipeline.tests._test_data import get_john_smith_tagged_by_lingpipe_without_labels_data
 
 
 def _test_config():

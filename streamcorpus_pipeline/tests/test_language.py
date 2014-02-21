@@ -2,7 +2,7 @@
 import os
 from streamcorpus_pipeline.stages import _init_stage
 from streamcorpus import make_stream_item, ContentItem
-from tests.streamcorpus_pipeline._test_data import _TEST_DATA_ROOT
+from streamcorpus_pipeline.tests._test_data import _TEST_DATA_ROOT
 
 def test_langauge():
     path = os.path.dirname(__file__)

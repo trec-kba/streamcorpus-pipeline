@@ -1,7 +1,7 @@
 import os
 from streamcorpus import Chunk, serialize
 from streamcorpus_pipeline._tokenizer import nltk_tokenizer
-from tests.streamcorpus_pipeline._test_data import _TEST_DATA_ROOT
+from streamcorpus_pipeline.tests._test_data import _TEST_DATA_ROOT
 
 def test_tokenizer():
     path = os.path.dirname(__file__)

@@ -6,7 +6,7 @@ import pytest
 from streamcorpus import make_stream_item, StreamItem, ContentItem, OffsetType, Chunk
 from streamcorpus_pipeline._hyperlink_labels import anchors_re, hyperlink_labels
 from streamcorpus_pipeline.stages import _init_stage
-from tests.streamcorpus_pipeline._test_data import _TEST_DATA_ROOT
+from streamcorpus_pipeline.tests._test_data import _TEST_DATA_ROOT
 
 logger = logging.getLogger(__name__)
 

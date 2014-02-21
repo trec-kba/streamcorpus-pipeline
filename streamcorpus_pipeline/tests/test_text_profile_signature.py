@@ -3,7 +3,7 @@ from __future__ import absolute_import
 import os
 import hashlib
 from streamcorpus_pipeline.text_profile_signature import tps
-from tests.streamcorpus_pipeline._test_data import _TEST_DATA_ROOT
+from streamcorpus_pipeline.tests._test_data import _TEST_DATA_ROOT
 
 def test_tps():
     path = os.path.dirname(__file__)

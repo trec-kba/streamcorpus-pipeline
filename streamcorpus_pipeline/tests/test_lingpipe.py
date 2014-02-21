@@ -45,7 +45,7 @@ def test_aligner(tmp_dir_path):
         'lingpipe', dict(
             tmp_dir_path = tmp_dir_path,
             exit_code_on_out_of_memory=1,
-            pipeline_root_path=os.path.join(os.path.dirname(__file__), '../../../third/'),
+            pipeline_root_path=os.path.join(os.path.dirname(__file__), '../../third/'),
             offset_types = ['BYTES'],
             offset_debugging = True,
             cleanup_tmp_files = False,
@@ -86,7 +86,7 @@ def test_aligner_separate(tmp_dir_path):
         'lingpipe', dict(
             tmp_dir_path = tmp_dir_path,
             exit_code_on_out_of_memory=1,
-            pipeline_root_path=os.path.join(os.path.dirname(__file__), '../../../third/'),
+            pipeline_root_path=os.path.join(os.path.dirname(__file__), '../../third/'),
             offset_types = ['BYTES'],
             offset_debugging = True,
             cleanup_tmp_files = False,

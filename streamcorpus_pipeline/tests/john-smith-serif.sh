@@ -9,7 +9,7 @@ die () {
 [ "$#" -eq 1 ] || die "1 argument required, $# provided"
 TMP=$1
 
-cd $(dirname $0)/../../..
+cd $(dirname $0)/../..
 
 export PYTHONPATH=$(dirname $0)/../..:$PYTHONPATH
 

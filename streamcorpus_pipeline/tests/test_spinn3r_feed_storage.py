@@ -13,16 +13,12 @@ from streamcorpus_pipeline._pipeline import Pipeline
 from streamcorpus_pipeline.run import instantiate_config, SimpleWorkUnit
 from streamcorpus_pipeline._spinn3r_feed_storage import \
     from_spinn3r_feed, ProtoStreamReader
-
+from streamcorpus_pipeline.tests._test_data import _TEST_DATA_ROOT
 
 @pytest.fixture
 def filename(request):
     """py.path.local for the spinn3r sample data file"""
-    here = request.fspath
-    # walk up to top of streamcorpus_pipeline tree
-    while here.basename != 'src':
-        here = here.dirpath()
-    return here.dirpath('data', 'test', 'spinn3r.bin')
+    return request.fspath.join('..', _TEST_DATA_ROOT, 'test', 'spinn3r.bin')
 
 @pytest.fixture
 def urls():
