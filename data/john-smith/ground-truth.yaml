@@ -4,9 +4,10 @@ annotator_id: bagga-and-baldwin
 root_path: original/
 entries:
   - target_id: 0
-    doc_path:
+    profile_path: 
       - 0/960114.114
       - 0/960228.375
+    doc_path:
       - 0/960402.459
       - 0/960402.464
       - 0/960513.222
