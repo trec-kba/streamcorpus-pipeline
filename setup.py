@@ -80,7 +80,7 @@ setup(
     version=VERSION,
     description=DESC,
     license=read_file('LICENSE.txt'),
-    long_description=read_file('README.rst'),
+    long_description=read_file('README.md'),
     #source_label=SOURCE_LABEL,
     author=AUTHOR,
     author_email=AUTHOR_EMAIL,
