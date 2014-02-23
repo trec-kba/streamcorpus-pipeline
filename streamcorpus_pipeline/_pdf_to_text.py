@@ -1,11 +1,13 @@
-import logging
-
+from __future__ import absolute_import
 from cStringIO import StringIO
+import logging
 
 from pdfminer.pdfinterp import PDFResourceManager, PDFPageInterpreter
 from pdfminer.converter import TextConverter
 from pdfminer.layout import LAParams
 from pdfminer.pdfpage import PDFPage
+
+from streamcorpus_pipeline.stages import Configured
 
 logger = logging.getLogger(__name__)
 
@@ -32,13 +34,13 @@ def convert_pdf_to_text(data):
     retstr.close()
     return ret
 
-def pdf_to_text(config):
+class pdf_to_text(Configured):
     '''
     returns a kba.pipeline "transform" function that attempts to
     generate stream_item.body.clean_visible from body.raw
     '''
-    ## make a closure around config
-    def _make_clean_visible(stream_item, context):
+    config_name = 'pdf_to_text'
+    def __call__(self, stream_item, context):
 
         if stream_item.body and stream_item.body.raw \
                 and stream_item.body.media_type == 'application/pdf':
@@ -54,5 +56,3 @@ def pdf_to_text(config):
                                  stream_item.stream_id)
 
         return stream_item
-
-    return _make_clean_visible

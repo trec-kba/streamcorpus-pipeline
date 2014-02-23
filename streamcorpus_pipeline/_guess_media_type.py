@@ -4,10 +4,13 @@ streamcorpus_pipeline Transform for gathering stats about file types.
 
 This software is released under an MIT/X11 open source license.
 
-Copyright 2012-2013 Diffeo, Inc.
+Copyright 2012-2014 Diffeo, Inc.
 '''
-
+from __future__ import absolute_import
 import re
+
+from streamcorpus_pipeline.stages import Configured
+
 first_letters = re.compile('''^(.|\n)*?(?P<first_letters>\S+\s?\S+)''')
 
 ## ignore up to 20 non '<' characters including line feeds looking for
@@ -97,14 +100,14 @@ def file_type_stats(config):
     return _file_type_stats
 
 
-def guess_media_type(config):
+class guess_media_type(Configured):
     '''
     returns a kba.pipeline "transform" function that populates
     body.media_type if it is empty and the content type is easily
     guessed.
     '''
-    ## make a closure around config
-    def _guess_media_type(stream_item, context):
+    config_name = 'guess_media_type'
+    def __call__(self, stream_item, context):
         if stream_item.body and stream_item.body.media_type:
             ## don't change it
             return stream_item
@@ -124,5 +127,3 @@ def guess_media_type(config):
                 stream_item.body.media_type = 'application/pdf'
 
         return stream_item
-
-    return _guess_media_type

@@ -57,6 +57,7 @@ from streamcorpus_pipeline._exceptions import ConfigurationError
 from streamcorpus_pipeline._spinn3r.protoStream_pb2 \
     import ProtoStreamDelimiter, ProtoStreamHeader
 from streamcorpus_pipeline._spinn3r.spinn3rApi_pb2 import Entry
+from streamcorpus_pipeline.stages import Configured
 
 logger = logging.getLogger(__name__)
 
@@ -158,7 +159,7 @@ class ProtoStreamReader(object):
             assert delim.delimiter_type == ProtoStreamDelimiter.ENTRY
             yield self._read_a(self._entry_type)
 
-class from_spinn3r_feed(object):
+class from_spinn3r_feed(Configured):
     """streamcorpus-pipeline reader for spinn3r.com feeds.
 
     Accepted configuration items include:
@@ -175,12 +176,12 @@ class from_spinn3r_feed(object):
     externally before invoking the pipeline.
 
     """
+    config_name = 'from_spinn3r_feed'
 
     _prefetched = {}
 
-    def __init__(self, config):
+    def __init__(self):
         super(from_spinn3r_feed, self).__init__()
-        self.config = config
 
     def __call__(self, i_str):
         # Do we have prefetched data for i_str?  Can/should/must we

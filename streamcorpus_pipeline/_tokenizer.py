@@ -4,25 +4,27 @@ streamcorpus_pipeline.TaggerBatchTransform for LingPipe
 
 This software is released under an MIT/X11 open source license.
 
-Copyright 2012-2013 Diffeo, Inc.
+Copyright 2012-2014 Diffeo, Inc.
 '''
+from __future__ import absolute_import
+import hashlib
+import itertools
+import logging
 import os
 import re
 import sys
-import uuid
 import time
-import hashlib
-import logging
-import itertools
 import traceback
-import streamcorpus
-from sortedcollection import SortedCollection
-from streamcorpus_pipeline.stages import IncrementalTransform
+import uuid
+
 from nltk.tokenize import WhitespaceTokenizer
 from nltk.tokenize.punkt import PunktWordTokenizer, PunktSentenceTokenizer
-from streamcorpus import Token, Sentence, EntityType, Chunk, Offset, OffsetType, Gender, MentionType, Attribute, AttributeType
 
-from _taggers import TaggerBatchTransform
+from sortedcollection import SortedCollection
+import streamcorpus
+from streamcorpus import Token, Sentence, EntityType, Chunk, Offset, OffsetType, Gender, MentionType, Attribute, AttributeType
+from streamcorpus_pipeline.stages import IncrementalTransform
+from streamcorpus_pipeline._taggers import TaggerBatchTransform
 
 logger = logging.getLogger('streamcorpus_pipeline.nltk_tokenizer')
 
@@ -31,9 +33,10 @@ class nltk_tokenizer(IncrementalTransform):
     a streamcorpus_pipeline IncrementalTransform that converts a chunk into a new
     chunk with Sentence objects generated using NLTK tokenizers
     '''
+    config_name = 'nltk_tokenizer'
     tagger_id = 'nltk_tokenizer'
-    def __init__(self, config):
-        self.config = config
+    def __init__(self):
+        super(nltk_tokenizer, self).__init__()
         self.sentence_tokenizer = PunktSentenceTokenizer()
         self.word_tokenizer = WhitespaceTokenizer() #PunktWordTokenizer()
 

@@ -4,23 +4,27 @@ Pipeline "transform" for converting raw text into clean_html
 
 This software is released under an MIT/X11 open source license.
 
-Copyright 2012-2013 Diffeo, Inc.
+Copyright 2012-2014 Diffeo, Inc.
 '''
-import re
-import os
-import string
+from __future__ import absolute_import
 import logging
+import os
+import re
+import string
 import traceback
-import streamcorpus
+
 import lxml.html
 import lxml.html.clean
 import lxml.html.soupparser
 from BeautifulSoup import UnicodeDammit
 
+import streamcorpus
+from streamcorpus_pipeline.stages import Configured
+
 logger = logging.getLogger(__name__)
 
 if __name__ != '__main__':
-    import _exceptions
+    import streamcorpus_pipeline._exceptions
 
 encoding_re = re.compile(
     '''(?P<start_xml>([^<]|\n)*?\<\?xml[^>]*)''' + \
@@ -299,16 +303,18 @@ def make_clean_html(raw, stream_item=None, log_dir_path=None):
 
     return _clean_html
 
-def clean_html(config):
+class clean_html(Configured):
     '''
     returns a kba.pipeline "transform" function that attempts to
     generate stream_item.body.clean_html from body.raw
     '''
-    ## make a closure around config
-    def _make_clean_html(stream_item, context):
-        require_code = config.get('require_language_code', None)
+    config_name = 'clean_html'
+    default_config = { 'include_language_codes': [] }
 
-        codes = config.get('include_language_codes', [])
+    def __call__(self, stream_item, context):
+        require_code = self.config.get('require_language_code', None)
+
+        codes = self.config['include_language_codes']
 
         if require_code:
             ## need to check stream_item for language
@@ -335,6 +341,4 @@ def clean_html(config):
                 log_dir_path=config.get('log_dir_path', None))
 
         return stream_item
-
-    return _make_clean_html
 

@@ -4,31 +4,36 @@ kba.pipeline Transform for converting v0_1_0 StreamItems to v0_2_0
 
 This software is released under an MIT/X11 open source license.
 
-Copyright 2012-2013 Diffeo, Inc.
+Copyright 2012-2014 Diffeo, Inc.
 '''
+from __future__ import absolute_import
+import logging
 
 from streamcorpus import make_stream_item, make_stream_time, ContentItem, Tagging, Rating, Target, Annotator
-import logging
+from streamcorpus_pipeline.stages import Configured
+
 logger = logging.getLogger(__name__)
 
-def keep_annotatoted(config):
+class keep_annotated(Configured):
     '''
     returns a kba.pipeline "transform" function that populates takes
     in v0_1_0 StreamItems and emits v0_2_0 StreamItems
     '''
-    fh = open(config['annotation_file'])
-    annotated_stream_ids = dict()
-    for line in fh.readlines():
-        if line.startswith('#'):
-            continue
-        parts = line.split()
-        stream_id = parts[2]
-        if stream_id not in annotated_stream_ids:
-            annotated_stream_ids[ stream_id ] = Rating(annotator=Annotator(annotator_id=parts[0]),
-                                                       target=Target(target_id='http://en.wikipedia.org/wiki/%s' % parts[3]))
+    config_name = 'keep_annotated'
+    def __init__(self):
+        super(keep_annotated, self).__init()
+        fh = open(self.config['annotation_file'])
+        annotated_stream_ids = dict()
+        for line in fh.readlines():
+            if line.startswith('#'):
+                continue
+            parts = line.split()
+            stream_id = parts[2]
+            if stream_id not in annotated_stream_ids:
+                annotated_stream_ids[ stream_id ] = Rating(annotator=Annotator(annotator_id=parts[0]),
+                                                           target=Target(target_id='http://en.wikipedia.org/wiki/%s' % parts[3]))
 
-    ## make a closure around config
-    def _keep_annotatoted(s1, context):
+    def __call__(self, s1, context):
         if s1.stream_id in annotated_stream_ids:
             r = annotated_stream_ids[s1.stream_id]
             s1.ratings[r.annotator.annotator_id] = [r]
@@ -36,15 +41,14 @@ def keep_annotatoted(config):
         else:
             return None
 
-    return _keep_annotatoted
-
-def upgrade_streamcorpus(config):
+class upgrade_streamcorpus(Configured):
     '''
     returns a kba.pipeline "transform" function that populates takes
     in v0_1_0 StreamItems and emits v0_2_0 StreamItems
     '''
-    ## make a closure around config
-    def _upgrade_streamcorpus(s1, context):
+    config_name = 'upgrade_streamcorpus'
+    default_config = { 'keep_old_cleansed_as_clean_visible': False }
+    def __call__(self, s1, context):
         s2 = make_stream_item(s1.stream_time.zulu_timestamp,
                               s1.abs_url)
         s2.schost = s1.schost
@@ -69,8 +73,7 @@ def upgrade_streamcorpus(config):
                     )}
             )
 
-        if 'keep_old_cleansed_as_clean_visible' in config and \
-                config['keep_old_cleansed_as_clean_visible']:
+        if self.config['keep_old_cleansed_as_clean_visible']:
             s2.body.clean_visible = s1.body.cleansed
 
         if s1.source == 'social':
@@ -111,5 +114,3 @@ def upgrade_streamcorpus(config):
                 )
             s2.other_content['anchor'] = ci
         return s2
-
-    return _upgrade_streamcorpus

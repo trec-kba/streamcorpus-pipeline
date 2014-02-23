@@ -5,13 +5,15 @@ if our own attempt to make clean_html from raw failed.
 
 This software is released under an MIT/X11 open source license.
 
-Copyright 2012-2013 Diffeo, Inc.
+Copyright 2012-2014 Diffeo, Inc.
 '''
-
+from __future__ import absolute_import
 import sys
-from _clean_html import force_unicode
 
-def handle_unconvertible_spinn3r(config):
+from streamcorpus_pipeline._clean_html import force_unicode
+from streamcorpus_pipeline.stages import Configurable
+
+class handle_unconvertible_spinn3r(Configurable):
     '''
     It seems that some of the spinn3r content is not actually UTF-8
     and there is no record of the original encoding, so we take a shot
@@ -19,8 +21,9 @@ def handle_unconvertible_spinn3r(config):
     using it as the clean_html.  If that fails, we drop the entire
     document from the corpus.
     '''
+    config_name = 'handle_unconvertible_spinn3r'
 
-    def _handle_unconvertible_spinn3r( si, context ):
+    def __call__(self, si, context):
 
         if not si.body:
             sys.exit('si.body should never be none: %r' % si.stream_id)
@@ -51,5 +54,3 @@ def handle_unconvertible_spinn3r(config):
 
         ## return the si for next stage in pipeline
         return si
-
-    return _handle_unconvertible_spinn3r

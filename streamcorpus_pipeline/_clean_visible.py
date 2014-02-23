@@ -7,17 +7,20 @@ any standoff annotation can refer to the original byte positions.
 
 This software is released under an MIT/X11 open source license.
 
-Copyright 2012-2013 Diffeo, Inc.
+Copyright 2012-2014 Diffeo, Inc.
 '''
-
-import re
-import sys
-import string
-import logging
+from __future__ import absolute_import
 import itertools
+import logging
+import re
+import string
+import sys
 import traceback
+
 import lxml.etree
-from _clean_html import drop_invalid_and_upper_utf8_chars
+
+from streamcorpus_pipeline._clean_html import drop_invalid_and_upper_utf8_chars
+import yakonfig
 
 logger = logging.getLogger(__name__)
 
@@ -105,16 +108,24 @@ def make_clean_visible(html, tag_replacement_char=' '):
     
     return ''.join( itertools.imap(non_tag_chars(), html) )
 
-def clean_visible(config):
+class clean_visible(object):
     '''
     returns a kba.pipeline "transform" function that attempts to
     generate stream_item.body.clean_visible from body.clean_html
     '''
-    ## we only do clean_html today
-    assert config.get('require_clean_html', True)
+    config_name = 'clean_visible'
+    default_config = { 'require_clean_html': True }
+    @staticmethod
+    def check_config(config, name):
+        if not config['require_clean_html']:
+            raise yakonfig.ConfigurationError('{} only does clean_html'
+                                              .format(name))
 
-    ## make a closure around config
-    def _make_clean_visible(stream_item, context):
+    def __init__(self):
+        self.config = yakonfig.get_global_config('streamcorpus_pipeline',
+                                                 self.config_name)
+
+    def __call__(self, stream_item, context):
         if stream_item.body:
             if stream_item.body.clean_html:
                 stream_item.body.clean_visible = \
@@ -126,9 +137,6 @@ def clean_visible(config):
                 stream_item.body.clean_visible = stream_item.body.raw
                 logger.debug('text plain raw copied to clean_visible')
         return stream_item
-
-    return _make_clean_visible
-
 
 def make_clean_visible_file(i_chunk, clean_visible_path):
     '''make a temp file of clean_visible text'''

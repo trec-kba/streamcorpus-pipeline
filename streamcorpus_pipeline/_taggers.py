@@ -6,25 +6,31 @@ This software is released under an MIT/X11 open source license.
 
 Copyright 2012-2013 Diffeo, Inc.
 '''
+from __future__ import absolute_import
+import collections
+import exceptions
 import gc
+import itertools
+import logging
 import os
+import shutil
+import subprocess
 import sys
 import time
-import shutil
-import stages
-import _memory
-import logging
 import traceback
-import itertools
-import subprocess
-import exceptions
-import collections
-import streamcorpus
+
 import xml.dom.minidom
+
+import streamcorpus
 from streamcorpus import Chunk, Tagging, Label, OffsetType, add_annotation
-from _clean_visible import make_clean_visible_file, cleanse
+from streamcorpus_pipeline._clean_visible import make_clean_visible_file, \
+    cleanse
 from sortedcollection import SortedCollection
-from _exceptions import PipelineOutOfMemory, PipelineBaseException
+from streamcorpus_pipeline._exceptions import PipelineOutOfMemory, \
+    PipelineBaseException
+import streamcorpus_pipeline._memory
+import streamcorpus_pipeline.stages
+from yakonfig import ConfigurationError
 
 logger = logging.getLogger(__name__)
 
@@ -320,17 +326,11 @@ def _aligner_core(t_path1, aligner, aligner_data):
         logger.info('copied %r -> %r', t_path2, t_path1)
 
 
-class _aligner_batch_transform(stages.BatchTransform):
+class _aligner_batch_transform(streamcorpus_pipeline.stages.BatchTransform):
     # aligner needs to be a single element tuple containing a function pointer,
     # because otherwise a function pointer assigned at class definition scope becomes
     # "bound" to the class and will be called with a suprious first 'self' argument.
     aligner = None
-    config_require = ()
-
-    def __init__(self, config):
-        self.config = config
-        for k in self.config_require:
-            assert k in self.config
 
     def process_path(self, chunk_path):
         _aligner_core(chunk_path, self.aligner[0], self.config)
@@ -344,29 +344,44 @@ class name_align_labels(_aligner_batch_transform):
     requires config['chain_selector'] = ALL | ANY
     requires config['annotator_id'] (which person/org did manual labelling)
     '''
+    config_name = 'name_align_labels'
+    @staticmethod
+    def check_config(config, name):
+        if 'chain_selector' not in config:
+            raise ConfigurationError('{} requires chain_selector'.format(name))
+        if 'annotator_id' not in config:
+            raise ConfigurationError('{} requires annotator_id'.format(name))
     aligner = (names_in_chains,)
-    config_require = ('chain_selector', 'annotator_id')
-
 
 class line_offset_align_labels(_aligner_batch_transform):
     '''
     requires config['annotator_id'] (which person/org did manual labelling)
     requires config['tagger_id'] (which software did tagging to process)
     '''
+    config_name = 'line_offset_align_labels'
+    @staticmethod
+    def check_config(config, name):
+        if 'annotator_id' not in config:
+            raise ConfigurationError('{} requires annotator_id'.format(name))
+        if 'tagger_id' not in config:
+            raise ConfigurationError('{} requires tagger_id'.format(name))
     aligner = (line_offset_labels,)
-    config_require = ('annotator_id', 'tagger_id')
-
 
 class byte_offset_align_labels(_aligner_batch_transform):
     '''
     requires config['annotator_id'] (which person/org did manual labelling)
     requires config['tagger_id'] (which software did tagging to process)
     '''
+    config_name = 'byte_offset_align_labels'
+    @staticmethod
+    def check_config(config, name):
+        if 'annotator_id' not in config:
+            raise ConfigurationError('{} requires annotator_id'.format(name))
+        if 'tagger_id' not in config:
+            raise ConfigurationError('{} requires tagger_id'.format(name))
     aligner = (byte_offset_labels,)
-    config_require = ('annotator_id', 'tagger_id')
 
-
-class TaggerBatchTransform(stages.BatchTransform):
+class TaggerBatchTransform(streamcorpus_pipeline.stages.BatchTransform):
     '''
     streamcorpus.pipeline.TaggerBatchTransform provides a structure for
     aligning a taggers output with labels and generating
@@ -374,8 +389,8 @@ class TaggerBatchTransform(stages.BatchTransform):
     '''
     template = None
 
-    def __init__(self, config):
-        self.config = config
+    def __init__(self):
+        super(TaggerBatchTransform, self).__init__()
         self._child = None
 
     def process_path(self, chunk_path):

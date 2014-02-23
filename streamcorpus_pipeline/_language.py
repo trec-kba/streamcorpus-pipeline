@@ -4,18 +4,21 @@ StreamItem.body.language
 
 This software is released under an MIT/X11 open source license.
 
-Copyright 2012-2013 Diffeo, Inc.
+Copyright 2012-2014 Diffeo, Inc.
 '''
 
+from __future__ import absolute_import
 import cld
 from streamcorpus import Language
+from streamcorpus_pipeline.stages import Configured
 
-def language(config):
+class language(Configured):
     '''
     If available, use .body.raw to guess the language name/code and
     store in .body.language
     '''
-    def _language(si, context):
+    config_name = 'language'
+    def __call__(self, si, context):
         if si.body and si.body.raw:
             name, code, is_reliable, num_text_bytes, details = cld.detect(si.body.raw)
             if is_reliable and code != 'xxx':
@@ -28,5 +31,3 @@ def language(config):
             si.body.language = Language(code='', name='')
 
         return si
-
-    return _language

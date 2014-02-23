@@ -1,11 +1,14 @@
 '''
 This software is released under an MIT/X11 open source license.
 
-Copyright 2012-2013 Diffeo, Inc.
+Copyright 2012-2014 Diffeo, Inc.
 '''
+from __future__ import absolute_import
 import copy
 import logging
+
 import streamcorpus
+from streamcorpus_pipeline.stages import Configured
 
 logger = logging.getLogger(__name__)
 
@@ -24,9 +27,8 @@ def upgrade_labels(old_obj, new_obj):
                 offsets=label.offsets)
             new_obj.labels[annotator_id].append(new_label)
 
-class upgrade_streamcorpus_v0_3_0(object):
-    def __init__(self, config):
-        self._config = config
+class upgrade_streamcorpus_v0_3_0(Configured):
+    config_name = 'upgrade_streamcorpus_v0_3_0'
 
     def __call__(self, si, context=None):
         if si.version == streamcorpus.Versions.v0_3_0:

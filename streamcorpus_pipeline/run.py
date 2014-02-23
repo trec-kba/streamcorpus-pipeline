@@ -18,8 +18,9 @@ import time
 
 import dblogger
 import kvlayer
-from yakonfig import set_global_config, set_runtime_args_object
+import yakonfig
 
+import streamcorpus_pipeline
 from streamcorpus_pipeline._exceptions import ConfigurationError
 from streamcorpus_pipeline._pipeline import Pipeline
 
@@ -82,6 +83,13 @@ def make_hash(obj):
 
 def instantiate_config(config):
     '''setup the config and load external modules
+
+    This updates 'config' as follows:
+
+    * All paths are replaced with absolute paths
+    * A hash and JSON dump of the config are stored in the config
+    * If 'pythonpath' is in the config, it is added to sys.path
+    * If 'setup_modules' is in the config, all modules named in it are loaded
     '''
     make_absolute_paths(config)
 
@@ -121,32 +129,20 @@ def instantiate_config(config):
     if die:
         sys.exit(1)
 
-
 def main():
     import argparse
     parser = argparse.ArgumentParser(
         description=Pipeline.__doc__,
-        usage='streamcorpus_pipeline config.yaml')
+        usage='echo file.in | streamcorpus_pipeline config.yaml')
     parser.add_argument('-i', '--input', action='append', 
                         help='file paths to input instead of reading from stdin')
     parser.add_argument('--in-glob', action='append', default=[], help='path glob specifying input files')
-    parser.add_argument('config', metavar='config.yaml', help='yakonfig YAML file')
+    parser.add_argument('config', metavar='FILE',
+                        help='top-level configuration file')
 
-    ## get kvlayer command line arguments
-    kvlayer.add_arguments(
-        parser, 
-        defaults=dict(
-            app_name='streamcorpus_pipeline',
-            ),
-        include_app_name=True,
-        include_namespace=True,
-        )
-
-    args = parser.parse_args()
-
-    ## use yakonfig to provide a globally accessible configuration
-    set_runtime_args_object(args)
-    config = set_global_config(args.config)
+    args = yakonfig.parse_args(parser,
+                               [yakonfig, kvlayer, streamcorpus_pipeline])
+    config = yakonfig.get_global_config()
     dblogger.configure_logging(config)
 
     ## this modifies the global config, passed by reference
@@ -162,7 +158,7 @@ def main():
         input_paths = sys.stdin
 
     ## get a Pipeline instance, so we can use it below
-    pipeline = Pipeline(config)
+    pipeline = Pipeline()
 
     for i_str in input_paths:
         work_unit = SimpleWorkUnit(i_str.strip())

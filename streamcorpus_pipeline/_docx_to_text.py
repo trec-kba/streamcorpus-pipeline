@@ -1,7 +1,10 @@
+from __future__ import absolute_import
 import logging
 from cStringIO import StringIO
 
 from docx import Document
+
+from streamcorpus_pipeline.stages import Configured
 
 logger = logging.getLogger(__name__)
 
@@ -14,14 +17,13 @@ def extract_text(data):
     fp.close()
     return result
 
-def docx_to_text(config):
+class docx_to_text(Configured):
     '''
     returns a kba.pipeline "transform" function that attempts to
     generate stream_item.body.clean_visible from body.raw
     '''
-    ## make a closure around config
-    def _make_clean_visible(stream_item, context):
-
+    config_name = 'docx_to_text'
+    def __call__(self, stream_item, context):
         if stream_item.body and stream_item.body.raw \
                 and stream_item.body.media_type == 'application/msword':
 
@@ -36,5 +38,3 @@ def docx_to_text(config):
                                  stream_item.stream_id)
 
         return stream_item
-
-    return _make_clean_visible

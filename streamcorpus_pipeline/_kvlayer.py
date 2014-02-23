@@ -13,11 +13,12 @@ import uuid
 
 import kvlayer
 import streamcorpus
+from streamcorpus_pipeline.stages import Configured
 import yakonfig
 
 logger = logging.getLogger(__name__)
 
-class from_kvlayer(object):
+class from_kvlayer(Configured):
     '''
     loads StreamItems from a kvlayer table based an i_str passed to
     __call__, where the i_str must be a four-tuple joined on commas
@@ -28,10 +29,14 @@ class from_kvlayer(object):
     If one of the doc_ids is provided, then both must be provided.
     That is, half-open ranges are not supported.
     '''
-    def __init__(self, config):
-        self.config = config
-        kvlayer_config = yakonfig.get_global_config('kvlayer')
-        self.client = kvlayer.client(kvlayer_config)
+    config_name = 'from_kvlayer'
+    @staticmethod
+    def check_config(config, name):
+        yakonfig.check_toplevel_config(kvlayer, name)
+
+    def __init__(self):
+        super(from_kvlayer, self).__init__()
+        self.client = kvlayer.client()
         self.client.setup_namespace(
             dict(stream_items=2))
 
@@ -58,7 +63,7 @@ class from_kvlayer(object):
             yield streamcorpus.deserialize(data)
 
 
-class to_kvlayer(object):
+class to_kvlayer(Configured):
     '''
     stores StreamItems in a kvlayer table called "stream_items" in the
     namespace specified in the config dict for this stage.
@@ -73,10 +78,14 @@ class to_kvlayer(object):
     doc_id using the index table stream_items_doc_id_epoch_ticks,
     which has the keys reversed and no data.
     '''
-    def __init__(self, config):
-        self.config = config
-        kvlayer_config = yakonfig.get_global_config('kvlayer')
-        self.client = kvlayer.client(kvlayer_config)
+    config_name = 'to_kvlayer'
+    @staticmethod
+    def check_config(config, name):
+        yakonfig.check_toplevel_config(kvlayer, name)
+
+    def __init__(self):
+        super(to_kvlayer, self).__init__()
+        self.client = kvlayer.client()
         self.client.setup_namespace(
             dict(stream_items=2,
                  stream_items_doc_id_epoch_ticks=2))

@@ -6,22 +6,22 @@ provides a command line interface to this functionality.
 
 This software is released under an MIT/X11 open source license.
 
-Copyright 2012-2013 Diffeo, Inc.
+Copyright 2012-2014 Diffeo, Inc.
 '''
 
+from __future__ import absolute_import
+import atexit
+import itertools
+import logging
+import math
 import os
 import re
+import shutil
+import signal
 import sys
 import time
-import uuid
-import math
-import shutil
-import atexit
-import signal
-import logging
 import traceback
-import itertools
-import streamcorpus
+import uuid
 
 try:
     import gevent
@@ -29,12 +29,14 @@ except:
     ## only load gevent if it is available :-)
     gevent = None
 
-from stages import _init_stage, BatchTransform
-from _exceptions import FailedExtraction, GracefulShutdown, ConfigurationError
-import _exceptions
+import streamcorpus
+import yakonfig
+from streamcorpus_pipeline.stages import _init_stage, BatchTransform
+from streamcorpus_pipeline._exceptions import FailedExtraction, \
+    GracefulShutdown, ConfigurationError, PipelineOutOfMemory, \
+    PipelineBaseException, TransformGivingUp
 
 logger = logging.getLogger(__name__)
-
 
 def run_pipeline(config, work_unit):
     'function that can be run by a rejester worker'
@@ -48,98 +50,48 @@ class Pipeline(object):
     instances, transforming them, and creating streamcorpus.Chunk
     files.  Requires a config dict, which is loaded from a yaml file.
     '''
-    def __init__(self, config):
-        assert 'streamcorpus_pipeline' in config, \
-            '"streamcorpus_pipeline" missing from config: %r' % config
-        config = config['streamcorpus_pipeline']
-        self.config = config
-        logger.debug('pipeline configuration: {!r}'.format(self.config))
+    def __init__(self):
+        self.config = yakonfig.get_global_config('streamcorpus_pipeline')
 
         self._shutting_down = False
         self.t_chunk = None  # current Chunk output file for incremental transforms
 
-        tmpdir = config.get('tmp_dir_path')
-        if tmpdir is None:
-            ## if someone wants to use /tmp, it should be explicit
-            raise ConfigurationError('tmp_dir_path required parameter')
-        config['tmp_dir_path'] = os.path.join(tmpdir, uuid.uuid4().hex)
+        tmpdir = self.config.get('tmp_dir_path')
+        ### TODO: this is wrong if the config gets reused
+        self.config['tmp_dir_path'] = os.path.join(tmpdir, uuid.uuid4().hex)
 
-        if not os.path.exists(config['tmp_dir_path']):
+        if not os.path.exists(self.config['tmp_dir_path']):
             try:
-                os.makedirs(config['tmp_dir_path'])
+                os.makedirs(self.config['tmp_dir_path'])
             except Exception, exc:
                 logger.debug('tmp_dir_path already there?', exc_info=True)
                 pass
 
-        if 'rate_log_interval' in self.config:
-            self.rate_log_interval = self.config['rate_log_interval']
-        else:
-            self.rate_log_interval = 100
-
-        if 'external_stages_path' in config:
-            import imp
-            try:
-                external_stages = imp.load_source('', config['external_stages_path'])
-            except Exception, exc:
-                logger.critical('failed to load external_stages_path: %r' % config['external_stages_path'])
-                sys.exit(traceback.format_exc(exc))
-            external_stages = external_stages.Stages
-        else:
-            external_stages = None
+        self.rate_log_interval = self.config['rate_log_interval']
 
         ## load the one reader
-        reader_name = config['reader']
-        _reader_config = config.get(reader_name, {})
-        _reader_config['tmp_dir_path'] = config.get('tmp_dir_path')
-        self._reader = _init_stage(
-            reader_name,
-            _reader_config,
-            external_stages)
+        self._reader = _init_stage(self.config['reader'])
 
         ## a list of transforms that take StreamItem instances as
         ## input and emit modified StreamItem instances
-        self._incremental_transforms = []
-        for name in config['incremental_transforms']:
-            _inc_trans_config = config.get(name, {})
-            _inc_trans_config['tmp_dir_path'] = config.get('tmp_dir_path')
-            it = _init_stage(name, _inc_trans_config, external_stages)
-            self._incremental_transforms.append(it)
+        self._incremental_transforms = \
+            [_init_stage(name)
+             for name in self.config['incremental_transforms']]
 
         ## a list of transforms that take a chunk path as input and
         ## return a path to a new chunk
-        self._batch_transforms = []
-        for name in config['batch_transforms']:
-            ## give it the global tmp_dir_path
-            _batch_trans_config = config.get(name, {})
-            _batch_trans_config['tmp_dir_path'] = config.get('tmp_dir_path')
-            bt = _init_stage(name, _batch_trans_config, external_stages)
-            assert isinstance(bt, BatchTransform), '%s is not a BatchTransform, got %r' % (name, bt)
-            self._batch_transforms.append(bt)
+        self._batch_transforms = \
+            [_init_stage(name) for name in self.config['batch_transforms']]
 
         ## a list of transforms that take a chunk path as input and
         ## return a path to a new chunk
-        if 'post_batch_incremental_transforms' in config:
-            self._pbi_stages = [
-                _init_stage(name, config.get(name, {}),
-                            external_stages)
-                for name in config['post_batch_incremental_transforms']]
-        else:
-            self._pbi_stages = []
+        self._pbi_stages = \
+            [_init_stage(name)
+             for name in self.config['post_batch_incremental_transforms']]
 
         ## a list of transforms that take a chunk path as input and
         ## return a path to a new chunk
-        self._writers  = [] 
-        for name in config['writers']:
-            _writer_config = config.get(name, {})
-            if _writer_config is None:
-                _writer_config = dict()
-            _writer_config['tmp_dir_path'] = config.get('tmp_dir_path')
-            self._writers.append( 
-                _init_stage(name, _writer_config, external_stages))
-
-        for sig in [signal.SIGTERM, signal.SIGABRT, signal.SIGHUP, signal.SIGINT]:
-            logger.debug('setting signal handler for %r' % sig)
-            signal.signal(sig, self.shutdown)
+        self._writers = [_init_stage(name) for name in self.config['writers']] 
 
         ## context allows stages to communicate with later stages
         self.context = dict(
@@ -273,7 +225,7 @@ class Pipeline(object):
             if si:
                 sources.add( si.source )
                 if self.config.get('assert_single_source', True) and len(sources) != 1:
-                    raise _exceptions.PipelineBaseException(
+                    raise PipelineBaseException(
                         'assert_single_source, but %r' % sources)
 
             if si and si.body and si.body.clean_visible:
@@ -376,7 +328,7 @@ class Pipeline(object):
         for transform in self._batch_transforms:
             try:
                 transform.process_path(chunk_path)
-            except _exceptions.PipelineOutOfMemory, exc:
+            except PipelineOutOfMemory, exc:
                 logger.critical('caught PipelineOutOfMemory, so shutting down')
                 self.shutdown( msg=traceback.format_exc(exc) )
             except Exception, exc:
@@ -458,7 +410,7 @@ class Pipeline(object):
                 if si is None:
                     return None
 
-            except _exceptions.TransformGivingUp:
+            except TransformGivingUp:
                 ## do nothing
                 logger.info('transform %r giving up on %r',
                             transform, si.stream_id)

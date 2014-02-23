@@ -5,50 +5,49 @@ This software is released under an MIT/X11 open source license.
 
 Copyright 2012-2013 Diffeo, Inc.
 '''
+from __future__ import absolute_import
+import streamcorpus_pipeline.stages.Configured
 
-def debug_filter(config):
-    def _debug_filter(si, context):
-        
-        if si.stream_id in config['accept_stream_ids']:
+class debug_filter(Configured):
+    config_name = 'debug_filter'
+    default_config = { 'accept_stream_ids': [] }
+    def __call__(self, si, context):
+        if si.stream_id in self.config['accept_stream_ids']:
             return si
         else:
             return None
 
-    return _debug_filter
-
-def exclusion_filter(config):
-    def _exclusion_filter(si, context):
-        
-        if si.stream_id in config['excluded_stream_ids']:
+class exclusion_filter(Configured):
+    config_name = 'exclusion_filter'
+    default_config = { 'excluded_stream_ids': [] }
+    def __call__(self, si, context):
+        if si.stream_id in self.config['excluded_stream_ids']:
             return None
         else:
             return si
 
-    return _exclusion_filter
-
-def filter_languages(config):
-    def _filter_languages(si, context):
-        if not si.body.language and config.get('allow_null_language', True):
+class filter_languages(Configured):
+    config_name = 'filter_languages'
+    default_config = { 'allow_null_language': True,
+                       'included_language_codes': [] }
+    def __call__(self, si, context):
+        if not si.body.language and self.config['allow_null_language']:
             return si
-
-        if si.body.language.code in config.get('included_language_codes', []):
+        if si.body.language.code in self.config['included_language_codes']:
             return si
-
         ## otherwise return None, which excludes the language
+        return None
 
-    return _filter_languages
-
-def remove_raw(config):
-    def _remove_raw(si, context):
-        if config.get('if_clean_visible_remove_raw', False):
+class remove_raw(Configured):
+    config_name = 'remove_raw'
+    default_config = { 'if_clean_visible_remove_raw': False }
+    def __call__(self, si, context):
+        if self.config['if_clean_visible_remove_raw']:
             if si.body.clean_visible:
                 si.body.raw = ''
             ## otherwise leave body.raw unchanged
-
         else:
             si.body.raw = ''
 
         return si
-
-    return _remove_raw
 

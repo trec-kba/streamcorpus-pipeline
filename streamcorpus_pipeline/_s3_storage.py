@@ -5,22 +5,26 @@ putting them out into local storage.
 
 This software is released under an MIT/X11 open source license.
 
-Copyright 2012-2013 Diffeo, Inc.
+Copyright 2012-2014 Diffeo, Inc.
 '''
+from __future__ import absolute_import
+from cStringIO import StringIO
+import hashlib
+import logging
 import os
 import sys
 import time
-import logging
-import hashlib
-import requests
 import traceback
+
+import requests
+
 import streamcorpus
-from _get_name_info import get_name_info
 from streamcorpus import decrypt_and_uncompress, compress_and_encrypt_path, Chunk
-from cStringIO import StringIO
-from _exceptions import FailedExtraction
-from _tarball_export import tarball_export
+from streamcorpus_pipeline._exceptions import FailedExtraction
+from streamcorpus_pipeline._get_name_info import get_name_info
 from streamcorpus_pipeline._spinn3r_feed_storage import _generate_stream_items
+from streamcorpus_pipeline.stages import Configured
+from streamcorpus_pipeline._tarball_export import tarball_export
 
 logger = logging.getLogger(__name__)
 
@@ -85,10 +89,11 @@ def get_bucket(config):
     bucket = conn.get_bucket(config['bucket'])
     return bucket
 
-class from_s3_chunks(object):
-    def __init__(self, config):
-        self.config = config
-        self.bucket = get_bucket(config)
+class from_s3_chunks(Configured):
+    config_name = 'from_s3_chunks'
+    def __init__(self):
+        super(from_s3_chunks, self).__init__()
+        self.bucket = get_bucket(self.config)
 
     def __call__(self, i_str):
         '''
@@ -154,10 +159,11 @@ class from_s3_chunks(object):
             else:
                 sys.exit('Invalid config: input_format = %r' % self.config['input_format'])
 
-class to_s3_chunks(object):
+class to_s3_chunks(Configured):
+    config_name = 'to_s3_chunks'
     def __init__(self, config):
-        self.config = config
-        self.bucket = get_bucket(config)
+        super(to_s3_chunks, self).__init__()
+        self.bucket = get_bucket(self.config)
 
     def __call__(self, t_path, name_info, i_str):
         '''
@@ -255,9 +261,10 @@ class to_s3_chunks(object):
             logger.critical('\n'.join(errors))
             raise Exception('original md5 = %r != %r = received md5' % (md5, rec_md5))
 
-class to_s3_tarballs(object):
-    def __init__(self, config):
-        self.config = config
+class to_s3_tarballs(Configured):
+    config_name = 'to_s3_tarballs'
+    def __init__(self):
+        super(to_s3_tarballs, self).__init__()
         self.bucket = get_bucket(config)
 
     def __call__(self, t_path, name_info, i_str):

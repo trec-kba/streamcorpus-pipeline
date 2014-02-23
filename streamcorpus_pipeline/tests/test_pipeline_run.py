@@ -18,14 +18,11 @@ logger = logging.getLogger(__name__)
         ('john-smith-serif.sh', True),
     ],
 )
-def cmd_expect_success(request):
+def cmd_expect_success(tmpdir, request):
     script_name, expect_success = request.param
     cmd = os.path.join(os.path.dirname(__file__), script_name)
-    tmp_dir = '/tmp/' + uuid.uuid4().hex
+    tmp_dir = str(tmpdir.join(uuid.uuid4().hex))
     cmd += ' ' + tmp_dir
-    def fin():
-        shutil.rmtree(tmp_dir, ignore_errors=True)
-    request.addfinalizer(fin)
     return (cmd, expect_success)
 
 def test_pipeline_run(cmd_expect_success):

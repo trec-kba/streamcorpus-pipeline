@@ -22,22 +22,23 @@ entries:
       - <token> ... <token>
   - [...]
 
-Copyright 2012-2013 Diffeo, Inc.
+Copyright 2012-2014 Diffeo, Inc.
 '''
-
-import os
-import yaml
-import magic
+from __future__ import absolute_import
 import logging
+import os
+
+import magic
+import yaml
+
 import streamcorpus
 from streamcorpus_pipeline._clean_visible import cleanse
+from streamcorpus_pipeline.stages import Configured
 
 logger = logging.getLogger(__name__)
 
-class yaml_files_list(object):
-    def __init__(self, config):
-        self.config = config
-
+class yaml_files_list(Configured):
+    config_name = 'yaml_files_list'
     def __call__(self, path_to_input_file):
         '''
         This _looks_ like a Chunk only in that it generates StreamItem

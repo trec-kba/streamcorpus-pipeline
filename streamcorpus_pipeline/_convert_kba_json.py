@@ -6,24 +6,24 @@ This software is released under an MIT/X11 open source license.
 
 Copyright 2012-2013 Diffeo, Inc.
 '''
-
-## this assumes that streamcorpus has been installed
-from streamcorpus import make_stream_item, ContentItem
-
-import os
-import json
-import gzip
+from __future__ import absolute_import
 import traceback
+import gzip
+import os
 
-def convert_kba_json(config):
+import json
+
+from streamcorpus import make_stream_item, ContentItem
+from streamcorpus_pipeline.stages import Configured
+
+class convert_kba_json(Configured):
     '''
     Returns a streamcorpus_pipeline "reader" that generates a single
     streamcorpus.Chunk file containing the John Smith corpus.
     '''
-    def _convert_kba_json(path_to_original):
+    config_name = 'convert_kba_json'
+    def __call__(self, path_to_original):
         return generate_stream_items_from_kba_json(path_to_original)
-    
-    return _convert_kba_json
 
 def generate_stream_items_from_kba_json(json_file_path):
     ## iterate over gzip'ed file of JSON lines

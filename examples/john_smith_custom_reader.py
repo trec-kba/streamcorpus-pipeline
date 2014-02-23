@@ -27,17 +27,19 @@ import hashlib
 import fnmatch
 import logging
 from streamcorpus_pipeline._clean_visible import cleanse
+from streamcorpus_pipeline.stages import Configured
 
 logger = logging.getLogger('kba.pipeline.john_smith_custom_reader')
 
-class john_smith_custom_reader(object):
-    def __init__(self, config):
-        self.config = config
+class john_smith_custom_reader(Configured):
+    config_name = 'john_smith_custom_reader'
+    def __init__(self):
+        super(john_smith_custom_reader, self).__init__()
 
         ## map input file names to ground truth data (used below)
         self.ground_truth = dict()
 
-        ground_truth_path = config.get('ground_truth_path', None)
+        ground_truth_path = self.config.get('ground_truth_path', None)
         if ground_truth_path:
             for line in open(ground_truth_path):
                 target_id, mention, file_name, entity_type = line.split('\t')

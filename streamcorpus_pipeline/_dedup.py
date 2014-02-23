@@ -4,18 +4,23 @@ doc_id or have similar nilsimsa hashes.
 
 This software is released under an MIT/X11 open source license.
 
-Copyright 2012-2013 Diffeo, Inc.
+Copyright 2012-2014 Diffeo, Inc.
 '''
+from __future__ import absolute_import
+import logging
 import os
 import sys
-import logging
+
 #import nilsimsa
+
+from streamcorpus_pipeline.stages import Configured
 
 logger = logging.getLogger(__name__)
 
-class dedup(object):
-    def __init__(self, config):
-        self.config = config
+class dedup(Configured):
+    config_name = 'dedup'
+    def __init__(self):
+        super(dedup, self).__init__()
         ## keep a mapping from doc_id to nilsimsa hexdigests
         self._doc_ids = dict()
         self._count = 0

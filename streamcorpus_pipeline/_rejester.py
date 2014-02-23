@@ -1,31 +1,28 @@
 '''
 This software is released under an MIT/X11 open source license.
 
-Copyright 2012-2013 Diffeo, Inc.
+Copyright 2012-2014 Diffeo, Inc.
 '''
-import sys
-import json
+from __future__ import absolute_import
 import argparse
+import sys
 import time
+
+import json
+
+import streamcorpus_pipeline
 from streamcorpus_pipeline.run import instantiate_config
 from streamcorpus_pipeline._pipeline import Pipeline
 from streamcorpus_pipeline._exceptions import ConfigurationError
-
+import yakonfig
 
 def rejester_run_function(work_unit):
-
-    config = work_unit.spec.get('config')
-    if not config or 'streamcorpus_pipeline' not in config:
-        raise ConfigurationError('spec is missing streamcorpus_pipeline: %r' % work_unit.spec)
-
-    instantiate_config(config)
-
-    pipeline = Pipeline(config)
-
-    work_unit.data['start_chunk_time'] = time.time()
-    work_unit.data['start_count'] = 0
-    pipeline._process_task(work_unit)
-
+    with yakonfig.defaulted_config([streamcorpus_pipeline],
+                                   config=work_unit.spec.get('config', {})):
+        pipeline = Pipeline()
+        work_unit.data['start_chunk_time'] = time.time()
+        work_unit.data['start_count'] = 0
+        pipeline._process_task(work_unit)
 
 def rejester_terminate_function(work_unit):
 

@@ -12,31 +12,28 @@ import yakonfig
 
 logger = logging.getLogger(__name__)
 
-@pytest.fixture(scope='function')
-def config(request):
-    args_dict = dict(
-        namespace='tests',
-        app_name='streamcorpus_pipeline',
-        storage_type='cassandra',
-        storage_addresses=['test-cassandra-1.diffeo.com:9160'],
-        connection_pool_size=2,
-        max_consistency_delay=120,
-        replication_factor=1,
-        thrift_framed_transport_size_in_mb=15,
-    )
-    yakonfig.set_runtime_args_dict(args_dict)
-    fh = StringIO('''kvlayer: !include_func kvlayer.default_yaml''')
-    kvlayer_config = yakonfig.set_global_config(fh)
-    def fin():
-        client = kvlayer.client(kvlayer_config['kvlayer'])
+@pytest.yield_fixture(scope='function')
+def config(request, namespace_string, redis_address):
+    config_yaml = """
+kvlayer:
+    storage_type: redis
+    storage_addresses:
+      - {0}
+    app_name: streamcorpus_pipeline
+    namespace: {1}
+
+streamcorpus_pipeline:
+    to_kvlayer: {{}}
+    from_kvlayer: {{}}
+""".format(redis_address, namespace_string)
+    with yakonfig.defaulted_config([kvlayer], yaml=config_yaml):
+        yield yakonfig.get_global_config()
+        client = kvlayer.client()
         client.delete_namespace()
-    request.addfinalizer(fin)
-    config = dict()
-    return config
 
 def test_kvlayer_reader_and_writer(config):
     path = get_test_v0_3_0_chunk_path()
-    writer = to_kvlayer(config)
+    writer = to_kvlayer()
     
     ## name_info and i_str are not used by the writer
     i_str = ''
@@ -54,7 +51,7 @@ def test_kvlayer_reader_and_writer(config):
     logger.info('%d doc_ids', len(all_doc_ids))
 
     ## make an reader
-    reader = from_kvlayer(config)
+    reader = from_kvlayer()
 
     ## test it with different i_str inputs:
     for i_str in ['', '0,,%d,' % 10**10, '%d,%s,%d,%s' % (all_epoch_ticks[0],  all_doc_ids[0],

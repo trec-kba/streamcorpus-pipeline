@@ -30,23 +30,18 @@ from streamcorpus_pipeline._exceptions import PipelineBaseException
 import os
 import hashlib
 
-def john_smith(config):
-    '''
-    Returns a kba.pipeline "reader" that generates a single
-    streamcorpus.Chunk file containing the John Smith corpus.
+class john_smith(object):
+    config_name = 'john_smith'
+    # no other config
 
-    :param config: a dictionary of config info, which is pulled from
-    the input .yaml file based on the name of this stage.  In this
-    case, if the .yaml file contains an entry "john_smith" inside
-    kba.pipeline, then it is passed here as the config
+    def __call__(self, i_str):
+        '''
+        Returns a kba.pipeline "reader" that generates a single
+        streamcorpus.Chunk file containing the John Smith corpus.
 
-    :returns function:
-    '''
-    ## This can be a closure around the config, or a class with a
-    ## __call__ method.  The returned object should be a callable,
-    ## e.g. a function, that expects a single string as its input
-    ## argument. 
-    return generate_john_smith_chunk
+        :returns function:
+        '''
+        return generate_john_smith_chunk(i_str)
 
 def generate_john_smith_chunk(path_to_original):
     '''
@@ -59,7 +54,7 @@ def generate_john_smith_chunk(path_to_original):
     creation_time = '1998-12-31T23:59:59.999999Z'
     correct_time = 915148799
 
-    if not path_to_original.startswith('/'):
+    if not os.path.isabs(path_to_original):
         path_to_original = os.path.join(os.getcwd(), path_to_original)
 
     ## iterate over the files in the 35 input directories

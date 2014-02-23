@@ -11,16 +11,21 @@ import threading
 
 import pkg_resources
 
+import yakonfig
+
 logger = logging.getLogger(__name__)
 
-class BatchTransform(object):
+class Configured(object):
+    """A stage that is configured within the streamcorpus_pipeline."""
+    def __init__(self):
+        self.config = yakonfig.get_global_config('streamcorpus_pipeline',
+                                                 self.config_name)
+
+class BatchTransform(Configured):
     __metaclass__ = ABCMeta
     '''
     Transform that acts on a streamcorpus chunk file.
     '''
-
-    def __init__(self, config):
-        self.config = config
 
     @abstractmethod
     def process_path(self, chunk_path):
@@ -44,14 +49,11 @@ class BatchTransform(object):
 # Current incremental transform implementations are a function which
 # takes (config), possibly a constructor, which returns a callable
 # (lambda, local function, __call__ method) which takes (stream_item, context)
-class IncrementalTransform(object):
+class IncrementalTransform(Configured):
     __metaclass__ = ABCMeta
     '''
     Transform that acts on streamcorpus StreamItem objects.
     '''
-    def __init__(self, config):
-        self.config = config
-
     @abstractmethod
     def process_item(self, stream_item, context):
         '''
@@ -80,9 +82,11 @@ Stages = {}
 
 
 def register_stage(name, constructor):
-    _load_default_stages()
+    load_default_stages()
     Stages[name] = constructor
 
+def get_stage(name):
+    return Stages[name]
 
 def _tryload_stage(moduleName, functionName, name=None):
     "If loading a module fails because of some subordinate load fail just warn and move on"
@@ -108,7 +112,7 @@ _default_stages_loaded = []
 _load_lock = threading.Lock()
 
 
-def _load_default_stages():
+def load_default_stages():
     if _default_stages_loaded:
         return
     with _load_lock:
@@ -141,8 +145,8 @@ def _load_default_stages():
         _tryload_stage('_guess_media_type', 'guess_media_type')
         _tryload_stage('_handle_unconvertible_spinn3r', 'handle_unconvertible_spinn3r')
         _tryload_stage('_hyperlink_labels', 'hyperlink_labels')
-        _tryload_stage('_upgrade_streamcorpus', 'keep_annotatoted', 'keep_annotated')
-        _tryload_stage('_upgrade_streamcorpus', 'keep_annotatoted', 'keep_annotatoted')
+        _tryload_stage('_upgrade_streamcorpus', 'keep_annotated')
+        _tryload_stage('_upgrade_streamcorpus', 'keep_annotated', 'keep_annotatoted')
         _tryload_stage('_language', 'language')
         _tryload_stage('_filters', 'remove_raw')
         _tryload_stage('_upgrade_streamcorpus', 'upgrade_streamcorpus')
@@ -165,14 +169,23 @@ def _load_default_stages():
 
         _default_stages_loaded.append(len(_default_stages_loaded) + 1)
 
+def load_external_stages(path):
+    """Add external stages from the Python module in 'path'.
 
-def _init_stage(name, config, external_stages=None):
+    'path' must be a path to a Python module source that contains
+    a 'Stages' dictionary, which is a map from stage name to callable.
+
+    """
+    load_default_stages()
+    import imp
+    mod = imp.load_source('', path)
+    Stages.update(mod.Stages)
+
+def _init_stage(name):
     '''
     Construct a stage from known Stages.
 
     :param name: string name of a stage in Stages
-
-    :param config: config dict passed into the stage constructor
 
     :returns callable: one of four possible types:
 
@@ -184,26 +197,9 @@ def _init_stage(name, config, external_stages=None):
 
        4) writers: take Chunk and push it somewhere
     '''
-    _load_default_stages()
+    load_default_stages()
 
-    if external_stages:
-        Stages.update( external_stages )
-
-    stage_constructor = Stages.get(name, None)
-    if stage_constructor is None:
-        raise Exception('unknown stage %r' % (name,))
-    stage = stage_constructor(config)
-
-    ## NB: we don't mess with config here, because even though the
-    ## usual usage involves just passing in config.get(name, {}),
-    ## there might be callers that need to modify config on the way in
-
-    # if using __import__()
-    ## Note that fromlist must be specified here to cause __import__()
-    ## to return the right-most component of name, which in our case
-    ## must be a function.  The contents of fromlist is not
-    ## considered; it just cannot be empty:
-    ## http://stackoverflow.com/questions/2724260/why-does-pythons-import-require-fromlist
-    #trans = __import__('clean_html', fromlist=['streamcorpus.pipeline'])
+    stage_constructor = Stages[name]
+    stage = stage_constructor()
 
     return stage

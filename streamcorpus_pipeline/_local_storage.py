@@ -4,8 +4,9 @@ putting them out into local storage.
 
 This software is released under an MIT/X11 open source license.
 
-Copyright 2012-2013 Diffeo, Inc.
+Copyright 2012-2014 Diffeo, Inc.
 '''
+from __future__ import absolute_import
 import os
 import sys
 import time
@@ -14,10 +15,12 @@ import shutil
 import hashlib
 import logging
 import traceback
-import streamcorpus
 from cStringIO import StringIO
-from _get_name_info import get_name_info
-from _tarball_export import tarball_export
+
+import streamcorpus
+from streamcorpus_pipeline._get_name_info import get_name_info
+from streamcorpus_pipeline.stages import Configured
+from streamcorpus_pipeline._tarball_export import tarball_export
 
 logger = logging.getLogger(__name__)
 
@@ -26,16 +29,26 @@ _message_versions = {
     'v0_2_0': streamcorpus.StreamItem_v0_2_0,
     'v0_3_0': streamcorpus.StreamItem_v0_3_0,
     }
-
-
-class from_local_chunks(object):
+def _check_version(config, name):
+    if config['streamcorpus_version'] not in _message_versions:
+        raise yakonfig.ConfigurationError(
+            'invalid {} streamcorpus_version {}'
+            .format(name, config['streamcorpus_version']))
+            
+class from_local_chunks(Configured):
     '''
     may use config['max_retries'] (default 1)
     may use config['max_backoff'] (seconds, default 300)
     may use config['streamcorpus_version'] (default 'v0_3_0')
     '''
-    def __init__(self, config):
-        self.config = config
+    config_name = 'from_local_chunks'
+    default_config = {
+        'max_backoff': 300,
+        'streamcorpus_version': 'v0_3_0',
+    }
+    @staticmethod
+    def check_config(config, name):
+        _check_version(config, name)
 
     def __call__(self, i_str):
         backoff = 0.1
@@ -45,7 +58,7 @@ class from_local_chunks(object):
         last_exc = None
         while tries < max_retries:
             try:
-                message = _message_versions[ self.config.get('streamcorpus_version', 'v0_3_0') ]
+                message = _message_versions[self.config['streamcorpus_version']]
                 logger.debug('reading from %r' % i_str)
                 chunk = streamcorpus.Chunk(path=i_str, mode='rb', message=message)
                 return chunk
@@ -56,7 +69,7 @@ class from_local_chunks(object):
                     backoff *= 2
                     tries += 1
                     elapsed = time.time() - start_time
-                    if elapsed > self.config.get('max_backoff', 300):
+                    if elapsed > self.config['max_backoff']:
                         ## give up after five minutes of retries
                         logger.critical('File %r not found after %d retries', i_str, tries)
                         raise
@@ -106,7 +119,7 @@ def patient_move(path1, path2, max_tries=30):
     raise Exception('weird error inside patient_move(%r, %r)' % (path1, path2))
 
 
-class to_local_chunks(object):
+class to_local_chunks(Configured):
     '''
     uses config dict parts:
     output_name: name of file to write to. may be 'input' to derive name from source path
@@ -117,9 +130,18 @@ class to_local_chunks(object):
     output_path: where to put output files
     compress: bool() True append '.xz' to output file name and compress output
     '''
-
-    def __init__(self, config):
-        self.config = config
+    config_name = 'to_local_chunks'
+    default_config = {
+        'cleanup_tmp_files': True,
+        'max_backoff': 300,
+    }
+    @staticmethod
+    def check_config(config, name):
+        if 'compress' in config:
+            if config['compress'] not in set('xz'):
+                raise yakonfig.ConfigurationError(
+                    'invalid {} compress value {}'
+                    .format(name, config['compress']))
 
     def __call__(self, t_path, name_info, i_str):
         o_type = self.config['output_type']
@@ -141,7 +163,6 @@ class to_local_chunks(object):
 
         ## prepare to compress the output
         compress = self.config.get('compress', None)
-        assert compress in [None, 'xz'], compress
 
         if o_type == 'samedir':
             ## assume that i_str was a local path
@@ -192,7 +213,7 @@ class to_local_chunks(object):
                 t_path, tmp_dir=self.config['tmp_dir_path'])
             assert not errors, errors
 
-            if self.config.get('cleanup_tmp_files', True):
+            if self.config['cleanup_tmp_files']:
                 # default action, move tmp file to output position
                 try:
                     logger.debug('attempting renamed(%r, %r)', t_path2, o_path)
@@ -214,7 +235,7 @@ class to_local_chunks(object):
                 logger.info('copied %r -> %r', t_path2, o_path)
                 return o_path
 
-        if self.config.get('cleanup_tmp_files', True):
+        if self.config['cleanup_tmp_files']:
             ## do an atomic renaming
             try:
                 logger.debug('attemping os.rename(%r, %r)', t_path, o_path)
@@ -240,8 +261,11 @@ class to_local_chunks(object):
 
 
 class to_local_tarballs(object):
-    def __init__(self, config):
-        self.config = config
+    config_name = 'to_local_tarballs'
+
+    def __init__(self):
+        self.config = yakonfig.get_global_config('streamcorpus_pipeline',
+                                                 config_name)
 
     def __call__(self, t_path, name_info, i_str):
         name_info.update( get_name_info( t_path, i_str=i_str ) )
