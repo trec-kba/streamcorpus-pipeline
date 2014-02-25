@@ -102,6 +102,7 @@ setup(
         'pytest-incremental',
         'pytest-capturelog',
         'epydoc',
+        'pytest-diffeo >= 0.1.4',
     ],
     install_requires=[
         'dblogger',
