@@ -16,9 +16,12 @@ import os
 import sys
 import time
 
+import yaml
+
 import dblogger
 import kvlayer
 import yakonfig
+from yakonfig.toplevel import assemble_default_config
 
 import streamcorpus_pipeline
 from streamcorpus_pipeline._exceptions import ConfigurationError
@@ -28,6 +31,7 @@ logger = logging.getLogger(__name__)
 
 def make_absolute_paths( config ):
     '''
+
     given a config dict with streamcorpus_pipeline as a key, find all
     keys under streamcorpus_pipeline that end with "_path" and if the
     value of that key is a relative path, convert it to an absolute
@@ -137,16 +141,28 @@ def main():
     parser.add_argument('-i', '--input', action='append', 
                         help='file paths to input instead of reading from stdin')
     parser.add_argument('--in-glob', action='append', default=[], help='path glob specifying input files')
+    parser.add_argument('--dump-config', metavar='MODE', nargs='?',
+                        const='effective',
+                        help='print configuration and stop (MODE=full|effective)')
     parser.add_argument('config', metavar='FILE',
                         help='top-level configuration file')
 
-    args = yakonfig.parse_args(parser,
-                               [yakonfig, kvlayer, streamcorpus_pipeline])
+    modules = [yakonfig, kvlayer, streamcorpus_pipeline]
+    args = yakonfig.parse_args(parser, modules)
     config = yakonfig.get_global_config()
     dblogger.configure_logging(config)
 
     ## this modifies the global config, passed by reference
     instantiate_config(config)
+
+    if args.dump_config:
+        if args.dump_config == 'full':
+            dc = config
+        else:
+            base = assemble_default_config(modules)
+            dc = yakonfig.diff_config(base, config)
+        yaml.dump(dc, sys.stdout)
+        return
 
     input_paths = []
     if args.in_glob:
