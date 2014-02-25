@@ -11,6 +11,7 @@ from streamcorpus_pipeline._rejester import rejester_run_function
 from rejester.workers import run_worker, MultiWorker
 
 logger = logging.getLogger(__name__)
+pytest_plugins = 'rejester.tests.fixtures'
 
 @pytest.fixture(scope="function") # (scope="module")
 def root_path(request):
