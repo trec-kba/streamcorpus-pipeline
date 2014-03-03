@@ -74,37 +74,68 @@ class to_kvlayer(Configured):
     This key structure supports time-range queries directly on the
     stream_items table.
 
-    To search by doc_id, one can look up all epoch_ticks for a given
-    doc_id using the index table stream_items_doc_id_epoch_ticks,
-    which has the keys reversed and no data.
+    The 'indexes' configuration parameter adds additional indexes
+    on the data.  Supported index types include:
+
+    ``doc_id_epoch_ticks`` adds an index with the two key parts reversed
+    and with no data, allowing range searching by document ID
+
+    ``with_source`` adds an index with the same two key parts as normal,
+    but stores the StreamItem's "source" field in the value, allowing
+    time filtering on source without decoding documents
+
+    In all cases the index table is `stream_items_` followed by the
+    index name.
     '''
     config_name = 'to_kvlayer'
+    default_config = { 'indexes': [ 'doc_id_epoch_ticks' ] }
     @staticmethod
     def check_config(config, name):
         yakonfig.check_toplevel_config(kvlayer, name)
+        for ndx in config['indexes']:
+            if ndx not in to_kvlayer.index_sizes:
+                raise yakonfig.ConfigurationError(
+                    'invalid {} indexes type {!r}'
+                    .format(name, ndx))
+
+    index_sizes = {
+        'doc_id_epoch_ticks': 2,
+        'with_source': 2,
+    }
 
     def __init__(self):
         super(to_kvlayer, self).__init__()
         self.client = kvlayer.client()
-        self.client.setup_namespace(
-            dict(stream_items=2,
-                 stream_items_doc_id_epoch_ticks=2))
+        tables = { 'stream_items': 2 }
+        for ndx in self.config['indexes']:
+            tables['stream_items_' + ndx] = self.index_sizes[ndx]
+        self.client.setup_namespace(tables)
 
     def __call__(self, t_path, name_info, i_str):
-        inverted_keys = deque()
+        indexes = {}
+        for ndx in self.config['indexes']: indexes[ndx] = []
+        # The idea here is that the actual documents can be pretty big,
+        # so we don't want to keep them in memory, but the indexes
+        # will just be UUID tuples.  So the iterator produces 
         def keys_and_values():
-            total_mb = 0.
             for si in streamcorpus.Chunk(t_path):
                 key1 = uuid.UUID(int=si.stream_time.epoch_ticks)
                 key2 = uuid.UUID(hex=si.doc_id)
                 data = streamcorpus.serialize(si)
                 errors, data = streamcorpus.compress_and_encrypt(data)
                 assert not errors, errors
-                total_mb += float(len(data)) / 2**20
-                logger.info('%r, %r --> %d, %.3f', key1, key2, len(data), total_mb)
+                
                 yield (key1, key2), data
-                inverted_keys.append( ((key2, key1), r'') )
 
-        self.client.put( 'stream_items', *keys_and_values())
+                for ndx in indexes:
+                    if ndx == 'doc_id_epoch_ticks':
+                        kvp = ((key2, key1), r'')
+                    elif ndx == 'with_source':
+                        kvp = ((key1, key2), si.source)
+                    else:
+                        assert False, ('invalid index type ' + ndx)
+                    indexes[ndx].append(kvp)
 
-        self.client.put( 'stream_items_doc_id_epoch_ticks', *inverted_keys)
+        self.client.put( 'stream_items', *list(keys_and_values()))
+        for ndx, kvps in indexes.iteritems():
+            self.client.put('stream_items_' + ndx, *kvps)
