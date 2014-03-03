@@ -146,10 +146,13 @@ class yaml_files_list(object):
         creation_time = os.path.getctime(path)
 
         ## construct abs_url
+        if not metadata['abs_url_base']:
+            abs_url_base = ''
+        else:
+            abs_url_base = metadata['abs_url_base']
         abs_url = os.path.join(
-            metadata['abs_url_base'],
-            target_id,
-            path.split(os.path.sep)[-1])
+            abs_url_base,
+            path)
 
         ## make stream item
         stream_item = streamcorpus.make_stream_item(
