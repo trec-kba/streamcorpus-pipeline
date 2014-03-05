@@ -106,7 +106,7 @@ setup(
     ],
     install_requires=[
         'dblogger',
-        'yakonfig >= 0.3.0',
+        'yakonfig >= 0.4.1',
         'python-magic',
         'python-docx',
         'thrift',

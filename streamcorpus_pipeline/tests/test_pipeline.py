@@ -11,6 +11,7 @@ import pytest
 import yaml
 
 import streamcorpus_pipeline
+import streamcorpus_pipeline.stages
 from streamcorpus_pipeline import Pipeline
 from streamcorpus_pipeline.tests._test_data import get_test_chunk_path, \
     get_test_chunk, \
@@ -23,11 +24,7 @@ logger = logging.getLogger(__name__)
 class SuccessfulExit(Exception):
     pass
 
-def test_pipeline(request, monkeypatch):
-    def mockexit(status=0):
-        logger.debug('sys.exit({})'.format(status))
-        raise SuccessfulExit()
-    monkeypatch.setattr(sys, 'exit', mockexit)
+def test_pipeline(request):
     filename=str(request.fspath.dirpath('test_dedup_chunk_counts.yaml'))
     with yakonfig.defaulted_config([streamcorpus_pipeline], filename=filename):
         ## config says read from stdin, so make that have what we want
@@ -45,7 +42,7 @@ def test_pipeline(request, monkeypatch):
 
         gevent.sleep(5)
 
-        with pytest.raises(SuccessfulExit):  # pylint: disable=E1101
+        with pytest.raises(SystemExit):  # pylint: disable=E1101
             p.shutdown(sig=signal.SIGTERM)
 
         logger.debug('now joining...')
@@ -78,3 +75,48 @@ def test_align_serif_stage():
     ## run the pipeline
     p = Pipeline( config )
     p.run()
+
+class ExternalStage(streamcorpus_pipeline.stages.Configured):
+    config_name = 'external_stage'
+    default_config = { 'message': 'default message' }
+    def get_message(self):
+        return self.config.get('message', None)
+Stages = { 'external_stage': ExternalStage }
+
+def test_external_stage_unregistered():
+    with yakonfig.defaulted_config([streamcorpus_pipeline], config={
+            'streamcorpus_pipeline': {
+                'external_stage': {
+                    'message': 'configured message',
+                },
+            },
+    }, validate=False):
+        stage = ExternalStage()
+        assert stage.get_message() == 'configured message'
+
+def test_external_stage_registered(tmpdir):
+    with yakonfig.defaulted_config([streamcorpus_pipeline], config={
+            'streamcorpus_pipeline': {
+                'external_stages_path': __file__,
+                'external_stage': {
+                    'message': 'configured message',
+                },
+                'reader': 'from_local_chunks',
+                'writers': ['to_local_chunks'],
+                'tmp_dir_path': str(tmpdir),
+            },
+    }):
+        stage = ExternalStage()
+        assert stage.get_message() == 'configured message'
+
+def test_external_stage_default(tmpdir):
+    with yakonfig.defaulted_config([streamcorpus_pipeline], config={
+            'streamcorpus_pipeline': {
+                'external_stages_path': __file__,
+                'reader': 'from_local_chunks',
+                'writers': ['to_local_chunks'],
+                'tmp_dir_path': str(tmpdir),
+            },
+    }):
+        stage = ExternalStage()
+        assert stage.get_message() == 'default message'
