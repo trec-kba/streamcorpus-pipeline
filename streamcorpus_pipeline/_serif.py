@@ -156,8 +156,8 @@ OVERRIDE kba_write_results_to_chunk:          false
 OVERRIDE kba_write_serifxml_to_chunk:         true
 '''
 
-    def __init__(self):
-        super(serif, self).__init__()
+    def __init__(self, *args, **kwargs):
+        super(serif, self).__init__(*args, **kwargs)
         self._child = None
 
     def _write_config_par(self, tmp_dir, par_file, pipeline_root_path):

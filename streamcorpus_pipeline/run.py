@@ -25,7 +25,8 @@ from yakonfig.toplevel import assemble_default_config
 
 import streamcorpus_pipeline
 from streamcorpus_pipeline._exceptions import ConfigurationError
-from streamcorpus_pipeline._pipeline import Pipeline
+from streamcorpus_pipeline._pipeline import PipelineFactory, Pipeline
+from streamcorpus_pipeline.stages import PipelineStages
 
 logger = logging.getLogger(__name__)
 
@@ -173,8 +174,12 @@ def main():
     if not input_paths:
         input_paths = sys.stdin
 
-    ## get a Pipeline instance, so we can use it below
-    pipeline = Pipeline()
+    scp_config = config['streamcorpus_pipeline']
+    stages = PipelineStages()
+    if 'external_stages_path' in scp_config:
+        stages.load_external_stages(scp_config['external_stages_path'])
+    factory = PipelineFactory(stages)
+    pipeline = factory(scp_config)
 
     for i_str in input_paths:
         work_unit = SimpleWorkUnit(i_str.strip())

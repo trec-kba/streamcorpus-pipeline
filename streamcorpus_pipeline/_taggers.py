@@ -389,8 +389,8 @@ class TaggerBatchTransform(streamcorpus_pipeline.stages.BatchTransform):
     '''
     template = None
 
-    def __init__(self):
-        super(TaggerBatchTransform, self).__init__()
+    def __init__(self, *args, **kwargs):
+        super(TaggerBatchTransform, self).__init__(*args, **kwargs)
         self._child = None
 
     def process_path(self, chunk_path):

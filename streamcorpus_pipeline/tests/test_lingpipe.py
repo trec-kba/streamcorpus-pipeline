@@ -10,7 +10,8 @@ import pytest
 import streamcorpus
 import streamcorpus_pipeline
 from streamcorpus import OffsetType
-from streamcorpus_pipeline._lingpipe import only_whitespace
+from streamcorpus_pipeline._lingpipe import lingpipe, only_whitespace
+from streamcorpus_pipeline._taggers import byte_offset_align_labels
 from streamcorpus_pipeline.tests.test_hyperlink_labels import \
     make_hyperlink_labeled_test_stream_item, \
     make_hyperlink_labeled_test_chunk
@@ -38,34 +39,27 @@ def test_aligner(tmpdir, request):
     chunk.add(si)
     chunk.close()
 
-    config_yaml = """
-streamcorpus_pipeline:
-    lingpipe:
-        tmp_dir_path: {!s}
-        exit_code_on_out_of_memory: 1
-        pipeline_root_path: {!s}
-        offset_types: [BYTES]
-        offset_debugging: True
-        cleanup_tmp_files: False
-        align_labels_by: byte_offset_labels
-        aligner_data:
-            annotator_id: author
-            tagger_id: lingpipe
-""".format(tmpdir, request.fspath.join('..', '..', '..', 'third'))
-    with yakonfig.defaulted_config([streamcorpus_pipeline], yaml=config_yaml,
-                                   validate=False):
-        lp = streamcorpus_pipeline.stages._init_stage('lingpipe')
-        logger.debug(c_path)
-        lp.process_path(c_path)
-        ## this are only present if cleanup_tmp_files is False
-        assert tmpdir.join('chunk.sc-clean_visible.xml').read()
-        assert tmpdir.join('chunk.sc-ner.xml').read()
-        logger.debug(os.listdir(str(tmpdir)))
-        si = list(streamcorpus.Chunk(c_path))[0]
-        logger.info('%d bytes clean_visible for %s', len(si.body.clean_visible), si.stream_id)
-        assert len(si.body.clean_visible) > 200
-        logger.info('%d sentences for %s', len(si.body.sentences['lingpipe']), si.stream_id)
-        assert len(si.body.sentences['lingpipe']) == 41, tmpdir.join('chunk.sc-ner.xml').read()
+    lp = lingpipe(config={
+        'tmp_dir_path': str(tmpdir),
+        'exit_code_on_out_of_memory': 1,
+        'pipeline_root_path':
+            str(request.fspath.join('..', '..', '..', 'third')),
+        'offset_types': ['BYTES'],
+        'offset_debugging': True,
+        'cleanup_tmp_files': False,
+        'align_labels_by': 'byte_offset_labels',
+        'aligner_data': {
+            'annotator_id': 'author',
+            'tagger_id': 'lingpipe',
+        },
+    })
+    lp.process_path(c_path)
+    ## this are only present if cleanup_tmp_files is False
+    assert tmpdir.join('chunk.sc-clean_visible.xml').read()
+    assert tmpdir.join('chunk.sc-ner.xml').read()
+    si = list(streamcorpus.Chunk(c_path))[0]
+    assert len(si.body.clean_visible) > 200
+    assert len(si.body.sentences['lingpipe']) == 41
 
 
 def test_aligner_separate(tmpdir, request):
@@ -80,37 +74,28 @@ def test_aligner_separate(tmpdir, request):
     chunk.add(si)
     chunk.close()
 
-    config_yaml = """
-streamcorpus_pipeline:
-    lingpipe:
-        tmp_dir_path: {!s}
-        exit_code_on_out_of_memory: 1
-        pipeline_root_path: {!s}
-        offset_types: [BYTES]
-        offset_debugging: True
-        cleanup_tmp_files: False
-    byte_offset_align_labels:
-        annotator_id: author
-        tagger_id: lingpipe
-""".format(tmpdir, request.fspath.join('..', '..', '..', 'third'))
-    with yakonfig.defaulted_config([streamcorpus_pipeline], yaml=config_yaml,
-                                   validate=False):
-        lp = streamcorpus_pipeline.stages._init_stage('lingpipe')
-        logger.debug(c_path)
-        lp.process_path(c_path)
-        assert tmpdir.join('chunk.sc-clean_visible.xml').read()
-        assert tmpdir.join('chunk.sc-ner.xml').read()
-        logger.debug(os.listdir(str(tmpdir)))
+    lp = lingpipe(config={
+        'tmp_dir_path': str(tmpdir),
+        'exit_code_on_out_of_memory': 1,
+        'pipeline_root_path':
+            str(request.fspath.join('..', '..', '..', 'third')),
+        'offset_types': ['BYTES'],
+        'offset_debugging': True,
+        'cleanup_tmp_files': False,
+    })
+    lp.process_path(c_path)
+    assert tmpdir.join('chunk.sc-clean_visible.xml').read()
+    assert tmpdir.join('chunk.sc-ner.xml').read()
 
-        ## run the aligner separately
-        aligner = streamcorpus_pipeline.stages._init_stage(
-            'byte_offset_align_labels')
-        aligner.process_path(c_path)
+    ## run the aligner separately
+    aligner = byte_offset_align_labels(config={
+        'annotator_id': 'author',
+        'tagger_id': 'lingpipe',
+    })
+    aligner.process_path(c_path)
 
-        ## verify that we get the same answer as test above
-        si = list(streamcorpus.Chunk(c_path))[0]
-        logger.info('%d bytes clean_visible for %s', len(si.body.clean_visible), si.stream_id)
-        assert len(si.body.clean_visible) > 200
-        logger.info('%d sentences for %s', len(si.body.sentences['lingpipe']), si.stream_id)
-        assert len(si.body.sentences['lingpipe']) == 41, tmpdir.join('chunk.sc-ner.xml').read()
+    ## verify that we get the same answer as test above
+    si = list(streamcorpus.Chunk(c_path))[0]
+    assert len(si.body.clean_visible) > 200
+    assert len(si.body.sentences['lingpipe']) == 41
 

@@ -11,8 +11,8 @@ import pytest
 import yaml
 
 import streamcorpus_pipeline
-import streamcorpus_pipeline.stages
-from streamcorpus_pipeline import Pipeline
+from streamcorpus_pipeline.stages import PipelineStages
+from streamcorpus_pipeline._pipeline import PipelineFactory
 from streamcorpus_pipeline.tests._test_data import get_test_chunk_path, \
     get_test_chunk, \
     get_test_v0_3_0_chunk_path, \
@@ -32,7 +32,9 @@ def test_pipeline(request):
         sys.stdin = StringIO(get_test_chunk_path())
 
         ## run the pipeline
-        p = Pipeline()
+        stages = PipelineStages()
+        pf = PipelineFactory(stages)
+        p = pf(yakonfig.get_global_config('streamcorpus_pipeline'))
 
         from streamcorpus_pipeline.run import SimpleWorkUnit
         work_unit = SimpleWorkUnit('long string indicating source of text')
@@ -91,7 +93,9 @@ def test_external_stage_unregistered():
                 },
             },
     }, validate=False):
-        stage = ExternalStage()
+        config=yakonfig.get_global_config('streamcorpus_pipeline',
+                                          'external_stage')
+        stage = ExternalStage(config=config)
         assert stage.get_message() == 'configured message'
 
 def test_external_stage_registered(tmpdir):
@@ -106,7 +110,9 @@ def test_external_stage_registered(tmpdir):
                 'tmp_dir_path': str(tmpdir),
             },
     }):
-        stage = ExternalStage()
+        config=yakonfig.get_global_config('streamcorpus_pipeline',
+                                          'external_stage')
+        stage = ExternalStage(config=config)
         assert stage.get_message() == 'configured message'
 
 def test_external_stage_default(tmpdir):
@@ -118,5 +124,7 @@ def test_external_stage_default(tmpdir):
                 'tmp_dir_path': str(tmpdir),
             },
     }):
-        stage = ExternalStage()
+        config=yakonfig.get_global_config('streamcorpus_pipeline',
+                                          'external_stage')
+        stage = ExternalStage(config=config)
         assert stage.get_message() == 'default message'

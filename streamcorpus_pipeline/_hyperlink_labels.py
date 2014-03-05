@@ -99,8 +99,8 @@ class hyperlink_labels(Configured):
         'domain_substrings': [],
     }
 
-    def __init__(self):
-        super(hyperlink_labels, self).__init__()
+    def __init__(self, *args, **kwargs):
+        super(hyperlink_labels, self).__init__(*args, **kwargs)
         self.offset_type = getattr(OffsetType, self.config['offset_types'][0])
         if self.offset_type != OffsetType.BYTES:
             logger.warn('using offset_type other than BYTES: %r' % self.offset_type)

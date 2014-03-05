@@ -180,9 +180,6 @@ class from_spinn3r_feed(Configured):
 
     _prefetched = {}
 
-    def __init__(self):
-        super(from_spinn3r_feed, self).__init__()
-
     def __call__(self, i_str):
         # Do we have prefetched data for i_str?  Can/should/must we
         # use it?

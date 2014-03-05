@@ -11,7 +11,7 @@ import logging
 import os
 import sys
 
-#import nilsimsa
+import nilsimsa
 
 from streamcorpus_pipeline.stages import Configured
 
@@ -19,8 +19,8 @@ logger = logging.getLogger(__name__)
 
 class dedup(Configured):
     config_name = 'dedup'
-    def __init__(self):
-        super(dedup, self).__init__()
+    def __init__(self, *args, **kwargs):
+        super(dedup, self).__init__(*args, **kwargs)
         ## keep a mapping from doc_id to nilsimsa hexdigests
         self._doc_ids = dict()
         self._count = 0

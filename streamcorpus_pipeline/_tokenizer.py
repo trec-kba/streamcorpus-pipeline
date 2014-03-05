@@ -26,7 +26,7 @@ from streamcorpus import Token, Sentence, EntityType, Chunk, Offset, OffsetType,
 from streamcorpus_pipeline.stages import IncrementalTransform
 from streamcorpus_pipeline._taggers import TaggerBatchTransform
 
-logger = logging.getLogger('streamcorpus_pipeline.nltk_tokenizer')
+logger = logging.getLogger(__name__)
 
 class nltk_tokenizer(IncrementalTransform):
     '''
@@ -35,8 +35,8 @@ class nltk_tokenizer(IncrementalTransform):
     '''
     config_name = 'nltk_tokenizer'
     tagger_id = 'nltk_tokenizer'
-    def __init__(self):
-        super(nltk_tokenizer, self).__init__()
+    def __init__(self, *args, **kwargs):
+        super(nltk_tokenizer, self).__init__(*args, **kwargs)
         self.sentence_tokenizer = PunktSentenceTokenizer()
         self.word_tokenizer = WhitespaceTokenizer() #PunktWordTokenizer()
 

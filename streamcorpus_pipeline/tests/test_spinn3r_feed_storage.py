@@ -10,10 +10,11 @@ import pytest
 from streamcorpus import Chunk
 import streamcorpus_pipeline
 from streamcorpus_pipeline._exceptions import ConfigurationError
-from streamcorpus_pipeline._pipeline import Pipeline
+from streamcorpus_pipeline._pipeline import Pipeline, PipelineFactory
 from streamcorpus_pipeline.run import instantiate_config, SimpleWorkUnit
 from streamcorpus_pipeline._spinn3r_feed_storage import \
     from_spinn3r_feed, ProtoStreamReader
+from streamcorpus_pipeline.stages import PipelineStages
 from streamcorpus_pipeline.tests._test_data import _TEST_DATA_ROOT
 import yakonfig
 
@@ -77,19 +78,19 @@ def test_proto_stream_reader_stringio(filename, urls):
     reader = ProtoStreamReader(StringIO(content))
     assert ([entry.source.canonical_link.href for entry in reader] == urls)
 
-def test_feed_direct(filename, urls, pipeline_config):
+def test_feed_direct(filename, urls):
     """test from_spinn3r_feed directly feeding in the input"""
-    with yakonfig.defaulted_config([streamcorpus_pipeline],
-                                   config=pipeline_config):
-        feed3r = from_spinn3r_feed()
-        it = feed3r(str(filename))
-        assert [si.abs_url for si in it] == urls
+    feed3r = from_spinn3r_feed(config={})
+    it = feed3r(str(filename))
+    assert [si.abs_url for si in it] == urls
 
 def test_spinn3r_pipeline(filename, urls, pipeline_config, output_file):
     """minimal end-to-end test, with a fixed pipeline"""
     with yakonfig.defaulted_config([streamcorpus_pipeline],
                                    config=pipeline_config):
-        pipeline = Pipeline()
+        stages = PipelineStages()
+        factory = PipelineFactory(stages)
+        pipeline = factory(yakonfig.get_global_config('streamcorpus_pipeline'))
         work_unit = SimpleWorkUnit(str(filename))
         work_unit.data['start_chunk_time'] = 0
         work_unit.data['start_count'] = 0
@@ -105,7 +106,9 @@ def test_spinn3r_pipeline_unprefetched(urls, pipeline_config):
     }
     with yakonfig.defaulted_config([streamcorpus_pipeline],
                                    config=pipeline_config):
-        pipeline = Pipeline()
+        stages = PipelineStages()
+        factory = PipelineFactory(stages)
+        pipeline = factory(yakonfig.get_global_config('streamcorpus_pipeline'))
         key = 'test_file.bin'
         work_unit = SimpleWorkUnit(key)
         work_unit.data['start_chunk_time'] = 0
@@ -120,7 +123,9 @@ def test_spinn3r_pipeline_prefetched(filename, urls, pipeline_config, output_fil
     }
     with yakonfig.defaulted_config([streamcorpus_pipeline],
                                    config=pipeline_config):
-        pipeline = Pipeline()
+        stages = PipelineStages()
+        factory = PipelineFactory(stages)
+        pipeline = factory(yakonfig.get_global_config('streamcorpus_pipeline'))
         key = 'test_file.bin'
         with filename.open('rb') as f:
             from_spinn3r_feed._prefetched[key] = f.read()
@@ -137,7 +142,9 @@ def test_spinn3r_pipeline_bogus_prefetched(filename, pipeline_config):
     """supply known-bad prefetched data"""
     with yakonfig.defaulted_config([streamcorpus_pipeline],
                                    config=pipeline_config):
-        pipeline = Pipeline()
+        stages = PipelineStages()
+        factory = PipelineFactory(stages)
+        pipeline = factory(yakonfig.get_global_config('streamcorpus_pipeline'))
         key = str(filename)
         from_spinn3r_feed._prefetched[key] = 'bogus data, dude!'
         work_unit = SimpleWorkUnit(key)
@@ -153,7 +160,9 @@ def test_spinn3r_pipeline_ignore_prefetched(filename, urls, pipeline_config, out
     }
     with yakonfig.defaulted_config([streamcorpus_pipeline],
                                    config=pipeline_config):
-        pipeline = Pipeline()
+        stages = PipelineStages()
+        factory = PipelineFactory(stages)
+        pipeline = factory(yakonfig.get_global_config('streamcorpus_pipeline'))
         key = str(filename)
         from_spinn3r_feed._prefetched[key] = 'bogus data, dude!'
         work_unit = SimpleWorkUnit(key)
@@ -172,7 +181,9 @@ def test_spinn3r_pipeline_filter_matches(filename, urls, pipeline_config, output
     }
     with yakonfig.defaulted_config([streamcorpus_pipeline],
                                    config=pipeline_config):
-        pipeline = Pipeline()
+        stages = PipelineStages()
+        factory = PipelineFactory(stages)
+        pipeline = factory(yakonfig.get_global_config('streamcorpus_pipeline'))
         work_unit = SimpleWorkUnit(str(filename))
         work_unit.data['start_chunk_time'] = 0
         work_unit.data['start_count'] = 0
@@ -188,7 +199,9 @@ def test_spinn3r_pipeline_filter_no_matches(filename, pipeline_config, output_fi
     }
     with yakonfig.defaulted_config([streamcorpus_pipeline],
                                    config=pipeline_config):
-        pipeline = Pipeline()
+        stages = PipelineStages()
+        factory = PipelineFactory(stages)
+        pipeline = factory(yakonfig.get_global_config('streamcorpus_pipeline'))
         work_unit = SimpleWorkUnit(str(filename))
         work_unit.data['start_chunk_time'] = 0
         work_unit.data['start_count'] = 0

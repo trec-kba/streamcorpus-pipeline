@@ -8,10 +8,9 @@ import pytest
 
 from streamcorpus import make_stream_item, StreamItem, ContentItem, OffsetType, Chunk
 import streamcorpus_pipeline
+from streamcorpus_pipeline._clean_visible import clean_visible
 from streamcorpus_pipeline._hyperlink_labels import anchors_re, hyperlink_labels
-from streamcorpus_pipeline.stages import _init_stage
 from streamcorpus_pipeline.tests._test_data import _TEST_DATA_ROOT
-import yakonfig
 
 logger = logging.getLogger(__name__)
 
@@ -28,20 +27,16 @@ def make_hyperlink_labeled_test_stream_item():
     context = {}
     si = make_test_stream_item()
     assert len(si.body.clean_html) > 200
-    config_yaml = """
-streamcorpus_pipeline:
-    hyperlink_labels:
-        require_abs_url: True
-        all_domains: True
-        offset_types: [BYTES]
-"""
-    with yakonfig.defaulted_config([streamcorpus_pipeline], yaml=config_yaml,
-                                   validate=False):
-        hyperlink_labels()(si, context)
-        cv = _init_stage('clean_visible')
-        cv(si, context)
-        assert len(si.body.clean_visible) > 200
-        return si
+    hl = hyperlink_labels(config={
+        'require_abs_url': True,
+        'all_domains': True,
+        'offset_types': ['BYTES'],
+    })
+    hl(si, context)
+    cv = clean_visible(config={})
+    cv(si, context)
+    assert len(si.body.clean_visible) > 200
+    return si
     
 def make_hyperlink_labeled_test_chunk():
     '''
@@ -53,45 +48,36 @@ def make_hyperlink_labeled_test_chunk():
     dpath = os.path.dirname(__file__)
     ipath = os.path.join( dpath, _TEST_DATA_ROOT, 'test/WEBLOG-100-fd5f05c8a680faa2bf8c55413e949bbf.sc' )
 
-    config_yaml = """
-streamcorpus_pipeline:
-    hyperlink_labels:
-        require_abs_url: True
-        all_domains: True
-        offset_types: [BYTES]
-"""
-    with yakonfig.defaulted_config([streamcorpus_pipeline], yaml=config_yaml,
-                                   validate=False):
-        cv = _init_stage('clean_visible')
-        hl = hyperlink_labels()
-        for si in Chunk(path=ipath):
-            ## clear out existing labels and tokens
-            si.body.labels = {}
-            si.body.sentences = {}
-            context = {}
-            hl(si, context)
-            cv(si, context)
-            o_chunk.add(si)
+    hl = hyperlink_labels(config={
+        'require_abs_url': True,
+        'all_domains': True,
+        'offset_types': [BYTES],
+    })
+    cv = make_clean_visible(config={})
+    for si in Chunk(path=ipath):
+        ## clear out existing labels and tokens
+        si.body.labels = {}
+        si.body.sentences = {}
+        context = {}
+        hl(si, context)
+        cv(si, context)
+        o_chunk.add(si)
 
-            o_chunk.close()
-            return tpath
+        o_chunk.close()
+        return tpath
     
 def test_basics():
     start = time.time()
     ## run it with a byte regex
     si1 = make_test_stream_item()
     context = {}
-    config_yaml = """
-streamcorpus_pipeline:
-    hyperlink_labels:
-        require_abs_url: True
-        domain_substrings: ["nytimes.com"]
-        all_domains: False
-        offset_types: [BYTES]
-"""
-    with yakonfig.defaulted_config([streamcorpus_pipeline], yaml=config_yaml,
-                                   validate=False):
-        hyperlink_labels()(si1, context)
+    hl1 = hyperlink_labels(config={
+        'require_abs_url': True,
+        'all_domains': False,
+        'domain_substrings': ['nytimes.com'],
+        'offset_types': ['BYTES'],
+    })
+    hl1(si1,context)
     elapsed_bytes = time.time() - start
 
     assert si1.body.labels['author'][0].offsets.keys() == [OffsetType.BYTES]
@@ -99,17 +85,13 @@ streamcorpus_pipeline:
     ## run it with regex
     start = time.time()
     si2 = make_test_stream_item()
-    config_yaml = """
-streamcorpus_pipeline:
-    hyperlink_labels:
-        require_abs_url: True
-        domain_substrings: ["nytimes.com"]
-        all_domains: False
-        offset_types: [LINES]
-"""
-    with yakonfig.defaulted_config([streamcorpus_pipeline], yaml=config_yaml,
-                                   validate=False):
-        hyperlink_labels()(si2, context)
+    hl2 = hyperlink_labels(config={
+        'require_abs_url': True,
+        'all_domains': False,
+        'domain_substrings': ['nytimes.com'],
+        'offset_types': ['LINES'],
+    })
+    hl2(si2,context)
     elapsed_lines = time.time() - start
 
     assert si2.body.labels['author'][0].offsets.keys() == [OffsetType.LINES]
@@ -149,19 +131,15 @@ def test_speed(parser_type):
 
     context = {}
     start = time.time()
-    config_yaml = """
-streamcorpus_pipeline:
-    hyperlink_labels:
-        require_abs_url: True
-        domain_substrings: ["nytimes.com"]
-        all_domains: False
-        offset_types: [{}]
-""".format(parser_type)
-    with yakonfig.defaulted_config([streamcorpus_pipeline], yaml=config_yaml,
-                                   validate=False):
-        for si in stream_items:
-            si = hyperlink_labels()(si, context)
-            elapsed = time.time() - start
+    hl = hyperlink_labels(config={
+        'require_abs_url': True,
+        'all_domains': False,
+        'domain_substrings': ['nytimes.com'],
+        'offset_types': [parser_type],
+    })
+    for si in stream_items:
+        si = hl(si, context)
+        elapsed = time.time() - start
     
     rate = len(stream_items) / elapsed
 
@@ -215,16 +193,11 @@ def test_long_doc(parser_type):
         os.path.join(path, 'company-test.html')).read()
 
     context = {}
-    config_yaml = """
-streamcorpus_pipeline:
-    hyperlink_labels:
-        require_abs_url: True
-        all_domains: True
-         ## will fail if set to bytes
-        offset_types: [{}]
-""".format(parser_type)
-    with yakonfig.defaulted_config([streamcorpus_pipeline], yaml=config_yaml,
-                                   validate=False):
-        hyperlink_labels()(stream_item, context)
+    hl = hyperlink_labels(config={
+        'require_abs_url': True,
+        'all_domains': True,
+        'offset_types': [parser_type],
+    })
+    hl(stream_item, context)
 
     

@@ -5,11 +5,10 @@ import pytest
 
 from streamcorpus import StreamItem, ContentItem
 import streamcorpus_pipeline
-from streamcorpus_pipeline.stages import _init_stage
 from streamcorpus_pipeline._clean_html import make_clean_html
 from streamcorpus_pipeline._clean_visible import make_clean_visible
+from streamcorpus_pipeline._hyperlink_labels import hyperlink_labels
 from streamcorpus_pipeline.tests._test_data import _TEST_DATA_ROOT
-import yakonfig
 
 def test_make_clean_html_nyt():
     path = os.path.dirname(__file__)
@@ -62,20 +61,15 @@ def test_target_parsing():
     assert 'logo' not in visible
     assert 'target' not in visible
 
-    config_yaml = """
-streamcorpus_pipeline:
-    hyperlink_labels:
-        offset_types: [LINES]
-        require_abs_url: True
-        all_domains: True
-"""
-    with yakonfig.defaulted_config([streamcorpus_pipeline], yaml=config_yaml,
-                                   validate=False):
-        hyperlink_labels = _init_stage('hyperlink_labels')
-        si = StreamItem(body=ContentItem(clean_html=html))
-        context = {}
-        hyperlink_labels( si, context )
-        html2 = si.body.clean_html
+    stage = hyperlink_labels(config={
+        'offset_types': ['LINES'],
+        'require_abs_url': True,
+        'all_domains': True,
+    })
+    si = StreamItem(body=ContentItem(clean_html=html))
+    context = {}
+    stage( si, context )
+    html2 = si.body.clean_html
 
     visible2 = make_clean_visible( html2 )
     

@@ -20,6 +20,7 @@ import traceback
 import lxml.etree
 
 from streamcorpus_pipeline._clean_html import drop_invalid_and_upper_utf8_chars
+from streamcorpus_pipeline.stages import Configured
 import yakonfig
 
 logger = logging.getLogger(__name__)
@@ -108,7 +109,7 @@ def make_clean_visible(html, tag_replacement_char=' '):
     
     return ''.join( itertools.imap(non_tag_chars(), html) )
 
-class clean_visible(object):
+class clean_visible(Configured):
     '''
     returns a kba.pipeline "transform" function that attempts to
     generate stream_item.body.clean_visible from body.clean_html
@@ -120,10 +121,6 @@ class clean_visible(object):
         if not config['require_clean_html']:
             raise yakonfig.ConfigurationError('{} only does clean_html'
                                               .format(name))
-
-    def __init__(self):
-        self.config = yakonfig.get_global_config('streamcorpus_pipeline',
-                                                 self.config_name)
 
     def __call__(self, stream_item, context):
         if stream_item.body:

@@ -260,12 +260,8 @@ class to_local_chunks(Configured):
         return o_path
 
 
-class to_local_tarballs(object):
+class to_local_tarballs(Configured):
     config_name = 'to_local_tarballs'
-
-    def __init__(self):
-        self.config = yakonfig.get_global_config('streamcorpus_pipeline',
-                                                 config_name)
 
     def __call__(self, t_path, name_info, i_str):
         name_info.update( get_name_info( t_path, i_str=i_str ) )

@@ -12,7 +12,7 @@ import collections
 import imp
 
 import streamcorpus_pipeline
-import streamcorpus_pipeline.stages as stages
+from streamcorpus_pipeline.stages import PipelineStages
 from yakonfig import ConfigurationError, check_subconfig, NewSubModules
 
 config_name = 'streamcorpus_pipeline'
@@ -22,22 +22,23 @@ default_config = {
     'incremental_transforms': [],
     'batch_transforms': [],
     'post_batch_incremental_transforms': [],
+    'cleanup_tmp_files': True,
+    'assert_single_source': True,
 }
-stages.load_default_stages()
 sub_modules = set(stage
-                  for stage in stages.Stages.itervalues()
+                  for stage in PipelineStages().itervalues()
                   if hasattr(stage, 'config_name'))
 
 def replace_config(config, name):
     # Do we have external stages?
     if 'external_stages_path' not in config: return streamcorpus_pipeline
+    stages = PipelineStages()
     try:
         stages.load_external_stages(config['external_stages_path'])
     except IOError, e:
         return streamcorpus_pipeline # let check_config re-raise this
-    # ugh
     new_sub_modules = set(stage
-                          for stage in stages.Stages.itervalues()
+                          for stage in stages.itervalues()
                           if hasattr(stage, 'config_name'))
     return NewSubModules(streamcorpus_pipeline, new_sub_modules)
 
@@ -47,6 +48,8 @@ def check_config(config, name):
                                  .format(name))
 
     # Checking stages:
+    stages = PipelineStages()
+
     # (1) Push in the external stages; 
     if 'external_stages_path' in config:
         try:
@@ -61,7 +64,7 @@ def check_config(config, name):
         raise ConfigurationError('{} requires reader stage'
                                  .format(name))
     try:
-        reader = stages.get_stage(config['reader'])
+        reader = stages[config['reader']]
     except ValueError, e:
         raise ConfigurationError(
             'invalid {} reader {}'
@@ -79,7 +82,7 @@ def check_config(config, name):
                                      .format(name, phase))
         for stagename in config[phase]:
             try:
-                stage = stages.get_stage(stagename)
+                stage = stages[stagename]
             except ValueError, e:
                 raise ConfigurationError(
                     'invalid {} {} {}'

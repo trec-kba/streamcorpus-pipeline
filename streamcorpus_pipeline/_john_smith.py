@@ -26,11 +26,12 @@ Copyright 2012-2013 Diffeo, Inc.
 ## this assumes that streamcorpus has been installed
 import streamcorpus
 from streamcorpus_pipeline._exceptions import PipelineBaseException
+from streamcorpus_pipeline.stages import Configured
 
 import os
 import hashlib
 
-class john_smith(object):
+class john_smith(Configured):
     config_name = 'john_smith'
     # no other config
 

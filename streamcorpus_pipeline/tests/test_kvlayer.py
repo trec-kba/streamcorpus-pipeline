@@ -43,7 +43,9 @@ def configurator(request, namespace_string, redis_address):
 def chunks(configurator, overlay={}):
     with configurator(overlay):
         path = get_test_v0_3_0_chunk_path()
-        writer = to_kvlayer()
+        config = yakonfig.get_global_config('streamcorpus_pipeline',
+                                            'to_kvlayer')
+        writer = to_kvlayer(config)
     
         ## name_info and i_str are not used by the writer
         i_str = ''
@@ -70,7 +72,9 @@ def test_kvlayer_reader_and_writer(configurator):
         logger.info('%d doc_ids', len(all_doc_ids))
 
         ## make an reader
-        reader = from_kvlayer()
+        config = yakonfig.get_global_config('streamcorpus_pipeline',
+                                            'from_kvlayer')
+        reader = from_kvlayer(config)
 
         ## test it with different i_str inputs:
         for i_str in ['', '0,,%d,' % 10**10, '%d,%s,%d,%s' %

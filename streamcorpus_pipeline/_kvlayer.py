@@ -34,8 +34,8 @@ class from_kvlayer(Configured):
     def check_config(config, name):
         yakonfig.check_toplevel_config(kvlayer, name)
 
-    def __init__(self):
-        super(from_kvlayer, self).__init__()
+    def __init__(self, *args, **kwargs):
+        super(from_kvlayer, self).__init__(*args, **kwargs)
         self.client = kvlayer.client()
         self.client.setup_namespace(
             dict(stream_items=2))
@@ -103,8 +103,8 @@ class to_kvlayer(Configured):
         'with_source': 2,
     }
 
-    def __init__(self):
-        super(to_kvlayer, self).__init__()
+    def __init__(self, *args, **kwargs):
+        super(to_kvlayer, self).__init__(*args, **kwargs)
         self.client = kvlayer.client()
         tables = { 'stream_items': 2 }
         for ndx in self.config['indexes']:

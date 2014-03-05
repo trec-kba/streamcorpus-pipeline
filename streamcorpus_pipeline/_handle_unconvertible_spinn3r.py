@@ -11,9 +11,9 @@ from __future__ import absolute_import
 import sys
 
 from streamcorpus_pipeline._clean_html import force_unicode
-from streamcorpus_pipeline.stages import Configurable
+from streamcorpus_pipeline.stages import Configured
 
-class handle_unconvertible_spinn3r(Configurable):
+class handle_unconvertible_spinn3r(Configured):
     '''
     It seems that some of the spinn3r content is not actually UTF-8
     and there is no record of the original encoding, so we take a shot

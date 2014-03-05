@@ -33,8 +33,8 @@ logger = logging.getLogger('kba.pipeline.john_smith_custom_reader')
 
 class john_smith_custom_reader(Configured):
     config_name = 'john_smith_custom_reader'
-    def __init__(self):
-        super(john_smith_custom_reader, self).__init__()
+    def __init__(self, *args, **kwargs):
+        super(john_smith_custom_reader, self).__init__(*args, **kwargs)
 
         ## map input file names to ground truth data (used below)
         self.ground_truth = dict()

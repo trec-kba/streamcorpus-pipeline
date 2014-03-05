@@ -1,10 +1,11 @@
+from __future__ import absolute_import
 import logging
 import os
 import time
 import uuid
-import shutil
-import pytest
 import subprocess
+
+import pytest
 
 logger = logging.getLogger(__name__)
 
@@ -14,8 +15,8 @@ logger = logging.getLogger(__name__)
         ('john-smith-simple.sh', True), 
         ('john-smith-small-chunks.sh', True), 
         ('john-smith-broken-for-test.sh', False), 
-        ('john-smith-lingpipe.sh', True),
-        ('john-smith-serif.sh', True),
+        pytest.mark.slow(('john-smith-lingpipe.sh', True)),
+        pytest.mark.slow(('john-smith-serif.sh', True)),
     ],
 )
 def cmd_expect_success(tmpdir, request):
