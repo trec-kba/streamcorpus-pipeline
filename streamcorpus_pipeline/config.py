@@ -24,6 +24,11 @@ default_config = {
     'post_batch_incremental_transforms': [],
     'cleanup_tmp_files': True,
     'assert_single_source': True,
+    'reader': 'from_local_chunks',
+    'writers': ['to_local_chunks'],
+}
+runtime_keys = {
+    'tmp_dir_path': 'tmp_dir_path',
 }
 sub_modules = set(stage
                   for stage in PipelineStages().itervalues()
