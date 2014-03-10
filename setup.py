@@ -72,7 +72,7 @@ class PyTest(Command):
         print sys.path
         # use pytest to run tests
         pytest = __import__('pytest')
-        if pytest.main(['-n', '8', '-vvs', 'src']):
+        if pytest.main(['-n', '8', '-vvs', 'streamcorpus_pipeline']):
             sys.exit(1)
 
 setup(
@@ -85,8 +85,7 @@ setup(
     author=AUTHOR,
     author_email=AUTHOR_EMAIL,
     url=URL,
-    packages = find_packages('src'),
-    package_dir = {'': 'src'},
+    packages = find_packages(),
     cmdclass={'test': PyTest,
     },
     classifiers=[
@@ -103,10 +102,11 @@ setup(
         'pytest-incremental',
         'pytest-capturelog',
         'epydoc',
+        'pytest-diffeo >= 0.1.4',
     ],
     install_requires=[
         'dblogger',
-        'yakonfig >= 0.3.0',
+        'yakonfig >= 0.4.1',
         'python-magic',
         'python-docx',
         'thrift',
@@ -136,8 +136,8 @@ setup(
     },
     data_files = [
         ## this does not appear to actually put anything into the egg...
-        ('examples', recursive_glob('src/examples', '*.py')),
+        ('examples', recursive_glob('examples', '*.py')),
         ('configs', recursive_glob('configs', '*.yaml')),
         #('data/john-smith', recursive_glob('data/john-smith', '*.*')),
-    ] + recursive_glob_with_tree('data/john-smith/original', '*')
+    ] + recursive_glob_with_tree('data/john-smith/original', '*'),
 )

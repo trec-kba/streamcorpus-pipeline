@@ -3,4 +3,4 @@ include version.py
 include LICENSE.txt
 recursive-include data/john-smith/original *
 recursive-include configs *.yaml
-recursive-include src/examples *.py
+recursive-include examples *.py

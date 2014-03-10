@@ -1,0 +1,141 @@
+'''
+Provides classes for loading StreamItem objects to/from kvlayer
+
+This software is released under an MIT/X11 open source license.
+
+Copyright 2012-2013 Diffeo, Inc.
+'''
+from collections import deque
+import logging
+import os
+import sys
+import uuid
+
+import kvlayer
+import streamcorpus
+from streamcorpus_pipeline.stages import Configured
+import yakonfig
+
+logger = logging.getLogger(__name__)
+
+class from_kvlayer(Configured):
+    '''
+    loads StreamItems from a kvlayer table based an i_str passed to
+    __call__, where the i_str must be a four-tuple joined on commas
+    that provides (epoch_ticks_1, doc_id_1, epoch_ticks_2, doc_id_2)  
+
+    If no values are specified, it defaults to the entire table.  If
+    one of the epoch_ticks is provided, then both must be provided.
+    If one of the doc_ids is provided, then both must be provided.
+    That is, half-open ranges are not supported.
+    '''
+    config_name = 'from_kvlayer'
+    @staticmethod
+    def check_config(config, name):
+        yakonfig.check_toplevel_config(kvlayer, name)
+
+    def __init__(self, *args, **kwargs):
+        super(from_kvlayer, self).__init__(*args, **kwargs)
+        self.client = kvlayer.client()
+        self.client.setup_namespace(
+            dict(stream_items=2))
+
+    def __call__(self, i_str):
+        if i_str:
+            epoch_ticks_1, doc_id_1, epoch_ticks_2, doc_id_2 = i_str.split(',')
+            epoch_ticks_1 = uuid.UUID(int=int(epoch_ticks_1))
+            epoch_ticks_2 = uuid.UUID(int=int(epoch_ticks_2))
+            if doc_id_1:
+                assert doc_id_2, (doc_id_1, doc_id_2)
+                doc_id_1 = uuid.UUID(hex=doc_id_1)
+                doc_id_2 = uuid.UUID(hex=doc_id_2)
+                key1 = (epoch_ticks_1, doc_id_1)
+                key2 = (epoch_ticks_2, doc_id_2)
+            else:
+                key1 = (epoch_ticks_1, )
+                key2 = (epoch_ticks_2, )
+            key_ranges = [(key1, key2)]
+        else:
+            key_ranges = []
+
+        for key, data in self.client.scan( 'stream_items', *key_ranges ):
+            errors, data = streamcorpus.decrypt_and_uncompress(data)
+            yield streamcorpus.deserialize(data)
+
+
+class to_kvlayer(Configured):
+    '''
+    stores StreamItems in a kvlayer table called "stream_items" in the
+    namespace specified in the config dict for this stage.
+    
+    each StreamItem is serialized and xz compressed and stored on the
+    key (UUID(int=epoch_ticks), UUID(hex=doc_id))
+
+    This key structure supports time-range queries directly on the
+    stream_items table.
+
+    The 'indexes' configuration parameter adds additional indexes
+    on the data.  Supported index types include:
+
+    ``doc_id_epoch_ticks`` adds an index with the two key parts reversed
+    and with no data, allowing range searching by document ID
+
+    ``with_source`` adds an index with the same two key parts as normal,
+    but stores the StreamItem's "source" field in the value, allowing
+    time filtering on source without decoding documents
+
+    In all cases the index table is `stream_items_` followed by the
+    index name.
+    '''
+    config_name = 'to_kvlayer'
+    default_config = { 'indexes': [ 'doc_id_epoch_ticks' ] }
+    @staticmethod
+    def check_config(config, name):
+        yakonfig.check_toplevel_config(kvlayer, name)
+        for ndx in config['indexes']:
+            if ndx not in to_kvlayer.index_sizes:
+                raise yakonfig.ConfigurationError(
+                    'invalid {} indexes type {!r}'
+                    .format(name, ndx))
+
+    index_sizes = {
+        'doc_id_epoch_ticks': 2,
+        'with_source': 2,
+    }
+
+    def __init__(self, *args, **kwargs):
+        super(to_kvlayer, self).__init__(*args, **kwargs)
+        self.client = kvlayer.client()
+        tables = { 'stream_items': 2 }
+        for ndx in self.config['indexes']:
+            tables['stream_items_' + ndx] = self.index_sizes[ndx]
+        self.client.setup_namespace(tables)
+
+    def __call__(self, t_path, name_info, i_str):
+        indexes = {}
+        for ndx in self.config['indexes']: indexes[ndx] = []
+        # The idea here is that the actual documents can be pretty big,
+        # so we don't want to keep them in memory, but the indexes
+        # will just be UUID tuples.  So the iterator produces 
+        def keys_and_values():
+            for si in streamcorpus.Chunk(t_path):
+                key1 = uuid.UUID(int=si.stream_time.epoch_ticks)
+                key2 = uuid.UUID(hex=si.doc_id)
+                data = streamcorpus.serialize(si)
+                errors, data = streamcorpus.compress_and_encrypt(data)
+                assert not errors, errors
+                
+                yield (key1, key2), data
+
+                for ndx in indexes:
+                    if ndx == 'doc_id_epoch_ticks':
+                        kvp = ((key2, key1), r'')
+                    elif ndx == 'with_source':
+                        kvp = ((key1, key2), si.source)
+                    else:
+                        assert False, ('invalid index type ' + ndx)
+                    indexes[ndx].append(kvp)
+
+        self.client.put( 'stream_items', *list(keys_and_values()))
+        for ndx, kvps in indexes.iteritems():
+            self.client.put('stream_items_' + ndx, *kvps)
