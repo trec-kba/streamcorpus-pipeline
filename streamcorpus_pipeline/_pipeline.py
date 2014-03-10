@@ -148,8 +148,9 @@ class Pipeline(object):
             self._cleanup_done = True
             return
         try:
-            logger.info('attempting rm -rf %s' % self.tmp_dir_path)
-            shutil.rmtree(self.tmp_dir_path)
+            if self.config.get('cleanup_tmp_files', True):
+                logger.info('attempting rm -rf %s' % self.config['tmp_dir_path'])
+                shutil.rmtree(self.config['tmp_dir_path'])
         except Exception, exc:
             logger.debug('trapped exception from cleaning up tmp_dir_path', exc_info=True)
         self._cleanup_done = True
