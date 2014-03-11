@@ -103,10 +103,6 @@ def instantiate_config(config):
     pipeline_config['config_hash'] = make_hash(config)
     pipeline_config['config_json'] = json.dumps(config)
 
-    ## setup loggers
-    if 'log_level' in pipeline_config:
-        logging.getLogger().setLevel(pipeline_config['log_level'])
-
     logger.debug('running config: {} = {!r}'
                  .format(pipeline_config['config_hash'], config))
 
@@ -138,15 +134,10 @@ def main():
     import argparse
     parser = argparse.ArgumentParser(
         description=Pipeline.__doc__,
-        usage='echo file.in | streamcorpus_pipeline config.yaml')
+        usage='streamcorpus_pipeline --config config.yaml --input file.in')
     parser.add_argument('-i', '--input', action='append', 
                         help='file paths to input instead of reading from stdin')
     parser.add_argument('--in-glob', action='append', default=[], help='path glob specifying input files')
-    parser.add_argument('--dump-config', metavar='MODE', nargs='?',
-                        const='effective',
-                        help='print configuration and stop (MODE=full|effective)')
-    parser.add_argument('config', metavar='FILE',
-                        help='top-level configuration file')
 
     modules = [yakonfig, kvlayer, streamcorpus_pipeline]
     args = yakonfig.parse_args(parser, modules)
@@ -156,23 +147,15 @@ def main():
     ## this modifies the global config, passed by reference
     instantiate_config(config)
 
-    if args.dump_config:
-        if args.dump_config == 'full':
-            dc = config
-        else:
-            base = assemble_default_config(modules)
-            dc = yakonfig.diff_config(base, config)
-        yaml.dump(dc, sys.stdout)
-        return
-
     input_paths = []
     if args.in_glob:
         for pattern in args.in_glob:
             input_paths.extend(glob.glob(pattern))
     if args.input:
-        input_paths.extend(args.input)
-    if not input_paths:
-        input_paths = sys.stdin
+        if args.input == '-':
+            input_paths.extend(sys.stdin)
+        else:
+            input_paths.extend(args.input)
 
     scp_config = config['streamcorpus_pipeline']
     stages = PipelineStages()
