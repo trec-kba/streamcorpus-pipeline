@@ -20,7 +20,7 @@ class keep_annotated(Configured):
     in v0_1_0 StreamItems and emits v0_2_0 StreamItems
     '''
     config_name = 'keep_annotated'
-    def __init__(self):
+    def __init__(self, config):
         super(keep_annotated, self).__init()
         fh = open(self.config['annotation_file'])
         annotated_stream_ids = dict()

@@ -24,8 +24,9 @@ logger = logging.getLogger(__name__)
 class find(Configured):
     config_name = 'find'
     default_config = { 'filter': True }
-    def __init__(self):
+    def __init__(self, config):
         super(find, self).__init__()
+        self.config = config
         self._stream_ids = set()
         for line in open(self.config['list_of_stream_ids_path']).read().splitlines():
             source, stream_id = line.split()
@@ -68,8 +69,9 @@ class find(Configured):
 class find_doc_ids(Configured):
     config_name = 'find_doc_ids'
     default_config = { 'filter': True }
-    def __init__(self):
+    def __init__(self, config):
         super(find_doc_ids, self).__init__()
+        self.config = config
         self._doc_ids = set()
         for line in open(self.config['list_of_doc_ids_path']).read().splitlines():
             doc_id = line.split()

@@ -14,8 +14,9 @@ from streamcorpus_pipeline.stages import Configured
 
 class dump_label_stats(Configured):
     config_name = 'dump_label_stats'
-    def __init__(self):
+    def __init__(self, config):
         super(dump_label_stats, self).__init__()
+        self.config = config
         self._path = os.path.join(self.config['dump_path'], str(uuid.uuid1()) + '.txt')
         self._dump_fh = open(self._path, 'wb')
 
