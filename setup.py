@@ -132,6 +132,7 @@ setup(
         'console_scripts': [
             'streamcorpus_pipeline = streamcorpus_pipeline.run:main',
             'streamcorpus_pipeline_work_units = streamcorpus_pipeline._rejester:make_work_units',
+            'streamcorpus_directory = streamcorpus_pipeline._directory:main',
         ]
     },
     data_files = [

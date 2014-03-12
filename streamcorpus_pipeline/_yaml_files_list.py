@@ -87,6 +87,10 @@ class yaml_files_list(Configured):
                     profile_paths = [profile_paths]
                 paths.extend(profile_paths)
 
+            ## Only yield documents once.  Because the user can specify
+            ## profile_paths and doc_paths we have the possibility of
+            ## duplicates.
+            visited_paths = []
             for path in paths:
                 ## normalize path
                 path = str(path)
@@ -98,9 +102,13 @@ class yaml_files_list(Configured):
                     for dirpath, dirnames, filenames in os.walk(path):
                         for fname in filenames:
                             fpath = os.path.join(base_dir, dirpath, fname)
-                            yield self._make_stream_item(fpath, entry, metadata)
+                            if fpath not in visited_paths:
+                                yield self._make_stream_item(fpath, entry, metadata)
+                                visited_paths.append(fpath)
                 else:
-                    yield self._make_stream_item(path, entry, metadata)
+                    if path not in visited_paths:
+                        yield self._make_stream_item(path, entry, metadata)
+                        visited_paths.append(path)
 
     def _ensure_unique(self, sym):
         ## Generate a unique identifier by appending a numeric suffix

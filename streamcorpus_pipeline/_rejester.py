@@ -10,6 +10,7 @@ import time
 
 import json
 
+import kvlayer
 import streamcorpus_pipeline
 from streamcorpus_pipeline.run import instantiate_config
 from streamcorpus_pipeline._pipeline import PipelineFactory
@@ -18,7 +19,7 @@ from streamcorpus_pipeline.stages import PipelineStages
 import yakonfig
 
 def rejester_run_function(work_unit):
-    with yakonfig.defaulted_config([streamcorpus_pipeline],
+    with yakonfig.defaulted_config([kvlayer, streamcorpus_pipeline],
                                    config=work_unit.spec.get('config', {})):
         scp_config = yakonfig.get_global_config('streamcorpus_pipeline')
         stages = PipelineStages()
