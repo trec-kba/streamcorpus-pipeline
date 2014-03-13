@@ -21,8 +21,8 @@ git checkout -- data/john-smith/john-smith-tagged-by-lingpipe-0.sc
 rm -f data/john-smith/john-smith-tagged-by-lingpipe-test-0.sc
 mkdir -p $TMP
 
-echo data/john-smith/original | python -m streamcorpus_pipeline.run configs/john-smith-lingpipe.yaml  ## creates data/john-smith/john-smith-tagged-by-lingpipe-0-prebuild.sc
-echo data/john-smith/john-smith-0.sc | python -m streamcorpus_pipeline.run configs/john-smith-lingpipe-from-chunk.yaml
+python -m streamcorpus_pipeline.run -c configs/john-smith-lingpipe.yaml -i data/john-smith/original  ## creates data/john-smith/john-smith-tagged-by-lingpipe-0-prebuild.sc
+python -m streamcorpus_pipeline.run -c configs/john-smith-lingpipe-from-chunk.yaml -i data/john-smith/john-smith-0.sc
 
 ## compare dumps
 python -m streamcorpus.dump data/john-smith/john-smith-tagged-by-lingpipe-0-prebuild.sc --tokens > $TMP/lp-0.tsv

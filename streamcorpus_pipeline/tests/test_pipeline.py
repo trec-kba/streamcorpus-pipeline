@@ -85,14 +85,15 @@ class ExternalStage(streamcorpus_pipeline.stages.Configured):
         return self.config.get('message', None)
 Stages = { 'external_stage': ExternalStage }
 
-def test_external_stage_unregistered():
+def test_external_stage_unregistered(tmpdir):
     with yakonfig.defaulted_config([streamcorpus_pipeline], config={
             'streamcorpus_pipeline': {
+                'tmp_dir_path': str(tmpdir),
                 'external_stage': {
                     'message': 'configured message',
                 },
             },
-    }, validate=False):
+    }):
         config=yakonfig.get_global_config('streamcorpus_pipeline',
                                           'external_stage')
         stage = ExternalStage(config=config)

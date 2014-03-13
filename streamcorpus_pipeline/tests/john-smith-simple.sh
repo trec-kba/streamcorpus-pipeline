@@ -5,8 +5,8 @@ set -e
 cd $(dirname $0)/../..
 export PYTHONPATH=$(dirname $0)/../..:$PYTHONPATH
 
-echo data/john-smith/original | python -m streamcorpus_pipeline.run configs/john-smith.yaml
-echo data/john-smith/original | python -m streamcorpus_pipeline.run configs/john-smith-with-labels-from-tsv.yaml
+python -m streamcorpus_pipeline.run -c configs/john-smith.yaml -i data/john-smith/original
+python -m streamcorpus_pipeline.run -c configs/john-smith-with-labels-from-tsv.yaml -i data/john-smith/original
 
 ## compare dumps
 python -m streamcorpus.dump data/john-smith/john-smith-0.sc                      --field stream_id | sort > js-0.tsv

@@ -28,9 +28,9 @@ git checkout -- data/john-smith/john-smith-tagged-by-lingpipe-0.sc
 rm -f data/john-smith/john-smith-tagged-by-lingpipe-test-0.sc
 mkdir -p $TMP
 
-echo data/john-smith/original | python -m streamcorpus_pipeline.run configs/john-smith-serif-streamcorpus_one_step.yaml
-echo data/john-smith/john-smith-0.sc | python -m streamcorpus_pipeline.run configs/john-smith-serif-streamcorpus_generate_serifxml.yaml
-echo data/john-smith/john-smith-tagged-by-serifxml-only.sc | python -m streamcorpus_pipeline.run configs/john-smith-serif-streamcorpus_read_serifxml.yaml
+python -m streamcorpus_pipeline.run -c configs/john-smith-serif-streamcorpus_one_step.yaml -i data/john-smith/original
+python -m streamcorpus_pipeline.run -c configs/john-smith-serif-streamcorpus_generate_serifxml.yaml -i data/john-smith/john-smith-0.sc
+python -m streamcorpus_pipeline.run -c configs/john-smith-serif-streamcorpus_read_serifxml.yaml -i data/john-smith/john-smith-tagged-by-serifxml-only.sc
 
 ## compare dumps
 python -m streamcorpus.dump data/john-smith/john-smith-tagged-by-serif-0.sc      --tokens > $TMP/serif-0.tsv
@@ -41,5 +41,5 @@ diff $TMP/serif-0.tsv $TMP/serif-test-0.tsv || die "failed: configs/john-smith-s
 
 ## this is so slow that there must be something wrong with our
 ## build of Stanford CoreNLP
-#echo data/john-smith/john-smith-0.sc | python -m streamcorpus.pipeline.run configs/john-smith-stanford-from-chunk.yaml
+#python -m streamcorpus.pipeline.run -c configs/john-smith-stanford-from-chunk.yaml -i data/john-smith/john-smith-0.sc
 
