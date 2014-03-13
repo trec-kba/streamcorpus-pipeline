@@ -1,15 +1,13 @@
 """yakonfig declarations for streamcorpus_pipeline.
 
------
-
-This software is released under an MIT/X11 open source license.
-
-Copyright 2014 Diffeo, Inc.
+.. This software is released under an MIT/X11 open source license.
+   Copyright 2014 Diffeo, Inc.
 
 """
 from __future__ import absolute_import
 import collections
 import imp
+import os
 
 import streamcorpus_pipeline
 from streamcorpus_pipeline.stages import PipelineStages
@@ -37,6 +35,9 @@ sub_modules = set(stage
 def replace_config(config, name):
     # Do we have external stages?
     if 'external_stages_path' not in config: return streamcorpus_pipeline
+    path = config['external_stages_path']
+    if not os.path.isabs(path) and config.get('root_path'):
+        path = os.path.join(config['root_path'], path)
     stages = PipelineStages()
     try:
         stages.load_external_stages(config['external_stages_path'])
@@ -93,3 +94,22 @@ def check_config(config, name):
                     'invalid {} {} {}'
                     .format(name, phase, stagename))
             check_subconfig(config, name, stage)
+
+def normalize_config(config):
+    # Fix up all paths in our own config to be absolute
+    root_path = config.get('root_path', os.getcwd())
+    def fix(c, k):
+        v = c[k]
+        if not os.path.isabs(v):
+            c[k] = os.path.join(root_path, v)
+    for k in config.iterkeys():
+        if k.endswith('path') and k != 'root_path': fix(config, k)
+    # Note, that happens to also include tmp_dir_path, which must exist.
+    tmp_dir_path = config['tmp_dir_path']
+    # Now go into all of our children and push in tmp_dir_path and fix
+    # up their paths too.
+    for c in config.itervalues():
+        if isinstance(c, collections.MutableMapping):
+            for k in c.iterkeys():
+                if k.endswith('path'): fix(c, k)
+            c['tmp_dir_path'] = tmp_dir_path
