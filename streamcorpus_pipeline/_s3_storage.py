@@ -90,6 +90,28 @@ def get_bucket(config):
     return bucket
 
 class from_s3_chunks(Configured):
+    '''Read :class:`streamcorpus.Chunk` files from Amazon S3.
+
+    There are several mandatory configuration items:
+
+    .. code-block:: yaml
+
+        from_s3_chunks:
+          # Mandatory, indicate how to connect to S3
+          bucket: aws-publicdatasets
+          s3_prefix_path: /trec/kba/kba-stream-corpus-2012/
+          aws_access_key_path: /home/diffeo/.s3-key
+          aws_secret_access_key_path: /home/diffeo/.s3-secret-key
+
+          # Optional
+          gpg_decryption_key_path: /home/diffeo/gpg-public
+          input_format: StreamItem
+          streamcorpus_version: v0_2_0
+
+    The input file names are always interpreted relative to the
+    specified path in the specified s3 bucket.
+
+    '''
     config_name = 'from_s3_chunks'
     def __init__(self, config):
         super(from_s3_chunks, self).__init__(config)
@@ -161,6 +183,40 @@ class from_s3_chunks(Configured):
                 sys.exit('Invalid config: input_format = %r' % self.config['input_format'])
 
 class to_s3_chunks(Configured):
+    '''Write :class:`streamcorpus.Chunk` files to Amazon S3.
+
+    There are several mandatory configuration items:
+
+    .. code-block:: yaml
+
+        from_s3_chunks:
+          output_name: output-%(first)d
+
+          # Mandatory, indicate how to connect to S3
+          bucket: aws-publicdatasets
+          s3_prefix_path: /trec/kba/kba-stream-corpus-2012/
+          aws_access_key_path: /home/diffeo/.s3-key
+          aws_secret_access_key_path: /home/diffeo/.s3-secret-key
+
+          # Optional
+          gpg_encryption_key_path: /home/diffeo/gpg-private
+          gpg_recipient: support@diffeo.com
+          cleanup_tmp_files: true
+
+          # Check after writing?
+          verify_via_http: true
+          gpg_decryption_key_path: /home/diffeo/gpg-public
+
+    ``output_name`` is expanded in the same way as the
+    :class:`~streamcorpus_pipeline._local_storage.to_local_chunks`
+    writer.  The filename always has ``.sc.xz.gpg`` appended to it,
+    and correspondingly, the output file is always compressed and
+    encrypted.  If ``verify_via_http`` is specified, the file is
+    read back from Amazon and compared against the original input.
+    If ``cleanup_tmp_files`` is specified, the intermediate chunk
+    file is deleted and no further pipeline stages can run.
+
+    '''
     config_name = 'to_s3_chunks'
     def __init__(self, config):
         super(to_s3_chunks, self).__init__(config)
