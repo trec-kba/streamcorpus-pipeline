@@ -120,28 +120,72 @@ def patient_move(path1, path2, max_tries=30):
 
 
 class to_local_chunks(Configured):
-    '''
-    uses config dict parts:
-    output_name: name of file to write to. may be 'input' to derive name from source path
-    output_type:
-      'samedir' place files next to input
-      'inplace' replace input file with output
-      'otherdir' place output files according to config['output_path']
-    output_path: where to put output files
-    compress: bool() True append '.xz' to output file name and compress output
+    '''Write output to a local chunk file.
+
+    .. warning:: This stage must be listed last in the ``writers`` list.
+                 For efficiency it renames the intermediate chunk file,
+                 and so any subsequent writer stages will have no input
+                 chunk file to work with.
+
+    This stage may take several additional configuration parameters.
+
+    .. code-block:: yaml
+
+        output_type: samedir
+
+    Where to place the output: ``inplace`` replaces the input file;
+    ``samedir`` uses the `output_name` in the same directory as the
+    input; and ``otherdir`` uses `output_name` in `output_path`.
+
+    .. code-block:: yaml
+
+        output_path: /home/diffeo/outputs
+
+    If `output_type` is ``otherdir``, the name of the directory to
+    write to.
+
+    .. code-block:: yaml
+
+        output_name: output-%(first)d.sc
+
+    Gives the name of the output file if `output_type` is not
+    ``inplace``.  If this is ``input`` then the output file name is
+    automatically derived from the input file name.  This may also
+    include Python format string parameters:
+
+    * ``%(input_fname)s``: the basename of the input file name
+    * ``%(input_md5)s``: the last part of a hyphenated input filename
+    * ``%(md5)s``: MD5 hash of the chunk file
+    * ``%(first)d``: index of the first item in the chunk file
+    * ``%(num)d``: number of items in the chunk file
+    * ``%(epoch_ticks)d``: timestamp of the first item in the chunk file
+    * ``%(target_names)s``: hyphenated list of rating target names
+    * ``%(source)s``: source name for items in the chunk file
+    * ``%(doc_ids_8)s``: hyphenated list of 8-character suffixes of document IDs
+    * ``%(date_hour)s``: partial timestamp including date and hour
+    * ``%(rand8)s``: 8-byte random hex string
+
+    .. code-block:: yaml
+
+        compress: true
+
+    If specified, append ``.xz`` to the output file name and
+    LZMA-compress the output file.  Defaults to false.
+
+    .. code-block:: yaml
+
+        cleanup_tmp_files: false
+
+    If set to "false", do not delete the intermediate file (or rename
+    it away), enabling later writer stages to be run.  Defaults to
+    true.
+
     '''
     config_name = 'to_local_chunks'
     default_config = {
         'cleanup_tmp_files': True,
-        'max_backoff': 300,
+        'compress': False,
     }
-    @staticmethod
-    def check_config(config, name):
-        if 'compress' in config:
-            if config['compress'] not in set('xz'):
-                raise yakonfig.ConfigurationError(
-                    'invalid {} compress value {}'
-                    .format(name, config['compress']))
 
     def __call__(self, t_path, name_info, i_str):
         o_type = self.config['output_type']

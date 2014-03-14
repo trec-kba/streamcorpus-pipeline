@@ -1,12 +1,147 @@
 #!/usr/bin/env python
-'''
-Provides a data transformation pipeline for expanding the data in
-StreamItem instances from streamcorpus.Chunk files.  streamcorpus_pipeline.run
-provides a command line interface to this functionality.
+'''Configuration and execution of the actual pipeline.
 
-This software is released under an MIT/X11 open source license.
+.. This software is released under an MIT/X11 open source license.
+   Copyright 2012-2014 Diffeo, Inc.
 
-Copyright 2012-2014 Diffeo, Inc.
+The :class:`Pipeline` itself consists of a series of
+:mod:`~streamcorpus_pipeline.stages`.  These are broken into several
+categories:
+
+* Exactly one *reader* runs first, producing a sequence of
+  :class:`streamcorpus.StreamItem` objects.
+
+* The stream items are fed through *incremental transforms*, which take
+  one stream item in and produce one stream item out.
+
+* All of the stream items are written to a file, and *batch transforms*
+  can operate on the entire collection of stream items at once.
+
+* *Post-batch incremental transforms* again operate on individual
+  stream items.
+
+* Some number of *writers* send the final output somewhere.
+
+Configuration
+=============
+
+The :command:`streamcorpus_pipeline` tool expects configuration in
+a YAML file.  The configuration resulting from this can be passed
+through :class:`PipelineFactory` to create :class:`Pipeline` objects.
+A typical coniguration looks like:
+
+.. code-block:: yaml
+
+    streamcorpus_pipeline:
+      # This setting is REQUIRED, it is typically set to a unique
+      # path per execution that can be easily cleaned up.
+      tmp_dir_path: /tmp/streamcorpus_pipeline-987
+
+      # Lists of stages
+      reader: from_local_chunks
+      incremental_transforms: [clean_html, language]
+      batch_transforms: []
+      post_batch_incremental_transforms: []
+      # to_local_chunks must be the last writer if it is used
+      writers: [to_local_chunks]
+
+      # Configuration for specific stages
+      clean_html:
+        include_language_codes: [en]
+
+The ``streamcorpus_pipeline`` block can additionally be configured
+with:
+
+.. code-block:: yaml
+
+    root_path: /home/user/diffeo
+
+Any configuration variable whose name ends in "path" whose value is
+not an absolute path is considered relative to this directory.  If
+omitted, use the current directory.
+
+.. code-block:: yaml
+
+    tmp_dir_path: directory
+
+Intermediate files are stored in :file:`directory`.  The pipeline
+execution will make an effort to clean this up.
+
+.. note:: The user is *required* to set ``tmp_dir_path``, there is no
+          default.
+
+.. code-block:: yaml
+
+    rate_log_interval: 500
+
+When this many items have been processed, log an INFO-level log
+message giving the current progress.
+
+.. code-block:: yaml
+
+    input_item_limit: 500
+
+Stop processing after reading this many stream items.  (Default:
+process the entire stream)
+
+.. code-block:: yaml
+
+    cleanup_tmp_files: true
+
+After execution finishes, delete ``tmp_dir_path``.
+
+.. code-block:: yaml
+
+    assert_single_source: false
+
+Normally a set of stream items has a consistent
+:attr:`streamcorpus.StreamItem.source` value, and the pipeline
+framework will stop if it sees different values here.  Set this to
+``false`` to disable this check.  (Default: do assert a single source
+value)
+
+.. code-block:: yaml
+
+    output_max_chunk_count: 500
+
+After this many items have been written, close and re-open the output.
+(Default: write entire output in one batch)
+
+.. code-block:: yaml
+
+    output_max_clean_visible_bytes: 1000000
+
+After this much :attr:`streamcorpus.StreamItem.clean_visible` content
+has been written, close and re-open the output.  (Default: write
+entire output in one batch)
+
+.. code-block:: yaml
+
+    external_stages_path: stages.py
+
+The file :file:`stages.py` is a Python module that declares a
+top-level dictionary named `Stages`, a map from stage name to
+implementing class.  Stages defined in this file can be used in any of
+the appropriate stage lists.
+
+API
+===
+
+The standard execution path is to pass the
+:mod:`streamcorpus_pipeline` module to
+:func:`yakonfig.parse_args`, then use :class:`PipelineFactory` to
+create :class:`Pipeline` objects from the resulting configuration.
+
+.. todo:: Make the top-level configuration point
+          :class:`PipelineFactory`, not the
+          :mod:`streamcorpus_pipeline` module
+
+.. autoclass:: PipelineFactory
+   :members:
+
+.. autoclass:: Pipeline
+   :members:
+
 '''
 
 from __future__ import absolute_import
@@ -41,14 +176,23 @@ logger = logging.getLogger(__name__)
 class PipelineFactory(object):
     '''Factory to create `Pipeline` objects from configuration.
 
-    Call this to get a `Pipeline` object.
+    Call this to get a `Pipeline` object.  Typical programmatic use:
+
+    >>> parser = argparse.ArgumentParser()
+    >>> args = yakonfig.parse_args([yakonfig, streamcorpus_pipeline])
+    >>> factory = PipelineFactory(StageRegistry())
+    >>> pipeline = factory(yakonfig.get_global_config('streamcorpus_pipeline'))
+
+    .. automethod:: __init__
+    .. automethod:: __call__
     '''
 
     def __init__(self, registry, *args, **kwargs):
         '''Create a pipeline factory.
 
         :param dict config: top-level "streamcorpus_pipeline" configuration
-        :param StageRegistry registry: registry of stages
+        :param registry: registry of stages
+        :type registry: :class:`~streamcorpus_pipeline.stages.StageRegistry`
 
         '''
         super(PipelineFactory, self).__init__(*args, **kwargs)
@@ -62,6 +206,11 @@ class PipelineFactory(object):
                 for stage in config[name]]
 
     def __call__(self, config):
+        '''Create a :class:`Pipeline`.
+
+        Pass in the configuration under the ``streamcorpus_pipeline``
+        block, not the top-level configuration that contains it.
+        '''
         tmpdir = config.get('tmp_dir_path')
         tmpdir = os.path.join(tmpdir, uuid.uuid4().hex)
         if not os.path.exists(tmpdir):
@@ -97,12 +246,51 @@ class Pipeline(object):
     on individual StreamItem objects.  Finally, any number of *writers*
     send output somewhere, usually a streamcorpus.Chunk file.
 
+    Callers should call :meth:`_cleanup` once when done doing
+    transformations.  If they do not, it will be automatically called
+    at shutdown.
+
+    .. automethod:: __init__
+    .. automethod:: _cleanup
+    .. automethod:: shutdown
+    .. automethod:: run
+    .. automethod:: _process_task
+
     '''
     def __init__(self, rate_log_interval, input_item_limit,
                  cleanup_tmp_files, tmp_dir_path, assert_single_source,
                  output_max_chunk_count, output_max_clean_visible_bytes,
                  reader, incremental_transforms, batch_transforms,
                  post_batch_incremental_transforms, writers):
+        '''Create a new pipeline object.
+
+        .. todo:: make this callable with just the lists of stages
+                  and give sane (language-level) defaults for the rest
+
+        :param int rate_log_interval: print progress every time this
+          many input items have been processed
+        :param int input_item_limit: stop after this many items
+        :param bool cleanup_tmp_files: delete `tmp_dir_path` after
+          execution if true
+        :param str tmp_dir_path: path for intermediate files
+        :param bool assert_single_source: require all items to have
+          the same source value if true
+        :param int output_max_chunk_count: restart output after
+          writing this many items
+        :param int output_max_clean_visible_bytes: restart output after
+          writing this much content
+        :param callable reader: reader stage object
+        :param incremental_transforms: single-item transformation stages
+        :paramtype incremental_transforms: list of callable
+        :param batch_transforms: chunk-file transformation stages
+        :paramtype batch_transforms: list of callable
+        :param post_batch_incremental_transforms: single-item transformation
+          stages
+        :paramtype post_batch_incremental_transforms: list of callable
+        :param writers: output stages
+        :paramtype writers: list of callable
+
+        '''
         self.rate_log_interval = rate_log_interval
         self.input_item_limit = input_item_limit
         self.cleanup_tmp_files = cleanup_tmp_files
@@ -135,7 +323,9 @@ class Pipeline(object):
     def _cleanup(self):
         '''shutdown all the stages, terminate the work_unit, remove tmp dir
 
-        This is idempotent.
+        This is idempotent.  Pipeline users should call this explicitly
+        when done with the pipeline, but this is also registered to
+        be called at shutdown.
         '''
         if self._cleanup_done:
             return
@@ -156,6 +346,13 @@ class Pipeline(object):
         self._cleanup_done = True
 
     def shutdown(self, sig=None, frame=None, msg=None, exit_code=None):
+        '''Clean up the pipeline and destroy the world.
+
+        This calls :meth:`_cleanup`, and then :func:`sys.exit`.
+        
+        .. todo:: move this functionality to :mod:`streamcorpus_pipeline.run`
+
+        '''
         if sig:
             logger.critical('shutdown inititated by signal: %r' % sig)
         elif msg:
@@ -172,8 +369,16 @@ class Pipeline(object):
         sys.exit(exit_code)
 
     def _process_task(self, work_unit):
-        '''
-        returns number of stream items processed
+        '''Process a :class:`rejester.WorkUnit`.
+
+        The work unit's key is taken as the input file name.  The
+        data should have ``start_count`` and ``start_chunk_time``
+        values, which are passed on to :meth:`run`.
+
+        :param work_unit: work unit to process
+        :paramtype work_unit: :class:`rejester.WorkUnit`
+        :return: number of stream items processed
+
         '''
         self.work_unit = work_unit
         i_str = work_unit.key
@@ -182,6 +387,17 @@ class Pipeline(object):
         self.run(i_str, start_count, start_chunk_time)
 
     def run(self, i_str, start_count=0, start_chunk_time=None):
+        '''Run the pipeline.
+
+        This runs all of the steps described in the pipeline constructor,
+        reading from some input and writing to some output.
+
+        :param str i_str: name of the input file, or other reader-specific
+          description of where to get input
+        :param int start_count: index of the first stream item
+        :param int start_chunk_time: timestamp for the first stream item
+
+        '''
         if start_chunk_time is None:
             start_chunk_time = time.time()
 

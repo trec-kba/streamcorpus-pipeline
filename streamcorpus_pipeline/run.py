@@ -1,10 +1,33 @@
 #!/usr/bin/env python
-'''
-See help(streamcorpus_pipeline.Pipeline) for details on configuration.
+''':command:`streamcorpus_pipeline` is the command-line entry point to the
+pipeline.
 
-This software is released under an MIT/X11 open source license.
+.. This software is released under an MIT/X11 open source license.
+   Copyright 2012-2014 Diffeo, Inc.
 
-Copyright 2012-2014 Diffeo, Inc.
+.. program:: streamcorpus_pipeline
+
+.. option:: --config <config.yaml>, -c <config.yaml>
+
+YAML configuration file for the pipeline.  This must have a
+``streamcorpus_pipeline`` section as described below.  It may also
+have a ``logging`` section for :mod:`dblogger`, a ``kvlayer`` section
+for :mod:`kvlayer` if the
+:class:`~streamcorpus_pipeline._kvlayer.to_kvlayer` stage is in use,
+and a ``rejester`` section if :mod:`rejester` is used for distributed
+work.
+
+.. option:: --input <file.sc>, -i <file.sc>
+
+Names the input file.  If the file name is ``-`` then standard input
+is used, if this makes sense.  Some reader stages may use the file
+name specially.
+
+.. option:: --in-glob <pattern>
+
+Runs the pipeline once for each file matching the shell :mod:`glob`
+``pattern``.
+
 '''
 from __future__ import absolute_import
 import copy
@@ -133,7 +156,7 @@ def instantiate_config(config):
 def main():
     import argparse
     parser = argparse.ArgumentParser(
-        description=Pipeline.__doc__,
+        description='process a sequence of stream items',
         usage='streamcorpus_pipeline --config config.yaml --input file.in')
     parser.add_argument('-i', '--input', action='append', 
                         help='file paths to input instead of reading from stdin')
