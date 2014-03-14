@@ -99,17 +99,17 @@ class from_s3_chunks(Configured):
         from_s3_chunks:
           # Mandatory, indicate how to connect to S3
           bucket: aws-publicdatasets
-          s3_prefix_path: /trec/kba/kba-stream-corpus-2012/
-          aws_access_key_path: /home/diffeo/.s3-key
-          aws_secret_access_key_path: /home/diffeo/.s3-secret-key
+          aws_access_key_id_path: keys/aws_access_key_id
+          aws_secret_access_key_path: keys/aws_secret_access_key
+          tries: 1
 
           # Optional
-          gpg_decryption_key_path: /home/diffeo/gpg-public
+          gpg_decryption_key_path: keys/gpg-key.public
           input_format: StreamItem
           streamcorpus_version: v0_2_0
 
     The input file names are always interpreted relative to the
-    specified path in the specified s3 bucket.
+    specified s3 bucket.
 
     '''
     config_name = 'from_s3_chunks'
@@ -194,18 +194,17 @@ class to_s3_chunks(Configured):
 
           # Mandatory, indicate how to connect to S3
           bucket: aws-publicdatasets
-          s3_prefix_path: /trec/kba/kba-stream-corpus-2012/
-          aws_access_key_path: /home/diffeo/.s3-key
-          aws_secret_access_key_path: /home/diffeo/.s3-secret-key
+          aws_access_key_id_path: keys/aws_access_key_id
+          aws_secret_access_key_path: keys/aws_secret_access_key
 
           # Optional
-          gpg_encryption_key_path: /home/diffeo/gpg-private
-          gpg_recipient: support@diffeo.com
+          gpg_encryption_key_path: keys/gpg-key.private
+          gpg_recipient: kba@trec-kba.org
           cleanup_tmp_files: true
 
           # Check after writing?
           verify_via_http: true
-          gpg_decryption_key_path: /home/diffeo/gpg-public
+          gpg_decryption_key_path: keys/gpg-key.public
 
     ``output_name`` is expanded in the same way as the
     :class:`~streamcorpus_pipeline._local_storage.to_local_chunks`
