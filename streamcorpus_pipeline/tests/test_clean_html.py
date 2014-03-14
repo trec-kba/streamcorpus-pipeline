@@ -5,7 +5,7 @@ import pytest
 
 from streamcorpus import StreamItem, ContentItem
 import streamcorpus_pipeline
-from streamcorpus_pipeline._clean_html import make_clean_html
+from streamcorpus_pipeline._clean_html import make_clean_html, clean_html
 from streamcorpus_pipeline._clean_visible import make_clean_visible
 from streamcorpus_pipeline._hyperlink_labels import hyperlink_labels
 from streamcorpus_pipeline.tests._test_data import _TEST_DATA_ROOT
@@ -100,3 +100,16 @@ def test_unicode_conversion():
     print type(visible)
 
     print visible.decode('utf8')
+
+def test_stage():
+    stage = clean_html({}) # NB: not even defaults
+    path = os.path.dirname(__file__)
+    path = os.path.join( path, _TEST_DATA_ROOT, 'test' )
+    with open(os.path.join(path, 'nytimes-index.html'), 'r') as f:
+        raw = f.read().decode('utf8')
+    si = StreamItem(body=ContentItem(raw=raw, media_type='text/html'))
+    si = stage(si, {})
+    
+    with open(os.path.join(path, 'nytimes-index-clean-stable.html'), 'r') as f:
+        stable = f.read()
+    assert si.body.clean_html == stable

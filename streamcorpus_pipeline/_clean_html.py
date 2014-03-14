@@ -304,28 +304,56 @@ def make_clean_html(raw, stream_item=None, log_dir_path=None):
     return _clean_html
 
 class clean_html(Configured):
-    '''
-    returns a kba.pipeline "transform" function that attempts to
-    generate stream_item.body.clean_html from body.raw
+    '''Create body.clean_html from body.raw.
+
+    Configuration options:
+
+    .. code-block:: yaml
+
+        require_language_code: en
+
+    If set, only work on stream items whose language code is the
+    specified value; pass others on unchanged.  Defaults to unset.
+
+    .. code-block:: yaml
+
+        include_language_codes: [en, ""]
+
+    If set to a non-empty list, only work on stream items whose
+    language code is one of the specified values; pass others on
+    unchanged.  Defaults to empty list (process all languages).
+
+    .. code-block:: yaml
+
+        log_dir_path: yes
+
+    If set, record any Unicode decoding errors and other exceptions in
+    body.logs on the stream item.  Note that this looks like a "path"
+    variable and will be rewritten to an absolute path, so its value
+    must be a string, but it only matters that the value is non-empty;
+    the actual value is unused.  Defaults to unset.
+
     '''
     config_name = 'clean_html'
-    default_config = { 'include_language_codes': [] }
+    default_config = {'include_language_codes': [] }
+
+    def __init__(self, *args, **kwargs):
+        super(clean_html, self).__init__(*args, **kwargs)
+        self.require_code = self.config.get('require_language_code')
+        self.codes = self.config.get('include_language_codes', [])
+        self.log_dir_path = self.config.get('log_dir_path', None)
 
     def __call__(self, stream_item, context):
-        require_code = self.config.get('require_language_code', None)
-
-        codes = self.config['include_language_codes']
-
-        if require_code:
+        if self.require_code:
             ## need to check stream_item for language
             if not stream_item.body.language or \
-                    require_code != stream_item.body.language.code:
+                    self.require_code != stream_item.body.language.code:
                 ## either missing or different
                 return stream_item
 
-        elif codes:
+        elif self.codes:
             if stream_item.body.language and \
-                    stream_item.body.language.code not in codes:
+                    stream_item.body.language.code not in self.codes:
                 ## has code and not the right one
                 return stream_item
 
@@ -338,7 +366,7 @@ class clean_html(Configured):
             stream_item.body.clean_html = make_clean_html(
                 stream_item.body.raw, 
                 stream_item=stream_item,
-                log_dir_path=config.get('log_dir_path', None))
+                log_dir_path=self.log_dir_path)
 
         return stream_item
 
