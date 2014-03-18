@@ -18,7 +18,7 @@ def test_parse_file():
 def test_parse_mentions():
     yfl = yaml_files_list(config={})
     raw_mentions = ['John Smith', {'name': 'John Smith'}, {'ip_address': '10.0.0.1'}]
-    mentions = yfl._parse_mentions(raw_mentions)
+    mentions = yfl._parse_slots(raw_mentions)
 
     assert len(mentions) == len(raw_mentions)
     assert mentions == [('name', 'John Smith'), ('name', 'John Smith'), ('ip_address', '10.0.0.1')]
