@@ -5,26 +5,46 @@ root_path: original/
 entities:
   - target_id: 0
     doc_path:
-      - 0/960114.114
-      - 0/960228.375
-      - 0/960402.459
-      - 0/960402.464
-      - 0/960513.222
-      - 0/960703.505
-      - 0/960826.274
-      - 0/960826.295
-      - 0/960829.192
-      - 0/960912.658
-      - 0/961014.500
-      - 0/970116.458
-      - 0/970218.938
-      - 0/970307.114
-      - 0/970401.380
-      - 0/970426.225
-      - 0/970703.406
-      - 0/970711.171
-      - 0/970827.638
-      - 0/970926.528
+      - doc_path: 0/960114.114
+        abs_url: https://raw.githubusercontent.com/trec-kba/streamcorpus-pipeline/master/data/john-smith/original/0/960114.114
+      - doc_path: 0/960228.375
+        abs_url: https://raw.githubusercontent.com/trec-kba/streamcorpus-pipeline/master/data/john-smith/original/0/960228.375
+      - doc_path: 0/960402.459
+        abs_url: https://raw.githubusercontent.com/trec-kba/streamcorpus-pipeline/master/data/john-smith/original/0/960402.459
+      - doc_path: 0/960402.464
+        abs_url: https://raw.githubusercontent.com/trec-kba/streamcorpus-pipeline/master/data/john-smith/original/0/960402.464
+      - doc_path: 0/960513.222
+        abs_url: https://raw.githubusercontent.com/trec-kba/streamcorpus-pipeline/master/data/john-smith/original/0/960513.222
+      - doc_path: 0/960703.505
+        abs_url: https://raw.githubusercontent.com/trec-kba/streamcorpus-pipeline/master/data/john-smith/original/0/960703.505
+      - doc_path: 0/960826.274
+        abs_url: https://raw.githubusercontent.com/trec-kba/streamcorpus-pipeline/master/data/john-smith/original/0/960826.274
+      - doc_path: 0/960826.295
+        abs_url: https://raw.githubusercontent.com/trec-kba/streamcorpus-pipeline/master/data/john-smith/original/0/960826.295
+      - doc_path: 0/960829.192
+        abs_url: https://raw.githubusercontent.com/trec-kba/streamcorpus-pipeline/master/data/john-smith/original/0/960829.192
+      - doc_path: 0/960912.658
+        abs_url: https://raw.githubusercontent.com/trec-kba/streamcorpus-pipeline/master/data/john-smith/original/0/960912.658
+      - doc_path: 0/961014.500
+        abs_url: https://raw.githubusercontent.com/trec-kba/streamcorpus-pipeline/master/data/john-smith/original/0/961014.500
+      - doc_path: 0/970116.458
+        abs_url: https://raw.githubusercontent.com/trec-kba/streamcorpus-pipeline/master/data/john-smith/original/0/970116.458
+      - doc_path: 0/970218.938
+        abs_url: https://raw.githubusercontent.com/trec-kba/streamcorpus-pipeline/master/data/john-smith/original/0/970218.938
+      - doc_path: 0/970307.114
+        abs_url: https://raw.githubusercontent.com/trec-kba/streamcorpus-pipeline/master/data/john-smith/original/0/970307.114
+      - doc_path: 0/970401.380
+        abs_url: https://raw.githubusercontent.com/trec-kba/streamcorpus-pipeline/master/data/john-smith/original/0/970401.380
+      - doc_path: 0/970426.225
+        abs_url: https://raw.githubusercontent.com/trec-kba/streamcorpus-pipeline/master/data/john-smith/original/0/970426.225
+      - doc_path: 0/970703.406
+        abs_url: https://raw.githubusercontent.com/trec-kba/streamcorpus-pipeline/master/data/john-smith/original/0/970703.406
+      - doc_path: 0/970711.171
+        abs_url: https://raw.githubusercontent.com/trec-kba/streamcorpus-pipeline/master/data/john-smith/original/0/970711.171
+      - doc_path: 0/970827.638
+        abs_url: https://raw.githubusercontent.com/trec-kba/streamcorpus-pipeline/master/data/john-smith/original/0/970827.638
+      - doc_path: 0/970926.528
+        abs_url: https://raw.githubusercontent.com/trec-kba/streamcorpus-pipeline/master/data/john-smith/original/0/970926.528
     slots:
       - John Smith
   - target_id: 1
