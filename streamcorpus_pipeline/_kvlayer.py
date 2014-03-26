@@ -8,6 +8,7 @@ Copyright 2012-2013 Diffeo, Inc.
 from collections import deque
 import logging
 import os
+import string
 import sys
 import uuid
 
@@ -62,8 +63,49 @@ class from_kvlayer(Configured):
             errors, data = streamcorpus.decrypt_and_uncompress(data)
             yield streamcorpus.deserialize(data)
 
+def get_kvlayer_stream_item(client, stream_id):
+    '''Retrieve a :class:`streamcorpus.StreamItem` from :mod:`kvlayer`.
+
+    This function requires that `client` already be set up properly::
+
+        client = kvlayer.client()
+        client.setup_namespace({'stream_items': 2})
+        si = get_kvlayer_stream_item(client, stream_id)
+
+    `stream_id` is in the form of
+    :data:`streamcorpus.StreamItem.stream_id` and contains the
+    ``epoch_ticks``, a hyphen, and the ``doc_id``.
+
+    :param client: kvlayer client object
+    :type client: :class:`kvlayer.AbstractStorage`
+    :param str stream_id: stream Id to retrieve
+    :return: corresponding :class:`streamcorpus.StreamItem`
+    :raise exceptions.KeyError: if `stream_id` is malformed or does
+      not correspond to anything in the database
+
+    '''
+    # Reminder: stream_id is 1234567890-123456789abcdef...0
+    # where the first part is the (decimal) epoch_ticks and the second
+    # part is the (hex) doc_id
+    parts = stream_id.split('-')
+    if len(parts) != 2:
+        raise KeyError('invalid stream_id ' + stream_id)
+    timestr = parts[0]
+    dochex = parts[1]
+    if not timestr.isdigit():
+        raise KeyError('invalid stream_id ' + stream_id)
+    if dochex.lstrip(string.hexdigits) != '':
+        raise KeyError('invalid stream_id ' + stream_id)
+
+    key = (uuid.UUID(int=int(timestr)), uuid.UUID(hex=dochex))
+    for k,v in client.get('stream_items', key):
+        if v is not None:
+            errors, bytestr = streamcorpus.decrypt_and_uncompress(v)
+            return streamcorpus.deserialize(bytestr)
+    raise KeyError(stream_id)
 
 class to_kvlayer(Configured):
+
     '''
     stores StreamItems in a kvlayer table called "stream_items" in the
     namespace specified in the config dict for this stage.
