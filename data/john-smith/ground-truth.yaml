@@ -3,7 +3,7 @@ source: bagga-and-baldwin
 annotator_id: bagga-and-baldwin
 root_path: original/
 entities:
-  - target_id: 0
+  - target_id: "0"
     doc_path:
       - doc_path: 0/960114.114
         abs_url: https://raw.githubusercontent.com/trec-kba/streamcorpus-pipeline/master/data/john-smith/original/0/960114.114
@@ -47,139 +47,139 @@ entities:
         abs_url: https://raw.githubusercontent.com/trec-kba/streamcorpus-pipeline/master/data/john-smith/original/0/970926.528
     slots:
       - John Smith
-  - target_id: 1
+  - target_id: "1"
     doc_path: 1/
     slots:
       - John Smith
-  - target_id: 2
+  - target_id: "2"
     doc_path: 2/
     slots:
       - John Smith
-  - target_id: 3
+  - target_id: "3"
     doc_path: 3/
     slots:
       - John Smith
-  - target_id: 4
+  - target_id: "4"
     doc_path: 4/
     slots:
       - John Smith
-  - target_id: 5
+  - target_id: "5"
     doc_path: 5/
     slots:
       - John Smith
-  - target_id: 6
+  - target_id: "6"
     doc_path: 6/
     slots:
       - John Smith
-  - target_id: 7
+  - target_id: "7"
     doc_path: 7/
     slots:
       - John Smith
-  - target_id: 8
+  - target_id: "8"
     doc_path: 8/
     slots:
       - John Smith
-  - target_id: 9
+  - target_id: "9"
     doc_path: 9/
     slots:
       - John Smith
-  - target_id: 10
+  - target_id: "10"
     doc_path: 10/
     slots:
       - John Smith
-  - target_id: 11
+  - target_id: "11"
     doc_path: 11/
     slots:
       - John Smith
-  - target_id: 12
+  - target_id: "12"
     doc_path: 12/
     slots:
       - John Smith
-  - target_id: 13
+  - target_id: "13"
     doc_path: 13/
     slots:
       - John Smith
-  - target_id: 14
+  - target_id: "14"
     doc_path: 14/
     slots:
       - John Smith
-  - target_id: 15
+  - target_id: "15"
     doc_path: 15/
     slots:
       - John Smith
-  - target_id: 16
+  - target_id: "16"
     doc_path: 16/
     slots:
       - John Smith
-  - target_id: 17
+  - target_id: "17"
     doc_path: 17/
     slots:
       - John Smith
-  - target_id: 18
+  - target_id: "18"
     doc_path: 18/
     slots:
       - John Smith
-  - target_id: 19
+  - target_id: "19"
     doc_path: 19/
     slots:
       - John Smith
-  - target_id: 20
+  - target_id: "20"
     doc_path: 20/
     slots:
       - John Smith
-  - target_id: 21
+  - target_id: "21"
     doc_path: 21/
     slots:
       - John Smith
-  - target_id: 22
+  - target_id: "22"
     doc_path: 22/
     slots:
       - John Smith
-  - target_id: 23
+  - target_id: "23"
     doc_path: 23/
     slots:
       - John Smith
-  - target_id: 24
+  - target_id: "24"
     doc_path: 24/
     slots:
       - John Smith
-  - target_id: 25
+  - target_id: "25"
     doc_path: 25/
     slots:
       - John Smith
-  - target_id: 26
+  - target_id: "26"
     doc_path: 26/
     slots:
       - John Smith
-  - target_id: 27
+  - target_id: "27"
     doc_path: 27/
     slots:
       - John Smith
-  - target_id: 28
+  - target_id: "28"
     doc_path: 28/
     slots:
       - John Smith
-  - target_id: 29
+  - target_id: "29"
     doc_path: 29/
     slots:
       - John Smith
-  - target_id: 30
+  - target_id: "30"
     doc_path: 30/
     slots:
       - John Smith
-  - target_id: 31
+  - target_id: "31"
     doc_path: 31/
     slots:
       - John Smith
-  - target_id: 32
+  - target_id: "32"
     doc_path: 32/
     slots:
       - John Smith
-  - target_id: 33
+  - target_id: "33"
     doc_path: 33/
     slots:
       - John Smith
-  - target_id: 34
+  - target_id: "34"
     doc_path: 34/
     slots:
       - John Smith
