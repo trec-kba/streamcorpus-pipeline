@@ -20,11 +20,9 @@ from BeautifulSoup import UnicodeDammit
 
 import streamcorpus
 from streamcorpus_pipeline.stages import Configured
+from streamcorpus_pipeline import _exceptions
 
 logger = logging.getLogger(__name__)
-
-if __name__ != '__main__':
-    import streamcorpus_pipeline._exceptions
 
 encoding_re = re.compile(
     '''(?P<start_xml>([^<]|\n)*?\<\?xml[^>]*)''' + \

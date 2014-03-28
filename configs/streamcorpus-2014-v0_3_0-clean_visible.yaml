@@ -1,25 +1,28 @@
+logging:
+  root:
+    level: DEBUG
 
 streamcorpus_pipeline:
-  root_path: /mnt/kba
+  root_path: /data/trec-kba
   log_level: DEBUG
 
   output_chunk_max_count: 500
 
-  tmp_dir_path:  tmp
-  cleanup_tmp_files: false
+  tmp_dir_path:  /mnt/kba/tmp
+  cleanup_tmp_files: true
 
   reader: from_s3_chunks
 
   incremental_transforms: [
     upgrade_streamcorpus_v0_3_0,
     language, 
-    guess_media_type, 
+    guess_media_type,
     clean_html, 
     hyperlink_labels, 
     clean_visible
     ]
 
-  batch_transforms: [] #serif]
+  batch_transforms: [serif]
 
   ## to_local_* must be last, because *moves* the tmp file away
   writers: [to_s3_chunks, to_local_tarballs]
@@ -70,7 +73,7 @@ streamcorpus_pipeline:
     offset_types: [CHARS]
     offset_debugging: true
     cleanup_tmp_files: false
-    tmp_dir_path: tmp
+    tmp_dir_path: /mnt/kba/tmp
 
     par: streamcorpus_one_step           ## performs tagging and constructs tokens with attrs
 

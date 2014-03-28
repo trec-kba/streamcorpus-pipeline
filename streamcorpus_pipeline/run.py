@@ -210,8 +210,8 @@ class SimpleWorkUnit(object):
     def terminate(self):
         pass
 
-    def fail(self):
-        logger.critical('failing SimpleWorkUnit(%r) = %r', self.key, self.data)
+    def fail(self, exc=None):
+        logger.critical('failing SimpleWorkUnit(%r) = %r: %r', self.key, self.data, exc, exc_info=True)
         sys.exit(-1)
 
 
