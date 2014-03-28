@@ -139,6 +139,8 @@ class StageRegistry(MutableMapping):
     # MutableMapping special methods
 
     def __getitem__(self, k):
+        if k not in self.stages:
+            raise KeyError('%r not in %r' % (k, self.stages.keys()))
         return self.stages[k]
 
     def __setitem__(self, k, v):
