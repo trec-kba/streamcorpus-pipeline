@@ -70,8 +70,7 @@ class yaml_files_list(Configured):
             logger.warn('source not set, defaulting to unknown')
 
         if 'annotator_id' not in metadata:
-            metadata['annotator_id'] = 'unknown'
-            logger.warn('annotator_id not set, defaulting to unknown')
+            raise Exception('Invalid labels yaml file: must specify annotator_id')
 
         for entity in entities:
             ## get list of file paths to look at
