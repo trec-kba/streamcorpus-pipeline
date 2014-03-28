@@ -4,7 +4,6 @@ logging:
 
 streamcorpus_pipeline:
   root_path: /data/trec-kba
-  log_level: DEBUG
 
   output_chunk_max_count: 500
 

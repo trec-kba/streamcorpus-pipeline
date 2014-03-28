@@ -163,6 +163,8 @@ def main():
     parser.add_argument('--in-glob', action='append', default=[], help='path glob specifying input files')
 
     modules = [yakonfig, kvlayer, streamcorpus_pipeline]
+
+    dblogger.configure_logging(dict(logging=dict(root=dict(level='DEBUG'))))
     args = yakonfig.parse_args(parser, modules)
     config = yakonfig.get_global_config()
     dblogger.configure_logging(config)
