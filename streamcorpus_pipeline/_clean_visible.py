@@ -110,9 +110,19 @@ def make_clean_visible(html, tag_replacement_char=' '):
     return ''.join( itertools.imap(non_tag_chars(), html) )
 
 class clean_visible(Configured):
-    '''
-    returns a kba.pipeline "transform" function that attempts to
-    generate stream_item.body.clean_visible from body.clean_html
+    '''Create ``body.clean_visible`` from ``body.clean_html``.
+
+    If there is no ``clean_html``, but there is a ``raw`` property
+    with a ``text_plain`` media type, use that value directly.
+
+    This has no useful configuration options.  The configuration
+    metadata will include a setting:
+
+    .. code-block:: yaml
+
+        require_clean_html: true
+
+    Setting this to ``false`` will always fail.
     '''
     config_name = 'clean_visible'
     default_config = { 'require_clean_html': True }
