@@ -186,6 +186,9 @@ def main():
     stages = PipelineStages()
     if 'external_stages_path' in scp_config:
         stages.load_external_stages(scp_config['external_stages_path'])
+    if 'external_stages_modules' in scp_config:
+        for mod in scp_config['external_stages_modules']:
+            stages.load_module_stages(mod)
     factory = PipelineFactory(stages)
     pipeline = factory(scp_config)
 
