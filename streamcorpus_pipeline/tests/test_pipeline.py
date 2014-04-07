@@ -129,3 +129,36 @@ def test_external_stage_default(tmpdir):
                                           'external_stage')
         stage = ExternalStage(config=config)
         assert stage.get_message() == 'default message'
+
+def test_external_module_registered(tmpdir):
+    with yakonfig.defaulted_config([streamcorpus_pipeline], config={
+            'streamcorpus_pipeline': {
+                'external_stages_modules':
+                [ 'streamcorpus_pipeline.tests.test_pipeline' ],
+                'external_stage': {
+                    'message': 'configured message',
+                },
+                'reader': 'from_local_chunks',
+                'writers': ['to_local_chunks'],
+                'tmp_dir_path': str(tmpdir),
+            },
+    }):
+        config=yakonfig.get_global_config('streamcorpus_pipeline',
+                                          'external_stage')
+        stage = ExternalStage(config=config)
+        assert stage.get_message() == 'configured message'
+
+def test_external_module_default(tmpdir):
+    with yakonfig.defaulted_config([streamcorpus_pipeline], config={
+            'streamcorpus_pipeline': {
+                'external_stages_modules':
+                [ 'streamcorpus_pipeline.tests.test_pipeline' ],
+                'reader': 'from_local_chunks',
+                'writers': ['to_local_chunks'],
+                'tmp_dir_path': str(tmpdir),
+            },
+    }):
+        config=yakonfig.get_global_config('streamcorpus_pipeline',
+                                          'external_stage')
+        stage = ExternalStage(config=config)
+        assert stage.get_message() == 'default message'

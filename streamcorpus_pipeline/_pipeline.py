@@ -124,6 +124,16 @@ top-level dictionary named `Stages`, a map from stage name to
 implementing class.  Stages defined in this file can be used in any of
 the appropriate stage lists.
 
+.. code-block:: yaml
+
+    external_stages_modules: [ example.stages ]
+
+The Python module :mod:`example.stages` declares a top-level
+dictionary named `Stages`, a map from stage name to implementing
+class.  The named modules must be on :data:`sys.path` so that the
+Python interpreter can find it.  Stages defined in these modules can
+be used in any of the appropriate stage lists.
+
 API
 ===
 
