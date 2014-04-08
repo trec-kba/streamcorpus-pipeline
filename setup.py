@@ -133,6 +133,7 @@ setup(
             'streamcorpus_pipeline = streamcorpus_pipeline.run:main',
             'streamcorpus_pipeline_work_units = streamcorpus_pipeline._rejester:make_work_units',
             'streamcorpus_directory = streamcorpus_pipeline._directory:main',
+            'streamcorpus_pipeline_test = streamcorpus_pipeline.tests.run:main',
         ]
     },
     data_files = [
