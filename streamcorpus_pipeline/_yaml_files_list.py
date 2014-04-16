@@ -36,7 +36,7 @@ import magic
 import yaml
 
 import streamcorpus
-import collections
+from collections import defaultdict
 from streamcorpus_pipeline._clean_visible import cleanse
 from streamcorpus_pipeline.stages import Configured
 
@@ -72,6 +72,14 @@ class yaml_files_list(Configured):
         if 'annotator_id' not in metadata:
             raise Exception('Invalid labels yaml file: must specify annotator_id')
 
+        ## yaml file lists are organized *per* entity, however this
+        ## must only emit each document once, even if multiple
+        ## entities are mentioned in the text.  
+        # dict keyed on absolute paths in local file system with
+        # values as lists of entity records from the original input
+        # yaml
+        docs = defaultdict(list)
+        abs_urls = dict()
         for entity in entities:
             ## get list of file paths to look at
             paths = entity['doc_path']
@@ -86,9 +94,9 @@ class yaml_files_list(Configured):
             for ext_profile in entity.get('external_profiles', []):
                 external_profiles.add(ext_profile['abs_url'])
 
-            ## Only yield documents once.  Because the user can
-            ## specify external_profiles and doc_paths we have the
-            ## possibility of duplicates.
+            ## For this entity, only touch each documents once.
+            ## Because the user can specify external_profiles and
+            ## doc_paths we have the possibility of duplicates.
             visited_paths = []
             for path in paths:
                 abs_url = None
@@ -121,17 +129,25 @@ class yaml_files_list(Configured):
                                     ## the case of a zip archive that
                                     ## was manually unpacked 
                                     _abs_url = abs_url + '#' + urllib.quote(sub_path)
-                                yield self._make_stream_item(fpath, entity, metadata, _abs_url, is_profile)
+                                docs[fpath].append((entity, is_profile))
+                                abs_urls[fpath] = _abs_url
                                 visited_paths.append(fpath)
                 else:
                     if path not in visited_paths:
                         is_profile = bool(path in external_profiles)
                         if abs_url is None:
                             raise Exception('when specifying a full path, you must also specify the abs_url: %r' % path)
-                        yield self._make_stream_item(path, entity, metadata, abs_url, is_profile)
+                        docs[path].append((entity, is_profile))
+                        abs_urls[path] = abs_url
                         visited_paths.append(path)
 
-    def _parse_slots(self, raw_slots):
+        ## multiple mentions per doc have been grouped
+        for path in docs:
+            yield self._make_stream_item(path, metadata, abs_urls[path], docs[path])
+            
+
+    @classmethod
+    def _parse_slots(cls, raw_slots):
         ## raw_slots is a list containing either dictionaries
         ## or strings.
         ## Example:
@@ -147,11 +163,11 @@ class yaml_files_list(Configured):
                 slots.append(('name', mention))
         return slots
 
-
-    def _make_stream_item(self, path, entity, metadata, abs_url, is_profile):
-        ## pull out target id and mention tokens
-        target_id = str(entity['target_id'])
-
+    @classmethod
+    def _make_stream_item(cls, path, metadata, abs_url, entities):
+        '''
+        
+        '''
         ## Every StreamItem has a stream_time property.  It usually comes
         ## from the document creation time.
         creation_time = os.path.getctime(path)
@@ -160,6 +176,8 @@ class yaml_files_list(Configured):
         stream_item = streamcorpus.make_stream_item(
             creation_time,
             abs_url)
+
+        stream_item.source = metadata.get('source')
 
         ## build a ContentItem for the body
         body = streamcorpus.ContentItem()
@@ -177,26 +195,34 @@ class yaml_files_list(Configured):
         anno.annotator_id = metadata['annotator_id']
         anno.annotation_time = stream_item.stream_time
 
-        ## build a Label for the doc-level label:
-        rating = streamcorpus.Rating()
-        rating.annotator = anno
-        rating.target = streamcorpus.Target(target_id = target_id)
-        rating.contains_mention = True
-        if is_profile:
-            rating.flags = [streamcorpus.FlagType.PROFILE]
+        num_ratings = 0
+        for entity, is_profile in entities:
+            num_ratings += 1
 
-        ## parse slots in yaml file
-        slots = self._parse_slots(entity['slots'])
+            ## pull out target id and mention tokens
+            target_id = str(entity['target_id'])
 
-        ## heuristically split the slots string on white space and
-        ## use each token as a separate mention.
-        rating.mentions = [cleanse(unicode(slot[1], 'utf-8')) for slot in slots]
+            ## build a Label for the doc-level label:
+            rating = streamcorpus.Rating()
+            rating.annotator = anno
+            rating.target = streamcorpus.Target(target_id = target_id)
+            rating.contains_mention = True
 
-        ## put this one label in the array of labels
-        streamcorpus.add_annotation(stream_item, rating)
+            if is_profile:
+                rating.flags = [streamcorpus.FlagType.PROFILE]
+
+            ## parse slots in yaml file
+            slots = cls._parse_slots(entity['slots'])
+
+            ## heuristically split the slots string on white space and
+            ## use each token as a separate mention.
+            rating.mentions = [cleanse(unicode(slot[1], 'utf-8')) for slot in slots]
+
+            ## put this one label in the array of labels
+            streamcorpus.add_annotation(stream_item, rating)
 
         ## provide this stream_item to the pipeline
-        logger.info('created StreamItem(abs_url=%r', stream_item.abs_url)
+        logger.info('created StreamItem(num ratings=%d, abs_url=%r', num_ratings, stream_item.abs_url)
         return stream_item
 
 if __name__ == '__main__':
