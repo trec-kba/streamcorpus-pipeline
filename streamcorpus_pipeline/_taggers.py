@@ -231,7 +231,16 @@ def line_offset_labels(stream_item, aligner_data):
                          label_off.value))
 
 def byte_offset_labels(stream_item, aligner_data):
-    ## get a set of tokens -- must have OffsetType.BYTES type offsets.
+    _offset_labels(stream_item, aligner_data, offset_type='BYTES')
+
+def char_offset_labels(stream_item, aligner_data):
+    _offset_labels(stream_item, aligner_data, offset_type='CHARS')
+
+def _offset_labels(stream_item, aligner_data, offset_type='BYTES'):
+    ## get a set of tokens -- must have OffsetType.<offset_type> type offsets.
+
+    offset_type = OffsetType._NAMES_TO_VALUES[offset_type]
+
     sentences = stream_item.body.sentences[aligner_data['tagger_id']]
 
     ## These next few steps are probably the most
@@ -240,7 +249,7 @@ def byte_offset_labels(stream_item, aligner_data):
 
     token_collection = SortedCollection(
         itertools.chain(*[sent.tokens for sent in sentences]),
-        key=lambda tok: tok.offsets[OffsetType.BYTES].first
+        key=lambda tok: tok.offsets[offset_type].first
         )
 
     ## if labels on ContentItem, then make labels on Tokens
@@ -251,7 +260,7 @@ def byte_offset_labels(stream_item, aligner_data):
 
             ## remove the offset from the label, because we are
             ## putting it into the token
-            label_off = label.offsets.pop( OffsetType.BYTES )
+            label_off = label.offsets.pop( offset_type )
 
             assert label_off.length == len(label_off.value)
 
@@ -277,7 +286,7 @@ def byte_offset_labels(stream_item, aligner_data):
 
                 if not tok.token in label_off.value:
                     sys.exit('%r not in %r' % \
-                        ([(t.offsets[OffsetType.BYTES].first, t.token)
+                        ([(t.offsets[offset_type].first, t.token)
                           for t in toks],
                          label_off.value))
 
@@ -295,8 +304,10 @@ def make_memory_info_msg(clean_visible_path=None, ner_xml_path=None):
 
 AlignmentStrategies = {
     'names_in_chains': names_in_chains,
-    'line_offset_labels': line_offset_labels,
+    #'line_offset_labels': line_offset_labels,
     'byte_offset_labels': byte_offset_labels,
+    'char_offset_labels': char_offset_labels,
+    'multi_token_match': multi_token_match,
     }
 
 def align_labels(t_path1, config):
