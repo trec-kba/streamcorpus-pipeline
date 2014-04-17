@@ -364,7 +364,7 @@ def multi_token_match(stream_item, aligner_data):
                 
                 num_tokens_matched = 0
                 for tok in look_ahead_match(rating, tokens):
-                    if aligner_data['update_labels']:
+                    if aligner_data.get('update_labels'):
                         tok.labels.pop(annotator_id, None)
                     add_annotation(tok, label)
                     num_tokens_matched += 1
