@@ -105,7 +105,7 @@ setup(
         'pytest-diffeo >= 0.1.4',
     ],
     install_requires=[
-        'dblogger',
+        'dblogger >= 0.4.0',
         'yakonfig >= 0.4.2',
         'python-magic',
         'python-docx',
@@ -131,7 +131,6 @@ setup(
     entry_points={
         'console_scripts': [
             'streamcorpus_pipeline = streamcorpus_pipeline.run:main',
-            'streamcorpus_pipeline_work_units = streamcorpus_pipeline._rejester:make_work_units',
             'streamcorpus_directory = streamcorpus_pipeline._directory:main',
             'streamcorpus_pipeline_test = streamcorpus_pipeline.tests.run:main',
         ]
