@@ -98,11 +98,10 @@ def main():
         description='process entire directories using streamcorpus_pipeline')
     parser.add_argument('directories', nargs='+', metavar='directory',
                         help='directory name(s) to process')
-    args = yakonfig.parse_args(parser, [yakonfig, rejester, kvlayer,
+    args = yakonfig.parse_args(parser, [yakonfig, rejester, kvlayer, dblogger,
                                         streamcorpus_pipeline, DirectoryConfig])
     gconfig = yakonfig.get_global_config()
     scdconfig = gconfig['streamcorpus_directory']
-    dblogger.configure_logging(gconfig)
     
     work_spec = {
         'name': scdconfig.get('name', 'streamcorpus_directory'),

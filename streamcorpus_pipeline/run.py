@@ -162,12 +162,9 @@ def main():
                         help='file paths to input instead of reading from stdin')
     parser.add_argument('--in-glob', action='append', default=[], help='path glob specifying input files')
 
-    modules = [yakonfig, kvlayer, streamcorpus_pipeline]
-
-    dblogger.configure_logging(dict(logging=dict(root=dict(level='DEBUG'))))
+    modules = [yakonfig, kvlayer, dblogger, streamcorpus_pipeline]
     args = yakonfig.parse_args(parser, modules)
     config = yakonfig.get_global_config()
-    dblogger.configure_logging(config)
 
     ## this modifies the global config, passed by reference
     instantiate_config(config)

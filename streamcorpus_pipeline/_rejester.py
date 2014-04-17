@@ -71,16 +71,3 @@ def rejester_run_function(work_unit):
 
 def rejester_terminate_function(work_unit):
     pass
-
-def make_work_units():
-    '''reads path strings over stdin and generates lines of JSON that
-    can be loaded into rejester
-    '''
-    usage = 'cat list-of-paths | streamcorpus_pipeline_work_units | rejester load <namespace> -u - -w spec.yaml'
-    parser = argparse.ArgumentParser(usage=usage)
-    parser.parse_args()    
-
-    for line in sys.stdin:
-        line = line.strip()
-        print json.dumps({line: dict(start_count=0, start_chunk_time=0)})
-
