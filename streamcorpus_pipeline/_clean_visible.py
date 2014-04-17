@@ -196,16 +196,23 @@ def make_clean_visible_file(i_chunk, clean_visible_path):
 ## used in 'cleanse' below
 whitespace = re.compile('''(\s|\n)+''', re.UNICODE)
 strip_punctuation = {ord(c): u' ' for c in string.punctuation}
+penn_treebank_brackets = re.compile('''-[RL].B-''', re.UNICODE)
 
 def cleanse(span, lower=True):
     '''Convert a unicode string into a lowercase string with no
 punctuation and only spaces for whitespace.
+
+Replace PennTreebank escaped brackets with ' ':
+-LRB- -RRB- -RSB- -RSB- -LCB- -RCB- 
+(The acronyms stand for (Left|Right) (Round|Square|Curly) Bracket.)
+http://www.cis.upenn.edu/~treebank/tokenization.html
 
 :param span: string
     '''
     assert isinstance(span, unicode), \
         'got non-unicode string %r' % span
     ## lowercase, strip punctuation, and shrink all whitespace
+    span = penn_treebank_brackets.sub(' ', span)
     if lower:
         span = span.lower()
     span = span.translate(strip_punctuation)

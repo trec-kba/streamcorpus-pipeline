@@ -364,8 +364,10 @@ class PipelineStages(StageRegistry):
 
         # BatchTransform
         self.tryload_stage('_taggers', 'byte_offset_align_labels')
-        self.tryload_stage('_taggers', 'line_offset_align_labels')
+        self.tryload_stage('_taggers', 'char_offset_align_labels')
+        #self.tryload_stage('_taggers', 'line_offset_align_labels')
         self.tryload_stage('_taggers', 'name_align_labels')
+        self.tryload_stage('_taggers', 'multi_token_match_align_labels')
         self.tryload_stage('_lingpipe', 'lingpipe')
         self.tryload_stage('_serif', 'serif')
         
