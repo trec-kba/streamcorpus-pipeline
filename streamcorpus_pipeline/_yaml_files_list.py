@@ -43,6 +43,79 @@ from streamcorpus_pipeline.stages import Configured
 logger = logging.getLogger(__name__)
 
 class yaml_files_list(Configured):
+    '''Read and tag flat files as described in a YAML file.
+
+    When this reader stage is in use, the input file to the pipeline
+    is a YAML file.  That YAML file points at several other files and
+    directories, and the contents of those files are emitted as
+    stream items.
+
+    The YAML file has the following format:
+
+    .. code-block:: yaml
+
+        root_path: /data/directory
+        annotator_id: my-name
+        source: weblog
+        entities:
+          - target_id: "https://kb.diffeo.com/sample"
+            doc_path:
+              - sample
+              - doc_path: copies/sample
+                abs_url: "http://source.example.com/sample"
+            external_profiles:
+              - doc_path: wikipedia/Sample
+                abs_url: "http://en.wikipedia.org/wiki/Sample"
+            slots:
+              - canonical_name: Sample
+              - example
+
+    At the top level, the file contains:
+
+    ``root_path`` (default: current directory)
+      Root path to the data to read.
+    ``annotator_id`` (required)
+      Annotator ID string on produced document ratings.
+    ``source`` (default: ``unknown``)
+      Source type for produced stream items.
+    ``entities`` (required)
+      List of entity document sets to read.
+
+    ``entities`` is a list of dictionaries.  Each entity dictionary has
+    the following items:
+
+    ``target_id`` (required)
+      Target entity URL for produced ratings
+    ``doc_path`` (required)
+      List of source files or directories.  These may be strings or
+      dictionaries.  If dictionaries, ``doc_path`` is the filesystem
+      path and ``abs_url`` is the corresponding URL; if strings, the
+      strings are filesystem paths and the URL is generated.
+      Filesystem paths are interpreted relative to the ``root_path``.
+    ``external_profiles`` (optional)
+      List of additional source files or directories that are external
+      profiles, such as Wikipedia articles.  These are processed in
+      the same way as items in ``doc_path`` but must be in dictionary
+      form, where the ``abs_url`` field identifies the external
+      knowledge base article.
+    ``slots`` (required)
+      Additional knowledge base metadata about the entity.  This is a
+      list of strings or dictionaries.  Strings are interpreted as
+      dictionaries of ``name`` mapping to the string.  The resulting
+      slot dictionaries are combined into a multiset where each slot
+      name maps to multiple values.
+
+    For each entity, the reader finds all documents in the named
+    directories and creates a :class:`streamcorpus.StreamItem` for
+    each.  The :attr:`~streamcorpus.StreamItem.body` has its
+    :attr:`~streamcorpus.ContentItem.raw` data set to the contents of
+    the file.  The stream items are also tagged with a
+    :class:`streamcorpus.Rating` where the annotator comes from the
+    file metadata and the target comes from the entity ``target_id``.
+    The :attr:`~streamcorpus.Rating.mentions` on the rating are set
+    to the union of all of the slot values for all slots.
+
+    '''
     config_name = 'yaml_files_list'
     def __call__(self, path_to_input_file):
         '''
