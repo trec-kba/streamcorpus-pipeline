@@ -3,39 +3,31 @@ import os
 from streamcorpus import Chunk, StreamItem_v0_2_0, add_annotation
 from StringIO import StringIO
 
-
-_TEST_DATA_ROOT = '../../data'
-
-
-def get_test_chunk_path():
-    path = os.path.dirname(__file__)
-    path = os.path.join( path, _TEST_DATA_ROOT, 'test', 'WEBLOG-100-fd5f05c8a680faa2bf8c55413e949bbf.sc' )
+def get_test_chunk_path(test_data_dir):
+    path = os.path.join(test_data_dir, 'test', 'WEBLOG-100-fd5f05c8a680faa2bf8c55413e949bbf.sc' )
     return path
 
-def get_test_chunk():
-    return Chunk(path=get_test_chunk_path(), message=StreamItem_v0_2_0)
+def get_test_chunk(test_data_dir):
+    return Chunk(path=get_test_chunk_path(test_data_dir), message=StreamItem_v0_2_0)
 
-def get_test_v0_3_0_chunk_path():
-    path = os.path.dirname(__file__)
-    path = os.path.join( path, _TEST_DATA_ROOT, 'test', 'WEBLOG-100-fd5f05c8a680faa2bf8c55413e949bbf-v0_3_0.sc.xz' )
+def get_test_v0_3_0_chunk_path(test_data_dir):
+    path = os.path.join(test_data_dir, 'test', 'WEBLOG-100-fd5f05c8a680faa2bf8c55413e949bbf-v0_3_0.sc.xz' )
     return path
 
-def get_test_v0_3_0_chunk_tagged_by_serif_path():
-    path = os.path.dirname(__file__)
-    path = os.path.join( path, _TEST_DATA_ROOT, 'test', 'WEBLOG-100-fd5f05c8a680faa2bf8c55413e949bbf-v0_3_0-tagged-by-serif.sc.xz' )
+def get_test_v0_3_0_chunk_tagged_by_serif_path(test_data_dir):
+    path = os.path.join(test_data_dir, 'test', 'WEBLOG-100-fd5f05c8a680faa2bf8c55413e949bbf-v0_3_0-tagged-by-serif.sc.xz')
     return path
 
-def get_john_smith_tagged_by_lingpipe_path():
+def get_john_smith_tagged_by_lingpipe_path(test_data_dir):
     return os.path.join(
-        os.path.dirname(__file__),
-        _TEST_DATA_ROOT,
+        test_data_dir,
         'john-smith/john-smith-tagged-by-lingpipe-0.sc')
 
-def get_john_smith_tagged_by_lingpipe_without_labels_data():
+def get_john_smith_tagged_by_lingpipe_without_labels_data(test_data_dir):
     fh = StringIO()
     o_chunk = Chunk(file_obj=fh, mode='wb')
 
-    path = get_john_smith_tagged_by_lingpipe_path()
+    path = get_john_smith_tagged_by_lingpipe_path(test_data_dir)
     for si in Chunk(path):
         for sentence in si.body.sentences['lingpipe']:
             for token in sentence.tokens:

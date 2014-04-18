@@ -28,9 +28,9 @@ def test_only_whitespace():
     assert not only_whitespace.match(u'\u200b foo')
     assert not only_whitespace.match('\n\nh  ')
 
-def test_aligner(tmpdir, request):
+def test_aligner(tmpdir, request, test_data_dir):
 
-    si = make_hyperlink_labeled_test_stream_item()
+    si = make_hyperlink_labeled_test_stream_item(test_data_dir)
     assert len(si.body.clean_visible) > 200
     #for x in si.body.labels['author']:
     #    print x.offsets[OffsetType.BYTES].first, x.offsets[OffsetType.BYTES].value, x.target.target_id
@@ -62,10 +62,10 @@ def test_aligner(tmpdir, request):
     assert len(si.body.sentences['lingpipe']) == 41
 
 
-def test_aligner_separate(tmpdir, request):
+def test_aligner_separate(tmpdir, request, test_data_dir):
 
 
-    si = make_hyperlink_labeled_test_stream_item()
+    si = make_hyperlink_labeled_test_stream_item(test_data_dir)
     assert len(si.body.clean_visible) > 200
     #for x in si.body.labels['author']:
     #    print x.offsets[OffsetType.BYTES].first, x.offsets[OffsetType.BYTES].value, x.target.target_id
@@ -98,4 +98,3 @@ def test_aligner_separate(tmpdir, request):
     si = list(streamcorpus.Chunk(c_path))[0]
     assert len(si.body.clean_visible) > 200
     assert len(si.body.sentences['lingpipe']) == 41
-

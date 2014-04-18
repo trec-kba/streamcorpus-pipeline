@@ -18,13 +18,13 @@ def stages():
     ('byte_offset_align_labels', 'ALL'),
     ('name_align_labels', 'ANY_MULTI_TOKEN'),
 ])
-def test_tagger_transform(tagger, chain_selector, stages, tmpdir):
+def test_tagger_transform(tagger, chain_selector, stages, tmpdir, test_data_dir):
     transform = stages.init_stage(tagger, { tagger: {
         'tagger_id': 'lingpipe',
         'annotator_id': 'bagga-and-baldwin',
         'chain_selector': chain_selector
     }})
-    data = get_john_smith_tagged_by_lingpipe_without_labels_data()
+    data = get_john_smith_tagged_by_lingpipe_without_labels_data(test_data_dir)
     with tmpdir.join('{}.{}.sc'.format(tagger, chain_selector)).open('wb') as tf:
         tf.write(data)
         tf.flush()

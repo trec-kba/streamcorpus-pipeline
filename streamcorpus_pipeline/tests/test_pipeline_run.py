@@ -12,9 +12,9 @@ logger = logging.getLogger(__name__)
 @pytest.fixture(
     scope = 'function',
     params = [
-        ('john-smith-simple.sh', True), 
-        ('john-smith-small-chunks.sh', True), 
-        ('john-smith-broken-for-test.sh', False), 
+        ('john-smith-simple.sh', True),
+        ('john-smith-small-chunks.sh', True),
+        ('john-smith-broken-for-test.sh', False),
         pytest.mark.slow(('john-smith-lingpipe.sh', True)),
         pytest.mark.slow(('john-smith-serif.sh', True)),
     ],
@@ -26,8 +26,9 @@ def cmd_expect_success(tmpdir, request):
     cmd += ' ' + tmp_dir
     return (cmd, expect_success)
 
+@pytest.mark.integration
 def test_pipeline_run(cmd_expect_success):
-    cmd, expect_success = cmd_expect_success    
+    cmd, expect_success = cmd_expect_success
     logger.info(cmd)
     p = subprocess.Popen(cmd, stderr=subprocess.PIPE, stdout=subprocess.PIPE, shell=True)
     ret = None
