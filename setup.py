@@ -115,7 +115,7 @@ setup(
         'rejester',
         'protobuf',
         'requests',
-        'streamcorpus>=0.3.23',
+        'streamcorpus>=0.3.28',
         'pyyaml',
         'nltk',
         'lxml',
