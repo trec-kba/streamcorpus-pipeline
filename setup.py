@@ -137,8 +137,8 @@ setup(
     },
     data_files = [
         ## this does not appear to actually put anything into the egg...
-        ('examples', recursive_glob('examples', '*.py')),
-        ('configs', recursive_glob('configs', '*.yaml')),
+        ('docs/examples/streamcorpus-pipeline/', recursive_glob('examples', '*.py')),
+        ('docs/examples/streamcorpus-pipeline/', recursive_glob('configs', '*.yaml')),
         #('data/john-smith', recursive_glob('data/john-smith', '*.*')),
-    ] + recursive_glob_with_tree('data/john-smith/original', '*'),
+    ] + recursive_glob_with_tree('data/smith/original', '*') + recursive_glob_with_tree('data/test', '*'),
 )

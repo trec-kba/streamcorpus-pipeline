@@ -1,4 +1,4 @@
-# coding: utf-8 
+# coding: utf-8
 
 import os
 import pytest
@@ -8,12 +8,10 @@ import streamcorpus_pipeline
 from streamcorpus_pipeline._clean_html import make_clean_html, clean_html
 from streamcorpus_pipeline._clean_visible import make_clean_visible
 from streamcorpus_pipeline._hyperlink_labels import hyperlink_labels
-from streamcorpus_pipeline.tests._test_data import _TEST_DATA_ROOT
 
-def test_make_clean_html_nyt():
-    path = os.path.dirname(__file__)
-    path = os.path.join( path, _TEST_DATA_ROOT, 'test' )
-    open(os.path.join(path, 'nytimes-index-clean.html'), 'wb').write(
+def test_make_clean_html_nyt(test_data_dir, tmpdir):
+    path = os.path.join(test_data_dir, 'test')
+    tmpdir.join('nytimes-index-clean.html').open('wb').write(
         make_clean_html(open(os.path.join(path, 'nytimes-index.html')).read().decode('utf8')))
     generated = open(os.path.join(path, 'nytimes-index-clean.html')).read()
     stable    = open(os.path.join(path, 'nytimes-index-clean-stable.html')).read()
@@ -46,9 +44,8 @@ id="comments-template"><h3 id="comments">4 Responses to &#822050+ Years of Digis
     assert cleaned_first_half == correct_first_half and cleaned_second_half == correct_second_half, cleaned
 
 
-def test_target_parsing():
-    path = os.path.dirname(__file__)
-    path = os.path.join( path, _TEST_DATA_ROOT, 'test' )
+def test_target_parsing(test_data_dir):
+    path = os.path.join(test_data_dir, 'test')
     test_html = open(os.path.join(path, 'target-test.html')).read()
 
     html = make_clean_html( test_html )
@@ -57,7 +54,7 @@ def test_target_parsing():
     assert 'target' in html
 
     visible = make_clean_visible( html )
-    
+
     assert 'logo' not in visible
     assert 'target' not in visible
 
@@ -72,7 +69,7 @@ def test_target_parsing():
     html2 = si.body.clean_html
 
     visible2 = make_clean_visible( html2 )
-    
+
     #print visible2
 
     assert 'target' not in visible2
@@ -81,9 +78,8 @@ def test_target_parsing():
 
 
 @pytest.mark.xfail  # pylint: disable=E1101
-def test_unicode_conversion():
-    path = os.path.dirname(__file__)
-    path = os.path.join( path, _TEST_DATA_ROOT, 'test' )
+def test_unicode_conversion(test_data_dir):
+    path = os.path.join(test_data_dir, 'test')
     test_html = open(os.path.join(path, 'raw-unicode-issues.html')).read()
 
     print type(test_html)
@@ -101,15 +97,14 @@ def test_unicode_conversion():
 
     print visible.decode('utf8')
 
-def test_stage():
+def test_stage(test_data_dir):
     stage = clean_html({}) # NB: not even defaults
-    path = os.path.dirname(__file__)
-    path = os.path.join( path, _TEST_DATA_ROOT, 'test' )
+    path = os.path.join(test_data_dir, 'test')
     with open(os.path.join(path, 'nytimes-index.html'), 'r') as f:
         raw = f.read().decode('utf8')
     si = StreamItem(body=ContentItem(raw=raw, media_type='text/html'))
     si = stage(si, {})
-    
+
     with open(os.path.join(path, 'nytimes-index-clean-stable.html'), 'r') as f:
         stable = f.read()
     assert si.body.clean_html == stable

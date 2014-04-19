@@ -40,13 +40,13 @@ def configurator(request, namespace_string, redis_address):
     return make_config
 
 @contextlib.contextmanager
-def chunks(configurator, overlay={}):
+def chunks(configurator, test_data_dir, overlay={}):
     with configurator(overlay):
-        path = get_test_v0_3_0_chunk_path()
+        path = get_test_v0_3_0_chunk_path(test_data_dir)
         config = yakonfig.get_global_config('streamcorpus_pipeline',
                                             'to_kvlayer')
         writer = to_kvlayer(config)
-    
+
         ## name_info and i_str are not used by the writer
         i_str = ''
         name_info = {}
@@ -59,8 +59,8 @@ def chunks(configurator, overlay={}):
         yield path, client
 
 @pytest.mark.slow
-def test_kvlayer_reader_and_writer(configurator):
-    with chunks(configurator) as (path, client):
+def test_kvlayer_reader_and_writer(configurator, test_data_dir):
+    with chunks(configurator, test_data_dir) as (path, client):
         ## check that index table was created
         all_doc_ids = set()
         all_epoch_ticks = set()
@@ -82,7 +82,7 @@ def test_kvlayer_reader_and_writer(configurator):
                        all_epoch_ticks[-1], all_doc_ids[-1]) ]:
             stream_ids = []
             for si in reader(i_str):
-                stream_ids.append(si.stream_id)    
+                stream_ids.append(si.stream_id)
             _input_chunk_ids = [si.stream_id for si in streamcorpus.Chunk(path)]
             input_chunk_ids = list(set(_input_chunk_ids))
             logger.info('%d inserts, %d unique',
@@ -93,7 +93,7 @@ def test_kvlayer_reader_and_writer(configurator):
             assert input_chunk_ids == stream_ids
 
 @pytest.mark.slow
-def test_kvlayer_index_with_source(configurator):
+def test_kvlayer_index_with_source(configurator, test_data_dir):
     overlay = {
         'streamcorpus_pipeline': {
             'to_kvlayer': {
@@ -101,7 +101,7 @@ def test_kvlayer_index_with_source(configurator):
             },
         },
     }
-    with chunks(configurator, overlay) as (path, client):
+    with chunks(configurator, test_data_dir, overlay) as (path, client):
         # We should not have written the doc_id_epoch_ticks index at all
         for k,v in client.scan('stream_items_doc_id_epoch_ticks'):
             assert False, 'epoch_ticks present! k={!r}'.format(k)
@@ -115,7 +115,7 @@ def test_kvlayer_index_with_source(configurator):
                     assert si.source == v
 
 @pytest.mark.slow
-def test_kvlayer_both_indexes(configurator):
+def test_kvlayer_both_indexes(configurator, test_data_dir):
     overlay = {
         'streamcorpus_pipeline': {
             'to_kvlayer': {
@@ -123,7 +123,7 @@ def test_kvlayer_both_indexes(configurator):
             },
         },
     }
-    with chunks(configurator, overlay) as (path, client):
+    with chunks(configurator, test_data_dir, overlay) as (path, client):
         for k,v in client.scan('stream_items_doc_id_epoch_ticks'):
             assert v == r''
             (k2,k1) = k

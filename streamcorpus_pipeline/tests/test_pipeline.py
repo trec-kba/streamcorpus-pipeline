@@ -24,12 +24,12 @@ logger = logging.getLogger(__name__)
 class SuccessfulExit(Exception):
     pass
 
-def test_pipeline(request):
+def test_pipeline(request, test_data_dir):
     filename=str(request.fspath.dirpath('test_dedup_chunk_counts.yaml'))
     with yakonfig.defaulted_config([streamcorpus_pipeline], filename=filename):
         ## config says read from stdin, so make that have what we want
         stdin = sys.stdin
-        sys.stdin = StringIO(get_test_chunk_path())
+        sys.stdin = StringIO(get_test_chunk_path(test_data_dir))
 
         ## run the pipeline
         stages = PipelineStages()
@@ -53,26 +53,26 @@ def test_pipeline(request):
 
 
 @pytest.mark.skipif('True')  # pylint: disable=E1101
-def test_post_batch_incremental_stage():
+def test_post_batch_incremental_stage(request, test_data_dir):
     path = os.path.dirname(__file__)
     config = yaml.load(open(os.path.join(path, 'test_post_batch_incremental.yaml')))
 
     ## config says read from stdin, so make that have what we want
     stdin = sys.stdin
-    sys.stdin = StringIO(get_test_chunk_path())
+    sys.stdin = StringIO(get_test_chunk_path(test_data_dir))
 
     ## run the pipeline
     p = Pipeline( config )
     p.run()
 
 @pytest.mark.skipif('True')  # pylint: disable=E1101
-def test_align_serif_stage():
+def test_align_serif_stage(test_data_dir):
     path = os.path.dirname(__file__)
     config = yaml.load(open(os.path.join(path, 'test_align_serif_stage.yaml')))
 
     ## config says read from stdin, so make that have what we want
     stdin = sys.stdin
-    sys.stdin = StringIO(get_test_v0_3_0_chunk_tagged_by_serif_path())
+    sys.stdin = StringIO(get_test_v0_3_0_chunk_tagged_by_serif_path(test_data_dir))
 
     ## run the pipeline
     p = Pipeline( config )
