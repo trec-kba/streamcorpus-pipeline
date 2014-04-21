@@ -161,6 +161,8 @@ def main():
     parser.add_argument('-i', '--input', action='append', 
                         help='file paths to input instead of reading from stdin')
     parser.add_argument('--in-glob', action='append', default=[], help='path glob specifying input files')
+    parser.add_argument('--third-dir-path', help='path to third-party tools directory')
+    parser.add_argument('--tmp-dir-path', help='path to temporary directory for scratch files, can be large')
 
     modules = [yakonfig, kvlayer, dblogger, streamcorpus_pipeline]
     args = yakonfig.parse_args(parser, modules)

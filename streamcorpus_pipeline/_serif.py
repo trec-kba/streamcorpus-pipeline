@@ -160,16 +160,16 @@ OVERRIDE kba_write_serifxml_to_chunk:         true
         super(serif, self).__init__(*args, **kwargs)
         self._child = None
 
-    def _write_config_par(self, tmp_dir, par_file, pipeline_root_path):
+    def _write_config_par(self, tmp_dir, par_file, tagger_root_path):
         if par_file == 'streamcorpus_generate_serifxml':
             # streamcorpus_generate_serifxml INCLUDEs streamcorpus_one_step
-            self._write_config_par(tmp_dir, 'streamcorpus_one_step', pipeline_root_path)
+            self._write_config_par(tmp_dir, 'streamcorpus_one_step', tagger_root_path)
         par_data = getattr(self, par_file)
         fpath = os.path.join(tmp_dir, par_file + '.par')
         fout = open(fpath, 'wb')
         fout.write(
             par_data.format(
-                serif_home_par=os.path.join(pipeline_root_path, 'par')
+                serif_home_par=os.path.join(tagger_root_path, 'par')
             )
         )
         fout.close()
@@ -181,21 +181,15 @@ OVERRIDE kba_write_serifxml_to_chunk:         true
         tmp_dir = os.path.join(scp_config['tmp_dir_path'], str(uuid.uuid4()))
         os.mkdir(tmp_dir)
         par_file = self.config['par']
-        pipeline_root_path = self.config['pipeline_root_path']
+        tagger_root_path = os.path.join(self.config['third_dir_path'], 
+                                        self.config['path_in_third'])
 
-        par_path = self._write_config_par(tmp_dir, par_file, pipeline_root_path)
-
-        tagger_config = dict(
-            pipeline_root_path=self.config['pipeline_root_path'],
-            par_file=self.config['par'],
-            tmp_dir=tmp_dir,
-            chunk_path=chunk_path,
-            )
+        par_path = self._write_config_par(tmp_dir, par_file, tagger_root_path)
 
         tmp_chunk_path = os.path.join(tmp_dir, 'output', os.path.basename(chunk_path))
 
         cmd = [
-            os.path.join(pipeline_root_path, 'bin/x86_64/Serif'),
+            os.path.join(tagger_root_path, 'bin/x86_64/Serif'),
             par_path,
             '-o', tmp_dir,
             chunk_path,

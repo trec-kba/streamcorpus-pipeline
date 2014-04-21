@@ -1,4 +1,3 @@
-kvlayer: !include_func kvlayer.default_yaml
 
 streamcorpus_pipeline:
   ## root path for all things that are called *_path in this file and

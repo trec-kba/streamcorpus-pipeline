@@ -520,6 +520,9 @@ class TaggerBatchTransform(streamcorpus_pipeline.stages.BatchTransform):
     def __init__(self, *args, **kwargs):
         super(TaggerBatchTransform, self).__init__(*args, **kwargs)
         self._child = None
+        self.config['tagger_root_path'] = \
+            os.path.join(self.config['third_dir_path'], 
+                         self.config['path_in_third'])
 
     def process_path(self, chunk_path):
         ## make temporary file paths based on chunk_path
@@ -561,12 +564,12 @@ class TaggerBatchTransform(streamcorpus_pipeline.stages.BatchTransform):
             raise exceptions.NotImplementedError('''
 Subclasses must specify a class property "template" that provides
 command string format for running a tagger.  It should take
-%(pipeline_root_path)s as the path from the config file,
+%(tagger_root_path)s as the path from the config file,
 %(clean_visible_path)s as the input XML file, and %(ner_xml_path)s as
 the output path to create.
 ''')
         tagger_config = dict(
-            pipeline_root_path=self.config['pipeline_root_path'],
+            tagger_root_path=self.config['tagger_root_path'],
             clean_visible_path=clean_visible_path,
             ner_xml_path=ner_xml_path)
         ## get a java_heap_size or default to 1GB
