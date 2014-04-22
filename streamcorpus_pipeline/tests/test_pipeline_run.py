@@ -19,11 +19,12 @@ logger = logging.getLogger(__name__)
         pytest.mark.slow(('john-smith-serif.sh', True)),
     ],
 )
-def cmd_expect_success(tmpdir, request):
+def cmd_expect_success(tmpdir, test_data_dir, third_dir, request):
     script_name, expect_success = request.param
     cmd = os.path.join(os.path.dirname(__file__), script_name)
     tmp_dir = str(tmpdir.join(uuid.uuid4().hex))
-    cmd += ' ' + tmp_dir
+    configs_dir = os.path.join(os.path.dirname(__file__), 'configs')
+    cmd = ' '.join([cmd, tmp_dir, configs_dir, test_data_dir, third_dir])
     return (cmd, expect_success)
 
 @pytest.mark.integration

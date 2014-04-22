@@ -1,18 +1,7 @@
-# YAML kba.pipeline config for generating clean_visible and then
-## operating lingpipe
-
 streamcorpus_pipeline:
   ## root path for all things that are called *_path in this file and
   ## are not an absolute path, i.e. start with '/'
   root_path: 
-
-  ## pipeline expects strings over stdin, which are typically paths to
-  ## streamcorpus.Chunk files.  They can also be some other kind of
-  ## opaque byte strings delimited by newlines that your particular
-  ## 'writer' is expecting.
-
-  ## put logs inside each chunk file
-  embedded_logs: true
 
   log_level: DEBUG
 
@@ -25,13 +14,6 @@ streamcorpus_pipeline:
   ## the same file system as their output.  This is also where the
   ## batch_transforms operate.
   tmp_dir_path: tmp
-
-  ## task_queue specifies the strings that are passed to an reader
-  ## to obtain a Chunk.  The strings might be paths in a file system
-  ## or some other source of data.  The task_queue might simply be
-  ## stdin, or it might be a more sophisticated shared queue.
-  task_queue: stdin
-  stdin:
 
   external_stages_path: examples/john_smith_custom_reader.py
 

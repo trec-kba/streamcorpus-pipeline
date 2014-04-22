@@ -36,7 +36,7 @@ streamcorpus_pipeline:
 
   lingpipe:
     exit_code_on_out_of_memory: 1
-    pipeline_root_path: third
+    path_in_third: lingpipe-4.1.0
     offset_types: [BYTES]
     offset_debugging: false
     cleanup_tmp_files: false

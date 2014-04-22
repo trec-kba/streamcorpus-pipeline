@@ -27,6 +27,7 @@ default_config = {
 }
 runtime_keys = {
     'tmp_dir_path': 'tmp_dir_path',
+    'third_dir_path': 'third_dir_path',
 }
 sub_modules = set(stage
                   for stage in PipelineStages().itervalues()
@@ -123,6 +124,7 @@ def normalize_config(config):
         if k.endswith('path') and k != 'root_path': fix(config, k)
     # Note, that happens to also include tmp_dir_path, which must exist.
     tmp_dir_path = config['tmp_dir_path']
+    third_dir_path = config.get('third_dir_path')
     # Now go into all of our children and push in tmp_dir_path and fix
     # up their paths too.
     for c in config.itervalues():
@@ -130,3 +132,4 @@ def normalize_config(config):
             for k in c.iterkeys():
                 if k.endswith('path'): fix(c, k)
             c['tmp_dir_path'] = tmp_dir_path
+            c['third_dir_path'] = third_dir_path
