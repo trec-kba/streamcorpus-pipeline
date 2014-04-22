@@ -2,6 +2,3 @@ include RELEASE-VERSION
 include version.py
 include LICENSE.txt
 include README.md
-recursive-include data/john-smith/original *
-recursive-include configs *.yaml
-recursive-include examples *.py

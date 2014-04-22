@@ -32,14 +32,20 @@ def recursive_glob(treeroot, pattern):
         results.extend(os.path.join(base, f) for f in goodfiles)
     return results
 
-def recursive_glob_with_tree(treeroot, pattern):
+def recursive_glob_with_tree(new_base, old_base, treeroot, pattern):
+    '''generate a list of tuples(new_base, list(paths to put there)
+    where the files are found inside of old_base/treeroot.
+    '''
     results = []
-    for base, dirs, files in os.walk(treeroot):
+    old_cwd = os.getcwd()
+    os.chdir(old_base)
+    for rel_base, dirs, files in os.walk(treeroot):
         goodfiles = fnmatch.filter(files, pattern)
         one_dir_results = []
         for f in goodfiles:
-            one_dir_results.append(os.path.join(base, f))
-        results.append((base, one_dir_results))
+            one_dir_results.append(os.path.join(old_base, rel_base, f))
+        results.append((os.path.join(new_base, rel_base), one_dir_results))
+    os.chdir(old_cwd)
     return results
 
 def _myinstall(pkgspec):
@@ -138,7 +144,8 @@ setup(
     data_files = [
         ## this does not appear to actually put anything into the egg...
         ('docs/examples/streamcorpus-pipeline/', recursive_glob('examples', '*.py')),
-        ('docs/examples/streamcorpus-pipeline/', recursive_glob('configs', '*.yaml')),
+        ('docs/examples/streamcorpus-pipeline/', recursive_glob('examples', '*.yaml')),
         #('data/john-smith', recursive_glob('data/john-smith', '*.*')),
-    ] + recursive_glob_with_tree('data/smith/original', '*') + recursive_glob_with_tree('data/test', '*'),
+    ] + recursive_glob_with_tree('data/streamcorpus-pipeline', 'data', 'john-smith/original', '*') \
+      + recursive_glob_with_tree('data/streamcorpus-pipeline', 'data', 'test', '*'),
 )
