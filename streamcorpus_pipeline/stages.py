@@ -18,6 +18,7 @@ Readers
 .. autoclass:: streamcorpus_pipeline._john_smith.john_smith
 .. autoclass:: streamcorpus_pipeline._yaml_files_list.yaml_files_list
 .. autoclass:: streamcorpus_pipeline._spinn3r_feed_storage.from_spinn3r_feed
+.. autoclass:: streamcorpus_pipeline._serifxml.from_serifxml
 
 Incremental transforms
 ======================
@@ -336,6 +337,7 @@ class PipelineStages(StageRegistry):
         self.tryload_stage('_john_smith', 'john_smith')
         self.tryload_stage('_yaml_files_list', 'yaml_files_list')
         self.tryload_stage('_spinn3r_feed_storage', 'from_spinn3r_feed')
+        self.tryload_stage('_serifxml', 'from_serifxml')
 
         # StreamItem stages
         # (alphabetical by stage name)
