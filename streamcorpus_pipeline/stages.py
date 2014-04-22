@@ -27,6 +27,7 @@ Incremental transforms
 .. autoclass:: streamcorpus_pipeline._clean_visible.clean_visible
 .. autoclass:: streamcorpus_pipeline._pdf_to_text.pdf_to_text
 .. autoclass:: streamcorpus_pipeline._docx_to_text.docx_to_text
+.. autoclass:: streamcorpus_pipeline._title.title
 .. autoclass:: streamcorpus_pipeline._filters.debug_filter
 .. autoclass:: streamcorpus_pipeline._dedup.dedup
 .. autoclass:: streamcorpus_pipeline._dump_label_stats.dump_label_stats
@@ -345,6 +346,7 @@ class PipelineStages(StageRegistry):
         self.tryload_stage('_clean_visible', 'clean_visible')
         self.tryload_stage('_pdf_to_text', 'pdf_to_text')
         self.tryload_stage('_docx_to_text', 'docx_to_text')
+        self.tryload_stage('_title', 'title')
         self.tryload_stage('_filters', 'debug_filter')
         self.tryload_stage('_dedup', 'dedup')
         self.tryload_stage('_dump_label_stats', 'dump_label_stats')
