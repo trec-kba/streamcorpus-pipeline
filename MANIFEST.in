@@ -4,5 +4,5 @@ include LICENSE.txt
 include README.md
 include data/john-smith/john-smith-tagged-by-lingpipe-serif-0-197.sc.xz
 recursive-include data/john-smith/original *
-recursive-include data/john-smith/test *
+recursive-include data/test *
 recursive-include examples *.yaml *.py
