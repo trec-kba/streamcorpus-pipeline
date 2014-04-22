@@ -145,6 +145,7 @@ setup(
         ## this does not appear to actually put anything into the egg...
         ('docs/examples/streamcorpus-pipeline/', recursive_glob('examples', '*.py')),
         ('docs/examples/streamcorpus-pipeline/', recursive_glob('examples', '*.yaml')),
+        ('data/streamcorpus-pipeline', ['data/john-smith/john-smith-tagged-by-lingpipe-serif-0-197.sc.xz']),
         #('data/john-smith', recursive_glob('data/john-smith', '*.*')),
     ] + recursive_glob_with_tree('data/streamcorpus-pipeline', 'data', 'john-smith/original', '*') \
       + recursive_glob_with_tree('data/streamcorpus-pipeline', 'data', 'test', '*'),
