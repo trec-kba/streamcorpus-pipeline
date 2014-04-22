@@ -82,13 +82,6 @@ class PyTest(Command):
             sys.exit(1)
 
 
-data_files = [
-        ('docs/examples/streamcorpus-pipeline/', recursive_glob('examples', '*.py')),
-        ('docs/examples/streamcorpus-pipeline/', recursive_glob('examples', '*.yaml')),
-        ('data/streamcorpus-pipeline', ['data/john-smith/john-smith-tagged-by-lingpipe-serif-0-197.sc.xz']),
-    ] + recursive_glob_with_tree('data/streamcorpus-pipeline', 'data', 'john-smith/original', '*') \
-      + recursive_glob_with_tree('data/streamcorpus-pipeline', 'data', 'test', '*')
-
 setup(
     name=PROJECT,
     version=VERSION,
@@ -149,5 +142,12 @@ setup(
             'streamcorpus_pipeline_test = streamcorpus_pipeline.tests.run:main',
         ]
     },
-    data_files = data_files,
+    data_files = [
+        ('docs/examples/streamcorpus-pipeline/', recursive_glob('examples', '*.py')),
+        ('docs/examples/streamcorpus-pipeline/', recursive_glob('examples', '*.yaml')),
+        ('data/streamcorpus-pipeline', ['data/john-smith/john-smith-tagged-by-lingpipe-serif-0-197.sc.xz']),
+    ] + recursive_glob_with_tree('data/streamcorpus-pipeline', 'data', 'john-smith/original', '*') \
+      + recursive_glob_with_tree('data/streamcorpus-pipeline', 'data', 'test', '*'),
+
+    zip_safe = False
 )
