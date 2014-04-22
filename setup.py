@@ -89,8 +89,6 @@ data_files = [
     ] + recursive_glob_with_tree('data/streamcorpus-pipeline', 'data', 'john-smith/original', '*') \
       + recursive_glob_with_tree('data/streamcorpus-pipeline', 'data', 'test', '*')
 
-print data_files
-
 setup(
     name=PROJECT,
     version=VERSION,
