@@ -19,7 +19,9 @@ streamcorpus_pipeline:
   ## generator of StreamItems
   reader: john_smith
 
-  incremental_transforms: []
+  incremental_transforms: [
+    title,
+  ]
 
   batch_transforms: []
 
