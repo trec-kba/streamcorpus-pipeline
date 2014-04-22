@@ -28,7 +28,7 @@ from streamcorpus_pipeline._clean_visible import make_clean_visible_file, \
 from sortedcollection import SortedCollection
 from streamcorpus_pipeline._exceptions import PipelineOutOfMemory, \
     PipelineBaseException
-import streamcorpus_pipeline._memory
+import streamcorpus_pipeline._memory as _memory
 import streamcorpus_pipeline.stages
 from yakonfig import ConfigurationError
 
