@@ -81,6 +81,16 @@ class PyTest(Command):
         if pytest.main(['-n', '8', '-vvs', 'streamcorpus_pipeline']):
             sys.exit(1)
 
+
+data_files = [
+        ('docs/examples/streamcorpus-pipeline/', recursive_glob('examples', '*.py')),
+        ('docs/examples/streamcorpus-pipeline/', recursive_glob('examples', '*.yaml')),
+        ('data/streamcorpus-pipeline', ['data/john-smith/john-smith-tagged-by-lingpipe-serif-0-197.sc.xz']),
+    ] + recursive_glob_with_tree('data/streamcorpus-pipeline', 'data', 'john-smith/original', '*') \
+      + recursive_glob_with_tree('data/streamcorpus-pipeline', 'data', 'test', '*')
+
+print data_files
+
 setup(
     name=PROJECT,
     version=VERSION,
@@ -141,12 +151,5 @@ setup(
             'streamcorpus_pipeline_test = streamcorpus_pipeline.tests.run:main',
         ]
     },
-    data_files = [
-        ## this does not appear to actually put anything into the egg...
-        ('docs/examples/streamcorpus-pipeline/', recursive_glob('examples', '*.py')),
-        ('docs/examples/streamcorpus-pipeline/', recursive_glob('examples', '*.yaml')),
-        ('data/streamcorpus-pipeline', ['data/john-smith/john-smith-tagged-by-lingpipe-serif-0-197.sc.xz']),
-        #('data/john-smith', recursive_glob('data/john-smith', '*.*')),
-    ] + recursive_glob_with_tree('data/streamcorpus-pipeline', 'data', 'john-smith/original', '*') \
-      + recursive_glob_with_tree('data/streamcorpus-pipeline', 'data', 'test', '*'),
+    data_files = data_files,
 )
