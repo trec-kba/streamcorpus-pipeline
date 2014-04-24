@@ -126,4 +126,8 @@ class guess_media_type(Configured):
             elif stream_item.body.raw[:10].lower().startswith('%pdf-'):
                 stream_item.body.media_type = 'application/pdf'
 
+        if stream_item.body and not stream_item.body.media_type \
+                and self.config.get('fallback_media_type'):
+            stream_item.body.media_type = self.config['fallback_media_type']
+
         return stream_item
