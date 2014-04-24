@@ -176,8 +176,12 @@ def main():
         for pattern in args.in_glob:
             input_paths.extend(glob.glob(pattern))
     if args.input:
-        if args.input == '-':
-            input_paths.extend(sys.stdin)
+        if '-' in args.input:
+            if args.in_glob:
+                sys.exit('cannot use "-i -" and --in-glob together')
+            if len(args.input) > 1:
+                sys.exit('cannot use "-i -" with multiple inputs')
+            input_paths = sys.stdin
         else:
             input_paths.extend(args.input)
 

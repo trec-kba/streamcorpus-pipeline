@@ -2,7 +2,7 @@
 
 set -e
 
-streamcorpus_pipeline -c $2/john-smith.yaml -i $3/john-smith/original
+echo $3/john-smith/original | streamcorpus_pipeline -c $2/john-smith.yaml -i -
 streamcorpus_pipeline -c $2/john-smith-with-labels-from-tsv.yaml -i $3/john-smith/original
 
 ## compare dumps
