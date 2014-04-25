@@ -34,3 +34,7 @@ register:
 check:
 	pylint -i y --output-format=parseable src/`git remote -v | grep origin | head -1 | cut -d':' -f 2 | cut -d'.' -f 1`
 
+streamcorpus.org:
+	python setup.py build_sphinx
+	s3cmd -c ../streamcorpus-website-builder-dot-s3cfg del --recursive --force  s3://streamcorpus.org/
+	s3cmd -c ../streamcorpus-website-builder-dot-s3cfg  put --recursive --acl-public build/sphinx/html/ s3://streamcorpus.org/
