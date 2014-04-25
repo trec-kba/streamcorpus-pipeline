@@ -18,6 +18,9 @@ and at `Diffeo <http://diffeo.com/>`_.
 
 Ask more at `StreamCorpus Google Group <http://groups.google.com/group/streamcorpus>`_
 
+All of these python package are hosted in `github.com/trec-kba <http://github.com/trec-kba/>`_ 
+and `github.com/diffeo <http://github.com/diffeo/>`_
+
 Contents:
 
 .. toctree::
