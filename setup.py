@@ -148,6 +148,6 @@ setup(
         ('data/streamcorpus-pipeline', ['data/john-smith/john-smith-tagged-by-lingpipe-serif-0-197.sc.xz']),
     ] + recursive_glob_with_tree('data/streamcorpus-pipeline', 'data', 'john-smith/original', '*') \
       + recursive_glob_with_tree('data/streamcorpus-pipeline', 'data', 'test', '*'),
-
+    include_package_data = True,
     zip_safe = False
 )
