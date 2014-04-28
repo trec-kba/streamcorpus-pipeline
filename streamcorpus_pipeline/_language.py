@@ -34,4 +34,9 @@ class language(Configured):
             ## no .body.raw -- rare, but not impossible
             si.body.language = Language(code='', name='')
 
+        if 'force' in self.config:            
+            si.body.language = Language(
+                code=self.config['force'].get('code'), 
+                name=self.config['force'].get('name'))
+
         return si

@@ -59,11 +59,21 @@ class serif(BatchTransform):
     Configuration options include:
 
     `path_in_third` (required)
-      Relative path in `third_dir_path` to Serif
+      Relative path in `third_dir_path` to directory containing serif
+      data directories
+
+    `serif_exe` (default: bin/x86_64/Serif)
+      Relative path within `path_in_third` to the Serif executable file
+
     `par` (required)
       Serif policy configuration; this is typically ``streamcorpus_one_step``,
       but may also be ``streamcorpus_read_serifxml`` or
       ``streamcorpus_generate_serifxml``
+
+    `par_additions`
+      Map from poicy configuration name to list of strings to append
+      as additional lines to customize the policy.
+
     `cleanup_tmp_files` (default: true)
       Delete the intermediate files used by Serif
 
@@ -206,6 +216,9 @@ OVERRIDE kba_write_serifxml_to_chunk:         true
             # streamcorpus_generate_serifxml INCLUDEs streamcorpus_one_step
             self._write_config_par(tmp_dir, 'streamcorpus_one_step', tagger_root_path)
         par_data = getattr(self, par_file)
+        for line in self.config.get('par_additions', {}).get(par_file, []):
+            par_data += '\n'
+            par_data += line + '\n'
         fpath = os.path.join(tmp_dir, par_file + '.par')
         fout = open(fpath, 'wb')
         fout.write(
@@ -230,7 +243,7 @@ OVERRIDE kba_write_serifxml_to_chunk:         true
         tmp_chunk_path = os.path.join(tmp_dir, 'output', os.path.basename(chunk_path))
 
         cmd = [
-            os.path.join(tagger_root_path, 'bin/x86_64/Serif'),
+            os.path.join(tagger_root_path, self.config.get('serif_exe', 'bin/x86_64/Serif')),
             par_path,
             '-o', tmp_dir,
             chunk_path,

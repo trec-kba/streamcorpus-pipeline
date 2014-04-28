@@ -62,9 +62,19 @@ class from_serifxml(Configured):
           - title
           batch_transforms:
           - serif
+          language:
+            force:
+              name: English
+              code: en
+          guess_media_type:
+            fallback_media_type: text/plain
           serif:
             path_in_third: serif/serif-latest
+            serif_exe: bin/x86_64/Serif
             par: streamcorpus_read_serifxml
+            par_additions:
+              streamcorpus_read_serifxml:
+              - "# example additional line"
           writer: to_local_chunks
           to_local_chunks:
             output_type: otherdir

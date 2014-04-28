@@ -5,11 +5,20 @@ streamcorpus_pipeline:
   tmp_dir_path: tmp
   reader: from_local_chunks
 
-  incremental_transforms: []
+  incremental_transforms:
+  - language
+  - guess_media_type
 
   batch_transforms: [serif]
 
   writers: [to_local_chunks]
+
+  language:
+    force:
+      name: English
+      code: en
+  guess_media_type:
+    fallback_media_type: text/plain
 
   to_local_chunks:
     output_type: otherdir
@@ -25,6 +34,7 @@ streamcorpus_pipeline:
   serif:
     exit_code_on_out_of_memory: 1
     path_in_third: serif/serif-latest
+    serif_exe: bin/x86_64/Serif
     offset_types: [CHARS]
     offset_debugging: true
     cleanup_tmp_files: false
@@ -34,6 +44,9 @@ streamcorpus_pipeline:
     par: streamcorpus_read_serifxml      ## reads serifxml from .body.taggings['serif'].raw_tagging to construct tokens with attrs
     #par: streamcorpus_one_step           ## performs tagging and constructs tokens with attrs
 
+    par_additions:
+      streamcorpus_read_serifxml:
+      - "# example additional line"
     ## convert all doc-level Rating objects into Label objects on all
     ## Tokens that appear in a coref chain that meets the criterion
     align_labels_by: names_in_chains
