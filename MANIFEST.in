@@ -3,6 +3,9 @@ include version.py
 include LICENSE.txt
 include README.md
 include data/john-smith/john-smith-tagged-by-lingpipe-serif-0-197.sc.xz
+include data/john-smith/ground-truth.yaml
+include data/test/WEBLOG-100-fd5f05c8a680faa2bf8c55413e949bbf.sc.xz
 recursive-include data/john-smith/original *
 recursive-include data/test *
 recursive-include examples *.yaml *.py
+recursive-include streamcorpus_pipeline *.yaml
