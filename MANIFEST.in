@@ -8,4 +8,4 @@ include data/test/WEBLOG-100-fd5f05c8a680faa2bf8c55413e949bbf.sc.xz
 recursive-include data/john-smith/original *
 recursive-include data/test *
 recursive-include examples *.yaml *.py
-recursive-include streamcorpus_pipeline *.yaml
+recursive-include streamcorpus_pipeline *.yaml *.sh
