@@ -16,7 +16,7 @@ them, i.e. strips punctuation, lowercases, and splits on whitespace.
 These strings are used by aligner stages after various taggers run,
 e.g. LingPipe or Serif.
 
-Copyright 2012-2013 Diffeo, Inc.
+Copyright 2012-2014 Diffeo, Inc.
 '''
 
 ## this assumes that streamcorpus has been installed
@@ -29,7 +29,7 @@ import logging
 from streamcorpus_pipeline._clean_visible import cleanse
 from streamcorpus_pipeline.stages import Configured
 
-logger = logging.getLogger('kba.pipeline.john_smith_custom_reader')
+logger = logging.getLogger('streamcorpus_pipeline.john_smith_custom_reader')
 
 class john_smith_custom_reader(Configured):
     config_name = 'john_smith_custom_reader'

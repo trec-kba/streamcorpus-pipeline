@@ -94,14 +94,22 @@ class from_serifxml(Configured):
             serifxml = f.read()
 
         fname = os.path.basename(i_str)
+        stream_time = None
         date_m = date_in_file_name_re.match(fname)
         if date_m:
             year = int(date_m.group('year'))
             month = int(date_m.group('month'))
             day = int(date_m.group('day'))
-            stream_time = streamcorpus.make_stream_time(
-                zulu_timestamp = '%d-%02d-%02dT00:00:01.000000Z' % (year, month, day))
-        else:
+            try:
+                stream_time = streamcorpus.make_stream_time(
+                    zulu_timestamp = '%d-%02d-%02dT00:00:01.000000Z' % (year, month, day))
+            except Exception, exc:
+                logger.info('trapped failed parsing of file name to make stream_time',
+                            exc_info=True)
+                stream_time = None
+
+        if not stream_time:
+            ## fall back to using the present moment on this system
             epoch_ticks = time.time() ### NOT IN THE SERIFXML FILE
             stream_time = streamcorpus.make_stream_time(epoch_ticks=epoch_ticks)
 
