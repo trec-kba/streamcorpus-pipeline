@@ -36,13 +36,86 @@ import magic
 import yaml
 
 import streamcorpus
-import collections
+from collections import defaultdict
 from streamcorpus_pipeline._clean_visible import cleanse
 from streamcorpus_pipeline.stages import Configured
 
 logger = logging.getLogger(__name__)
 
 class yaml_files_list(Configured):
+    '''Read and tag flat files as described in a YAML file.
+
+    When this reader stage is in use, the input file to the pipeline
+    is a YAML file.  That YAML file points at several other files and
+    directories, and the contents of those files are emitted as
+    stream items.
+
+    The YAML file has the following format:
+
+    .. code-block:: yaml
+
+        root_path: /data/directory
+        annotator_id: my-name
+        source: weblog
+        entities:
+          - target_id: "https://kb.diffeo.com/sample"
+            doc_path:
+              - sample
+              - doc_path: copies/sample
+                abs_url: "http://source.example.com/sample"
+            external_profiles:
+              - doc_path: wikipedia/Sample
+                abs_url: "http://en.wikipedia.org/wiki/Sample"
+            slots:
+              - canonical_name: Sample
+              - example
+
+    At the top level, the file contains:
+
+    ``root_path`` (default: current directory)
+      Root path to the data to read.
+    ``annotator_id`` (required)
+      Annotator ID string on produced document ratings.
+    ``source`` (default: ``unknown``)
+      Source type for produced stream items.
+    ``entities`` (required)
+      List of entity document sets to read.
+
+    ``entities`` is a list of dictionaries.  Each entity dictionary has
+    the following items:
+
+    ``target_id`` (required)
+      Target entity URL for produced ratings
+    ``doc_path`` (required)
+      List of source files or directories.  These may be strings or
+      dictionaries.  If dictionaries, ``doc_path`` is the filesystem
+      path and ``abs_url`` is the corresponding URL; if strings, the
+      strings are filesystem paths and the URL is generated.
+      Filesystem paths are interpreted relative to the ``root_path``.
+    ``external_profiles`` (optional)
+      List of additional source files or directories that are external
+      profiles, such as Wikipedia articles.  These are processed in
+      the same way as items in ``doc_path`` but must be in dictionary
+      form, where the ``abs_url`` field identifies the external
+      knowledge base article.
+    ``slots`` (required)
+      Additional knowledge base metadata about the entity.  This is a
+      list of strings or dictionaries.  Strings are interpreted as
+      dictionaries of ``name`` mapping to the string.  The resulting
+      slot dictionaries are combined into a multiset where each slot
+      name maps to multiple values.
+
+    For each entity, the reader finds all documents in the named
+    directories and creates a :class:`streamcorpus.StreamItem` for
+    each.  The :attr:`~streamcorpus.StreamItem.body` has its
+    :attr:`~streamcorpus.ContentItem.raw` data set to the contents of
+    the file.  The stream items are also tagged with a
+    :class:`streamcorpus.Rating` where the annotator comes from the
+    file metadata and the target comes from the entity ``target_id``.
+    The :attr:`~streamcorpus.Rating.mentions` on the rating are set
+    to the union of all of the slot values for all slots.
+
+    '''
     config_name = 'yaml_files_list'
     def __call__(self, path_to_input_file):
         '''
@@ -72,6 +145,14 @@ class yaml_files_list(Configured):
         if 'annotator_id' not in metadata:
             raise Exception('Invalid labels yaml file: must specify annotator_id')
 
+        ## yaml file lists are organized *per* entity, however this
+        ## must only emit each document once, even if multiple
+        ## entities are mentioned in the text.  
+        # dict keyed on absolute paths in local file system with
+        # values as lists of entity records from the original input
+        # yaml
+        docs = defaultdict(list)
+        abs_urls = dict()
         for entity in entities:
             ## get list of file paths to look at
             paths = entity['doc_path']
@@ -86,9 +167,9 @@ class yaml_files_list(Configured):
             for ext_profile in entity.get('external_profiles', []):
                 external_profiles.add(ext_profile['abs_url'])
 
-            ## Only yield documents once.  Because the user can
-            ## specify external_profiles and doc_paths we have the
-            ## possibility of duplicates.
+            ## For this entity, only touch each documents once.
+            ## Because the user can specify external_profiles and
+            ## doc_paths we have the possibility of duplicates.
             visited_paths = []
             for path in paths:
                 abs_url = None
@@ -121,17 +202,25 @@ class yaml_files_list(Configured):
                                     ## the case of a zip archive that
                                     ## was manually unpacked 
                                     _abs_url = abs_url + '#' + urllib.quote(sub_path)
-                                yield self._make_stream_item(fpath, entity, metadata, _abs_url, is_profile)
+                                docs[fpath].append((entity, is_profile))
+                                abs_urls[fpath] = _abs_url
                                 visited_paths.append(fpath)
                 else:
                     if path not in visited_paths:
                         is_profile = bool(path in external_profiles)
                         if abs_url is None:
                             raise Exception('when specifying a full path, you must also specify the abs_url: %r' % path)
-                        yield self._make_stream_item(path, entity, metadata, abs_url, is_profile)
+                        docs[path].append((entity, is_profile))
+                        abs_urls[path] = abs_url
                         visited_paths.append(path)
 
-    def _parse_slots(self, raw_slots):
+        ## multiple mentions per doc have been grouped
+        for path in docs:
+            yield self._make_stream_item(path, metadata, abs_urls[path], docs[path])
+            
+
+    @classmethod
+    def _parse_slots(cls, raw_slots):
         ## raw_slots is a list containing either dictionaries
         ## or strings.
         ## Example:
@@ -147,11 +236,11 @@ class yaml_files_list(Configured):
                 slots.append(('name', mention))
         return slots
 
-
-    def _make_stream_item(self, path, entity, metadata, abs_url, is_profile):
-        ## pull out target id and mention tokens
-        target_id = str(entity['target_id'])
-
+    @classmethod
+    def _make_stream_item(cls, path, metadata, abs_url, entities):
+        '''
+        
+        '''
         ## Every StreamItem has a stream_time property.  It usually comes
         ## from the document creation time.
         creation_time = os.path.getctime(path)
@@ -160,6 +249,8 @@ class yaml_files_list(Configured):
         stream_item = streamcorpus.make_stream_item(
             creation_time,
             abs_url)
+
+        stream_item.source = metadata.get('source')
 
         ## build a ContentItem for the body
         body = streamcorpus.ContentItem()
@@ -177,26 +268,34 @@ class yaml_files_list(Configured):
         anno.annotator_id = metadata['annotator_id']
         anno.annotation_time = stream_item.stream_time
 
-        ## build a Label for the doc-level label:
-        rating = streamcorpus.Rating()
-        rating.annotator = anno
-        rating.target = streamcorpus.Target(target_id = target_id)
-        rating.contains_mention = True
-        if is_profile:
-            rating.flags = [streamcorpus.FlagType.PROFILE]
+        num_ratings = 0
+        for entity, is_profile in entities:
+            num_ratings += 1
 
-        ## parse slots in yaml file
-        slots = self._parse_slots(entity['slots'])
+            ## pull out target id and mention tokens
+            target_id = str(entity['target_id'])
 
-        ## heuristically split the slots string on white space and
-        ## use each token as a separate mention.
-        rating.mentions = [cleanse(unicode(slot[1], 'utf-8')) for slot in slots]
+            ## build a Label for the doc-level label:
+            rating = streamcorpus.Rating()
+            rating.annotator = anno
+            rating.target = streamcorpus.Target(target_id = target_id)
+            rating.contains_mention = True
 
-        ## put this one label in the array of labels
-        streamcorpus.add_annotation(stream_item, rating)
+            if is_profile:
+                rating.flags = [streamcorpus.FlagType.PROFILE]
+
+            ## parse slots in yaml file
+            slots = cls._parse_slots(entity['slots'])
+
+            ## heuristically split the slots string on white space and
+            ## use each token as a separate mention.
+            rating.mentions = [cleanse(unicode(slot[1], 'utf-8')) for slot in slots]
+
+            ## put this one label in the array of labels
+            streamcorpus.add_annotation(stream_item, rating)
 
         ## provide this stream_item to the pipeline
-        logger.info('created StreamItem(abs_url=%r', stream_item.abs_url)
+        logger.info('created StreamItem(num ratings=%d, abs_url=%r', num_ratings, stream_item.abs_url)
         return stream_item
 
 if __name__ == '__main__':

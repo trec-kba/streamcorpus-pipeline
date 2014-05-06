@@ -13,9 +13,13 @@ from streamcorpus import Language
 from streamcorpus_pipeline.stages import Configured
 
 class language(Configured):
-    '''
-    If available, use .body.raw to guess the language name/code and
-    store in .body.language
+    '''Guess at a language from ``body.raw``.
+
+    This always adds a ``language`` annotation to the body, but if
+    the body does not have a raw part or the language cannot be reliably
+    detected, it may be empty.
+
+    This has no configuration options.
     '''
     config_name = 'language'
     def __call__(self, si, context):
@@ -29,5 +33,10 @@ class language(Configured):
         elif si.body:
             ## no .body.raw -- rare, but not impossible
             si.body.language = Language(code='', name='')
+
+        if 'force' in self.config:            
+            si.body.language = Language(
+                code=self.config['force'].get('code'), 
+                name=self.config['force'].get('name'))
 
         return si

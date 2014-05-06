@@ -1,14 +1,10 @@
-import getpass
 import logging
 import multiprocessing
 import os
-import pytest
 import time
 import yaml
 
 import streamcorpus
-from streamcorpus_pipeline._rejester import rejester_run_function
-from streamcorpus_pipeline.tests._test_data import _TEST_DATA_ROOT
 from rejester.workers import run_worker, MultiWorker
 
 logger = logging.getLogger(__name__)
@@ -19,14 +15,19 @@ def job_status(master, name):
     string."""
     parts = []
     a = master.num_available(name)
-    if a > 0: parts.append("{0} available".format(a))
+    if a > 0:
+        parts.append("{0} available".format(a))
     p = master.num_pending(name)
-    if p > 0: parts.append("{0} pending".format(p))
+    if p > 0:
+        parts.append("{0} pending".format(p))
     f = master.num_finished(name)
-    if f > 0: parts.append("{0} finished".format(f))
+    if f > 0:
+        parts.append("{0} finished".format(f))
     z = master.num_failed(name)
-    if z > 0: parts.append("{0} failed".format(z))
-    if len(parts) == 0: parts.append("no status")
+    if z > 0:
+        parts.append("{0} failed".format(z))
+    if len(parts) == 0:
+        parts.append("no status")
     return ', '.join(parts)
 
 def jobs_status(master, jobs):
@@ -35,22 +36,22 @@ def jobs_status(master, jobs):
     return '; '.join(['{0}: {1}'.format(j, job_status(master, j))
                       for j in jobs])
 
-def test_rejester_john_smith_simple(task_master, tmpdir):
+def test_rejester_john_smith_simple(task_master, test_data_dir, tmpdir):
 
-    configs = [ 'john-smith', 'john-smith-with-labels-from-tsv' ]
+    configs = [ 'john-smith']
     inputs = [ 'john-smith/original' ]
 
     # set up the job specs:
     work_specs = {}
     units = {}
-    root = os.path.join(os.path.dirname(__file__), _TEST_DATA_ROOT)
-    treeroot = os.path.join(root, '..')
+    config_root = os.path.join(os.path.dirname(__file__), 'configs')
     for c in configs:
-        fn = os.path.join(treeroot, 'configs', c + '.yaml')
+        fn = os.path.join(config_root, c + '.yaml')
         with open(fn, 'r') as f:
             config = yaml.load(f)
         assert 'streamcorpus_pipeline' in config
-        config['streamcorpus_pipeline']['root_path'] = treeroot
+        root = os.path.dirname(__file__)
+        config['streamcorpus_pipeline']['root_path'] = root
         assert 'writers' in config['streamcorpus_pipeline']
         assert 'to_local_chunks' in config['streamcorpus_pipeline']['writers']
         assert 'to_local_chunks' in config['streamcorpus_pipeline']
@@ -67,7 +68,7 @@ def test_rejester_john_smith_simple(task_master, tmpdir):
             'terminate_function': 'rejester_terminate_function'
         }
         units[c] = {
-            os.path.join(root, i): dict(start_chunk_time=0)
+            os.path.join(test_data_dir, i): dict(start_chunk_time=0)
             for i in inputs
         }
         task_master.update_bundle(work_specs[c], units[c])
@@ -104,7 +105,7 @@ def test_rejester_john_smith_simple(task_master, tmpdir):
 
             # otherwise wait for a short bit and reloop
             time.sleep(0.1)
-    except Exception, e:
+    except Exception:
         logger.error("something went wrong", exc_info=True)
     finally:
         logger.info("shutting down master")
@@ -125,8 +126,8 @@ def test_rejester_john_smith_simple(task_master, tmpdir):
     # fetch back all of the work units and verify they succeeded
     for c in configs:
         for i in inputs:
-            ii = os.path.join(root, i)
-            assert units[c][ii].get('traceback') is None
+            ii = os.path.join(test_data_dir, i)
+            assert task_master.inspect_work_unit(c, ii).get('traceback') is None
         assert task_master.num_failed(c) == 0
         assert task_master.num_finished(c) == len(inputs)
 
@@ -147,5 +148,4 @@ def test_rejester_john_smith_simple(task_master, tmpdir):
             ids.add(si.stream_id)
         return ids
     stream_ids = [read_stream_id(fn) for fn in outputs]
-    assert len(stream_ids) == 2
-    assert stream_ids[0] == stream_ids[1]
+    assert len(stream_ids) == len(outputs)

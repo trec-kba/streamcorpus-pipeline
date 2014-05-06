@@ -28,7 +28,7 @@ from streamcorpus_pipeline._clean_visible import make_clean_visible_file, \
 from sortedcollection import SortedCollection
 from streamcorpus_pipeline._exceptions import PipelineOutOfMemory, \
     PipelineBaseException
-import streamcorpus_pipeline._memory
+import streamcorpus_pipeline._memory as _memory
 import streamcorpus_pipeline.stages
 from yakonfig import ConfigurationError
 
@@ -190,6 +190,7 @@ def names_in_chains(stream_item, aligner_data):
 
                 ## stream_item passed by reference, so nothing to return
 
+
 def line_offset_labels(stream_item, aligner_data):
     ## get a set of tokens -- must have OffsetType.LINES in them.
     sentences = stream_item.body.sentences[aligner_data['tagger_id']]
@@ -230,8 +231,18 @@ def line_offset_labels(stream_item, aligner_data):
                           for t in toks],
                          label_off.value))
 
+
 def byte_offset_labels(stream_item, aligner_data):
-    ## get a set of tokens -- must have OffsetType.BYTES type offsets.
+    _offset_labels(stream_item, aligner_data, offset_type='BYTES')
+
+def char_offset_labels(stream_item, aligner_data):
+    _offset_labels(stream_item, aligner_data, offset_type='CHARS')
+
+def _offset_labels(stream_item, aligner_data, offset_type='BYTES'):
+    ## get a set of tokens -- must have OffsetType.<offset_type> type offsets.
+
+    offset_type = OffsetType._NAMES_TO_VALUES[offset_type]
+
     sentences = stream_item.body.sentences[aligner_data['tagger_id']]
 
     ## These next few steps are probably the most
@@ -240,7 +251,7 @@ def byte_offset_labels(stream_item, aligner_data):
 
     token_collection = SortedCollection(
         itertools.chain(*[sent.tokens for sent in sentences]),
-        key=lambda tok: tok.offsets[OffsetType.BYTES].first
+        key=lambda tok: tok.offsets[offset_type].first
         )
 
     ## if labels on ContentItem, then make labels on Tokens
@@ -251,7 +262,7 @@ def byte_offset_labels(stream_item, aligner_data):
 
             ## remove the offset from the label, because we are
             ## putting it into the token
-            label_off = label.offsets.pop( OffsetType.BYTES )
+            label_off = label.offsets.pop( offset_type )
 
             assert label_off.length == len(label_off.value)
 
@@ -277,9 +288,96 @@ def byte_offset_labels(stream_item, aligner_data):
 
                 if not tok.token in label_off.value:
                     sys.exit('%r not in %r' % \
-                        ([(t.offsets[OffsetType.BYTES].first, t.token)
+                        ([(t.offsets[offset_type].first, t.token)
                           for t in toks],
                          label_off.value))
+
+
+def look_ahead_match(rating, tokens):
+    '''
+    iterate through all tokens looking for matches of cleansed tokens,
+    skipping tokens left empty by cleansing and coping with Token
+    objects that produce multiple space-separated strings when
+    cleansed.
+    '''
+    ## this ensures that all cleansed tokens are non-zero length
+    clean_mentions = []
+    for m in rating.mentions:
+        mtoks = cleanse(m.decode('utf8')).split(' ')
+        if mtoks and  mtoks != ['']:
+            clean_mentions.append(mtoks)
+        else:
+            logger.warn('got empty cleansed mention: %r\nrating=%r' % (m, rating))
+
+    for i in range(len(tokens)):
+        for mtoks in clean_mentions:
+            if tokens[i][0][0] == mtoks[0]:
+                ## found the start of a possible match, so iterate
+                ## through the tuples of cleansed strings for each
+                ## Token while stepping through the cleansed strings
+                ## for this mention.
+                m_j = 1
+                i_j = 0
+                last_token_matched = 0
+                matched = True
+                while m_j < len(mtoks):
+                    i_j += 1
+                    if i_j == len(tokens[i + last_token_matched][0]):
+                        i_j = 0
+                        last_token_matched += 1
+                        if i + last_token_matched == len(tokens):
+                            matched = False
+                            break
+                    if mtoks[m_j] == tokens[i + last_token_matched][0][i_j]:
+                        m_j += 1
+                    elif tokens[i + last_token_matched][0][i_j] == '':
+                        continue
+                    else:
+                        matched = False
+                        break
+                if matched:
+                    ## yield each matched token only once
+                    toks = set()
+                    for j in xrange(last_token_matched + 1):
+                        toks.add(tokens[i + j][1])
+                    for tok in toks:
+                        yield tok
+
+def multi_token_match(stream_item, aligner_data):
+    '''
+    iterate through tokens looking for near-exact matches to strings
+    in si.ratings...mentions
+    '''    
+    sentences = stream_item.body.sentences.get(aligner_data['tagger_id'])
+    if not sentences:
+        return
+    ## construct a list of tuples, where the first part of each tuple
+    ## is a tuple of cleansed strings, and the second part is the
+    ## Token object from which it came.
+    tokens = map(lambda tok: (cleanse(tok.token.decode('utf8')).split(' '), tok), 
+                 itertools.chain(*[sent.tokens for sent in sentences]))    
+    for annotator_id, ratings in stream_item.ratings.items():
+        if annotator_id == aligner_data['annotator_id']:
+            for rating in ratings:
+                label = Label(annotator=rating.annotator,
+                              target=rating.target)
+                
+                num_tokens_matched = 0
+                for tok in look_ahead_match(rating, tokens):
+                    if aligner_data.get('update_labels'):
+                        tok.labels.pop(annotator_id, None)
+                    add_annotation(tok, label)
+                    num_tokens_matched += 1
+
+                if num_tokens_matched == 0:
+                    logger.critical('failed multi_token_match %r:\n  mentions: %r\n  tokens: %r\n clean_html=%r',
+                                    stream_item.abs_url, rating.mentions, tokens, stream_item.body.clean_html)
+                else:
+                    logger.debug('matched %d tokens for %r',
+                                 num_tokens_matched, rating.target.target_id)
+
+                ## stream_item passed by reference, so nothing to return
+
 
 def make_memory_info_msg(clean_visible_path=None, ner_xml_path=None):
     msg = 'reporting memory while running on:\n%r\n%r' % (clean_visible_path, ner_xml_path)
@@ -295,8 +393,10 @@ def make_memory_info_msg(clean_visible_path=None, ner_xml_path=None):
 
 AlignmentStrategies = {
     'names_in_chains': names_in_chains,
-    'line_offset_labels': line_offset_labels,
+    #'line_offset_labels': line_offset_labels,
     'byte_offset_labels': byte_offset_labels,
+    'char_offset_labels': char_offset_labels,
+    'multi_token_match': multi_token_match,
     }
 
 def align_labels(t_path1, config):
@@ -381,6 +481,34 @@ class byte_offset_align_labels(_aligner_batch_transform):
             raise ConfigurationError('{} requires tagger_id'.format(name))
     aligner = (byte_offset_labels,)
 
+class char_offset_align_labels(_aligner_batch_transform):
+    '''
+    requires config['annotator_id'] (which person/org did manual labelling)
+    requires config['tagger_id'] (which software did tagging to process)
+    '''
+    config_name = 'char_offset_align_labels'
+    @staticmethod
+    def check_config(config, name):
+        if 'annotator_id' not in config:
+            raise ConfigurationError('{} requires annotator_id'.format(name))
+        if 'tagger_id' not in config:
+            raise ConfigurationError('{} requires tagger_id'.format(name))
+    aligner = (char_offset_labels,)
+
+class multi_token_match_align_labels(_aligner_batch_transform):
+    '''
+    requires config['annotator_id'] (which person/org did manual labelling)
+    requires config['tagger_id'] (which software did tagging to process)
+    '''
+    config_name = 'multi_token_match_align_labels'
+    @staticmethod
+    def check_config(config, name):
+        if 'annotator_id' not in config:
+            raise ConfigurationError('{} requires annotator_id'.format(name))
+        if 'tagger_id' not in config:
+            raise ConfigurationError('{} requires tagger_id'.format(name))
+    aligner = (multi_token_match,)
+
 class TaggerBatchTransform(streamcorpus_pipeline.stages.BatchTransform):
     '''
     streamcorpus.pipeline.TaggerBatchTransform provides a structure for
@@ -392,6 +520,9 @@ class TaggerBatchTransform(streamcorpus_pipeline.stages.BatchTransform):
     def __init__(self, *args, **kwargs):
         super(TaggerBatchTransform, self).__init__(*args, **kwargs)
         self._child = None
+        self.config['tagger_root_path'] = \
+            os.path.join(self.config['third_dir_path'], 
+                         self.config['path_in_third'])
 
     def process_path(self, chunk_path):
         ## make temporary file paths based on chunk_path
@@ -433,12 +564,12 @@ class TaggerBatchTransform(streamcorpus_pipeline.stages.BatchTransform):
             raise exceptions.NotImplementedError('''
 Subclasses must specify a class property "template" that provides
 command string format for running a tagger.  It should take
-%(pipeline_root_path)s as the path from the config file,
+%(tagger_root_path)s as the path from the config file,
 %(clean_visible_path)s as the input XML file, and %(ner_xml_path)s as
 the output path to create.
 ''')
         tagger_config = dict(
-            pipeline_root_path=self.config['pipeline_root_path'],
+            tagger_root_path=self.config['tagger_root_path'],
             clean_visible_path=clean_visible_path,
             ner_xml_path=ner_xml_path)
         ## get a java_heap_size or default to 1GB

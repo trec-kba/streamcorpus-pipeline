@@ -1,0 +1,44 @@
+streamcorpus_pipeline:
+  root_path: 
+  log_level: DEBUG
+  output_chunk_max_count: 200
+  tmp_dir_path: tmp
+  reader: john_smith
+
+  ## expected this input:
+  #echo data/john-smith/original | python -m kba.pipeline.run configs/john-smith-serif-streamcorpus_one_step.yaml
+
+  incremental_transforms: []
+
+  batch_transforms: [serif]
+
+  writers: [to_local_chunks]
+
+  to_local_chunks:
+    output_type: otherdir
+    output_path: data/john-smith/
+    output_name: "john-smith-tagged-by-serif-%(first)s"
+
+  serif:
+    exit_code_on_out_of_memory: 1
+    path_in_third: serif/serif-latest
+    offset_types: [CHARS]
+    offset_debugging: true
+    cleanup_tmp_files: true
+    tmp_dir_path: tmp
+
+    ## crucial to tell serif what parameters to use
+    #par: streamcorpus_generate_serifxml  ## puts serifxml into raw_tagging (for testing)
+    #par: streamcorpus_read_serifxml      ## reads serifxml from .body.taggings['serif'].raw_tagging to construct tokens with attrs
+    par: streamcorpus_one_step           ## performs tagging and constructs tokens with attrs
+
+    ## convert all doc-level Rating objects into Label objects on all
+    ## Tokens that appear in a coref chain that meets the criterion
+    align_labels_by: names_in_chains
+    aligner_data:
+      ## apply Label to each Token in any chain for which ALL|ANY of
+      ## the strings in Rating.mentions appear as substrings in at
+      ## least one Token.token string of the coref chain
+      chain_selector:  ALL
+      ## identifier of annotator to find in the doc-level Ratings
+      annotator_id: bagga-and-baldwin

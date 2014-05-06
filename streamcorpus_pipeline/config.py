@@ -27,6 +27,7 @@ default_config = {
 }
 runtime_keys = {
     'tmp_dir_path': 'tmp_dir_path',
+    'third_dir_path': 'third_dir_path',
 }
 sub_modules = set(stage
                   for stage in PipelineStages().itervalues()
@@ -34,15 +35,24 @@ sub_modules = set(stage
 
 def replace_config(config, name):
     # Do we have external stages?
-    if 'external_stages_path' not in config: return streamcorpus_pipeline
-    path = config['external_stages_path']
-    if not os.path.isabs(path) and config.get('root_path'):
-        path = os.path.join(config['root_path'], path)
+    if ('external_stages_path' not in config and
+        'external_stages_modules' not in config):
+        return streamcorpus_pipeline
     stages = PipelineStages()
-    try:
-        stages.load_external_stages(config['external_stages_path'])
-    except IOError, e:
-        return streamcorpus_pipeline # let check_config re-raise this
+    if 'external_stages_path' in config:
+        path = config['external_stages_path']
+        if not os.path.isabs(path) and config.get('root_path'):
+            path = os.path.join(config['root_path'], path)
+        try:
+            stages.load_external_stages(config['external_stages_path'])
+        except IOError, e:
+            return streamcorpus_pipeline # let check_config re-raise this
+    if 'external_stages_modules' in config:
+        for mod in config['external_stages_modules']:
+            try:
+                stages.load_module_stages(mod)
+            except ImportError, e:
+                return streamcorpus_pipeline # let check_config re-raise this
     new_sub_modules = set(stage
                           for stage in stages.itervalues()
                           if hasattr(stage, 'config_name'))
@@ -64,6 +74,14 @@ def check_config(config, name):
             raise ConfigurationError(
                 'invalid {} external_stages_path {}'
                 .format(name, config['external_stages_path']), e)
+    if 'external_stages_modules' in config:
+            for mod in config['external_stages_modules']:
+                try:
+                    stages.load_module_stages(mod)
+                except ImportError, e:
+                    raise ConfigurationError(
+                        'invalid {} external_stages_modules value {}'
+                        .format(name, mod), e)
 
     # (2) Check the reader;
     if 'reader' not in config:
@@ -106,6 +124,7 @@ def normalize_config(config):
         if k.endswith('path') and k != 'root_path': fix(config, k)
     # Note, that happens to also include tmp_dir_path, which must exist.
     tmp_dir_path = config['tmp_dir_path']
+    third_dir_path = config.get('third_dir_path')
     # Now go into all of our children and push in tmp_dir_path and fix
     # up their paths too.
     for c in config.itervalues():
@@ -113,3 +132,4 @@ def normalize_config(config):
             for k in c.iterkeys():
                 if k.endswith('path'): fix(c, k)
             c['tmp_dir_path'] = tmp_dir_path
+            c['third_dir_path'] = third_dir_path

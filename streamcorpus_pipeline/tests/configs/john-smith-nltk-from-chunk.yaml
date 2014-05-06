@@ -1,0 +1,37 @@
+# YAML streamcorpus_pipeline config for generating clean_visible and then
+## operating lingpipe
+
+streamcorpus_pipeline:
+  ## root path for all things that are called *_path in this file and
+  ## are not an absolute path, i.e. start with '/'
+  root_path: 
+
+  log_level: DEBUG
+
+  output_chunk_max_count: 500
+
+  ## tmp_dir_path, some readers and writers require this dir to be in
+  ## the same file system as their output.  This is also where the
+  ## batch_transforms operate.
+  tmp_dir_path: tmp
+
+  ## generator of StreamItems
+  reader: from_local_chunks
+
+  incremental_transforms: [
+    nltk_tokenizer
+  ]
+
+  batch_transforms: []
+
+  writers: [to_local_chunks]
+
+  from_local_chunks:
+    max_retries: 30
+    streamcorpus_version: v0_3_0
+
+  to_local_chunks:
+    #output_type: inplace
+    output_type: otherdir
+    output_path: data/john-smith/
+    output_name: "john-smith-tagged-by-nltk-test-%(first)s"

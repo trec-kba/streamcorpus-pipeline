@@ -161,13 +161,12 @@ def main():
     parser.add_argument('-i', '--input', action='append', 
                         help='file paths to input instead of reading from stdin')
     parser.add_argument('--in-glob', action='append', default=[], help='path glob specifying input files')
+    parser.add_argument('--third-dir-path', help='path to third-party tools directory')
+    parser.add_argument('--tmp-dir-path', help='path to temporary directory for scratch files, can be large')
 
-    modules = [yakonfig, kvlayer, streamcorpus_pipeline]
-
-    dblogger.configure_logging(dict(logging=dict(root=dict(level='DEBUG'))))
+    modules = [yakonfig, kvlayer, dblogger, streamcorpus_pipeline]
     args = yakonfig.parse_args(parser, modules)
     config = yakonfig.get_global_config()
-    dblogger.configure_logging(config)
 
     ## this modifies the global config, passed by reference
     instantiate_config(config)
@@ -177,8 +176,12 @@ def main():
         for pattern in args.in_glob:
             input_paths.extend(glob.glob(pattern))
     if args.input:
-        if args.input == '-':
-            input_paths.extend(sys.stdin)
+        if '-' in args.input:
+            if args.in_glob:
+                sys.exit('cannot use "-i -" and --in-glob together')
+            if len(args.input) > 1:
+                sys.exit('cannot use "-i -" with multiple inputs')
+            input_paths = sys.stdin
         else:
             input_paths.extend(args.input)
 
@@ -186,6 +189,9 @@ def main():
     stages = PipelineStages()
     if 'external_stages_path' in scp_config:
         stages.load_external_stages(scp_config['external_stages_path'])
+    if 'external_stages_modules' in scp_config:
+        for mod in scp_config['external_stages_modules']:
+            stages.load_module_stages(mod)
     factory = PipelineFactory(stages)
     pipeline = factory(scp_config)
 

@@ -1,0 +1,5 @@
+
+streamcorpus_pipeline_WRONG_NAME:
+   nothing: is
+   ## this is just a test to show that the test in
+   ## john-smith-simple.sh can fail and be caught correctly by pytest

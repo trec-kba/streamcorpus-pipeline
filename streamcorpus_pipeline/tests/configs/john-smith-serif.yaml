@@ -1,0 +1,30 @@
+streamcorpus_pipeline:
+  root_path: 
+  log_level: DEBUG
+  output_chunk_max_count: 500
+  log_dir_path: tmp
+  tmp_dir_path: tmp
+  reader: yaml_files_list
+
+  incremental_transforms: [clean_html, clean_visible]
+  batch_transforms: [serif]
+  writers: [to_local_chunks]
+
+  to_local_chunks:
+    #output_type: inplace
+    output_type: otherdir
+    output_path: data/john-smith/
+    output_name: "john-smith-tagged-by-serif-%(first)s-%(num)s"
+
+  serif:
+    path_in_third: serif/serif-latest
+    cleanup_tmp_files: false
+    par: streamcorpus_one_step
+    align_labels_by: names_in_chains
+    aligner_data:
+      ## apply Label to each Token in any chain for which ALL|ANY of
+      ## the strings in Rating.mentions appear as substrings in at
+      ## least one Token.token string of the coref chain
+      chain_selector:  ALL
+      ## identifier of annotator to find in the doc-level Ratings
+      annotator_id: bagga-and-baldwin

@@ -1,0 +1,81 @@
+logging:
+  root:
+    level: INFO
+
+streamcorpus_pipeline:
+  root_path: /data/trec-kba
+
+  output_chunk_max_count: 500
+
+  tmp_dir_path:  /data/trec-kba/tmp
+  cleanup_tmp_files: true
+
+  reader: from_s3_chunks
+
+  incremental_transforms: [
+    upgrade_streamcorpus_v0_3_0,
+    language, 
+    guess_media_type,
+    clean_html, 
+    hyperlink_labels, 
+    clean_visible
+    ]
+
+  batch_transforms: [serif]
+
+  ## to_local_* must be last, because *moves* the tmp file away
+  writers: [to_s3_chunks]  #, to_local_tarballs]
+
+  from_s3_chunks:
+    aws_access_key_id_path:     keys/trec-aws-s3.aws_access_key_id
+    aws_secret_access_key_path: keys/trec-aws-s3.aws_secret_access_key
+    bucket: aws-publicdatasets
+    s3_path_prefix: trec/kba/kba-streamcorpus-2013-v0_2_0
+    tries: 10
+    input_format: streamitem
+    streamcorpus_version: v0_2_0
+    gpg_decryption_key_path: keys/trec-kba-rsa.gpg-key.private
+
+  to_s3_chunks:
+    aws_access_key_id_path:     keys/trec-aws-s3.aws_access_key_id
+    aws_secret_access_key_path: keys/trec-aws-s3.aws_secret_access_key
+    bucket: aws-publicdatasets
+    s3_path_prefix: trec/kba/kba-streamcorpus-2014-v0_3_0
+    output_name: "%(date_hour)s/%(source)s-%(num)d-%(input_md5)s-%(md5)s"
+    tries: 10
+    gpg_decryption_key_path: keys/trec-kba-rsa.gpg-key.private
+    gpg_encryption_key_path: keys/trec-kba-rsa.gpg-key.pub
+    gpg_recipient: trec-kba
+    verify_via_http: true
+    cleanup_tmp_files: false  ## so to_local_tarballs can run below
+
+  clean_html:
+    included_language_codes: ["en", ""]
+
+  hyperlink_labels:
+    require_clean_html: true
+    require_abs_url: true
+    all_domains: true
+    offset_types: [BYTES]
+
+  clean_visible:
+    require_clean_html: true
+
+  to_local_tarballs:
+    output_path: /data/trec-kba/data/streamcorpus-2014-v0_3_0-clean_visible-tarballs
+    output_name: "%(date_hour)s/%(source)s-%(num)d-%(input_md5)s-%(md5)s"
+
+
+  serif:
+    exit_code_on_out_of_memory: 1
+    pipeline_root_path: /data/trec-kba/third/serif-latest
+    offset_types: [CHARS]
+    offset_debugging: true
+    cleanup_tmp_files: true
+    tmp_dir_path: /data/trec-kba/tmp
+
+    par: streamcorpus_one_step           ## performs tagging and constructs tokens with attrs
+
+    #align_labels_by: char_offset_align_labels
+    #aligner_data:
+    #  annotator_id: author

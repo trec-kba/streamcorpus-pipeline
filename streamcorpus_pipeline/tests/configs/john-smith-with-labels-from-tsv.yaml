@@ -1,0 +1,38 @@
+streamcorpus_pipeline:
+  ## root path for all things that are called *_path in this file and
+  ## are not an absolute path, i.e. start with '/'
+  root_path: 
+
+  log_level: DEBUG
+
+  output_chunk_max_count: 500
+
+  ## the main pipeline log_dir_path can trigger similar log chunk
+  log_dir_path: data/john-smith/
+
+  ## tmp_dir_path, some readers and writers require this dir to be in
+  ## the same file system as their output.  This is also where the
+  ## batch_transforms operate.
+  tmp_dir_path: tmp
+
+  external_stages_path: examples/john_smith_custom_reader.py
+
+  ## generator of StreamItems
+  reader: john_smith_custom_reader
+
+  incremental_transforms: []
+
+  batch_transforms: []
+
+  writers: [to_local_chunks]
+
+  john_smith_custom_reader:
+    ## illustrate passing a path into a stage, see _john_smith.py comments
+    ground_truth_path: data/john-smith/ground-truth.tsv
+
+  to_local_chunks:
+    #output_type: inplace
+    output_type: otherdir
+    output_path: data/john-smith/
+    output_name: john-smith-from-external-stage-%(first)s
+

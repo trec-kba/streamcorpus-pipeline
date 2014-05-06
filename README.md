@@ -10,3 +10,5 @@ transform functions for getting clean_html, clean_visible, creating
 labels from hyperlinks to particular sites (e.g. Wikipedia), and
 taggers like LingPipe, Serif, and Factorie, which make Tokens and
 Sentences.
+
+Read more at [streamcorpus.org](http://streamcorpus.org/)

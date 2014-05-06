@@ -1,14 +1,12 @@
 from __future__ import absolute_import
 import os
 
-import pytest
-
 from streamcorpus_pipeline._yaml_files_list import yaml_files_list
 
-def test_parse_file():
+def test_parse_file(test_data_dir):
     yfl = yaml_files_list(config={})
-    input_file = os.path.join(os.path.dirname(__file__), '../../data/john-smith/ground-truth.yaml')
-    os.chdir(os.path.join(os.path.dirname(__file__), '../../data/john-smith/'))
+    input_file = os.path.join(test_data_dir, 'john-smith/ground-truth.yaml')
+    os.chdir(os.path.join(test_data_dir, 'john-smith/'))
     cnt = 0
     for si in yfl(input_file):
         assert si.stream_id

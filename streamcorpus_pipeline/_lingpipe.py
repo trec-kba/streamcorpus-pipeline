@@ -241,7 +241,7 @@ class lingpipe(TaggerBatchTransform):
     tagger_id = 'lingpipe'
 
     template = \
-        '''cd %(pipeline_root_path)s/lingpipe-4.1.0/demos/generic/bin && ''' + \
+        '''cd %(tagger_root_path)s/demos/generic/bin && ''' + \
         '''cat %(clean_visible_path)s | ./cmd_coref_en_news_muc6.sh ''' + \
         ''' "-contentType=text/html" "-includeElts=FILENAME" ''' + \
         ''' %(java_heap_size)s 1> %(ner_xml_path)s'''

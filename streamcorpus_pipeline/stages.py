@@ -18,6 +18,7 @@ Readers
 .. autoclass:: streamcorpus_pipeline._john_smith.john_smith
 .. autoclass:: streamcorpus_pipeline._yaml_files_list.yaml_files_list
 .. autoclass:: streamcorpus_pipeline._spinn3r_feed_storage.from_spinn3r_feed
+.. autoclass:: streamcorpus_pipeline._serifxml.from_serifxml
 
 Incremental transforms
 ======================
@@ -26,6 +27,7 @@ Incremental transforms
 .. autoclass:: streamcorpus_pipeline._clean_visible.clean_visible
 .. autoclass:: streamcorpus_pipeline._pdf_to_text.pdf_to_text
 .. autoclass:: streamcorpus_pipeline._docx_to_text.docx_to_text
+.. autoclass:: streamcorpus_pipeline._title.title
 .. autoclass:: streamcorpus_pipeline._filters.debug_filter
 .. autoclass:: streamcorpus_pipeline._dedup.dedup
 .. autoclass:: streamcorpus_pipeline._dump_label_stats.dump_label_stats
@@ -195,7 +197,29 @@ class StageRegistry(MutableMapping):
         mod = imp.load_source('', path)
         self.update(mod.Stages)
 
+    def load_module_stages(self, mod):
+        '''Add external stages from the Python module `mod`.
+
+        If `mod` is a string, then it will be interpreted as the name
+        of a module; otherwise it is an actual module object.  The
+        module should exist somewhere in :data:`sys.path`.  The module
+        must contain a `Stages` dictionary, which is a map from stage
+        name to callable.
+
+        :param mod: name of the module or the module itself
+        :raise exceptions.ImportError: if `mod` cannot be loaded or does
+          not contain ``Stages``
+
+        '''
+        if isinstance(mod, basestring):
+            mod = __import__(mod, globals=globals(), locals=locals(),
+                             fromlist=['Stages'], level=0)
+        if not hasattr(mod, 'Stages'):
+            raise ImportError(mod)
+        self.update(mod.Stages)
+
     def init_stage(self, name, config):
+
         '''Construct and configure a stage from known stages.
 
         `name` must be the name of one of the stages in this.  `config`
@@ -314,6 +338,7 @@ class PipelineStages(StageRegistry):
         self.tryload_stage('_john_smith', 'john_smith')
         self.tryload_stage('_yaml_files_list', 'yaml_files_list')
         self.tryload_stage('_spinn3r_feed_storage', 'from_spinn3r_feed')
+        self.tryload_stage('_serifxml', 'from_serifxml')
 
         # StreamItem stages
         # (alphabetical by stage name)
@@ -321,6 +346,7 @@ class PipelineStages(StageRegistry):
         self.tryload_stage('_clean_visible', 'clean_visible')
         self.tryload_stage('_pdf_to_text', 'pdf_to_text')
         self.tryload_stage('_docx_to_text', 'docx_to_text')
+        self.tryload_stage('_title', 'title')
         self.tryload_stage('_filters', 'debug_filter')
         self.tryload_stage('_dedup', 'dedup')
         self.tryload_stage('_dump_label_stats', 'dump_label_stats')
@@ -342,8 +368,10 @@ class PipelineStages(StageRegistry):
 
         # BatchTransform
         self.tryload_stage('_taggers', 'byte_offset_align_labels')
-        self.tryload_stage('_taggers', 'line_offset_align_labels')
+        self.tryload_stage('_taggers', 'char_offset_align_labels')
+        #self.tryload_stage('_taggers', 'line_offset_align_labels')
         self.tryload_stage('_taggers', 'name_align_labels')
+        self.tryload_stage('_taggers', 'multi_token_match_align_labels')
         self.tryload_stage('_lingpipe', 'lingpipe')
         self.tryload_stage('_serif', 'serif')
         

@@ -2,11 +2,9 @@ from __future__ import absolute_import
 import os
 from streamcorpus import Chunk, serialize
 from streamcorpus_pipeline._tokenizer import nltk_tokenizer
-from streamcorpus_pipeline.tests._test_data import _TEST_DATA_ROOT
 
-def test_tokenizer():
-    path = os.path.dirname(__file__)
-    path = os.path.join( path, _TEST_DATA_ROOT, 'test', 'wlc-chunk-with-labels.sc' )
+def test_tokenizer(test_data_dir):
+    path = os.path.join(test_data_dir, 'test', 'wlc-chunk-with-labels.sc' )
     num = 0
     for si in Chunk(path):
         num += 1
@@ -21,7 +19,7 @@ def test_tokenizer():
         #open(path, 'wb').write(serialize(si))
         #return
         if 1:
-                
+
             #assert si.body.sentences['nltk_tokenizer'] == sentences
             num = 0
             for i in range(len(si.body.sentences['nltk_tokenizer'])):

@@ -4,28 +4,26 @@ import os
 import time
 import uuid
 
-import pytest 
+import pytest
 
 from streamcorpus import make_stream_item, StreamItem, ContentItem, OffsetType, Chunk
 import streamcorpus_pipeline
 from streamcorpus_pipeline._clean_visible import clean_visible
 from streamcorpus_pipeline._hyperlink_labels import anchors_re, hyperlink_labels
-from streamcorpus_pipeline.tests._test_data import _TEST_DATA_ROOT
 
 logger = logging.getLogger(__name__)
 
-def make_test_stream_item():
+def make_test_stream_item(test_data_dir):
     stream_item = make_stream_item(None, 'http://nytimes.com/')
     stream_item.body = ContentItem()
-    path = os.path.dirname(__file__)
-    path = os.path.join( path, _TEST_DATA_ROOT, 'test', 
+    path = os.path.join( test_data_dir, 'test',
                          'nytimes-index-clean-stable.html')
     stream_item.body.clean_html = open(path).read()
     return stream_item
 
-def make_hyperlink_labeled_test_stream_item():
+def make_hyperlink_labeled_test_stream_item(test_data_dir):
     context = {}
-    si = make_test_stream_item()
+    si = make_test_stream_item(test_data_dir)
     assert len(si.body.clean_html) > 200
     hl = hyperlink_labels(config={
         'require_abs_url': True,
@@ -37,16 +35,15 @@ def make_hyperlink_labeled_test_stream_item():
     cv(si, context)
     assert len(si.body.clean_visible) > 200
     return si
-    
-def make_hyperlink_labeled_test_chunk():
+
+def make_hyperlink_labeled_test_chunk(test_data_dir):
     '''
     returns a path to a temporary chunk that has been hyperlink labeled
     '''
     tpath = os.path.join('/tmp', str(uuid.uuid1()) + '.sc')
     o_chunk = Chunk(tpath, mode='wb')
 
-    dpath = os.path.dirname(__file__)
-    ipath = os.path.join( dpath, _TEST_DATA_ROOT, 'test/WEBLOG-100-fd5f05c8a680faa2bf8c55413e949bbf.sc' )
+    ipath = os.path.join(test_data_dir, 'test/WEBLOG-100-fd5f05c8a680faa2bf8c55413e949bbf.sc' )
 
     hl = hyperlink_labels(config={
         'require_abs_url': True,
@@ -65,11 +62,11 @@ def make_hyperlink_labeled_test_chunk():
 
         o_chunk.close()
         return tpath
-    
-def test_basics():
+
+def test_basics(test_data_dir):
     start = time.time()
     ## run it with a byte regex
-    si1 = make_test_stream_item()
+    si1 = make_test_stream_item(test_data_dir)
     context = {}
     hl1 = hyperlink_labels(config={
         'require_abs_url': True,
@@ -84,7 +81,7 @@ def test_basics():
 
     ## run it with regex
     start = time.time()
-    si2 = make_test_stream_item()
+    si2 = make_test_stream_item(test_data_dir)
     hl2 = hyperlink_labels(config={
         'require_abs_url': True,
         'all_domains': False,
@@ -118,13 +115,12 @@ def test_basics():
     ('BYTES',),
     ('LINES',),
 ])
-def test_speed(parser_type):
+def test_speed(parser_type, test_data_dir):
     stream_items = []
     for i in xrange(10):
         stream_item = StreamItem()
         stream_item.body = ContentItem()
-        path = os.path.dirname(__file__)
-        path = os.path.join( path, _TEST_DATA_ROOT, 'test' )
+        path = os.path.join(test_data_dir, 'test' )
         stream_item.body.clean_html = open(
             os.path.join(path, 'nytimes-index-clean.html')).read()
         stream_items.append( stream_item )
@@ -140,7 +136,7 @@ def test_speed(parser_type):
     for si in stream_items:
         si = hl(si, context)
         elapsed = time.time() - start
-    
+
     rate = len(stream_items) / elapsed
 
     logger.debug('OffsetType: {}'.format(OffsetType))
@@ -154,7 +150,7 @@ This is a funky <a
 href ='http://en.wikipedia.org/wiki/Bogus'  asdf=4
 >the Bogus</a>
 
-              Obviously intrigued by anything named Munn I sought <a href="http://en.wikipedia.org/wiki/Munny">more 
+              Obviously intrigued by anything named Munn I sought <a href="http://en.wikipedia.org/wiki/Munny">more
               info</a>.</font></p>
 
 '''
@@ -184,11 +180,10 @@ def test_anchors_re():
     ('BYTES',),
     ('LINES',),
 ])
-def test_long_doc(parser_type):
+def test_long_doc(parser_type, test_data_dir):
     stream_item = StreamItem()
     stream_item.body = ContentItem()
-    path = os.path.dirname(__file__)
-    path = os.path.join( path, _TEST_DATA_ROOT, 'test' )
+    path = os.path.join(test_data_dir, 'test' )
     stream_item.body.clean_html = open(
         os.path.join(path, 'company-test.html')).read()
 
@@ -199,5 +194,3 @@ def test_long_doc(parser_type):
         'offset_types': [parser_type],
     })
     hl(stream_item, context)
-
-    

@@ -1,0 +1,33 @@
+
+streamcorpus_pipeline:
+  ## root path for all things that are called *_path in this file and
+  ## are not an absolute path, i.e. start with '/'
+  root_path: 
+
+  ## pipeline expects strings over stdin, which are typically paths to
+  ## streamcorpus.Chunk files.  They can also be some other kind of
+  ## opaque byte strings delimited by newlines that your particular
+  ## 'reader' is expecting.
+
+  log_level: DEBUG
+
+  output_chunk_max_count: 50
+
+  ## gets cleaned up when pipeline exits
+  tmp_dir_path: tmp
+
+  ## generator of StreamItems
+  reader: john_smith
+
+  incremental_transforms: []
+
+  batch_transforms: []
+
+  writers: [to_local_chunks]
+
+  to_local_chunks:
+    #output_type: inplace
+    output_type: otherdir
+    output_path: tmp  ## which will get cleaned up
+    output_name: john-smith-%(first)s
+

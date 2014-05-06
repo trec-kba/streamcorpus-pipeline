@@ -88,15 +88,66 @@ def iter_attrs( idx_bytes ):
 
 
 class hyperlink_labels(Configured):
-    '''
-    Finds hyperlinks in clean_html and generate a list of Labels
-    treating the author as the Annotator
+    '''Creates document labels from hyperlinks in ``body.clean_html``.
+
+    The labels are attached to the stream item body with an annotator
+    ID of ``author``.  Any HTML ``<a href="...">`` matching the selection
+    criteria will be turned into a label.
+
+    You generally must set either ``all_domains`` or
+    ``domain_substrings``.  A typical configuration will look like:
+
+    .. code-block:: yaml
+
+        streamcorpus_pipeline:
+          incremental_transforms: [ ..., hyperlink_labels, ... ]
+          hyperlink_labels:
+            require_abs_url: true
+            domain_substrings: [ "trec-kba.org" ]
+
+    Configuration options:
+
+    .. code-block:: yaml
+
+        all_domains: false
+        domain_substrings: [ 'trec-kba.org' ]
+
+    A label will only be produced if ``all_domains`` is true, or if
+    the hostname part of the URL has one of ``domain_substrings`` as a
+    substring.  Note that the default configuration is ``all_domains``
+    false and an empty ``domain_substrings`` list, so no labels will
+    be produced without additional configuration.
+
+    .. code-block:: yaml
+
+        require_abs_url: true
+
+    Only produce labels for fully-qualified ``http://...`` URLs.  False
+    by default.
+
+    .. code-block:: yaml
+
+        offset_types: [BYTES]
+
+    A list containing at least one of ``BYTES`` and ``LINES``
+    indicating what sort of document offset should be attached to the
+    label.  Only the first value is used.  ``LINES`` is not
+    recommended.
+
+    .. code-block:: yaml
+
+        require_clean_html: true
+
+    Cannot be changed.
+
     '''
     config_name = 'hyperlink_labels'
     default_config = {
+        'require_clean_html': True,
         'require_abs_url': False,
         'all_domains': False,
         'domain_substrings': [],
+        'offset_types': ['BYTES'],
     }
 
     def __init__(self, *args, **kwargs):

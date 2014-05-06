@@ -110,9 +110,19 @@ def make_clean_visible(html, tag_replacement_char=' '):
     return ''.join( itertools.imap(non_tag_chars(), html) )
 
 class clean_visible(Configured):
-    '''
-    returns a kba.pipeline "transform" function that attempts to
-    generate stream_item.body.clean_visible from body.clean_html
+    '''Create ``body.clean_visible`` from ``body.clean_html``.
+
+    If there is no ``clean_html``, but there is a ``raw`` property
+    with a ``text_plain`` media type, use that value directly.
+
+    This has no useful configuration options.  The configuration
+    metadata will include a setting:
+
+    .. code-block:: yaml
+
+        require_clean_html: true
+
+    Setting this to ``false`` will always fail.
     '''
     config_name = 'clean_visible'
     default_config = { 'require_clean_html': True }
@@ -186,16 +196,23 @@ def make_clean_visible_file(i_chunk, clean_visible_path):
 ## used in 'cleanse' below
 whitespace = re.compile('''(\s|\n)+''', re.UNICODE)
 strip_punctuation = {ord(c): u' ' for c in string.punctuation}
+penn_treebank_brackets = re.compile('''-[RL].B-''', re.UNICODE)
 
 def cleanse(span, lower=True):
     '''Convert a unicode string into a lowercase string with no
 punctuation and only spaces for whitespace.
+
+Replace PennTreebank escaped brackets with ' ':
+-LRB- -RRB- -RSB- -RSB- -LCB- -RCB- 
+(The acronyms stand for (Left|Right) (Round|Square|Curly) Bracket.)
+http://www.cis.upenn.edu/~treebank/tokenization.html
 
 :param span: string
     '''
     assert isinstance(span, unicode), \
         'got non-unicode string %r' % span
     ## lowercase, strip punctuation, and shrink all whitespace
+    span = penn_treebank_brackets.sub(' ', span)
     if lower:
         span = span.lower()
     span = span.translate(strip_punctuation)

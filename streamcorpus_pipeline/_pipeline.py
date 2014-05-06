@@ -124,6 +124,16 @@ top-level dictionary named `Stages`, a map from stage name to
 implementing class.  Stages defined in this file can be used in any of
 the appropriate stage lists.
 
+.. code-block:: yaml
+
+    external_stages_modules: [ example.stages ]
+
+The Python module :mod:`example.stages` declares a top-level
+dictionary named `Stages`, a map from stage name to implementing
+class.  The named modules must be on :data:`sys.path` so that the
+Python interpreter can find it.  Stages defined in these modules can
+be used in any of the appropriate stage lists.
+
 API
 ===
 
@@ -222,7 +232,7 @@ class PipelineFactory(object):
             cleanup_tmp_files=config['cleanup_tmp_files'],
             tmp_dir_path=tmpdir,
             assert_single_source=config['assert_single_source'],
-            output_max_chunk_count=config.get('output_max_chunk_count'),
+            output_chunk_max_count=config.get('output_chunk_max_count'),
             output_max_clean_visible_bytes=
                 config.get('output_max_clean_visible_bytes'),
             reader=self._init_stage(config, 'reader'),
@@ -259,7 +269,7 @@ class Pipeline(object):
     '''
     def __init__(self, rate_log_interval, input_item_limit,
                  cleanup_tmp_files, tmp_dir_path, assert_single_source,
-                 output_max_chunk_count, output_max_clean_visible_bytes,
+                 output_chunk_max_count, output_max_clean_visible_bytes,
                  reader, incremental_transforms, batch_transforms,
                  post_batch_incremental_transforms, writers):
         '''Create a new pipeline object.
@@ -275,7 +285,7 @@ class Pipeline(object):
         :param str tmp_dir_path: path for intermediate files
         :param bool assert_single_source: require all items to have
           the same source value if true
-        :param int output_max_chunk_count: restart output after
+        :param int output_chunk_max_count: restart output after
           writing this many items
         :param int output_max_clean_visible_bytes: restart output after
           writing this much content
@@ -296,7 +306,7 @@ class Pipeline(object):
         self.cleanup_tmp_files = cleanup_tmp_files
         self.tmp_dir_path = tmp_dir_path
         self.assert_single_source = assert_single_source
-        self.output_max_chunk_count = output_max_chunk_count
+        self.output_chunk_max_count = output_chunk_max_count
         self.output_max_clean_visible_bytes = output_max_clean_visible_bytes
 
         # stages that get passed in:
@@ -485,7 +495,8 @@ class Pipeline(object):
                 #logger.debug('len(si.body.clean_visible)=%d' % int(10 * int(math.floor(float(len(si.body.clean_visible)) / 2**10)/10)))
                 logger.debug('len(si.body.clean_visible)=%d' % len(si.body.clean_visible))
 
-            if (self.output_max_chunk_count is not None and
+
+            if (self.output_chunk_max_count is not None and
                 len(self.t_chunk) == self.output_chunk_max_count):
                 logger.warn('reached output_chunk_max_count (%d) at: %d' % (len(self.t_chunk), next_idx))
                 self.t_chunk.close()

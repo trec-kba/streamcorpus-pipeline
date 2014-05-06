@@ -28,9 +28,10 @@ def test_only_whitespace():
     assert not only_whitespace.match(u'\u200b foo')
     assert not only_whitespace.match('\n\nh  ')
 
-def test_aligner(tmpdir, request):
+@pytest.mark.integration
+def test_aligner(tmpdir, request, test_data_dir, third_dir):
 
-    si = make_hyperlink_labeled_test_stream_item()
+    si = make_hyperlink_labeled_test_stream_item(test_data_dir)
     assert len(si.body.clean_visible) > 200
     #for x in si.body.labels['author']:
     #    print x.offsets[OffsetType.BYTES].first, x.offsets[OffsetType.BYTES].value, x.target.target_id
@@ -42,8 +43,8 @@ def test_aligner(tmpdir, request):
     lp = lingpipe(config={
         'tmp_dir_path': str(tmpdir),
         'exit_code_on_out_of_memory': 1,
-        'pipeline_root_path':
-            str(request.fspath.join('..', '..', '..', 'third')),
+        'third_dir_path': third_dir,
+        'path_in_third': 'lingpipe-4.10',
         'offset_types': ['BYTES'],
         'offset_debugging': True,
         'cleanup_tmp_files': False,
@@ -61,11 +62,11 @@ def test_aligner(tmpdir, request):
     assert len(si.body.clean_visible) > 200
     assert len(si.body.sentences['lingpipe']) == 41
 
+@pytest.mark.integration
+def test_aligner_separate(tmpdir, request, test_data_dir, third_dir):
 
-def test_aligner_separate(tmpdir, request):
 
-
-    si = make_hyperlink_labeled_test_stream_item()
+    si = make_hyperlink_labeled_test_stream_item(test_data_dir)
     assert len(si.body.clean_visible) > 200
     #for x in si.body.labels['author']:
     #    print x.offsets[OffsetType.BYTES].first, x.offsets[OffsetType.BYTES].value, x.target.target_id
@@ -77,8 +78,8 @@ def test_aligner_separate(tmpdir, request):
     lp = lingpipe(config={
         'tmp_dir_path': str(tmpdir),
         'exit_code_on_out_of_memory': 1,
-        'pipeline_root_path':
-            str(request.fspath.join('..', '..', '..', 'third')),
+        'third_dir_path': third_dir,
+        'path_in_third': 'lingpipe-4.10',
         'offset_types': ['BYTES'],
         'offset_debugging': True,
         'cleanup_tmp_files': False,
@@ -98,4 +99,3 @@ def test_aligner_separate(tmpdir, request):
     si = list(streamcorpus.Chunk(c_path))[0]
     assert len(si.body.clean_visible) > 200
     assert len(si.body.sentences['lingpipe']) == 41
-

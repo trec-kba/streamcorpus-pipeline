@@ -24,6 +24,7 @@ post-build-test:
 install: clean lxml
 	## might need to do this on mac: export C_INCLUDE_PATH=/usr/include:/usr/local/include:/opt/local/include
 	python setup.py clean --all
+	python setup.py --version
 	python setup.py build
 	python setup.py install
 
@@ -34,3 +35,7 @@ register:
 check:
 	pylint -i y --output-format=parseable src/`git remote -v | grep origin | head -1 | cut -d':' -f 2 | cut -d'.' -f 1`
 
+streamcorpus.org: install
+	python setup.py build_sphinx
+	s3cmd -c ../streamcorpus-website-builder-dot-s3cfg del --recursive --force  s3://streamcorpus.org/
+	s3cmd -c ../streamcorpus-website-builder-dot-s3cfg  put --recursive --acl-public build/sphinx/html/ s3://streamcorpus.org/

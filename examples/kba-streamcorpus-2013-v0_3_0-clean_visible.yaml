@@ -1,0 +1,85 @@
+## YAML kba.pipeline config for generating clean_visible and then
+## operating lingpipe
+
+streamcorpus_pipeline:
+  ## root path for all things that are called *_path in this file and
+  ## are not an absolute path, i.e. start with '/'
+  root_path: /data/trec-kba
+
+  ## put logs inside each chunk file
+  embedded_logs: false
+
+  ## the main pipeline log_dir_path can trigger similar log chunk
+  #log_dir_path:  logs
+  log_level: INFO
+
+  output_chunk_max_count: 10000
+
+  ## tmp_dir, some readers and writers require this dir to be in
+  ## the same file system as their output.  This is also where the
+  ## batch_transforms operate.
+  tmp_dir_path:  tmp
+
+  task_queue: zookeeper
+  zookeeper:
+    namespace: kba_streamcorpus_2013_v0_3_0_clean_visible
+    zookeeper_address: cass-1.diffeo.com:2181
+    zookeeper_timeout: 120
+    storage_addresses: ["cass-1.diffeo.com:9160"]
+
+  ## generator of StreamItems
+  reader: from_s3_chunks
+
+  incremental_transforms: [
+    upgrade_streamcorpus_v0_3_0,
+    language, 
+    guess_media_type, 
+    clean_html, 
+    hyperlink_labels, 
+    clean_visible
+    ]
+
+  batch_transforms: []
+
+  ## to_local_chunks must be last, because *moves* the tmp file away
+  writers: [to_s3_chunks, to_local_tarballs]
+
+  from_s3_chunks:
+    aws_access_key_id_path:     keys/trec-aws-s3.aws_access_key_id
+    aws_secret_access_key_path: keys/trec-aws-s3.aws_secret_access_key
+    bucket: aws-publicdatasets
+    s3_path_prefix: trec/kba/kba-streamcorpus-2013-v0_2_0
+    tries: 10
+    input_format: streamitem
+    streamcorpus_version: v0_2_0
+    gpg_decryption_key_path: keys/trec-kba-rsa.gpg-key.private
+
+  to_s3_chunks:
+    aws_access_key_id_path:     keys/trec-aws-s3.aws_access_key_id
+    aws_secret_access_key_path: keys/trec-aws-s3.aws_secret_access_key
+    bucket: aws-publicdatasets
+    s3_path_prefix: trec/kba/kba-streamcorpus-2013-v0_3_0-clean_visible
+    output_name: "%(date_hour)s/%(source)s-%(num)d-%(input_md5)s-%(md5)s"
+    tries: 10
+    gpg_decryption_key_path: keys/trec-kba-rsa.gpg-key.private
+    gpg_encryption_key_path: keys/trec-kba-rsa.gpg-key.pub
+    gpg_recipient: trec-kba
+    verify_via_http: true
+    cleanup_tmp_files: false  ## so to_local_tarballs can run below
+
+  clean_html:
+    require_language_code: en
+    included_language_codes: ["en", ""]
+
+  hyperlink_labels:
+    require_clean_html: true
+    require_abs_url: true
+    all_domains: true
+    offset_types: [BYTES]
+
+  clean_visible:
+    require_clean_html: true
+
+  to_local_tarballs:
+    output_path: data/kba-streamcorpus-2013-v0_3_0-clean_visible-tarballs
+    output_name: "%(date_hour)s/%(source)s-%(num)d-%(input_md5)s-%(md5)s"

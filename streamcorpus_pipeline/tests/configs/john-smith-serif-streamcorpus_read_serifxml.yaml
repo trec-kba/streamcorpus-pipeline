@@ -1,0 +1,59 @@
+streamcorpus_pipeline:
+  root_path: 
+  log_level: DEBUG
+  output_chunk_max_count: 200
+  tmp_dir_path: tmp
+  reader: from_local_chunks
+
+  incremental_transforms:
+  - language
+  - guess_media_type
+
+  batch_transforms: [serif]
+
+  writers: [to_local_chunks]
+
+  language:
+    force:
+      name: English
+      code: en
+  guess_media_type:
+    fallback_media_type: text/plain
+
+  to_local_chunks:
+    output_type: otherdir
+    output_path: data/john-smith/
+    output_name: "john-smith-tagged-by-serif-via-serifxml-%(first)s"
+
+  from_local_chunks:
+    max_retries: 30
+    streamcorpus_version: v0_3_0
+    ## expecting this:
+    #echo data/john-smith/john-smith-tagged-by-serifxml-only.sc | python -m kba.pipeline.run john-smith-serif-streamcorpus_read_serifxml.yaml
+
+  serif:
+    exit_code_on_out_of_memory: 1
+    path_in_third: serif/serif-latest
+    serif_exe: bin/x86_64/Serif
+    offset_types: [CHARS]
+    offset_debugging: true
+    cleanup_tmp_files: false
+
+    ## crucial to tell serif what parameters to use
+    #par: streamcorpus_generate_serifxml  ## puts serifxml into raw_tagging (for testing)
+    par: streamcorpus_read_serifxml      ## reads serifxml from .body.taggings['serif'].raw_tagging to construct tokens with attrs
+    #par: streamcorpus_one_step           ## performs tagging and constructs tokens with attrs
+
+    par_additions:
+      streamcorpus_read_serifxml:
+      - "# example additional line"
+    ## convert all doc-level Rating objects into Label objects on all
+    ## Tokens that appear in a coref chain that meets the criterion
+    align_labels_by: names_in_chains
+    aligner_data:
+      ## apply Label to each Token in any chain for which ALL|ANY of
+      ## the strings in Rating.mentions appear as substrings in at
+      ## least one Token.token string of the coref chain
+      chain_selector:  ALL
+      ## identifier of annotator to find in the doc-level Ratings
+      annotator_id: bagga-and-baldwin
