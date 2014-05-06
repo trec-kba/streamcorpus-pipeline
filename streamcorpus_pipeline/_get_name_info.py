@@ -15,6 +15,10 @@ def get_name_info(chunk_path, assert_one_date_hour=False, i_str=None):
     assert i_str is not None, 'must provide i_str as keyword arg'
 
     name_info = dict()
+    if i_str:
+        name_info['i_str'] = i_str
+    else:
+        name_info['i_str'] = ''
 
     i_fname = i_str.split('/')[-1]
     i_fname = i_fname.split('.')[0]  ## strip off .sc[.xz[.gpg]]
