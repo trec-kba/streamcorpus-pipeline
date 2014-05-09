@@ -322,7 +322,7 @@ class to_local_tarballs(Configured):
         if dirname and not os.path.exists(dirname):
             os.makedirs(dirname)
 
-        t_path2 = tarball_export(t_path, name_info)
+        t_path2 = tarball_export(self.config, t_path, name_info)
 
         ## do an atomic renaming    
         try:
