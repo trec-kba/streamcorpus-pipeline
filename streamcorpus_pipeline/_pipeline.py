@@ -469,7 +469,7 @@ class Pipeline(object):
                 ## make a temporary chunk at a temporary path
                 # (Lazy allocation after we've read an item that might get processed out to the new chunk file)
                 # TODO: make this EVEN LAZIER by not opening the t_chunk until inside _run_incremental_transforms whe the first output si is ready
-                t_path = os.path.join(self.tmp_dir_path, 'trec-kba-pipeline-tmp-%s' % str(uuid.uuid4()))
+                t_path = os.path.join(self.tmp_dir_path, 'streamcorpus-pipeline-tmp-%s' % str(uuid.uuid4()))
                 self.t_chunk = streamcorpus.Chunk(path=t_path, mode='wb')
             assert self.t_chunk.message == streamcorpus.StreamItem_v0_3_0, self.t_chunk.message
 
