@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 '''
 streamcorpus_pipeline incremental transform for extracting a document
-title and putting it in ~:attr:`streamcorpus.StreamItem.other_content`
+title and putting it in :attr:`~streamcorpus.StreamItem.other_content`
 
 This software is released under an MIT/X11 open source license.
 
@@ -29,7 +29,7 @@ def add_content_item(stream_item, title_m):
 
 class title(Configured):
     '''Create "title" entry in
-    ~:attr:`streamcorpus.StreamItem.other_content`, if it does not
+    :attr:`~streamcorpus.StreamItem.other_content`, if it does not
     already exist.
     '''
     config_name = 'title'
