@@ -202,5 +202,5 @@ class filter_domains(Configured):
                     return si
 
         ## otherwise return None, which excludes the stream item
-        logger.critical('rejecting: %r %r', si.schost, si.abs_url)
+        logger.debug('rejecting: %r %r', si.schost, si.abs_url)
         return None
