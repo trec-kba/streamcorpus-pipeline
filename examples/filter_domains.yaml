@@ -1,0 +1,55 @@
+kvlayer: &kvlayer
+  app_name: diffeo
+  namespace: kba2014
+  storage_type: redis
+  storage_addresses: [ "redis.diffeo.com:6379" ]
+  username: root
+  password: secret
+
+#logging:
+#  root:
+#    level: INFO
+
+## This causes logs to flow into kvlayer, so the `dblogger`
+## command-line tool can query them.
+logging:
+  handlers:
+    dblogger: 
+      class: dblogger.DatabaseLogHandler
+      storage_config: *kvlayer
+  root:
+    handlers: [ console, dblogger ]
+    level: DEBUG
+
+  streamcorpus_pipeline:
+    level: DEBUG
+
+streamcorpus_pipeline:
+  root_path: /data/trec-kba
+
+  tmp_dir_path:  /data/trec-kba/tmp
+  cleanup_tmp_files: true
+
+  reader: from_s3_chunks
+
+  incremental_transforms:
+  - filter_domains
+
+  filter_domains:
+    include_domains_path: bc-wa-domains.txt
+
+  batch_transforms: []
+
+  ## to_local_* must be last, because *moves* the tmp file away
+  writers: [to_kvlayer]
+
+  from_s3_chunks:
+    aws_access_key_id_path:     keys/trec-aws-s3.aws_access_key_id
+    aws_secret_access_key_path: keys/trec-aws-s3.aws_secret_access_key
+    bucket: aws-publicdatasets
+    s3_path_prefix: trec/kba/kba-streamcorpus-2014-v0_3_0
+    tries: 10
+    input_format: streamitem
+    streamcorpus_version: v0_3_0
+    gpg_decryption_key_path: keys/trec-kba-rsa.gpg-key.private
+
