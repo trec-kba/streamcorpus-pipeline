@@ -6,6 +6,7 @@ import pytest
 import streamcorpus
 from streamcorpus_pipeline._upgrade_streamcorpus_v0_3_0 import \
     upgrade_streamcorpus_v0_3_0
+from streamcorpus_pipeline.tests._test_data import get_test_chunk_path
 
 def test_protection(test_data_dir):
     with pytest.raises(streamcorpus.VersionMismatchError):  # pylint: disable=E1101
@@ -20,12 +21,8 @@ def test_protection(test_data_dir):
 def test_upgrade_streamcorpus_v0_3_0(test_data_dir):
     up = upgrade_streamcorpus_v0_3_0(config={})
     count = 0
-    for si in streamcorpus.Chunk(
-            os.path.join(
-                test_data_dir,
-                'test/WEBLOG-100-fd5f05c8a680faa2bf8c55413e949bbf.sc'),
-            message=streamcorpus.StreamItem_v0_2_0
-    ):
+    
+    for si in streamcorpus.Chunk(get_test_chunk_path(test_data_dir), message=streamcorpus.StreamItem_v0_2_0):
         count += 1
         si3 = up(si)
         assert si3.version == streamcorpus.Versions._NAMES_TO_VALUES['v0_3_0']

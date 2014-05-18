@@ -6,19 +6,20 @@ import uuid
 
 import pytest
 
+import streamcorpus
 from streamcorpus import make_stream_item, StreamItem, ContentItem, OffsetType, Chunk
 import streamcorpus_pipeline
 from streamcorpus_pipeline._clean_visible import clean_visible
 from streamcorpus_pipeline._hyperlink_labels import anchors_re, hyperlink_labels
+from streamcorpus_pipeline.tests._test_data import get_test_chunk_path
 
 logger = logging.getLogger(__name__)
 
 def make_test_stream_item(test_data_dir):
     stream_item = make_stream_item(None, 'http://nytimes.com/')
     stream_item.body = ContentItem()
-    path = os.path.join( test_data_dir, 'test',
-                         'nytimes-index-clean-stable.html')
-    stream_item.body.clean_html = open(path).read()
+    path = os.path.join(test_data_dir, 'test', 'nytimes-index-clean-stable.html')
+    stream_item.body.clean_html = open(str(path)).read()
     return stream_item
 
 def make_hyperlink_labeled_test_stream_item(test_data_dir):
@@ -36,14 +37,14 @@ def make_hyperlink_labeled_test_stream_item(test_data_dir):
     assert len(si.body.clean_visible) > 200
     return si
 
-def make_hyperlink_labeled_test_chunk(test_data_dir):
+def make_hyperlink_labeled_test_chunk(tmpdir):
     '''
     returns a path to a temporary chunk that has been hyperlink labeled
     '''
-    tpath = os.path.join('/tmp', str(uuid.uuid1()) + '.sc')
+    tpath = tmpdir.join(str(uuid.uuid1()) + '.sc')
     o_chunk = Chunk(tpath, mode='wb')
 
-    ipath = os.path.join(test_data_dir, 'test/WEBLOG-100-fd5f05c8a680faa2bf8c55413e949bbf.sc' )
+    ipath = get_test_chunk_path()
 
     hl = hyperlink_labels(config={
         'require_abs_url': True,
@@ -51,7 +52,7 @@ def make_hyperlink_labeled_test_chunk(test_data_dir):
         'offset_types': [BYTES],
     })
     cv = make_clean_visible(config={})
-    for si in Chunk(path=ipath):
+    for si in Chunk(path=ipath, message=streamcorpus.StreamItem_v0_2_0):
         ## clear out existing labels and tokens
         si.body.labels = {}
         si.body.sentences = {}
