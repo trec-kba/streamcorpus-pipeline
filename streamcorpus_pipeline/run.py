@@ -201,6 +201,9 @@ def main():
         work_unit.data['start_count'] = 0
         pipeline._process_task(work_unit)
 
+    ## explicitly call cleanup, which is idempotent
+    pipeline.cleanup()
+
 class SimpleWorkUnit(object):
     '''partially duck-typed rejester.WorkUnit that wraps strings from
     stdin and provides only the methods used by the Pipeline

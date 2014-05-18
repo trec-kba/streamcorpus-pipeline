@@ -69,5 +69,10 @@ def rejester_run_function(work_unit):
         work_unit.data['start_count'] = 0
         pipeline._process_task(work_unit)
 
+        ## explicitly call cleanup, which is idempotent and might not
+        ## get called by atexit if we are running under
+        ## multiprocessing
+        pipeline.cleanup()
+
 def rejester_terminate_function(work_unit):
     pass
