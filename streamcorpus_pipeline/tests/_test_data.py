@@ -21,7 +21,7 @@ def get_test_v0_3_0_chunk_tagged_by_serif_path(test_data_dir):
 def get_john_smith_tagged_by_lingpipe_path(test_data_dir):
     return os.path.join(
         test_data_dir,
-        'john-smith/john-smith-tagged-by-lingpipe-serif-0.sc.xz')
+        'john-smith/john-smith-tagged-by-lingpipe-serif-0-197.sc.xz')
 
 def get_john_smith_tagged_by_lingpipe_without_labels_data(test_data_dir):
     fh = StringIO()
