@@ -180,6 +180,7 @@ from streamcorpus_pipeline.stages import BatchTransform
 from streamcorpus_pipeline._exceptions import FailedExtraction, \
     GracefulShutdown, ConfigurationError, PipelineOutOfMemory, \
     PipelineBaseException, TransformGivingUp
+from streamcorpus_pipeline.util import rmtree
 
 logger = logging.getLogger(__name__)
 
@@ -222,7 +223,6 @@ class PipelineFactory(object):
         block, not the top-level configuration that contains it.
         '''
         tmpdir = config.get('tmp_dir_path')
-        tmpdir = os.path.join(tmpdir, uuid.uuid4().hex)
         if not os.path.exists(tmpdir):
             os.makedirs(tmpdir)
 
@@ -328,9 +328,9 @@ class Pipeline(object):
         # TODO: this is kind of wrong and we should make try/finally DTRT
         self._shutting_down = False
         self._cleanup_done = False
-        atexit.register(self._cleanup)
+        atexit.register(self.cleanup)
 
-    def _cleanup(self):
+    def cleanup(self):
         '''shutdown all the stages, terminate the work_unit, remove tmp dir
 
         This is idempotent.  Pipeline users should call this explicitly
@@ -339,20 +339,20 @@ class Pipeline(object):
         '''
         if self._cleanup_done:
             return
+        #from streamcorpus_pipeline._rmtree import get_open_fds
+        #logger.critical(get_open_fds(verbose=True))
+        if (self.t_chunk):
+            self.t_chunk.close()
         if self.work_unit:
             self.work_unit.terminate()
         for transform in self.batch_transforms:
             transform.shutdown()
         if not self.cleanup_tmp_files:
             logger.info('skipping cleanup due to config.cleanup_tmp_files=False')
-            self._cleanup_done = True
-            return
-        try:
-            if self.cleanup_tmp_files:
-                logger.info('attempting rm -rf %s' % self.tmp_dir_path)
-                shutil.rmtree(self.tmp_dir_path)
-        except Exception, exc:
-            logger.debug('trapped exception from cleaning up tmp_dir_path', exc_info=True)
+        else:
+            logger.debug('attempting rm -rf %s', self.tmp_dir_path)
+            rmtree(self.tmp_dir_path)
+            logger.info('finished rm -rf %s', self.tmp_dir_path)
         self._cleanup_done = True
 
     def shutdown(self, sig=None, frame=None, msg=None, exit_code=None):
@@ -469,7 +469,7 @@ class Pipeline(object):
                 ## make a temporary chunk at a temporary path
                 # (Lazy allocation after we've read an item that might get processed out to the new chunk file)
                 # TODO: make this EVEN LAZIER by not opening the t_chunk until inside _run_incremental_transforms whe the first output si is ready
-                t_path = os.path.join(self.tmp_dir_path, 'streamcorpus-pipeline-tmp-%s' % str(uuid.uuid4()))
+                t_path = os.path.join(self.tmp_dir_path, 't_chunk-%s' % uuid.uuid4().hex)
                 self.t_chunk = streamcorpus.Chunk(path=t_path, mode='wb')
             assert self.t_chunk.message == streamcorpus.StreamItem_v0_3_0, self.t_chunk.message
 
@@ -517,7 +517,9 @@ class Pipeline(object):
                 (input_item_count > self.input_item_limit)):
                 break
 
-        if self.t_chunk:
+        ## bool(t_chunk) is False if t_chunk has no data, but we still
+        ## want to make sure it gets closed.
+        if self.t_chunk is not None:
             self.t_chunk.close()
             o_paths = self._process_output_chunk(start_count, next_idx, sources, i_str, t_path)
             self.t_chunk = None
@@ -587,6 +589,8 @@ class Pipeline(object):
             # only proceed if above transforms left us with something
             if (self.t_chunk) and (len(self.t_chunk) >= 0):
                 self._run_writers(start_count, next_idx, sources, i_str, t_path, o_paths)
+        if self.t_chunk is not None:
+            self.t_chunk.close()                
         return o_paths
 
     def _run_batch_transforms(self, chunk_path):

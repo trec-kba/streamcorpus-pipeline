@@ -7,11 +7,15 @@
 from __future__ import absolute_import
 import collections
 import imp
+import logging
 import os
+import uuid
 
 import streamcorpus_pipeline
 from streamcorpus_pipeline.stages import PipelineStages
 from yakonfig import ConfigurationError, check_subconfig, NewSubModules
+
+logger = logging.getLogger(__name__)
 
 config_name = 'streamcorpus_pipeline'
 default_config = {
@@ -122,8 +126,16 @@ def normalize_config(config):
             c[k] = os.path.join(root_path, v)
     for k in config.iterkeys():
         if k.endswith('path') and k != 'root_path': fix(config, k)
+
     # Note, that happens to also include tmp_dir_path, which must exist.
+
+    # ensure that tmp_dir_path is unique to this process, so Pipeline
+    # can remove it and anything left in it by various stages.
+    config['tmp_dir_path'] = os.path.join(config['tmp_dir_path'], uuid.uuid4().hex)
+
     tmp_dir_path = config['tmp_dir_path']
+    logger.debug('tmp_dir_path --> %s', tmp_dir_path)
+
     third_dir_path = config.get('third_dir_path')
     # Now go into all of our children and push in tmp_dir_path and fix
     # up their paths too.
