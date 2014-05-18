@@ -256,12 +256,12 @@ class Pipeline(object):
     on individual StreamItem objects.  Finally, any number of *writers*
     send output somewhere, usually a streamcorpus.Chunk file.
 
-    Callers should call :meth:`_cleanup` once when done doing
+    Callers should call :meth:`cleanup` once when done doing
     transformations.  If they do not, it will be automatically called
     at shutdown.
 
     .. automethod:: __init__
-    .. automethod:: _cleanup
+    .. automethod:: cleanup
     .. automethod:: shutdown
     .. automethod:: run
     .. automethod:: _process_task
@@ -358,7 +358,7 @@ class Pipeline(object):
     def shutdown(self, sig=None, frame=None, msg=None, exit_code=None):
         '''Clean up the pipeline and destroy the world.
 
-        This calls :meth:`_cleanup`, and then :func:`sys.exit`.
+        This calls :meth:`cleanup`, and then :func:`sys.exit`.
         
         .. todo:: move this functionality to :mod:`streamcorpus_pipeline.run`
 
@@ -368,7 +368,7 @@ class Pipeline(object):
         elif msg:
             logger.critical('shutdown inititated, msg: %s' % msg)
         self._shutting_down = True
-        self._cleanup()
+        self.cleanup()
         if exit_code is None:
             if msg:
                 exit_code = -1
