@@ -1,11 +1,12 @@
-'''
-This software is released under an MIT/X11 open source license.
+'''Generates metadata for use in naming files created by writers,
+e.g. to_local_chunks and to_s3_chunks
 
-Copyright 2012-2013 Diffeo, Inc.
+.. This software is released under an MIT/X11 open source license.
+   Copyright 2012-2014 Diffeo, Inc.
 '''
 
 import random
-
+import datetime
 from streamcorpus import Chunk
 
 def get_name_info(chunk_path, assert_one_date_hour=False, i_str=None):
@@ -71,5 +72,9 @@ def get_name_info(chunk_path, assert_one_date_hour=False, i_str=None):
     # different value every time it is accessed so that a format could
     # be 'foo-{rand8}{rand8}'
     name_info['rand8'] = '%08x' % (random.randint(0, 0x7fffffff),)
+
+    name_info['date_now'] = datetime.datetime.utcnow().strftime('%Y-%m-%d')
+    name_info['time_now'] = datetime.datetime.utcnow().strftime('%H-%M-%S')
+    name_info['date_time_now'] = datetime.datetime.utcnow().strftime('%Y-%m-%d-%H-%M-%S')
 
     return name_info
