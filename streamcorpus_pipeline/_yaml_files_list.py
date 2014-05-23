@@ -189,7 +189,7 @@ class yaml_files_list(Configured):
                             fpath = os.path.join(dirpath, fname)
                             if fpath not in visited_paths:
                                 is_profile = bool(fpath in external_profiles)
-                                sub_path = fpath[len(path) + 1:]
+                                sub_path = fpath[len(path):]
                                 if abs_url is None:
                                     ## construct a URL from the
                                     ## sub_path, which works with wget
