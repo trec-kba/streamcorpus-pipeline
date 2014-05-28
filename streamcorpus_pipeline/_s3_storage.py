@@ -154,7 +154,10 @@ class from_s3_chunks(Configured):
                 i_content_md5 = key.key.split('.')[-3]
             else:
                 ## go past {sc,protostream}.xz.gpg
-                i_content_md5 = key.key.split('.')[-4][-32:]
+                parts = key.key.split('.')
+                if  parts[-1] == '.gpg':
+                    parts.pop()
+                i_content_md5 = parts[-3][-32:]
 
             ## verify the data matches expected md5
             f_content_md5 = hashlib.md5(data).hexdigest() # pylint: disable=E1101
@@ -207,12 +210,13 @@ class to_s3_chunks(Configured):
 
     ``output_name`` is expanded in the same way as the
     :class:`~streamcorpus_pipeline._local_storage.to_local_chunks`
-    writer.  The filename always has ``.sc.xz.gpg`` appended to it,
-    and correspondingly, the output file is always compressed and
-    encrypted.  If ``verify_via_http`` is specified, the file is
-    read back from Amazon and compared against the original input.
-    If ``cleanup_tmp_files`` is specified, the intermediate chunk
-    file is deleted and no further pipeline stages can run.
+    writer.  The filename always has ``.sc.xz`` appended to it, and
+    correspondingly, the output file is always compressed.  If GPG
+    keys are provided, then ``.gpg`` is appended and the file is
+    encrypted.  If ``verify_via_http`` is specified, the file is read
+    back from Amazon and compared against the original input.  If
+    ``cleanup_tmp_files`` is specified, the intermediate chunk file is
+    deleted and no further pipeline stages can run.
 
     '''
     config_name = 'to_s3_chunks'
@@ -231,7 +235,9 @@ class to_s3_chunks(Configured):
             return o_path
 
         o_fname = self.config['output_name'] % name_info
-        o_path = os.path.join(self.config['s3_path_prefix'], o_fname + '.sc.xz.gpg')
+        o_path = os.path.join(self.config['s3_path_prefix'], o_fname + '.sc.xz')
+        if self.config.get('gpg_encryption_key_path'):
+            o_path += '.gpg'
 
         name_info['s3_output_path'] = o_path
 
