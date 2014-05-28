@@ -3,9 +3,8 @@
 Provides classes for loading chunk files from local storage and
 putting them out into local storage.
 
-This software is released under an MIT/X11 open source license.
-
-Copyright 2012-2014 Diffeo, Inc.
+.. This software is released under an MIT/X11 open source license.
+   Copyright 2012-2014 Diffeo, Inc.
 '''
 from __future__ import absolute_import
 from cStringIO import StringIO
