@@ -582,6 +582,7 @@ class Pipeline(object):
             ## with stages like "find"
 
             ## batch transforms act on the whole chunk in-place
+            logger.info('running batch transforms on %d StreamItems', len(self.t_chunk))
             self._run_batch_transforms(t_path)
 
             self._maybe_run_post_batch_incremental_transforms(t_path)
@@ -676,7 +677,10 @@ class Pipeline(object):
             ### transform should implement its own timeouts.
             try:
                 si = transform(si, context=self.context)
+
                 if si is None:
+                    logger.warn('transform %r deleted %s',
+                                 transform, si.stream_id)
                     return None
 
             except TransformGivingUp:
@@ -704,5 +708,4 @@ class Pipeline(object):
         ## put the StreamItem into the output
         assert type(si) == streamcorpus.StreamItem_v0_3_0, type(si)
         self.t_chunk.add(si)
-
         return si
