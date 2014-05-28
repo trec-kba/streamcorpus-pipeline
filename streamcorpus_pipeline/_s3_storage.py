@@ -145,7 +145,7 @@ class from_s3_chunks(Configured):
             data = fh.getvalue()
             _errors, data = decrypt_and_uncompress(
                 data, 
-                self.config['gpg_decryption_key_path'],
+                self.config.get('gpg_decryption_key_path'),
                 ## how should this get into the config...?
                 tmp_dir=self.config['tmp_dir_path'],
                 )
@@ -242,11 +242,11 @@ class to_s3_chunks(Configured):
         #gc.collect()
 
         ## compress and encrypt
-        logger.critical( 'key path: %r' % self.config['gpg_encryption_key_path'] )
+        logger.info( 'key path: %r', self.config.get('gpg_encryption_key_path') )
         _errors, t_path2 = compress_and_encrypt_path(
             t_path, 
-            self.config['gpg_encryption_key_path'],
-            gpg_recipient=self.config['gpg_recipient'],
+            self.config.get('gpg_encryption_key_path'),
+            gpg_recipient=self.config.get('gpg_recipient'),
             tmp_dir=self.config['tmp_dir_path'],
             )
         logger.info( '\n'.join(_errors) )
@@ -304,7 +304,7 @@ class to_s3_chunks(Configured):
         req = requests.get(url)
         errors, data = decrypt_and_uncompress(
             req.content, # pylint: disable=E1103
-            self.config['gpg_decryption_key_path'],
+            self.config.get('gpg_decryption_key_path'),
             tmp_dir=self.config['tmp_dir_path'],
             )
 
