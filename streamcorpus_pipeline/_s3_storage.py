@@ -82,8 +82,8 @@ def _retry(func):
 
 def get_bucket(config):
     ## use special keys for accessing AWS public data sets bucket
-    aws_access_key_id =     open(config['aws_access_key_id_path']).read()
-    aws_secret_access_key = open(config['aws_secret_access_key_path']).read()
+    aws_access_key_id =     open(config['aws_access_key_id_path']).read().strip()
+    aws_secret_access_key = open(config['aws_secret_access_key_path']).read().strip()
     conn = S3Connection(aws_access_key_id,
                         aws_secret_access_key)
     bucket = conn.get_bucket(config['bucket'])
