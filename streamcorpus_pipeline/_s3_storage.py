@@ -3,9 +3,8 @@
 Provides classes for loading chunk files from local storage and
 putting them out into local storage.
 
-This software is released under an MIT/X11 open source license.
-
-Copyright 2012-2014 Diffeo, Inc.
+.. This software is released under an MIT/X11 open source license.
+   Copyright 2012-2014 Diffeo, Inc.
 '''
 from __future__ import absolute_import
 from cStringIO import StringIO
@@ -82,8 +81,8 @@ def _retry(func):
 
 def get_bucket(config):
     ## use special keys for accessing AWS public data sets bucket
-    aws_access_key_id =     open(config['aws_access_key_id_path']).read()
-    aws_secret_access_key = open(config['aws_secret_access_key_path']).read()
+    aws_access_key_id =     open(config['aws_access_key_id_path']).read().strip()
+    aws_secret_access_key = open(config['aws_secret_access_key_path']).read().strip()
     conn = S3Connection(aws_access_key_id,
                         aws_secret_access_key)
     bucket = conn.get_bucket(config['bucket'])
@@ -145,7 +144,7 @@ class from_s3_chunks(Configured):
             data = fh.getvalue()
             _errors, data = decrypt_and_uncompress(
                 data, 
-                self.config['gpg_decryption_key_path'],
+                self.config.get('gpg_decryption_key_path'),
                 ## how should this get into the config...?
                 tmp_dir=self.config['tmp_dir_path'],
                 )
@@ -155,7 +154,10 @@ class from_s3_chunks(Configured):
                 i_content_md5 = key.key.split('.')[-3]
             else:
                 ## go past {sc,protostream}.xz.gpg
-                i_content_md5 = key.key.split('.')[-4][-32:]
+                parts = key.key.split('.')
+                if  parts[-1] == '.gpg':
+                    parts.pop()
+                i_content_md5 = parts[-3][-32:]
 
             ## verify the data matches expected md5
             f_content_md5 = hashlib.md5(data).hexdigest() # pylint: disable=E1101
@@ -208,12 +210,13 @@ class to_s3_chunks(Configured):
 
     ``output_name`` is expanded in the same way as the
     :class:`~streamcorpus_pipeline._local_storage.to_local_chunks`
-    writer.  The filename always has ``.sc.xz.gpg`` appended to it,
-    and correspondingly, the output file is always compressed and
-    encrypted.  If ``verify_via_http`` is specified, the file is
-    read back from Amazon and compared against the original input.
-    If ``cleanup_tmp_files`` is specified, the intermediate chunk
-    file is deleted and no further pipeline stages can run.
+    writer.  The filename always has ``.sc.xz`` appended to it, and
+    correspondingly, the output file is always compressed.  If GPG
+    keys are provided, then ``.gpg`` is appended and the file is
+    encrypted.  If ``verify_via_http`` is specified, the file is read
+    back from Amazon and compared against the original input.  If
+    ``cleanup_tmp_files`` is specified, the intermediate chunk file is
+    deleted and no further pipeline stages can run.
 
     '''
     config_name = 'to_s3_chunks'
@@ -232,7 +235,9 @@ class to_s3_chunks(Configured):
             return o_path
 
         o_fname = self.config['output_name'] % name_info
-        o_path = os.path.join(self.config['s3_path_prefix'], o_fname + '.sc.xz.gpg')
+        o_path = os.path.join(self.config['s3_path_prefix'], o_fname + '.sc.xz')
+        if self.config.get('gpg_encryption_key_path'):
+            o_path += '.gpg'
 
         name_info['s3_output_path'] = o_path
 
@@ -242,11 +247,11 @@ class to_s3_chunks(Configured):
         #gc.collect()
 
         ## compress and encrypt
-        logger.critical( 'key path: %r' % self.config['gpg_encryption_key_path'] )
+        logger.info( 'key path: %r', self.config.get('gpg_encryption_key_path') )
         _errors, t_path2 = compress_and_encrypt_path(
             t_path, 
-            self.config['gpg_encryption_key_path'],
-            gpg_recipient=self.config['gpg_recipient'],
+            self.config.get('gpg_encryption_key_path'),
+            gpg_recipient=self.config.get('gpg_recipient'),
             tmp_dir=self.config['tmp_dir_path'],
             )
         logger.info( '\n'.join(_errors) )
@@ -304,7 +309,7 @@ class to_s3_chunks(Configured):
         req = requests.get(url)
         errors, data = decrypt_and_uncompress(
             req.content, # pylint: disable=E1103
-            self.config['gpg_decryption_key_path'],
+            self.config.get('gpg_decryption_key_path'),
             tmp_dir=self.config['tmp_dir_path'],
             )
 
