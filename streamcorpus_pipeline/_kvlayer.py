@@ -5,11 +5,8 @@ This software is released under an MIT/X11 open source license.
 
 Copyright 2012-2013 Diffeo, Inc.
 '''
-from collections import deque
 import logging
-import os
 import string
-import sys
 import uuid
 
 import kvlayer
@@ -23,7 +20,7 @@ class from_kvlayer(Configured):
     '''
     loads StreamItems from a kvlayer table based an i_str passed to
     __call__, where the i_str must be a four-tuple joined on commas
-    that provides (epoch_ticks_1, doc_id_1, epoch_ticks_2, doc_id_2)  
+    that provides (epoch_ticks_1, doc_id_1, epoch_ticks_2, doc_id_2)
 
     If no values are specified, it defaults to the entire table.  If
     one of the epoch_ticks is provided, then both must be provided.
@@ -109,7 +106,7 @@ class to_kvlayer(Configured):
     '''
     stores StreamItems in a kvlayer table called "stream_items" in the
     namespace specified in the config dict for this stage.
-    
+
     each StreamItem is serialized and xz compressed and stored on the
     key (UUID(int=epoch_ticks), UUID(hex=doc_id))
 
@@ -158,7 +155,7 @@ class to_kvlayer(Configured):
         for ndx in self.config['indexes']: indexes[ndx] = []
         # The idea here is that the actual documents can be pretty big,
         # so we don't want to keep them in memory, but the indexes
-        # will just be UUID tuples.  So the iterator produces 
+        # will just be UUID tuples.  So the iterator produces
         def keys_and_values():
             for si in streamcorpus.Chunk(t_path):
                 key1 = uuid.UUID(int=si.stream_time.epoch_ticks)
@@ -166,14 +163,18 @@ class to_kvlayer(Configured):
                 data = streamcorpus.serialize(si)
                 errors, data = streamcorpus.compress_and_encrypt(data)
                 assert not errors, errors
-                
+
                 yield (key1, key2), data
 
                 for ndx in indexes:
                     if ndx == 'doc_id_epoch_ticks':
                         kvp = ((key2, key1), r'')
                     elif ndx == 'with_source':
-                        kvp = ((key1, key2), si.source)
+                        ## si.source can be None but we can't write None blobs to kvlayer
+                        if si.source:
+                            kvp = ((key1, key2), si.source)
+                        else:
+                            continue
                     else:
                         assert False, ('invalid index type ' + ndx)
                     indexes[ndx].append(kvp)
