@@ -28,6 +28,7 @@ entities:
 Copyright 2012-2014 Diffeo, Inc.
 '''
 from __future__ import absolute_import
+import collections
 import logging
 import os
 import urllib
@@ -69,6 +70,11 @@ class yaml_files_list(Configured):
             slots:
               - canonical_name: Sample
               - example
+              - title: [Sample, "dot com"]
+              - knowledge_bases:
+                - value: wikipedia
+                - profile_id: "http://en.wikipedia.org/wiki/Sample"
+                - annotator_id: my-name
 
     At the top level, the file contains:
 
@@ -99,11 +105,7 @@ class yaml_files_list(Configured):
       form, where the ``abs_url`` field identifies the external
       knowledge base article.
     ``slots`` (required)
-      Additional knowledge base metadata about the entity.  This is a
-      list of strings or dictionaries.  Strings are interpreted as
-      dictionaries of ``name`` mapping to the string.  The resulting
-      slot dictionaries are combined into a multiset where each slot
-      name maps to multiple values.
+      Additional knowledge base metadata about the entity.
 
     For each entity, the reader finds all documents in the named
     directories and creates a :class:`streamcorpus.StreamItem` for
@@ -114,6 +116,35 @@ class yaml_files_list(Configured):
     file metadata and the target comes from the entity ``target_id``.
     The :attr:`~streamcorpus.Rating.mentions` on the rating are set
     to the union of all of the slot values for all slots.
+
+    The ``slots`` field is a list of values.  Each value is interpreted
+    as follows:
+
+    1. If it is a dictionary, then each key in the dictionary is
+       interpreted as a slot name, and the corresponding value provides
+       the slot values.  Otherwise, the value is taken as a value for
+       the slot ``NAME``.
+
+    2. If the slot value is a list, then each item in the list is
+       independently interpreted as a value for this slot.
+
+    3. If the slot value is a dictionary, then it may have keys
+       ``value`` (required), ``mention_id``, ``profile_id``, and
+       ``annotator_id``, which are used to construct a composite slot
+       value.  Otherwise, the slot value is used directly without
+       additional metadata.
+
+    The following YAML fragment provides several values for the
+    ``NAME`` slot, which are ultimately combined:
+
+    .. code-block:: yaml
+
+        slots:
+          - one
+          - NAME: two
+          - NAME: [three, four]
+          - NAME:
+              value: five
 
     '''
     config_name = 'yaml_files_list'
@@ -221,19 +252,18 @@ class yaml_files_list(Configured):
 
     @classmethod
     def _parse_slots(cls, raw_slots):
-        ## raw_slots is a list containing either dictionaries
-        ## or strings.
-        ## Example:
-        ## - slot-name: slot_value
-        ## - name: APT1
-        ## - APT1
-
         slots = []
         for mention in raw_slots:
-            if isinstance(mention, dict):
-                slots.extend(mention.iteritems())
-            else:
-                slots.append(('name', mention))
+            if not isinstance(mention, collections.Mapping):
+                mention = {'NAME': mention}
+            for slotname, vl in mention.iteritems():
+                if (isinstance(vl, basestring) or
+                    not isinstance(vl, collections.Sequence)):
+                    vl = [vl]
+                for slotvalue in vl:
+                    if isinstance(slotvalue, collections.Mapping):
+                        slotvalue = slotvalue['value']
+                    slots.append((slotname, slotvalue))
         return slots
 
     @classmethod
