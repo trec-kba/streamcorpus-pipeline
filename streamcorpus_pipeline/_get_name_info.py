@@ -8,6 +8,9 @@ e.g. to_local_chunks and to_s3_chunks
 import random
 import datetime
 from streamcorpus import Chunk
+import re
+
+is_hex_32 = re.compile('[a-fA-F0-9]{32}')
 
 def get_name_info(chunk_path, assert_one_date_hour=False, i_str=None):
     '''
@@ -25,7 +28,11 @@ def get_name_info(chunk_path, assert_one_date_hour=False, i_str=None):
     i_fname = i_fname.split('.')[0]  ## strip off .sc[.xz[.gpg]]
     name_info['input_fname'] = i_fname 
 
-    name_info['input_md5'] = i_fname.split('-')[-1]
+    input_md5s = []
+    for part in i_fname.split('-'):
+        if len(part) == 32 and is_hex_32.match(part):
+            input_md5s.append(part)
+    name_info['input_md5'] = '-'.join(input_md5s)
 
     # TODO: return a dict-like object that does the expensive
     # calculation lazily, the name format might not even need that

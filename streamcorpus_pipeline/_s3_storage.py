@@ -157,7 +157,7 @@ class from_s3_chunks(Configured):
                 parts = key.key.split('.')
                 if  parts[-1] == '.gpg':
                     parts.pop()
-                i_content_md5 = parts[-3][-32:]
+                i_content_md5 = parts[-4][-32:]
 
             ## verify the data matches expected md5
             f_content_md5 = hashlib.md5(data).hexdigest() # pylint: disable=E1101

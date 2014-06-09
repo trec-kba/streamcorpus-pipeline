@@ -35,6 +35,7 @@ Incremental transforms
 .. autoclass:: streamcorpus_pipeline._filters.exclusion_filter
 .. autofunction:: streamcorpus_pipeline._guess_media_type.file_type_stats
 .. autoclass:: streamcorpus_pipeline._filters.filter_languages
+.. autoclass:: streamcorpus_pipeline._filters.filter_tagger_ids
 .. autoclass:: streamcorpus_pipeline._find.find
 .. autoclass:: streamcorpus_pipeline._find.find_doc_ids
 .. autoclass:: streamcorpus_pipeline._guess_media_type.guess_media_type
@@ -355,6 +356,7 @@ class PipelineStages(StageRegistry):
         self.tryload_stage('_filters', 'exclusion_filter')
         self.tryload_stage('_guess_media_type', 'file_type_stats')
         self.tryload_stage('_filters', 'filter_languages')
+        self.tryload_stage('_filters', 'filter_tagger_ids')
         self.tryload_stage('_find', 'find')
         self.tryload_stage('_find', 'find_doc_ids')
         self.tryload_stage('_guess_media_type', 'guess_media_type')

@@ -676,11 +676,12 @@ class Pipeline(object):
             ### various libraries.  This probably means that each
             ### transform should implement its own timeouts.
             try:
+                stream_id = si.stream_id
                 si = transform(si, context=self.context)
 
                 if si is None:
                     logger.warn('transform %r deleted %s',
-                                 transform, si.stream_id)
+                                 transform, stream_id)
                     return None
 
             except TransformGivingUp:
@@ -690,7 +691,7 @@ class Pipeline(object):
 
             except Exception, exc:
                 logger.critical('transform %r failed on %r from i_str=%r', 
-                                transform, si.stream_id, self.context.get('i_str'),
+                                transform, si and si.stream_id, self.context.get('i_str'),
                                 exc_info=True)
 
         assert si is not None

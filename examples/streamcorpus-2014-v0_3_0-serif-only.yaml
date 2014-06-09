@@ -1,0 +1,46 @@
+logging:
+  root:
+    level: INFO
+
+streamcorpus_pipeline:
+  root_path: /data/trec-kba
+
+  tmp_dir_path:  /data/trec-kba/tmp
+  cleanup_tmp_files: true
+
+  reader: from_s3_chunks
+
+  incremental_transforms:
+    - filter_tagger_ids
+
+  batch_transforms: []
+
+  filter_tagger_ids:
+    tagger_ids_to_keep:
+      - serif
+
+  writers: [to_s3_chunks]
+
+  from_s3_chunks:
+    aws_access_key_id_path:     keys/trec-aws-s3.aws_access_key_id
+    aws_secret_access_key_path: keys/trec-aws-s3.aws_secret_access_key
+    bucket: aws-publicdatasets
+    s3_path_prefix: trec/kba/kba-streamcorpus-2014-v0_3_0
+    tries: 10
+    input_format: streamitem
+    streamcorpus_version: v0_3_0
+    gpg_decryption_key_path: keys/trec-kba-rsa.gpg-key.private
+
+  to_s3_chunks:
+    aws_access_key_id_path:     keys/trec-aws-s3.aws_access_key_id
+    aws_secret_access_key_path: keys/trec-aws-s3.aws_secret_access_key
+    bucket: aws-publicdatasets
+    s3_path_prefix: trec/kba/kba-streamcorpus-2014-v0_3_0-serif-only
+    output_name: "%(date_hour)s/%(source)s-%(num)d-%(input_md5)s-%(md5)s"
+    tries: 10
+    gpg_decryption_key_path: keys/trec-kba-rsa.gpg-key.private
+    gpg_encryption_key_path: keys/trec-kba-rsa.gpg-key.pub
+    gpg_recipient: trec-kba
+    verify_via_http: true
+    cleanup_tmp_files: true
+

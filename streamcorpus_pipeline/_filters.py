@@ -96,6 +96,38 @@ class filter_languages(Configured):
         ## otherwise return None, which excludes the language
         return None
 
+
+class filter_tagger_ids(Configured):
+    '''Remove stream items that lack a StreamItem.body.sentences entry
+    from specified tagger_id(s)
+
+    This looks at the :attr:`~streamcorpus.StreamItem.body.sentences`
+    field.  It has two configuration options:
+
+    .. code-block:: yaml
+
+        filter_tagger_ids:
+          tagger_ids_to_keep:
+            - serif
+
+    If the none of the tagger_ids_to_keep are in
+    :attr:`~streamcorpus.StreamItem.body.sentences`, the stream item
+    is dropped.  If one of the required tagger_ids is present, but
+    points to an empty list, then it is also dropped.
+
+    '''
+    config_name = 'filter_tagger_ids'
+    default_config = { 'tagger_ids_to_keep': [] }
+    def __call__(self, si, context):
+        if not si.body or not si.body.sentences:
+            return None
+        for tagger_id in self.config['tagger_ids_to_keep']:
+            sentences = si.body.sentences.get(tagger_id)
+            if sentences:
+                return si
+        return None
+
+
 class remove_raw(Configured):
     '''Remove the raw form of the content.
 
