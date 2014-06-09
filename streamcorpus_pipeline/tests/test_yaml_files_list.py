@@ -1,5 +1,8 @@
 from __future__ import absolute_import
+from cStringIO import StringIO
 import os
+
+import yaml
 
 from streamcorpus_pipeline._yaml_files_list import yaml_files_list
 
@@ -20,4 +23,18 @@ def test_parse_mentions():
     mentions = yfl._parse_slots(raw_mentions)
 
     assert len(mentions) == len(raw_mentions)
-    assert mentions == [('name', 'John Smith'), ('name', 'John Smith'), ('ip_address', '10.0.0.1')]
+    assert mentions == [('NAME', 'John Smith'), ('name', 'John Smith'), ('ip_address', '10.0.0.1')]
+
+def test_parse_mentions_example():
+    yfl = yaml_files_list(config={})
+    stuff = StringIO('''slots:
+  - one
+  - NAME: two
+  - NAME: [three, four]
+  - NAME:
+      value: five
+''')
+    raw_slots = yaml.load(stuff)['slots']
+    assert (yfl._parse_slots(raw_slots) ==
+            [('NAME', 'one'), ('NAME', 'two'), ('NAME', 'three'),
+             ('NAME', 'four'), ('NAME', 'five')])
