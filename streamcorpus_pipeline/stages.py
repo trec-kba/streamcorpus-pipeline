@@ -100,6 +100,7 @@ from abc import ABCMeta, abstractmethod
 from collections import Callable, MutableMapping
 import imp
 import logging
+import pkg_resources
 
 import yakonfig
 
@@ -385,3 +386,12 @@ class PipelineStages(StageRegistry):
         self.tryload_stage('_kvlayer', 'to_kvlayer')
         self.tryload_stage('_s3_storage', 'to_s3_chunks')
         self.tryload_stage('_s3_storage', 'to_s3_tarballs')
+
+        # load from setuptools 'entry_points' of other installed packages
+        for entry_point in pkg_resources.iter_entry_points('streamcorpus_pipeline.stages'):
+            try:
+                name = entry_point.name
+                stage_constructor = entry_point.load()
+                self[name] = stage_constructor
+            except:
+                logger.error('failure loading plugin entry point', exc_info=True)
