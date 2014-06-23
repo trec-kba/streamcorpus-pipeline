@@ -15,6 +15,9 @@ streamcorpus_pipeline:
   ## batch_transforms operate.
   tmp_dir_path: tmp
 
+  # Loads the Python file given and looks for a `Stages` module variable.
+  # `Stages` should be a map from stage name to a Python class. This will
+  # bring those stages into scope for use with, e.g., `reader`.
   external_stages_path: examples/john_smith_custom_reader.py
 
   ## generator of StreamItems
