@@ -213,6 +213,8 @@ class PipelineFactory(object):
         return self.registry.init_stage(config[name], config)
 
     def _init_stages(self, config, name):
+        if name not in config:
+            return []
         return [self.registry.init_stage(stage, config)
                 for stage in config[name]]
 
