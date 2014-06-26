@@ -37,6 +37,7 @@ import itertools
 import logging
 import json
 import os
+import re
 import sys
 import time
 
@@ -54,10 +55,8 @@ from streamcorpus_pipeline.stages import PipelineStages
 
 logger = logging.getLogger(__name__)
 
-def make_absolute_paths( config ):
-    '''
-
-    given a config dict with streamcorpus_pipeline as a key, find all
+def make_absolute_paths(config):
+    '''given a config dict with streamcorpus_pipeline as a key, find all
     keys under streamcorpus_pipeline that end with "_path" and if the
     value of that key is a relative path, convert it to an absolute
     path using the value provided by root_path
@@ -77,6 +76,8 @@ def make_absolute_paths( config ):
         for key, val in sub_config.items():
             if isinstance(val, basestring):
                 if key.endswith('path'):
+                    ## ignore URLs in *_path parameters
+                    if re.match('^http.?://', val): continue
                     ## we have a path... is it already absolute?
                     if not val.startswith('/'):
                         ## make the path absolute
