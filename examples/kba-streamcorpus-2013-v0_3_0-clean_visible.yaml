@@ -1,16 +1,9 @@
-## YAML kba.pipeline config for generating clean_visible and then
-## operating lingpipe
-
 streamcorpus_pipeline:
   ## root path for all things that are called *_path in this file and
   ## are not an absolute path, i.e. start with '/'
   root_path: /data/trec-kba
 
-  ## put logs inside each chunk file
-  embedded_logs: false
-
   ## the main pipeline log_dir_path can trigger similar log chunk
-  #log_dir_path:  logs
   log_level: INFO
 
   output_chunk_max_count: 10000
@@ -19,13 +12,6 @@ streamcorpus_pipeline:
   ## the same file system as their output.  This is also where the
   ## batch_transforms operate.
   tmp_dir_path:  tmp
-
-  task_queue: zookeeper
-  zookeeper:
-    namespace: kba_streamcorpus_2013_v0_3_0_clean_visible
-    zookeeper_address: cass-1.diffeo.com:2181
-    zookeeper_timeout: 120
-    storage_addresses: ["cass-1.diffeo.com:9160"]
 
   ## generator of StreamItems
   reader: from_s3_chunks

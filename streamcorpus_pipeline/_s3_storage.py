@@ -324,8 +324,8 @@ class to_s3_chunks(Configured):
 
 class to_s3_tarballs(Configured):
     config_name = 'to_s3_tarballs'
-    def __init__(self):
-        super(to_s3_tarballs, self).__init__()
+    def __init__(self, config):
+        super(to_s3_tarballs, self).__init__(config)
         self.bucket = get_bucket(config)
 
     def __call__(self, t_path, name_info, i_str):
@@ -346,7 +346,7 @@ class to_s3_tarballs(Configured):
         ## forcibly collect dereferenced objects
         #gc.collect()
 
-        t_path2 = tarball_export(t_path, name_info)
+        t_path2 = tarball_export(self.config, t_path, name_info)
 
         data = open(t_path2).read()
         name_info['md5'] = hashlib.md5(data).hexdigest() # pylint: disable=E1101

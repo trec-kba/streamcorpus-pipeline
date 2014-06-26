@@ -5,42 +5,45 @@ logging:
 streamcorpus_pipeline:
   root_path: .
 
-  tmp_dir_path: tmp
+  output_chunk_max_count: 500
+
+  tmp_dir_path:  tmp
   cleanup_tmp_files: true
 
   reader: from_s3_chunks
 
-  incremental_transforms:
-    - filter_tagger_ids
-
+  incremental_transforms: []
   batch_transforms: []
 
-  filter_tagger_ids:
-    tagger_ids_to_keep:
-      - serif
-
-  writers: [to_s3_chunks]
+  ## to_local_* must be last, because *moves* the tmp file away
+  writers: [to_s3_tarballs]
 
   from_s3_chunks:
     aws_access_key_id_path:     /data/trec-kba/keys/trec-aws-s3.aws_access_key_id
     aws_secret_access_key_path: /data/trec-kba/keys/trec-aws-s3.aws_secret_access_key
     bucket: aws-publicdatasets
-    s3_path_prefix: trec/kba/kba-streamcorpus-2014-v0_3_0
+    ## TODO: looks like this is ignored, input paths must have this
+    ## prefix in them already
+    s3_path_prefix: trec/kba/kba-streamcorpus-2014-v0_3_0-serif-only
     tries: 10
     input_format: streamitem
     streamcorpus_version: v0_3_0
     gpg_decryption_key_path: /data/trec-kba/keys/trec-kba-rsa.gpg-key.private
 
-  to_s3_chunks:
+  to_s3_tarballs:
     aws_access_key_id_path:     /data/trec-kba/keys/trec-aws-s3.aws_access_key_id
     aws_secret_access_key_path: /data/trec-kba/keys/trec-aws-s3.aws_secret_access_key
     bucket: aws-publicdatasets
-    s3_path_prefix: trec/kba/kba-streamcorpus-2014-v0_3_0-serif-only
-    output_name: "%(date_hour)s/%(source)s-%(num)d-%(input_md5)s-%(md5)s"
+    s3_path_prefix: trec/kba/kba-streamcorpus-2014-v0_3_0-html-tarballs/
+    output_name: "%(date_hour)s/%(input_fname)s"
     tries: 10
-    gpg_decryption_key_path: /data/trec-kba/keys/trec-kba-rsa.gpg-key.private
-    gpg_encryption_key_path: /data/trec-kba/keys/trec-kba-rsa.gpg-key.pub
-    gpg_recipient: trec-kba
     verify_via_http: true
     cleanup_tmp_files: true
+
+    tarinfo_name: "%(i_str)s#%(stream_id)s"
+    tarinfo_uname: "jrf"
+    tarinfo_gname: "trec-kba"
+
+    ## the serif-only corpus has already been filtered in this way
+    #accepted_language_codes: [en, ""]
 
