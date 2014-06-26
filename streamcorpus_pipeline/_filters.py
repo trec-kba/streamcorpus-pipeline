@@ -11,6 +11,8 @@ import logging
 import re
 from urlparse import urlparse
 
+from backports import lzma
+
 from streamcorpus_pipeline.stages import Configured
 
 
@@ -50,18 +52,38 @@ class exclusion_filter(Configured):
 
     .. code-block:: yaml
 
+      exclusion_filter:
+        excluded_stream_ids_path: file-of-one-stream-id-per-line.txt.xz
         excluded_stream_ids:
           - 1360783522-ebf059defa41b2812c1f969f28cdb45e
 
-    Stream IDs in the list are dropped, all others are passed on
-    unmodified.  Defaults to an empty list (don't drop any stream
-    items).
+    Stream IDs in the `excluded_stream_ids` list are dropped, all
+    others are passed on unmodified.  Defaults to an empty list (don't
+    drop any stream items).
+
+    In addition to listing Stream IDs in the yaml itself, you can pass
+    `excluded_stream_ids_path` with one Stream ID per line.  This file
+    can be optionally be xz-compressed.
 
     '''
     config_name = 'exclusion_filter'
     default_config = { 'excluded_stream_ids': [] }
+
+    def __init__(self, *args, **kwargs):
+        super(exclusion_filter, self).__init__(*args, **kwargs)
+        stream_ids = set(self.config.get('excluded_stream_ids', []))
+        stream_ids_path = self.config.get('excluded_stream_ids_path')
+        if stream_ids_path:
+            if stream_ids_path.endswith('.xz'):
+                fh = lzma.open(stream_ids_path)
+            else:
+                fh = open(stream_ids_path)
+            map(stream_ids.add, fh.read().splitlines())
+        self.excluded_stream_ids = stream_ids
+        logger.info('finished loading %d stream_ids to exclude', len(stream_ids))
+
     def __call__(self, si, context):
-        if si.stream_id in self.config['excluded_stream_ids']:
+        if si.stream_id in self.excluded_stream_ids:
             return None
         else:
             return si
