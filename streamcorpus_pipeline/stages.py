@@ -30,6 +30,7 @@ Incremental transforms
 .. autoclass:: streamcorpus_pipeline._title.title
 .. autoclass:: streamcorpus_pipeline._filters.debug_filter
 .. autoclass:: streamcorpus_pipeline._filters.filter_domains
+.. autoclass:: streamcorpus_pipeline._fix_text.fix_text
 .. autoclass:: streamcorpus_pipeline._dedup.dedup
 .. autoclass:: streamcorpus_pipeline._dump_label_stats.dump_label_stats
 .. autoclass:: streamcorpus_pipeline._filters.exclusion_filter
@@ -100,6 +101,7 @@ from abc import ABCMeta, abstractmethod
 from collections import Callable, MutableMapping
 import imp
 import logging
+import pkg_resources
 
 import yakonfig
 
@@ -351,6 +353,7 @@ class PipelineStages(StageRegistry):
         self.tryload_stage('_title', 'title')
         self.tryload_stage('_filters', 'debug_filter')
         self.tryload_stage('_filters', 'filter_domains')
+        self.tryload_stage('_fix_text', 'fix_text')
         self.tryload_stage('_dedup', 'dedup')
         self.tryload_stage('_dump_label_stats', 'dump_label_stats')
         self.tryload_stage('_filters', 'exclusion_filter')
@@ -385,3 +388,12 @@ class PipelineStages(StageRegistry):
         self.tryload_stage('_kvlayer', 'to_kvlayer')
         self.tryload_stage('_s3_storage', 'to_s3_chunks')
         self.tryload_stage('_s3_storage', 'to_s3_tarballs')
+
+        # load from setuptools 'entry_points' of other installed packages
+        for entry_point in pkg_resources.iter_entry_points('streamcorpus_pipeline.stages'):
+            try:
+                name = entry_point.name
+                stage_constructor = entry_point.load()
+                self[name] = stage_constructor
+            except:
+                logger.error('failure loading plugin entry point', exc_info=True)

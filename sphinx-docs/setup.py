@@ -7,12 +7,12 @@ from version import get_git_version
 import os
 
 VERSION, SOURCE_HASH = get_git_version()
-PROJECT = 'diffeo-sphinx'
+PROJECT = 'streamcorpus-pipeline/sphinx-docs'
 URL = 'http://diffeo.com'
 AUTHOR = 'Diffeo, Inc.'
 AUTHOR_EMAIL = 'support@diffeo.com'
-DESC = 'Master Diffeo documentation set.'
-LICENSE = 'Diffeo Proprietary Commercial Computer Software'
+DESC = 'StreamCorpus documentation'
+LICENSE = 'MIT/X11 license http://opensource.org/licenses/MIT'
 
 def subtree(t, d):
     for dirpath, dirnames, filenames in os.walk(d):
@@ -46,19 +46,15 @@ setup(
         'sphinxcontrib-httpdomain',
 
         # We list these for completeness.  However, note that because
-        # of the way pip runs, 'pip install diffeo-sphinx' on a totally
+        # of the way pip runs, 'pip install .' on a totally
         # clean virtualenv will produce broken documentation; it will
         # install the following dependency packages, then install this
         # (running Sphinx), then install recursive dependencies.
-        'bigforest',
         'dblogger',
-        'diffeo-cyber',
-        'diffeo-spinn3r',
         'kvlayer',
         'rejester',
         'streamcorpus-pipeline',
         'streamcorpus',
-        'treelab',
         'yakonfig',
     ],
     # there must be a data_files for install_data to run

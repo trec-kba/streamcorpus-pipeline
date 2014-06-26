@@ -1,0 +1,75 @@
+logging:
+  root:
+    level: INFO
+
+rejester:
+  namespace: my_kba_filtering
+  app_name: rejester
+  registry_addresses: ["redis.example.com:6379"]
+
+streamcorpus_pipeline:
+  ## "." means current working directory
+  root_path: .
+
+  tmp_dir_path: tmp
+  cleanup_tmp_files: true
+
+  external_stages_path: examples/filter_exact_match.py
+
+  reader: from_s3_chunks
+
+  incremental_transforms:
+    ## remove all StreamItems that do not exactly match
+    - filter_exact_match
+
+  batch_transforms: []
+
+  filter_exact_match:
+    ## names ending in "_path" will be made absolute relative to the root_path
+    match_strings_path: my_match_strings.txt
+
+  writers: [to_s3_chunks]
+
+  from_s3_chunks:
+    ## put paths to your own keys here; these files must be just the
+    ## access_key_id and secret_access_key strings without newlines
+    aws_access_key_id_path:     /data/trec-kba/keys/trec-aws-s3.aws_access_key_id
+    aws_secret_access_key_path: /data/trec-kba/keys/trec-aws-s3.aws_secret_access_key
+
+    ## this is the location of the NIST's StreamCorpus
+    bucket: aws-publicdatasets
+    s3_path_prefix: trec/kba/kba-streamcorpus-2014-v0_3_0
+
+    tries: 10
+    input_format: streamitem
+    streamcorpus_version: v0_3_0
+
+    ## you need this key if you are processing NIST's StreamCorpus,
+    ## which is encrypted
+    gpg_decryption_key_path: /data/trec-kba/keys/trec-kba-rsa.gpg-key.private
+
+  to_s3_chunks:
+
+    ## put your own bucket and paths to your own keys here; these
+    ## files must be just the access_key_id and secret_access_key
+    ## strings without newlines
+    aws_access_key_id_path:     /data/trec-kba/keys/trec-aws-s3.aws_access_key_id
+    aws_secret_access_key_path: /data/trec-kba/keys/trec-aws-s3.aws_secret_access_key
+
+    bucket: aws-publicdatasets
+    s3_path_prefix: trec/kba/kba-streamcorpus-2014-v0_3_0-to-delete
+
+    output_name: "%(date_hour)s/%(source)s-%(num)d-%(input_md5)s-%(md5)s"
+    tries: 10
+    cleanup_tmp_files: true
+
+    ## you only need these keys if you are encrypting the data that
+    ## you are putting into your bucket; you need both if you require
+    ## verify_via_http, which fetches and decrypts to validate what
+    ## was saved.
+    gpg_decryption_key_path: /data/trec-kba/keys/trec-kba-rsa.gpg-key.private
+    gpg_encryption_key_path: /data/trec-kba/keys/trec-kba-rsa.gpg-key.pub
+    gpg_recipient: trec-kba
+
+    verify_via_http: true
+

@@ -370,11 +370,14 @@ def multi_token_match(stream_item, aligner_data):
                     num_tokens_matched += 1
 
                 if num_tokens_matched == 0:
-                    logger.critical('failed multi_token_match %r:\n  mentions: %r\n  tokens: %r\n clean_html=%r',
-                                    stream_item.abs_url, rating.mentions, tokens, stream_item.body.clean_html)
+                    logger.warning('multi_token_match didn\'t actually match '
+                                   'entity %r in stream_id %r',
+                                   rating.target.target_id,
+                                   stream_item.stream_id)
                 else:
-                    logger.debug('matched %d tokens for %r',
-                                 num_tokens_matched, rating.target.target_id)
+                    logger.debug('matched %d tokens for %r in %r',
+                                 num_tokens_matched, rating.target.target_id,
+                                 stream_item.stream_id)
 
                 ## stream_item passed by reference, so nothing to return
 
@@ -417,13 +420,10 @@ def _aligner_core(t_path1, aligner, aligner_data):
     t_chunk2.close()
 
     if aligner_data.get('cleanup_tmp_files', True):
-        logger.info('atomic rename: %r --> %r', t_path2, t_path1)
         os.rename(t_path2, t_path1)
-        logger.debug('done renaming')
     else:
         # for development, leave intermediate tmp file
         shutil.copy(t_path2, t_path1)
-        logger.info('copied %r -> %r', t_path2, t_path1)
 
 
 class _aligner_batch_transform(streamcorpus_pipeline.stages.BatchTransform):
@@ -575,7 +575,6 @@ the output path to create.
         ## get a java_heap_size or default to 1GB
         tagger_config['java_heap_size'] = self.config.get('java_heap_size', '')
         cmd = self.template % tagger_config
-        logger.critical( cmd )
         start_time = time.time()
         ## make sure we are using as little memory as possible
         gc.collect()

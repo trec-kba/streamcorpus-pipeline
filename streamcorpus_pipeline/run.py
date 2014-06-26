@@ -33,6 +33,7 @@ from __future__ import absolute_import
 import copy
 import glob
 import importlib
+import itertools
 import logging
 import json
 import os
@@ -153,6 +154,17 @@ def instantiate_config(config):
     if die:
         sys.exit(1)
 
+
+def pathfile_iter(path):
+    if path.endswith('.gz'):
+        fin = gzip.open(path, 'rb')
+    else:
+        fin = open(path, 'rb')
+    for line in fin:
+        line = line.strip()
+        yield line
+
+
 def main():
     import argparse
     parser = argparse.ArgumentParser(
@@ -163,6 +175,7 @@ def main():
     parser.add_argument('--in-glob', action='append', default=[], help='path glob specifying input files')
     parser.add_argument('--third-dir-path', help='path to third-party tools directory')
     parser.add_argument('--tmp-dir-path', help='path to temporary directory for scratch files, can be large')
+    parser.add_argument('-f', '--file-of-paths', dest='file_of_paths', default=None, help='path to file with list of paths for input, one per line')
 
     modules = [yakonfig, kvlayer, dblogger, streamcorpus_pipeline]
     args = yakonfig.parse_args(parser, modules)
@@ -185,6 +198,9 @@ def main():
         else:
             input_paths.extend(args.input)
 
+    if args.file_of_paths:
+        input_paths = itertools.chain(input_paths, pathfile_iter(args.file_of_paths))
+
     scp_config = config['streamcorpus_pipeline']
     stages = PipelineStages()
     if 'external_stages_path' in scp_config:
@@ -196,6 +212,7 @@ def main():
     pipeline = factory(scp_config)
 
     for i_str in input_paths:
+        logger.info('input path %r', i_str)
         work_unit = SimpleWorkUnit(i_str.strip())
         work_unit.data['start_chunk_time'] = time.time()
         work_unit.data['start_count'] = 0

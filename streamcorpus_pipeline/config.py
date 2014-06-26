@@ -122,6 +122,8 @@ def normalize_config(config):
     root_path = config.get('root_path', os.getcwd())
     def fix(c, k):
         v = c[k]
+        if v is None:
+            return
         if not os.path.isabs(v):
             c[k] = os.path.join(root_path, v)
     for k in config.iterkeys():

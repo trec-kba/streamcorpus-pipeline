@@ -117,6 +117,7 @@ setup(
         'python-magic',
         'python-docx',
         'thrift',
+        'ftfy',
         'gevent',
         'kvlayer >= 0.2.8',
         'rejester',
