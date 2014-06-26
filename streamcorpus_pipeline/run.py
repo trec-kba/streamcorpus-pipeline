@@ -177,6 +177,8 @@ def main():
     parser.add_argument('--third-dir-path', help='path to third-party tools directory')
     parser.add_argument('--tmp-dir-path', help='path to temporary directory for scratch files, can be large')
     parser.add_argument('-f', '--file-of-paths', dest='file_of_paths', default=None, help='path to file with list of paths for input, one per line')
+    parser.add_argument('--skip', type=int, default=0,
+                        help='Skip the first N stream items.')
 
     modules = [yakonfig, kvlayer, dblogger, streamcorpus_pipeline]
     args = yakonfig.parse_args(parser, modules)
@@ -216,7 +218,7 @@ def main():
         logger.info('input path %r', i_str)
         work_unit = SimpleWorkUnit(i_str.strip())
         work_unit.data['start_chunk_time'] = time.time()
-        work_unit.data['start_count'] = 0
+        work_unit.data['start_count'] = args.skip
         pipeline._process_task(work_unit)
 
     ## explicitly call cleanup, which is idempotent
