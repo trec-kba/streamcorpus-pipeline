@@ -43,19 +43,29 @@ class debug_filter(Configured):
         else:
             return None
 
-class exclusion_filter(Configured):
-    '''Remove specific stream items.
+class id_filter(Configured):
+    '''Include or exclude specific stream items by doc_id or stream_id
 
-    This is not usually needed, but if specific stream items have been
-    identified to cause problems with a tagger or other stages, this
-    can remove them before they run.  It has one configuration item:
+    If specific stream items have been identified, e.g. as causing
+    problems with a tagger or other stages, then this can remove them
+    before they run.  
 
     .. code-block:: yaml
 
-      exclusion_filter:
+      id_filter:
         excluded_stream_ids_path: file-of-one-stream-id-per-line.txt.xz
         excluded_stream_ids:
           - 1360783522-ebf059defa41b2812c1f969f28cdb45e
+        included_stream_ids_path: file-of-one-stream-id-per-line.txt.xz
+        included_stream_ids:
+          - 1360783522-ebf059defa41b2812c1f969f28cdb45e
+        included_doc_ids_path: file-of-one-doc-id-per-line.txt.xz
+        included_doc_ids:
+          - ebf059defa41b2812c1f969f28cdb45e
+        excluded_doc_ids_path: file-of-one-doc-id-per-line.txt.xz
+        excluded_doc_ids:
+          - ebf059defa41b2812c1f969f28cdb45e
+
 
     Stream IDs in the `excluded_stream_ids` list are dropped, all
     others are passed on unmodified.  Defaults to an empty list (don't
@@ -66,26 +76,50 @@ class exclusion_filter(Configured):
     can be optionally be xz-compressed.
 
     '''
-    config_name = 'exclusion_filter'
-    default_config = { 'excluded_stream_ids': [] }
+    config_name = 'id_filter'
+    default_config = { 
+        'excluded_stream_ids': [],
+        'included_stream_ids': [],
+        'excluded_doc_ids': [],
+        'included_doc_ids': [],
+        }
 
     def __init__(self, *args, **kwargs):
-        super(exclusion_filter, self).__init__(*args, **kwargs)
-        stream_ids = set(self.config.get('excluded_stream_ids', []))
-        stream_ids_path = self.config.get('excluded_stream_ids_path')
-        if stream_ids_path:
-            if stream_ids_path.endswith('.xz'):
-                fh = lzma.open(stream_ids_path)
+        super(id_filter, self).__init__(*args, **kwargs)
+        self.included_doc_ids = set()
+        self.excluded_doc_ids = set()
+        self.included_stream_ids = set()
+        self.excluded_stream_ids = set()
+        for mode in ['excluded', 'included']:
+            for id_type in ['stream_ids', 'doc_ids']:
+                self.configure(mode, id_type)
+
+    def configure(self, mode, id_type):
+        mode_type = '%s_%s' % (mode, id_type)
+        data = set(self.config.get(mode_type, []))
+        path = self.config.get(mode_type + '_path')
+        if path:
+            if path.endswith('.xz'):
+                fh = lzma.open(path)
             else:
-                fh = open(stream_ids_path)
-            map(stream_ids.add, fh.read().splitlines())
-        self.excluded_stream_ids = stream_ids
-        logger.info('finished loading %d stream_ids to exclude', len(stream_ids))
+                fh = open(path)
+            map(data.add, fh.read().splitlines())
+        setattr(self, mode_type, data)
+        logger.info('finished loading %d %s to %s', len(data), id_type, mode)
 
     def __call__(self, si, context):
         if si.stream_id in self.excluded_stream_ids:
             return None
+        if si.doc_id in self.excluded_stream_ids:
+            return None
+
+        if self.included_stream_ids or self.included_doc_ids:
+            if si.stream_id in self.included_stream_ids:
+                return si
+            if si.doc_id in self.included_doc_ids:
+                return si
         else:
+            ## not filtering by inclusion
             return si
 
 class filter_languages(Configured):
