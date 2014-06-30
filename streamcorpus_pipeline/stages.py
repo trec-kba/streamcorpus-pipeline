@@ -33,7 +33,7 @@ Incremental transforms
 .. autoclass:: streamcorpus_pipeline._fix_text.fix_text
 .. autoclass:: streamcorpus_pipeline._dedup.dedup
 .. autoclass:: streamcorpus_pipeline._dump_label_stats.dump_label_stats
-.. autoclass:: streamcorpus_pipeline._filters.exclusion_filter
+.. autoclass:: streamcorpus_pipeline._filters.id_filter
 .. autofunction:: streamcorpus_pipeline._guess_media_type.file_type_stats
 .. autoclass:: streamcorpus_pipeline._filters.filter_languages
 .. autoclass:: streamcorpus_pipeline._filters.filter_tagger_ids
@@ -356,7 +356,7 @@ class PipelineStages(StageRegistry):
         self.tryload_stage('_fix_text', 'fix_text')
         self.tryload_stage('_dedup', 'dedup')
         self.tryload_stage('_dump_label_stats', 'dump_label_stats')
-        self.tryload_stage('_filters', 'exclusion_filter')
+        self.tryload_stage('_filters', 'id_filter')
         self.tryload_stage('_guess_media_type', 'file_type_stats')
         self.tryload_stage('_filters', 'filter_languages')
         self.tryload_stage('_filters', 'filter_tagger_ids')
