@@ -11,6 +11,7 @@ from cStringIO import StringIO
 import hashlib
 import logging
 import os
+import re
 import sys
 import time
 import traceback
@@ -153,11 +154,16 @@ class from_s3_chunks(Configured):
                     self.config['streamcorpus_version'] == 'v0_1_0':
                 i_content_md5 = key.key.split('.')[-3]
             else:
-                ## go past {sc,protostream}.xz.gpg
-                parts = key.key.split('.')
-                if  parts[-1] == '.gpg':
-                    parts.pop()
-                i_content_md5 = parts[-4][-32:]
+                    ## go past {sc,protostream}.xz.gpg
+                    parts = key.key.split('.')
+                    if  parts[-1] == '.gpg':
+                        parts.pop()
+                    try:
+                        i_content_md5 = parts[-4][-32:]
+                    except IndexError:
+                        # The regex hammer.
+                        m = re.search('([a-z0-9]{32})\.sc', key.key)
+                        i_content_md5 = m.group(1)
 
             ## verify the data matches expected md5
             f_content_md5 = hashlib.md5(data).hexdigest() # pylint: disable=E1101
