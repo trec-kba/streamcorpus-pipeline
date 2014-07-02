@@ -304,10 +304,29 @@ class to_s3_chunks(Configured):
     def put(self, o_path, data):
         key = Key(self.bucket, o_path)
         key.set_contents_from_file(StringIO(data))
-        key.set_acl('public-read')
+
+        if not self.config.get('is_private', False):
+            # Makes the file have a public URL.
+            key.set_acl('public-read')
+
+    @_retry
+    def redownload_verify(self, o_path, md5):
+        key = Key(get_bucket(self.config), o_path)
+        contents = key.get_contents_as_string()
+        errors, data = decrypt_and_uncompress(
+            contents, # pylint: disable=E1103
+            self.config.get('gpg_decryption_key_path'),
+            tmp_dir=self.config['tmp_dir_path'],
+            )
+
+        logger.info( 'got back SIs: %d' % len( list( Chunk(data=data) ) ))
+        return verify_md5(md5, data, other_errors=errors)
 
     @_retry
     def verify(self, o_path, md5):
+        if self.config.get('is_private', False):
+            return self.redownload_verify(o_path, md5)
+
         url = 'http://s3.amazonaws.com/%(bucket)s/%(o_path)s' % dict(
             bucket = self.config['bucket'],
             o_path = o_path)
@@ -320,13 +339,8 @@ class to_s3_chunks(Configured):
             )
 
         logger.info( 'got back SIs: %d' % len( list( Chunk(data=data) ) ))
+        return verify_md5(md5, data, other_errors=errors)
 
-        rec_md5 = hashlib.md5(data).hexdigest() # pylint: disable=E1101
-        if md5 == rec_md5:
-            return
-        else:
-            logger.critical('\n'.join(errors))
-            raise Exception('original md5 = %r != %r = received md5' % (md5, rec_md5))
 
 class to_s3_tarballs(Configured):
     config_name = 'to_s3_tarballs'
@@ -411,19 +425,34 @@ class to_s3_tarballs(Configured):
     def put(self, o_path, data):
         key = Key(self.bucket, o_path)
         key.set_contents_from_file(StringIO(data))
-        key.set_acl('public-read')
+        if not self.config.get('is_private', False):
+            # Makes the file have a public URL.
+            key.set_acl('public-read')
+
+    @_retry
+    def redownload_verify(self, o_path, md5):
+        key = Key(get_bucket(self.config), o_path)
+        data = key.get_contents_as_string()
+        logger.info( 'got back SIs: %d' % len( list( Chunk(data=data) ) ))
+        return verify_md5(md5, data)
 
     @_retry
     def verify(self, o_path, md5):
+        if self.config.get('is_private', False):
+            return self.redownload_verify(o_path, md5)
+
         url = 'http://s3.amazonaws.com/%(bucket)s/%(o_path)s' % dict(
             bucket = self.config['bucket'],
             o_path = o_path)
         logger.info('fetching %r' % url)
         req = requests.get(url)
-        data = req.content # pylint: disable=E1103
+        return verify_md5(md5, req.content)
 
-        rec_md5 = hashlib.md5(data).hexdigest() # pylint: disable=E1101
-        if md5 == rec_md5:
-            return
-        else:
-            raise Exception('original md5 = %r != %r = received md5' % (md5, rec_md5))
+
+def verify_md5(md5_expected, data, other_errors=None):
+    md5_recv = hashlib.md5(data).hexdigest()
+    if md5_expected != md5_recv:
+        if other_errors is not None:
+            logger.critical('\n'.join(other_errors))
+        raise Exception('original md5 = %r != %r = received md5' \
+                        % (md5_expected, md5_recv))
