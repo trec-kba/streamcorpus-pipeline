@@ -1,6 +1,7 @@
 from __future__ import absolute_import
 import contextlib
 import logging
+import uuid
 
 import pytest
 
@@ -38,6 +39,53 @@ def configurator(request, namespace_string, redis_address):
             client = kvlayer.client()
             client.delete_namespace()
     return make_config
+
+def test_kvlayer_simple(configurator, tmpdir):
+    si = streamcorpus.make_stream_item('2000-01-01T12:34:00.000123Z',
+                                       'test://test.stream.item/')
+    chunkfile = str(tmpdir.join('chunk.sc.xz'))
+    with streamcorpus.Chunk(path=chunkfile, mode='wb') as chunk:
+        chunk.add(si)
+
+    with configurator():
+        writer = to_kvlayer(yakonfig.get_global_config(
+            'streamcorpus_pipeline', 'to_kvlayer'))
+        writer(chunkfile, {}, '')
+
+        kvlclient = kvlayer.client()
+        kvlclient.setup_namespace({'stream_items': 2})
+        print repr(list(kvlclient.scan_keys('stream_items')))
+        for (k,v) in kvlclient.get(
+                'stream_items',
+                (uuid.UUID(int=946730040),
+                 uuid.UUID(hex='985c1e3ed73256cd9a399919fe93cf76'))):
+            assert v is not None
+
+        reader = from_kvlayer(yakonfig.get_global_config(
+            'streamcorpus_pipeline', 'from_kvlayer'))
+        sis = list(reader(''))
+        assert len(sis) == 1
+        assert sis[0].stream_time.epoch_ticks == si.stream_time.epoch_ticks
+        assert sis[0].abs_url == si.abs_url
+
+def test_kvlayer_negative(configurator, tmpdir):
+    si = streamcorpus.make_stream_item('1969-07-20T20:18:00.000000Z',
+                                       'test://test.stream.item/')
+    chunkfile = str(tmpdir.join('chunk.sc.xz'))
+    with streamcorpus.Chunk(path=chunkfile, mode='wb') as chunk:
+        chunk.add(si)
+
+    with configurator():
+        writer = to_kvlayer(yakonfig.get_global_config(
+            'streamcorpus_pipeline', 'to_kvlayer'))
+        writer(chunkfile, {}, '')
+
+        reader = from_kvlayer(yakonfig.get_global_config(
+            'streamcorpus_pipeline', 'from_kvlayer'))
+        sis = list(reader(''))
+        assert len(sis) == 1
+        assert sis[0].stream_time.epoch_ticks == si.stream_time.epoch_ticks
+        assert sis[0].abs_url == si.abs_url
 
 @contextlib.contextmanager
 def chunks(configurator, test_data_dir, overlay={}):

@@ -3,8 +3,10 @@ Provides classes for loading StreamItem objects to/from kvlayer
 
 This software is released under an MIT/X11 open source license.
 
-Copyright 2012-2013 Diffeo, Inc.
+Copyright 2012-2014 Diffeo, Inc.
 '''
+from __future__ import absolute_import
+import ctypes
 import logging
 import string
 import uuid
@@ -15,6 +17,28 @@ from streamcorpus_pipeline.stages import Configured
 import yakonfig
 
 logger = logging.getLogger(__name__)
+
+def epoch_ticks_to_uuid(ticks):
+    '''Convert seconds since the Unix epoch to a UUID type.
+
+    The actual value is seconds since the Unix epoch, expressed as a
+    64-bit signed int, left-padded with 64 zero bits.
+
+    >>> epoch_ticks_to_uuid(946730040)
+    UUID('00000000-0000-0000-0000-0000386df438')
+    >>> epoch_ticks_to_uuid(-14182920)
+    UUID('00000000-0000-0000-ffff-ffffff2795f8')
+
+    '''
+    return uuid.UUID(int=ctypes.c_ulonglong(int(ticks)).value)
+
+def uuid_to_epoch_ticks(u):
+    '''Convert a UUID type to seconds since the Unix epoch.
+
+    This undoes :func:`epoch_ticks_to_uuid`.
+
+    '''
+    return ctypes.c_longlong(u.int).value
 
 class from_kvlayer(Configured):
     '''
@@ -41,8 +65,8 @@ class from_kvlayer(Configured):
     def __call__(self, i_str):
         if i_str:
             epoch_ticks_1, doc_id_1, epoch_ticks_2, doc_id_2 = i_str.split(',')
-            epoch_ticks_1 = uuid.UUID(int=int(epoch_ticks_1))
-            epoch_ticks_2 = uuid.UUID(int=int(epoch_ticks_2))
+            epoch_ticks_1 = epoch_ticks_to_uuid(epoch_ticks_1)
+            epoch_ticks_2 = epoch_ticks_to_uuid(epoch_ticks_2)
             if doc_id_1:
                 assert doc_id_2, (doc_id_1, doc_id_2)
                 doc_id_1 = uuid.UUID(hex=doc_id_1)
@@ -158,7 +182,7 @@ class to_kvlayer(Configured):
         # will just be UUID tuples.  So the iterator produces
         def keys_and_values():
             for si in streamcorpus.Chunk(t_path):
-                key1 = uuid.UUID(int=si.stream_time.epoch_ticks)
+                key1 = epoch_ticks_to_uuid(si.stream_time.epoch_ticks)
                 key2 = uuid.UUID(hex=si.doc_id)
                 data = streamcorpus.serialize(si)
                 errors, data = streamcorpus.compress_and_encrypt(data)
