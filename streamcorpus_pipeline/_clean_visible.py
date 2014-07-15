@@ -173,7 +173,7 @@ def make_clean_visible_file(i_chunk, clean_visible_path):
                 logger.critical( 'failed on stream_id=%s to follow:' % si.stream_id )
                 logger.critical( repr(si.body.clean_visible) )
                 logger.critical( 'above was stream_id=%s' % si.stream_id )
-                sys.exit(str(exc))
+                raise
         else:
             doc.text = ''
         _clean.write(lxml.etree.tostring(doc, encoding='UTF-8'))

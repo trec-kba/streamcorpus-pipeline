@@ -188,7 +188,8 @@ class from_s3_chunks(Configured):
                 return streamcorpus.Chunk(data=data, message=message)
 
             else:
-                sys.exit('Invalid config: input_format = %r' % self.config['input_format'])
+                raise ConfigurationError('from_s3_chunks input_format = %r' %
+                                         self.config['input_format'])
 
 class to_s3_chunks(Configured):
     '''Write :class:`streamcorpus.Chunk` files to Amazon S3.

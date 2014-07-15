@@ -44,6 +44,7 @@ import time
 
 import json
 
+import dblogger
 import kvlayer
 import streamcorpus_pipeline
 from streamcorpus_pipeline.run import instantiate_config
@@ -53,7 +54,7 @@ from streamcorpus_pipeline.stages import PipelineStages
 import yakonfig
 
 def rejester_run_function(work_unit):
-    with yakonfig.defaulted_config([kvlayer, streamcorpus_pipeline],
+    with yakonfig.defaulted_config([dblogger, kvlayer, streamcorpus_pipeline],
                                    config=work_unit.spec.get('config', {})):
         scp_config = yakonfig.get_global_config('streamcorpus_pipeline')
         stages = PipelineStages()
@@ -68,11 +69,6 @@ def rejester_run_function(work_unit):
         work_unit.data['start_chunk_time'] = time.time()
         work_unit.data['start_count'] = 0
         pipeline._process_task(work_unit)
-
-        ## explicitly call cleanup, which is idempotent and might not
-        ## get called by atexit if we are running under
-        ## multiprocessing
-        pipeline.cleanup()
 
 def rejester_terminate_function(work_unit):
     pass

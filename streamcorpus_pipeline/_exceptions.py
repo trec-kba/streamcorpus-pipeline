@@ -29,3 +29,6 @@ class GracefulShutdown(PipelineBaseException):
 class ConfigurationError(PipelineBaseException):
     pass
 
+class InvalidStreamItem(PipelineBaseException):
+    '''Some content in a stream item was invalid.'''
+    pass

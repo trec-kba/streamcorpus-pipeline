@@ -226,7 +226,8 @@ def line_offset_labels(stream_item, aligner_data):
 
                 ## only for debugging
                 if not tok.token or tok.token not in label_off.value:
-                    sys.exit('%r not in %r' % \
+                    raise InvalidStreamItem(
+                        '%r not in %r' %
                         ([(t.offsets[OffsetType.LINES].first, t.token)
                           for t in toks],
                          label_off.value))
@@ -287,7 +288,8 @@ def _offset_labels(stream_item, aligner_data, offset_type='BYTES'):
                 assert tok.token is not None, tok.token
 
                 if not tok.token in label_off.value:
-                    sys.exit('%r not in %r' % \
+                    raise InvalidStreamItem(
+                        '%r not in %r' %
                         ([(t.offsets[offset_type].first, t.token)
                           for t in toks],
                          label_off.value))
@@ -583,8 +585,6 @@ the output path to create.
         except OSError, exc:
             msg = traceback.format_exc(exc)
             msg += make_memory_info_msg(clean_visible_path, ner_xml_path)
-            # instead of sys.ext, do proper shutdown
-            #sys.exit(int(self.config['exit_code_on_out_of_memory']))
             raise PipelineOutOfMemory(msg)
 
         s_out, errors = self._child.communicate()

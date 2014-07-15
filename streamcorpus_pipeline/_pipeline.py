@@ -155,17 +155,14 @@ create :class:`Pipeline` objects from the resulting configuration.
 '''
 
 from __future__ import absolute_import
-import atexit
 import itertools
 import logging
 import math
 import os
 import re
 import shutil
-import signal
 import sys
 import time
-import traceback
 import uuid
 
 try:
@@ -224,15 +221,11 @@ class PipelineFactory(object):
         Pass in the configuration under the ``streamcorpus_pipeline``
         block, not the top-level configuration that contains it.
         '''
-        tmpdir = config.get('tmp_dir_path')
-        if not os.path.exists(tmpdir):
-            os.makedirs(tmpdir)
-
         return Pipeline(
             rate_log_interval=config['rate_log_interval'],
             input_item_limit=config.get('input_item_limit'),
             cleanup_tmp_files=config['cleanup_tmp_files'],
-            tmp_dir_path=tmpdir,
+            tmp_dir_path=config['tmp_dir_path'],
             assert_single_source=config['assert_single_source'],
             output_chunk_max_count=config.get('output_chunk_max_count'),
             output_max_clean_visible_bytes=
@@ -258,13 +251,7 @@ class Pipeline(object):
     on individual StreamItem objects.  Finally, any number of *writers*
     send output somewhere, usually a streamcorpus.Chunk file.
 
-    Callers should call :meth:`cleanup` once when done doing
-    transformations.  If they do not, it will be automatically called
-    at shutdown.
-
     .. automethod:: __init__
-    .. automethod:: cleanup
-    .. automethod:: shutdown
     .. automethod:: run
     .. automethod:: _process_task
 
@@ -327,59 +314,6 @@ class Pipeline(object):
             )
         self.work_unit = None
 
-        # TODO: this is kind of wrong and we should make try/finally DTRT
-        self._shutting_down = False
-        self._cleanup_done = False
-        atexit.register(self.cleanup)
-
-    def cleanup(self):
-        '''shutdown all the stages, terminate the work_unit, remove tmp dir
-
-        This is idempotent.  Pipeline users should call this explicitly
-        when done with the pipeline, but this is also registered to
-        be called at shutdown.
-        '''
-        if self._cleanup_done:
-            return
-        #from streamcorpus_pipeline._rmtree import get_open_fds
-        #logger.critical(get_open_fds(verbose=True))
-        if (self.t_chunk):
-            self.t_chunk.close()
-        if self.work_unit:
-            self.work_unit.terminate()
-        for transform in self.batch_transforms:
-            transform.shutdown()
-        if not self.cleanup_tmp_files:
-            logger.info('skipping cleanup due to config.cleanup_tmp_files=False')
-        else:
-            logger.debug('attempting rm -rf %s', self.tmp_dir_path)
-            rmtree(self.tmp_dir_path)
-            logger.info('finished rm -rf %s', self.tmp_dir_path)
-        self._cleanup_done = True
-
-    def shutdown(self, sig=None, frame=None, msg=None, exit_code=None):
-        '''Clean up the pipeline and destroy the world.
-
-        This calls :meth:`cleanup`, and then :func:`sys.exit`.
-        
-        .. todo:: move this functionality to :mod:`streamcorpus_pipeline.run`
-
-        '''
-        if sig:
-            logger.critical('shutdown inititated by signal: %r' % sig)
-        elif msg:
-            logger.critical('shutdown inititated, msg: %s' % msg)
-        self._shutting_down = True
-        self.cleanup()
-        if exit_code is None:
-            if msg:
-                exit_code = -1
-            elif sig:
-                exit_code = 128 + sig
-        logger.critical('shutdown in final steps, exit_code=%d' % exit_code)
-        logging.shutdown()
-        sys.exit(exit_code)
-
     def _process_task(self, work_unit):
         '''Process a :class:`rejester.WorkUnit`.
 
@@ -410,141 +344,153 @@ class Pipeline(object):
         :param int start_chunk_time: timestamp for the first stream item
 
         '''
-        if start_chunk_time is None:
-            start_chunk_time = time.time()
-
-        ## the reader returns generators of StreamItems
         try:
+            if not os.path.exists(self.tmp_dir_path):
+                os.makedirs(self.tmp_dir_path)
+
+            if start_chunk_time is None:
+                start_chunk_time = time.time()
+
+            ## the reader returns generators of StreamItems
             i_chunk = self.reader(i_str)
-        except FailedExtraction, exc:
-            ## means that task is invalid, reader did its best
-            ## and gave up, so fail the work_unit
-            logger.critical('committing failure_log on %s' % (i_str),
-                            exc_info = exc)
+
+            ## t_path points to the currently in-progress temp chunk
+            t_path = None
+
+            ## loop over all docs in the chunk processing and cutting
+            ## smaller chunks if needed
+
+            len_clean_visible = 0
+            sources = set()
+            next_idx = 0
+
+            ## how many have we input and actually done processing on?
+            input_item_count = 0
+
+            for si in i_chunk:
+                # TODO: break out a _process_stream_item function?
+                next_idx += 1
+
+                ## yield to the gevent hub to allow other things to run
+                if gevent:
+                    gevent.sleep(0)
+
+                ## skip forward until we reach start_count
+                if next_idx <= start_count:
+                    continue
+
+                if next_idx % self.rate_log_interval == 0:
+                    ## indexing is zero-based, so next_idx corresponds
+                    ## to length of list of SIs processed so far
+                    elapsed = time.time() - start_chunk_time
+                    if elapsed > 0:
+                        rate = float(next_idx) / elapsed
+                        logger.info('%d in %.1f --> %.1f per sec on '
+                                    '(pre-partial_commit) %s',
+                                    next_idx - start_count, elapsed, rate,
+                                    i_str)
+
+                if not self.t_chunk:
+                    ## make a temporary chunk at a temporary path
+                    # (Lazy allocation after we've read an item that might get processed out to the new chunk file)
+                    # TODO: make this EVEN LAZIER by not opening the t_chunk until inside _run_incremental_transforms whe the first output si is ready
+                    t_path = os.path.join(self.tmp_dir_path,
+                                          't_chunk-%s' % uuid.uuid4().hex)
+                    self.t_chunk = streamcorpus.Chunk(path=t_path, mode='wb')
+                    assert self.t_chunk.message == streamcorpus.StreamItem_v0_3_0, self.t_chunk.message
+
+                # TODO: a set of incremental transforms is equivalent
+                # to a batch transform.  Make the pipeline explicitly
+                # configurable as such:
+                #
+                # batch_transforms: [[incr set 1], batch op, [incr set 2], ...]
+                #
+                # OR: for some list of transforms (mixed incremental
+                # and batch) pipeline can detect and batchify as needed
+
+                ## incremental transforms populate t_chunk
+                ## let the incremental transforms destroy the si by
+                ## returning None
+                si = self._run_incremental_transforms(
+                    si, self.incremental_transforms)
+
+                ## insist that every chunk has only one source string
+                if si:
+                    sources.add( si.source )
+                    if self.assert_single_source and len(sources) != 1:
+                        raise InvalidStreamItem(
+                            'stream item %r had source %r, not %r '
+                            '(set assert_single_source: false to suppress)' %
+                            (si.stream_id, si.source, sources))
+
+                if si and si.body and si.body.clean_visible:
+                    len_clean_visible += len(si.body.clean_visible)
+                    ## log binned clean_visible lengths, for quick stats estimates
+                    #logger.debug('len(si.body.clean_visible)=%d' % int(10 * int(math.floor(float(len(si.body.clean_visible)) / 2**10)/10)))
+                    #logger.debug('len(si.body.clean_visible)=%d' % len(si.body.clean_visible))
+
+
+                if (self.output_chunk_max_count is not None and
+                    len(self.t_chunk) == self.output_chunk_max_count):
+                    logger.info('reached output_chunk_max_count (%d) at: %d',
+                                len(self.t_chunk), next_idx)
+                    self.t_chunk.close()
+                    self._intermediate_output_chunk(
+                        start_count, next_idx, sources, i_str, t_path)
+                    start_count = next_idx
+
+                elif (self.output_max_clean_visible_bytes is not None and
+                      len_clean_visible >=
+                      self.output_chunk_max_clean_visible_bytes):
+                    logger.info(
+                        'reached output_chunk_max_clean_visible_bytes '
+                        '(%d) at: %d',
+                        self.output_chunk_max_clean_visible_bytes,
+                        len_clean_visible)
+                    len_clean_visible = 0
+                    self.t_chunk.close()
+                    self._intermediate_output_chunk(
+                        start_count, next_idx, sources, i_str, t_path)
+                    start_count = next_idx
+
+                input_item_count += 1
+                if ((self.input_item_limit is not None) and
+                    (input_item_count > self.input_item_limit)):
+                    break
+
+            ## bool(t_chunk) is False if t_chunk has no data, but we still
+            ## want to make sure it gets closed.
+            if self.t_chunk is not None:
+                self.t_chunk.close()
+                o_paths = self._process_output_chunk(
+                    start_count, next_idx, sources, i_str, t_path)
+                self.t_chunk = None
+            else:
+                o_paths = None
+
+            ## set start_count and o_paths in work_unit and updated
+            data = dict(start_count=next_idx, o_paths=o_paths)
+            logger.debug('WorkUnit.update() data=%r', data)
             if self.work_unit is not None:
-                self.work_unit.fail(exc)
-            return 0
+                self.work_unit.data.update(data)
+                self.work_unit.update()
 
-        ## t_path points to the currently in-progress temp chunk
-        t_path = None
+            ## return how many stream items we processed
+            return next_idx
 
-        ## loop over all docs in the chunk processing and cutting
-        ## smaller chunks if needed
-
-        len_clean_visible = 0
-        sources = set()
-        next_idx = 0
-
-        input_item_count = 0  # how many have we input and actually done processing on?
-
-        for si in i_chunk:
-            # TODO: break out a _process_stream_item function?
-            next_idx += 1
-
-            if self._shutting_down:
-                break
-
-            ## must yield to the gevent hub to allow other
-            ## things to run, in particular test_pipeline
-            ## needs this to verify that shutdown works.  We
-            ## import gevent here instead of above out of
-            ## paranoia that the kazoo module used in
-            ## ZookeeperTaskQueue may need to do a monkey
-            ## patch before this gets imported:
-            if gevent:
-                gevent.sleep(0)
-
-            ## skip forward until we reach start_count
-            if next_idx <= start_count:
-                continue
-
-            if next_idx % self.rate_log_interval == 0:
-                ## indexing is zero-based, so next_idx corresponds
-                ## to length of list of SIs processed so far
-                elapsed = time.time() - start_chunk_time
-                if elapsed > 0:
-                    rate = float(next_idx) / elapsed
-                    logger.info('%d in %.1f --> %.1f per sec on (pre-partial_commit) %s' % (
-                        next_idx - start_count, elapsed, rate, i_str))
-
-            if not self.t_chunk:
-                ## make a temporary chunk at a temporary path
-                # (Lazy allocation after we've read an item that might get processed out to the new chunk file)
-                # TODO: make this EVEN LAZIER by not opening the t_chunk until inside _run_incremental_transforms whe the first output si is ready
-                t_path = os.path.join(self.tmp_dir_path, 't_chunk-%s' % uuid.uuid4().hex)
-                self.t_chunk = streamcorpus.Chunk(path=t_path, mode='wb')
-            assert self.t_chunk.message == streamcorpus.StreamItem_v0_3_0, self.t_chunk.message
-
-            # TODO: a set of incremental transforms is equivalent to a batch transform.
-            # Make the pipeline explicitly configurable as such:
-            # batch_transforms: [[incr set 1], big batch op, [incr set 2], ...]
-            # OR: for some list of transforms (mixed incremental and batch) pipeline can detect and batchify as needed
-
-            ## incremental transforms populate t_chunk
-            ## let the incremental transforms destroy the si by returning None
-            si = self._run_incremental_transforms(si, self.incremental_transforms)
-
-            ## insist that every chunk has only one source string
-            if si:
-                sources.add( si.source )
-                if self.assert_single_source and len(sources) != 1:
-                    raise PipelineBaseException(
-                        'assert_single_source, but %r' % sources)
-
-            if si and si.body and si.body.clean_visible:
-                len_clean_visible += len(si.body.clean_visible)
-                ## log binned clean_visible lengths, for quick stats estimates
-                #logger.debug('len(si.body.clean_visible)=%d' % int(10 * int(math.floor(float(len(si.body.clean_visible)) / 2**10)/10)))
-                logger.debug('len(si.body.clean_visible)=%d' % len(si.body.clean_visible))
-
-
-            if (self.output_chunk_max_count is not None and
-                len(self.t_chunk) == self.output_chunk_max_count):
-                logger.warn('reached output_chunk_max_count (%d) at: %d' % (len(self.t_chunk), next_idx))
+        finally:
+            if self.t_chunk is not None:
                 self.t_chunk.close()
-                self._intermediate_output_chunk(start_count, next_idx, sources, i_str, t_path)
-                start_count = next_idx
-
-            elif (self.output_max_clean_visible_bytes is not None and
-                    len_clean_visible >= self.output_chunk_max_clean_visible_bytes):
-                logger.warn('reached output_chunk_max_clean_visible_bytes (%d) at: %d' % (
-                        self.output_chunk_max_clean_visible_bytes, len_clean_visible))
-                len_clean_visible = 0
-                self.t_chunk.close()
-                self._intermediate_output_chunk(start_count, next_idx, sources, i_str, t_path)
-                start_count = next_idx
-
-            input_item_count += 1
-            if ((self.input_item_limit is not None) and
-                (input_item_count > self.input_item_limit)):
-                break
-
-        ## bool(t_chunk) is False if t_chunk has no data, but we still
-        ## want to make sure it gets closed.
-        if self.t_chunk is not None:
-            self.t_chunk.close()
-            o_paths = self._process_output_chunk(start_count, next_idx, sources, i_str, t_path)
-            self.t_chunk = None
-        else:
-            o_paths = None
-
-        ## set start_count and o_paths in work_unit and updated
-        data = dict(start_count=next_idx, o_paths=o_paths)
-        logger.debug('WorkUnit.update() data=%r', data)
-        if self.work_unit is not None:
-            self.work_unit.data.update(data)
-            self.work_unit.update()
-
-        # return how many stream items we processed
-        return next_idx
+            for transform in self.batch_transforms:
+                transform.shutdown()
+            if self.cleanup_tmp_files:
+                rmtree(self.tmp_dir_path)
+            
 
     def _intermediate_output_chunk(self, start_count, next_idx, sources, i_str, t_path):
         '''save a chunk that is smaller than the input chunk
         '''
         o_paths = self._process_output_chunk(start_count, next_idx, sources, i_str, t_path)
-
-        if self._shutting_down:
-            return
 
         ## set start_count and o_paths in work_unit and updated
         data = dict(start_count=next_idx, o_paths=o_paths)
@@ -598,18 +544,7 @@ class Pipeline(object):
 
     def _run_batch_transforms(self, chunk_path):
         for transform in self.batch_transforms:
-            try:
-                transform.process_path(chunk_path)
-            except PipelineOutOfMemory, exc:
-                logger.critical('caught PipelineOutOfMemory, so shutting down')
-                self.shutdown( msg=traceback.format_exc(exc) )
-            except Exception, exc:
-                if self._shutting_down:
-                    logger.critical('ignoring exception while shutting down', exc_info=True)
-                else:
-                    ## otherwise, let it bubble up and kill this process
-                    logger.critical('batch transform %r failed', transform, exc_info=True)
-                    raise
+            transform.process_path(chunk_path)
 
     def _maybe_run_post_batch_incremental_transforms(self, t_path):
         ## Run post batch incremental (pbi) transform stages.
@@ -637,24 +572,12 @@ class Pipeline(object):
             )
 
         for writer in self.writers:
-            try:
-                logger.debug('running %r on %r: %r', writer, i_str, name_info)
-                o_path = writer(t_path, name_info, i_str)                        
-            except OSError, exc:
-                if exc.errno == 12:
-                    logger.critical('caught OSError 12 in writer, so shutting down')
-                    self.shutdown( msg=traceback.format_exc(exc) )
-                else:
-                    logger.critical('writer (%r, %r) failed', writer, i_str, exc_info=True)
-                    raise
-
+            logger.debug('running %r on %r: %r', writer, i_str, name_info)
+            o_path = writer(t_path, name_info, i_str) 
             logger.debug('loaded (%d, %d) of %r into %r',
-                    start_count, next_idx - 1, i_str, o_path)
+                         start_count, next_idx - 1, i_str, o_path)
             if o_path:
                 o_paths.append( o_path )
-
-            if self._shutting_down:
-                return
 
     def _run_incremental_transforms(self, si, transforms):
         '''
@@ -700,15 +623,14 @@ class Pipeline(object):
 
         ## expect to always have a stream_time
         if not si.stream_time:
-            msg = 'empty stream_time: %s' % si
-            logger.critical(msg)
-            sys.exit(msg)
+            raise InvalidStreamItem('empty stream_time: %s' % si)
 
         if si.stream_id is None:
-            logger.critical('empty stream_id: %r', si)
-            return None
+            raise InvalidStreamItem('empty stream_id: %r' % si)
 
         ## put the StreamItem into the output
-        assert type(si) == streamcorpus.StreamItem_v0_3_0, type(si)
+        if type(si) != streamcorpus.StreamItem_v0_3_0:
+            raise InvalidStreamItem('incorrect stream item object %r' %
+                                    type(si))
         self.t_chunk.add(si)
         return si

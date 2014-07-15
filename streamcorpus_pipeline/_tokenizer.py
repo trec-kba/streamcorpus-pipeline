@@ -88,12 +88,7 @@ class nltk_tokenizer(IncrementalTransform):
             sent = Sentence()
             sentence_pos = 0
             for start, end in self.word_tokenizer.span_tokenize(sent_str):
-                try:
-                    token_str = sent_str[start:end].encode('utf8')
-                except Exception, exc:
-                    logger.critical("died on sent_str[%d:%d].encode('utf8')",
-                                    start, end, exc_info=True)
-                    sys.exit('failed to cope with %r in %r' % (sent_str[start:end], sent_str))
+                token_str = sent_str[start:end].encode('utf8')
                 tok = Token(
                     token_num=token_num,
                     token=token_str,

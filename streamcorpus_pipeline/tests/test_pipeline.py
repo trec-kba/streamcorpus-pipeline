@@ -44,9 +44,6 @@ def test_pipeline(request, test_data_dir):
 
         gevent.sleep(5)
 
-        with pytest.raises(SystemExit):  # pylint: disable=E1101
-            p.shutdown(sig=signal.SIGTERM)
-
         logger.debug('now joining...')
         timeout = gevent.Timeout(1)
         g.join(timeout=timeout)

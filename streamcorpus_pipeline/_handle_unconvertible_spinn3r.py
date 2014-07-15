@@ -11,6 +11,7 @@ from __future__ import absolute_import
 import sys
 
 from streamcorpus_pipeline._clean_html import force_unicode
+from streamcorpus_pipeline._exceptions import InvalidStreamItem
 from streamcorpus_pipeline.stages import Configured
 
 class handle_unconvertible_spinn3r(Configured):
@@ -26,10 +27,12 @@ class handle_unconvertible_spinn3r(Configured):
     def __call__(self, si, context):
 
         if not si.body:
-            sys.exit('si.body should never be none: %r' % si.stream_id)
+            raise InvalidStreamItem('si.body should never be none: %r' %
+                                    si.stream_id)
 
         if not si.body.raw:
-            sys.exit('si.body.raw should never be none: %r' % si.stream_id)
+            raise InvalidStreamItem('si.body.raw should never be none: %r' %
+                                    si.stream_id)
 
         if not si.body.clean_html:
 
