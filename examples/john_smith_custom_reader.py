@@ -1,10 +1,12 @@
-'''
-Example of how to transform a corpus into the streamcorpus format.
+'''Example of how to transform a corpus into the streamcorpus format
+and feed it into the streamcorpus_pipeline.  This offers a "reader"
+stage that can be referenced in a streamcorpus_pipeline configuration
+file.
 
-This does the same thing as the regular kba.pipeline's john_smith
-reader with these differences:
+This does the same thing as the regular streamcorpus_pipeline's
+built-in john_smith reader with these differences:
 
-1) this is run as an "external stage" by
+1) this is run as an "external stage", see example:
 configs/john-smith-with-labels-from-tsv.yaml
 
 2) ground truth data is loaded from a tab-separated-values value,
