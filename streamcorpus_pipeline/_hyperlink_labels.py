@@ -181,8 +181,13 @@ class hyperlink_labels(Configured):
                 return False
             domain = parts[2].lower()
             for substring in self.config['domain_substrings']:
-                if substring in domain:
-                    return True            
+                try:
+                    if substring in str(domain):
+                        return True
+                except Exception, exc:
+                    logger.warn('%r in %r raised', substring, domain, exc_info=True)
+                    return False
+
 
     def line_href_anchors(self):
         '''
@@ -242,6 +247,10 @@ class hyperlink_labels(Configured):
         assert len(self.clean_html) == len(new_clean_html) - newlines_added
         self.clean_html = new_clean_html
 
+    def char_href_anchors(self, chars=False):
+        for tup in self.byte_href_anchors(chars=True):
+            yield tup
+
     def byte_href_anchors(self, chars=False):
         '''
         simple, regex-based extractor of anchor tags, so we can
@@ -280,7 +289,10 @@ class hyperlink_labels(Configured):
             # include anchor plus the </a>
             idx += length + 4
 
-            yield m.group('href'), first, length, m.group('anchor')
+            if chars:
+                yield m.group('href').encode('utf8'), first, length, m.group('anchor').encode('utf8')
+            else:
+                yield m.group('href'), first, length, m.group('anchor')
 
         assert idx - 4 == len(input_buffer)
 
@@ -368,8 +380,8 @@ class hyperlink_labels(Configured):
         if   self.offset_type == OffsetType.BYTES:
             parser = self.byte_href_anchors
 
-        elif self.offset_type == OffsetType.LINES:
-            parser = self.line_href_anchors
+        elif self.offset_type == OffsetType.CHARS:
+            parser = self.char_href_anchors
 
         labels = []
         ## make clean_html accessible as a class property so we can 
