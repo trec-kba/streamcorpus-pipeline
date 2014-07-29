@@ -169,7 +169,7 @@ class hyperlink_labels(Configured):
         :returns bool:
         '''
         if self.config['require_abs_url']:
-            if not href.lower().startswith('http://'):
+            if not href.lower().startswith(('http://', 'https://')):
                 return False
         if self.config['all_domains']:
             ## blanket accept all domains as labels
@@ -182,7 +182,7 @@ class hyperlink_labels(Configured):
             domain = parts[2].lower()
             for substring in self.config['domain_substrings']:
                 try:
-                    if substring in str(domain):
+                    if substring in domain:
                         return True
                 except Exception, exc:
                     logger.warn('%r in %r raised', substring, domain, exc_info=True)
