@@ -150,33 +150,25 @@ class from_s3_chunks(Configured):
                 tmp_dir=self.config['tmp_dir_path'],
                 )
             logger.info( '\n'.join(_errors) )
-            if self.config['input_format'] == 'streamitem' and \
-                    self.config['streamcorpus_version'] == 'v0_1_0':
-                i_content_md5 = key.key.split('.')[-3]
-            else:
-                    ## go past {sc,protostream}.xz.gpg
-                    parts = key.key.split('.')
-                    if  parts[-1] == '.gpg':
-                        parts.pop()
-                    try:
-                        i_content_md5 = parts[-4][-32:]
-                    except IndexError:
-                        # The regex hammer.
-                        m = re.search('([a-z0-9]{32})\.sc', key.key)
-                        i_content_md5 = m.group(1)
+            if self.config.get('compare_md5_in_file_name') is None:
+                logger.warn('not checking md5, consider setting compare_md5_in_file_name')
+            if self.config.get('compare_md5_in_file_name', False):
+                # The regex hammer.
+                m = re.search('([a-z0-9]{32})\.sc', key.key)
+                i_content_md5 = m.group(1)
 
-            ## verify the data matches expected md5
-            f_content_md5 = hashlib.md5(data).hexdigest() # pylint: disable=E1101
-            if i_content_md5 != f_content_md5:
-                msg = 'FAIL(%d): %s --> %s != %s' % (tries, key.key, i_content_md5, f_content_md5)
-                logger.critical(msg)
-                tries += 1
-                if tries > self.config['tries']:
-                    ## indicate complete failure to pipeline so it
-                    ## gets recorded in task_queue
-                    raise FailedExtraction(msg)
-                else:
-                    continue
+                ## verify the data matches expected md5
+                f_content_md5 = hashlib.md5(data).hexdigest() # pylint: disable=E1101
+                if i_content_md5 != f_content_md5:
+                    msg = 'FAIL(%d): %s --> %s != %s' % (tries, key.key, i_content_md5, f_content_md5)
+                    logger.critical(msg)
+                    tries += 1
+                    if tries > self.config['tries']:
+                        ## indicate complete failure to pipeline so it
+                        ## gets recorded in task_queue
+                        raise FailedExtraction(msg)
+                    else:
+                        continue
 
             if self.config['input_format'] == 'spinn3r':
                 ## convert the data from spinn3r's protostream format
