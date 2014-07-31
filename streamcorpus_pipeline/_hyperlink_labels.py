@@ -383,6 +383,9 @@ class hyperlink_labels(Configured):
         elif self.offset_type == OffsetType.CHARS:
             parser = self.char_href_anchors
 
+        elif self.offset_type == OffsetType.LINES:
+            parser = self.line_href_anchors
+
         labels = []
         ## make clean_html accessible as a class property so we can 
         self.clean_html = clean_html

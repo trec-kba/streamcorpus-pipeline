@@ -59,7 +59,7 @@ def test_target_parsing(test_data_dir):
     assert 'target' not in visible
 
     stage = hyperlink_labels(config={
-        'offset_types': ['LINES'],
+        'offset_types': ['CHARS'],
         'require_abs_url': True,
         'all_domains': True,
     })
