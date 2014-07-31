@@ -291,7 +291,7 @@ def _offset_labels(stream_item, aligner_data, offset_type='BYTES'):
                 ## only for debugging
                 assert tok.token is not None, tok.token
 
-                if not tok.token in label_off.value:
+                if cleanse(tok.token) not in label_off.value:
                     raise InvalidStreamItem(
                         '%r not in %r' %
                         ([(t.offsets[offset_type].first, t.token)
