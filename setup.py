@@ -146,7 +146,7 @@ setup(
     data_files = [
         ('docs/examples/streamcorpus-pipeline/', recursive_glob('examples', '*.py')),
         ('docs/examples/streamcorpus-pipeline/', recursive_glob('examples', '*.yaml')),
-        ('data/streamcorpus-pipeline', [
+        ('data/streamcorpus-pipeline/john-smith/', [
                 'data/john-smith/john-smith-tagged-by-lingpipe-serif-0-197.sc.xz',
                 'data/john-smith/ground-truth.yaml',
                 ]),
