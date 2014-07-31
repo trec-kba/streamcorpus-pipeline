@@ -265,7 +265,7 @@ def _offset_labels(stream_item, aligner_data, offset_type='BYTES'):
             ## putting it into the token
             label_off = label.offsets.pop( offset_type )
 
-            if offset_type = OffsetType.CHARS:
+            if offset_type == OffsetType.CHARS:
                 assert label_off.length == len(label_off.value.decode('utf8')), (label_off.length, repr(label_off.value))
             else:
                 ## had better by BYTES
