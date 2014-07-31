@@ -114,7 +114,7 @@ def test_basics(test_data_dir):
 
 @pytest.mark.parametrize(('parser_type',), [  # pylint: disable=E1101
     ('BYTES',),
-    ('LINES',),
+    ('CHARS',),
 ])
 def test_speed(parser_type, test_data_dir):
     stream_items = []
@@ -179,7 +179,7 @@ def test_anchors_re():
 
 @pytest.mark.parametrize(('parser_type',), [  # pylint: disable=E1101
     ('BYTES',),
-    ('LINES',),
+    ('CHARS',),
 ])
 def test_long_doc(parser_type, test_data_dir):
     stream_item = StreamItem()
