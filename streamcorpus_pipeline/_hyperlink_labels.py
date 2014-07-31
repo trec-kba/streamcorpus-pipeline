@@ -281,8 +281,6 @@ class hyperlink_labels(Configured):
             idx += len(before) + len(ahref)
             first = idx
 
-            ## usually this will be one, but it could be more than
-            ## that when an anchor text contains newlines
             length = len(m.group('anchor'))
 
             ## update the index for the next loop

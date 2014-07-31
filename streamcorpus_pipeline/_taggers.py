@@ -27,7 +27,7 @@ from streamcorpus_pipeline._clean_visible import make_clean_visible_file, \
     cleanse
 from sortedcollection import SortedCollection
 from streamcorpus_pipeline._exceptions import PipelineOutOfMemory, \
-    PipelineBaseException
+    PipelineBaseException, InvalidStreamItem
 import streamcorpus_pipeline._memory as _memory
 import streamcorpus_pipeline.stages
 from yakonfig import ConfigurationError
@@ -265,7 +265,11 @@ def _offset_labels(stream_item, aligner_data, offset_type='BYTES'):
             ## putting it into the token
             label_off = label.offsets.pop( offset_type )
 
-            assert label_off.length == len(label_off.value)
+            if offset_type = OffsetType.CHARS:
+                assert label_off.length == len(label_off.value.decode('utf8')), (label_off.length, repr(label_off.value))
+            else:
+                ## had better by BYTES
+                assert label_off.length == len(label_off.value), (label_off.length, repr(label_off.value))
 
             #print 'L: %d\t%r\t%r' % (label_off.first, label_off.value,
             #                         '\n'.join(hope_original.split('\n')[label_off.first:label_off.first+label_off.length]))
