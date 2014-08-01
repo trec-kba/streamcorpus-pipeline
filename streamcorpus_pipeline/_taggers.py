@@ -193,7 +193,7 @@ def names_in_chains(stream_item, aligner_data):
 
 def line_offset_labels(stream_item, aligner_data):
     ## get a set of tokens -- must have OffsetType.LINES in them.
-    sentences = stream_item.body.sentences[aligner_data['tagger_id']]
+    sentences = stream_item.body.sentences.get(aligner_data['tagger_id'], [])
 
     ## if labels on ContentItem, then make labels on Tokens
     for annotator_id in stream_item.body.labels:
@@ -244,7 +244,7 @@ def _offset_labels(stream_item, aligner_data, offset_type='BYTES'):
 
     offset_type = OffsetType._NAMES_TO_VALUES[offset_type]
 
-    sentences = stream_item.body.sentences[aligner_data['tagger_id']]
+    sentences = stream_item.body.sentences.get(aligner_data['tagger_id'], [])
 
     ## These next few steps are probably the most
     ## memory intensive, because they fully
@@ -291,6 +291,10 @@ def _offset_labels(stream_item, aligner_data, offset_type='BYTES'):
                 ## only for debugging
                 assert tok.token is not None, tok.token
 
+                '''
+                Cannot do the check below, because Serif actually *changes* the characters that it puts in Token.token....
+                InvalidStreamItem: [(55701, '2002'), (55706, 'coup'), (55711, "d'etat")] not in '2002 coup d\xe2\x80\x99etat'
+
                 if tok.token not in label_off.value and \
                    cleanse(tok.token.decode('utf8')) not in \
                    cleanse(label_off.value.decode('utf8')):
@@ -299,6 +303,7 @@ def _offset_labels(stream_item, aligner_data, offset_type='BYTES'):
                         ([(t.offsets[offset_type].first, t.token)
                           for t in toks],
                          label_off.value))
+                '''
 
 
 def look_ahead_match(rating, tokens):
