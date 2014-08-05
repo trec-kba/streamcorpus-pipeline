@@ -98,6 +98,8 @@ def main():
         description='process entire directories using streamcorpus_pipeline')
     parser.add_argument('directories', nargs='+', metavar='directory',
                         help='directory name(s) to process')
+    parser.add_argument('-n', '--nice', default=0, type=int, 
+                        help='specify a nice level for these jobs')
     args = yakonfig.parse_args(parser, [yakonfig, rejester, kvlayer, dblogger,
                                         streamcorpus_pipeline, DirectoryConfig])
     gconfig = yakonfig.get_global_config()
@@ -131,7 +133,7 @@ def main():
 
     if scdconfig['engine'] == 'rejester':
         tm = rejester.TaskMaster(gconfig['rejester'])
-        tm.update_bundle(work_spec, work_units)
+        tm.update_bundle(work_spec, work_units, nice=args.nice)
     elif scdconfig['engine'] == 'standalone':
         for k,v in work_units.iteritems():
             u = SimpleWorkUnit(k)
