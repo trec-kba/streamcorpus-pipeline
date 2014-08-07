@@ -242,6 +242,7 @@ def char_offset_labels(stream_item, aligner_data):
 def _offset_labels(stream_item, aligner_data, offset_type='BYTES'):
     ## get a set of tokens -- must have OffsetType.<offset_type> type offsets.
 
+    otype_str = offset_type
     offset_type = OffsetType._NAMES_TO_VALUES[offset_type]
 
     sentences = stream_item.body.sentences.get(aligner_data['tagger_id'], [])
@@ -270,6 +271,11 @@ def _offset_labels(stream_item, aligner_data, offset_type='BYTES'):
                 # happening in few enough cases that I did feel comfortable
                 # just ignoring it.
                 # ---AG
+                found_types = [OffsetType._VALUES_TO_NAMES.get(k, '???')
+                               for k in label.offsets.keys()]
+                logger.warn('Could not find offset type "%s" in label '
+                            'offsets. Found %s types in stream item %r'
+                            % (otype_str, found_types, stream_item.stream_id))
                 continue
 
             ## remove the offset from the label, because we are
