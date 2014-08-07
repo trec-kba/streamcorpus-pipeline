@@ -260,6 +260,17 @@ def _offset_labels(stream_item, aligner_data, offset_type='BYTES'):
         if annotator_id != aligner_data['annotator_id']:
             continue
         for label in stream_item.body.labels[annotator_id]:
+            if offset_type not in label.offsets:
+                # This was causing a very small number of jobs to fail in
+                # the WLC dataset. Namely, the expected offset type did not
+                # exist in `label.offsets`. (There was a byte offset but not
+                # a char offset, even though the `char_offset_align_labels`
+                # was used.) I don't understand enough about the system
+                # to know why the expected offset type didn't exist, but it was
+                # happening in few enough cases that I did feel comfortable
+                # just ignoring it.
+                # ---AG
+                continue
 
             ## remove the offset from the label, because we are
             ## putting it into the token
