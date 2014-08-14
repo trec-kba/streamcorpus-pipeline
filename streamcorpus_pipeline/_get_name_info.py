@@ -12,7 +12,8 @@ import re
 
 is_hex_32 = re.compile('[a-fA-F0-9]{32}')
 
-def get_name_info(chunk_path, assert_one_date_hour=False, i_str=None):
+def get_name_info(chunk_path, assert_one_date_hour=False, i_str=None,
+                  chunk_type=Chunk):
     '''
     takes a chunk blob and obtains the date_hour, md5, num
     '''
@@ -37,21 +38,22 @@ def get_name_info(chunk_path, assert_one_date_hour=False, i_str=None):
     # TODO: return a dict-like object that does the expensive
     # calculation lazily, the name format might not even need that
     # value.
-    ch = Chunk(path=chunk_path, mode='rb')
+    ch = chunk_type(path=chunk_path, mode='rb')
     date_hours = set()
     target_names = set()
     doc_ids = set()
     epoch_ticks = None
     count = 0
     for si in ch:
-        if epoch_ticks is None:
-            epoch_ticks = si.stream_time.epoch_ticks
-        date_hours.add( si.stream_time.zulu_timestamp[:13] )
-        doc_ids.add( si.doc_id )
-        for annotator_id, ratings in si.ratings.items():
-            for rating in ratings:
-                target_name = rating.target.target_id.split('/')[-1]
-                target_names.add( target_name )
+        if chunk_type is Chunk:
+            if epoch_ticks is None:
+                epoch_ticks = si.stream_time.epoch_ticks
+            date_hours.add( si.stream_time.zulu_timestamp[:13] )
+            doc_ids.add( si.doc_id )
+            for annotator_id, ratings in si.ratings.items():
+                for rating in ratings:
+                    target_name = rating.target.target_id.split('/')[-1]
+                    target_names.add( target_name )
         count += 1
 
     ## create the md5 property, so we can use it in the filename
@@ -62,18 +64,21 @@ def get_name_info(chunk_path, assert_one_date_hour=False, i_str=None):
     name_info['target_names'] = '-'.join( target_names )
     name_info['doc_ids_8'] = '-'.join( [di[:8] for di in doc_ids] )
 
-    if assert_one_date_hour:
-        assert len(date_hours) == 1, \
-            'got a chunk with other than one data_hour! ' + \
-            repr(date_hours)
+    if chunk_type is Chunk:
+        if assert_one_date_hour:
+            assert len(date_hours) == 1, \
+                'got a chunk with other than one data_hour! ' + \
+                repr(date_hours)
 
-    if len(date_hours) > 0:
-        date_hour = list(date_hours)[0]
-        date_hour = date_hour.replace('T', '-')
+        if len(date_hours) > 0:
+            date_hour = list(date_hours)[0]
+            date_hour = date_hour.replace('T', '-')
+        else:
+            assert count == 0, (date_hours, count)
+            date_hour = None
+        name_info['date_hour'] = date_hour
     else:
-        assert count == 0, (date_hours, count)
-        date_hour = None
-    name_info['date_hour'] = date_hour
+        name_info['date_hour'] = 'NO-DATE-HOUR-FOR-FC'
 
     # TODO: in future lazy evaluation world, rand8 should return a
     # different value every time it is accessed so that a format could
