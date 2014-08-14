@@ -8,6 +8,8 @@ import logging
 import streamcorpus
 from cStringIO import StringIO
 
+from yakonfig import ConfigurationError
+
 logger = logging.getLogger(__name__)
 
 def tarball_export(config, t_path, name_info):
@@ -39,7 +41,12 @@ def tarball_export(config, t_path, name_info):
             info = tar.tarinfo()
             ## make a name from the path and stream_id
             #'%s#%s' % (s3_path, si.stream_id)
-            info.name  = config.get('tarinfo_name') % name_info
+            for k in ('name', 'uname', 'gname'):
+                full= 'tarinfo_%s' % k
+                if full not in config:
+                    raise ConfigurationError(
+                        'to_s3_tarballs requires the "%s" option.' % full)
+            info.name  = config['tarinfo_name'] % name_info
             info.uname = config.get('tarinfo_uname')
             info.gname = config.get('tarinfo_gname')
             info.type = tarfile.REGTYPE
