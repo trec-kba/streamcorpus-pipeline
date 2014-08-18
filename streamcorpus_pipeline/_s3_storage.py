@@ -409,21 +409,11 @@ class to_s3_chunks(Configured):
         Load chunk from t_path and put it into the right place in s3
         using the output_name template from the config
         '''
-        self.name_info = name_info
-        self.outfmt = self.config['output_format'].lower()
-        if self.outfmt == 'featurecollection':
-            chunk_type = ICChunk
-        elif self.outfmt == 'streamitem':
-            chunk_type = streamcorpus.Chunk
-        else:
-            raise FailedExtraction(
-                'Invalid output format: "%s". Choose one of StreamItem '
-                'or FeatureCollection.' % self.config['output_format'])
-
         # Getting name info actually assembles an entire chunk in memory
         # from `t_path`, so we now need to tell it which chunk type to use.
-        self.name_info.update(get_name_info(t_path, i_str=i_str,
-                                            chunk_type=chunk_type))
+        self.name_info = dict(name_info,
+                              **get_name_info(t_path, i_str=i_str,
+                                              chunk_type=self.chunk_type))
         if self.name_info['num'] == 0:
             return None
 
@@ -433,12 +423,27 @@ class to_s3_chunks(Configured):
 
         t_path2, data = self.prepare_on_disk(t_path)
         logger.debug('compressed size: %d' % len(data))
-        self.put_data(o_path, data, name_info['md5'])
+        self.put_data(o_path, data, self.name_info['md5'])
 
         self.cleanup(t_path, t_path2)
         logger.info('%s finished:\n\t input: %s\n\toutput: %s'
                     % (self.__class__.__name__, i_str, o_path))
         return o_path
+
+    @property
+    def outfmt(self):
+        return self.config['output_format'].lower()
+
+    @property
+    def chunk_type(self):
+        if self.outfmt == 'featurecollection':
+            return ICChunk
+        elif self.outfmt == 'streamitem':
+            return streamcorpus.Chunk
+        else:
+            raise FailedExtraction(
+                'Invalid output format: "%s". Choose one of StreamItem '
+                'or FeatureCollection.' % self.config['output_format'])
 
     @property
     def s3key_name(self):
