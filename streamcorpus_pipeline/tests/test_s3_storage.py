@@ -16,7 +16,10 @@ import pytest
 from backports import lzma
 
 from kvlayer.instance_collection import Chunk as ICChunk
-from dossier.fc import FeatureCollection
+try:
+    from dossier.fc import FeatureCollection
+except ImportError:
+    pass
 import yakonfig
 
 import streamcorpus
@@ -157,7 +160,12 @@ def make_dummy_fc_chunks(dummy_chunks, md5=False):
     return make_dummy_chunks(dummy_chunks, ICChunk, make, md5=md5)
 
 
-@pytest.fixture(params=['streamitem', 'featurecollection'])
+# Avoid testing feature collections when dossier is not present.
+# TODO: Remove this when dossier is released.
+formats = ['streamitem']
+if 'FeatureCollection' in globals():
+    formats.append('featurecollection')
+@pytest.fixture(params=formats)
 def chunker(request):
     if request.param == 'streamitem':
         make_chunks = make_dummy_si_chunks
