@@ -44,15 +44,6 @@ def bucket_name():
 def bucket(request, bucket_name):
     assert os.getenv('AWS_ACCESS_KEY_ID')
     assert os.getenv('AWS_SECRET_ACCESS_KEY')
-
-    # Reconnect here because Amazon's keep-alive is wicked short and
-    # boto won't *reliably* reconnect for us.
-    # See: https://github.com/boto/boto/issues/1934
-    # def close(): 
-        # b = s3stage.get_bucket({'bucket': bucket_name}) 
-        # b.delete_keys(list(b.list())) 
-    # request.addfinalizer(close) 
-
     return s3stage.get_bucket({'bucket': bucket_name})
 
 
