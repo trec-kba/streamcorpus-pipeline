@@ -10,6 +10,7 @@ import os.path as path
 import tarfile
 import tempfile
 import urllib2
+import uuid
 
 import pytest
 from backports import lzma
@@ -31,30 +32,45 @@ pytestmark = pytest.mark.skipif(
            'AWS_ACCESS_KEY_ID, AWS_SECRET_ACCESS_KEY, AWS_TEST_BUCKET.')
 
 
-@pytest.fixture
+@pytest.fixture(scope='function')
 def bucket_name():
     return os.getenv('AWS_TEST_BUCKET') or 'diffeo-test'
 
 
-@pytest.yield_fixture
-def bucket(bucket_name):
+@pytest.fixture(scope='function')
+def bucket(request, bucket_name):
     assert os.getenv('AWS_ACCESS_KEY_ID')
     assert os.getenv('AWS_SECRET_ACCESS_KEY')
 
-    yield s3stage.get_bucket({'bucket': bucket_name})
     # Reconnect here because Amazon's keep-alive is wicked short and
     # boto won't *reliably* reconnect for us.
     # See: https://github.com/boto/boto/issues/1934
-    b = s3stage.get_bucket({'bucket': bucket_name})
-    b.delete_keys(list(b.list()))
+    # def close(): 
+        # b = s3stage.get_bucket({'bucket': bucket_name}) 
+        # b.delete_keys(list(b.list())) 
+    # request.addfinalizer(close) 
+
+    return s3stage.get_bucket({'bucket': bucket_name})
+
+
+def clean_bucket(name, prefix):
+    b = s3stage.get_bucket({'bucket': name})
+    b.delete_keys(list(b.list(prefix=prefix)))
 
 
 @pytest.yield_fixture
 def from_s3_chunks(bucket_name):
-    testc = {'from_s3_chunks': {'bucket': bucket_name, 'tries': 1}}
+    testc = {
+        'from_s3_chunks': {
+            'bucket': bucket_name,
+            'tries': 1,
+            's3_path_prefix': uuid.uuid4().hex,
+        },
+    }
     defconf = yakonfig.defaulted_config([s3stage.from_s3_chunks], config=testc)
     with defconf as conf:
         yield s3stage.from_s3_chunks(conf['from_s3_chunks'])
+        clean_bucket(bucket_name, testc['from_s3_chunks']['s3_path_prefix'])
 
 
 @pytest.yield_fixture
@@ -71,11 +87,13 @@ def to_s3_chunks(bucket_name):
             'tarinfo_name': '%(stream_id)s',
             'tarinfo_uname': 'utartest',
             'tarinfo_gname': 'gtartest',
+            's3_path_prefix': uuid.uuid4().hex,
         },
     }
     defconf = yakonfig.defaulted_config([s3stage.to_s3_chunks], config=testc)
     with defconf as conf:
         yield s3stage.to_s3_chunks(conf['to_s3_chunks'])
+        clean_bucket(bucket_name, testc['to_s3_chunks']['s3_path_prefix'])
 
 
 @pytest.fixture
@@ -198,7 +216,10 @@ def test_to_s3_chunks_count(bucket, to_s3_chunks, chunker):
     chunks = chunker['make_chunks'](dummies)
     to_s3_chunks.config['output_format'] = chunker['format']
     map(partial(run_to_s3, to_s3_chunks), chunks.values())
-    assert 4 == len(list(get_chunk_items(bucket, chunks, chunker['format'])))
+
+    its = get_chunk_items(bucket, chunks, chunker['format'],
+                          prefix=to_s3_chunks.config['s3_path_prefix'])
+    assert 4 == len(list(its))
 
 
 def test_to_s3_tarballs_count(bucket, to_s3_tarballs, chunker):
@@ -211,7 +232,9 @@ def test_to_s3_tarballs_count(bucket, to_s3_tarballs, chunker):
     map(partial(run_to_s3, to_s3_tarballs), chunks.values())
 
     for key in dummies:
-        data = bucket.get_key('%s.tar.gz' % key).get_contents_as_string()
+        fullkey = path.join(to_s3_tarballs.config['s3_path_prefix'],
+                            '%s.tar.gz' % key)
+        data = bucket.get_key(fullkey).get_contents_as_string()
         tar = tarfile.open(fileobj=StringIO(data), mode='r:gz')
         assert sorted(dummies[key]) == sorted(tar.getnames())
 
@@ -219,7 +242,8 @@ def test_to_s3_tarballs_count(bucket, to_s3_tarballs, chunker):
 def test_from_s3_chunks_count(bucket, from_s3_chunks, chunker):
     dummies = {'a': ['a1'], 'b': ['b1', 'b2'], 'c': ['c1']}
     from_s3_chunks.config['input_format'] = chunker['format']
-    put_chunks(bucket, chunker['make_chunks'](dummies))
+    put_chunks(bucket, chunker['make_chunks'](dummies),
+               prefix=from_s3_chunks.config['s3_path_prefix'])
     assert 4 == sum(len(list(from_s3_chunks(k))) for k in dummies)
 
 
@@ -229,7 +253,8 @@ def test_to_s3_chunks_read(bucket, to_s3_chunks, chunker):
     to_s3_chunks.config['output_format'] = chunker['format']
     map(partial(run_to_s3, to_s3_chunks), chunks.values())
 
-    read_chunks = get_chunks(bucket, chunks, chunker['format'])
+    read_chunks = get_chunks(bucket, chunks, chunker['format'],
+                             prefix=to_s3_chunks.config['s3_path_prefix'])
     for key, sinames in dummies.items():
         sinames = sorted(sinames)
         got_names = [name_from_item(it)
@@ -240,38 +265,19 @@ def test_to_s3_chunks_read(bucket, to_s3_chunks, chunker):
 def test_from_s3_chunks_read(bucket, from_s3_chunks, chunker):
     dummies = {'a': ['a1'], 'b': ['b1', 'b2'], 'c': ['c1']}
     from_s3_chunks.config['input_format'] = chunker['format']
-    put_chunks(bucket, chunker['make_chunks'](dummies))
+    put_chunks(bucket, chunker['make_chunks'](dummies),
+               prefix=from_s3_chunks.config['s3_path_prefix'])
     for key, sinames in dummies.items():
         sinames = sorted(sinames)
         got_names = [name_from_item(it) for it in from_s3_chunks(key)]
         assert sinames == got_names
 
 
-def test_to_s3_chunks_count_path_prefix(bucket, to_s3_chunks, chunker):
-    dummies = {'a': ['a1'], 'b': ['b1', 'b2'], 'c': ['c1']}
-    prefix = 'sitest'
-    chunks = chunker['make_chunks'](dummies)
-    to_s3_chunks.config['output_format'] = chunker['format']
-    to_s3_chunks.config['s3_path_prefix'] = prefix
-    map(partial(run_to_s3, to_s3_chunks), chunks.values())
-    assert 4 == len(list(get_chunk_items(bucket, chunks, chunker['format'],
-                                         prefix=prefix)))
-
-
-def test_from_s3_chunks_count_path_prefix(bucket, from_s3_chunks, chunker):
-    dummies = {'a': ['a1'], 'b': ['b1', 'b2'], 'c': ['c1']}
-    prefix = 'sitest'
-    from_s3_chunks.config['input_format'] = chunker['format']
-    put_chunks(bucket, chunker['make_chunks'](dummies), prefix=prefix)
-    from_s3_chunks.config['s3_path_prefix'] = prefix
-    assert 4 == sum(len(list(from_s3_chunks(k))) for k in dummies)
-
-
 def test_from_s3_si_chunks_md5(bucket, from_s3_chunks, chunker):
     dummies = {'a': ['a1'], 'b': ['b1', 'b2'], 'c': ['c1']}
     from_s3_chunks.config['input_format'] = chunker['format']
     chunks = chunker['make_chunks'](dummies, md5=True)
-    put_chunks(bucket, chunks)
+    put_chunks(bucket, chunks, prefix=from_s3_chunks.config['s3_path_prefix'])
 
     from_s3_chunks.config['compare_md5_in_file_name'] = True
     assert 4 == sum(len(list(from_s3_chunks(chunks[k]['key'])))
@@ -285,7 +291,7 @@ def test_from_s3_chunks_md5_invalid(bucket, from_s3_chunks, chunker):
     dummies = {'a': ['a1']}
     from_s3_chunks.config['input_format'] = chunker['format']
     chunks = chunker['make_chunks'](dummies, md5=False)
-    put_chunks(bucket, chunks)
+    put_chunks(bucket, chunks, prefix=from_s3_chunks.config['s3_path_prefix'])
     from_s3_chunks.config['compare_md5_in_file_name'] = True
     with pytest.raises(FailedExtraction):
         from_s3_chunks(chunks['a']['key'])
@@ -294,13 +300,15 @@ def test_from_s3_chunks_md5_invalid(bucket, from_s3_chunks, chunker):
 def test_from_s3_chunks_md5_corrupt(bucket, from_s3_chunks, chunker):
     dummies = {'a': ['a1']}
     chunks = chunker['make_chunks'](dummies, md5=True)
-    put_chunks(bucket, chunks)
+    put_chunks(bucket, chunks, prefix=from_s3_chunks.config['s3_path_prefix'])
 
     from_s3_chunks.config['input_format'] = chunker['format']
     from_s3_chunks.config['compare_md5_in_file_name'] = True
 
     # Corrupt the data so the md5 won't match.
-    key = bucket.get_key(chunks['a']['key'])
+    fullkey = path.join(from_s3_chunks.config['s3_path_prefix'],
+                        chunks['a']['key'])
+    key = bucket.get_key(fullkey)
     key.set_contents_from_string(lzma.compress('FUBAR'))
 
     with pytest.raises(FailedExtraction):
@@ -310,7 +318,8 @@ def test_from_s3_chunks_md5_corrupt(bucket, from_s3_chunks, chunker):
 def test_from_s3_chunks_bad_informat(bucket, from_s3_chunks, chunker):
     dummies = {'a': ['a1']}
     from_s3_chunks.config['input_format'] = chunker['format']
-    put_chunks(bucket, chunker['make_chunks'](dummies))
+    put_chunks(bucket, chunker['make_chunks'](dummies),
+               prefix=from_s3_chunks.config['s3_path_prefix'])
 
     from_s3_chunks.config['input_format'] = 'FUBAR'
     with pytest.raises(FailedExtraction):
@@ -336,7 +345,10 @@ def test_to_s3_chunks_verify(bucket, to_s3_chunks, chunker):
     to_s3_chunks.config['output_format'] = chunker['format']
     to_s3_chunks.config['verify'] = True
     map(partial(run_to_s3, to_s3_chunks), chunks.values())
-    assert 4 == len(list(get_chunk_items(bucket, chunks, chunker['format'])))
+
+    its = get_chunk_items(bucket, chunks, chunker['format'],
+                          prefix=to_s3_chunks.config['s3_path_prefix'])
+    assert 4 == len(list(its))
 
 
 def test_to_s3_chunks_public(bucket_name, bucket, to_s3_chunks, chunker):
@@ -346,7 +358,9 @@ def test_to_s3_chunks_public(bucket_name, bucket, to_s3_chunks, chunker):
     to_s3_chunks.config['is_private'] = False
 
     run_to_s3(to_s3_chunks, chunks['a'])
-    urllib2.urlopen(public_url(bucket_name, 'a', chunker['format']))
+    purl = public_url(bucket_name, 'a', chunker['format'],
+                      prefix=to_s3_chunks.config['s3_path_prefix'])
+    urllib2.urlopen(purl)
 
 
 def test_to_s3_chunks_private(bucket_name, bucket, to_s3_chunks, chunker):
@@ -357,7 +371,9 @@ def test_to_s3_chunks_private(bucket_name, bucket, to_s3_chunks, chunker):
 
     run_to_s3(to_s3_chunks, chunks['a'])
     try:
-        urllib2.urlopen(public_url(bucket_name, 'a', chunker['format']))
+        purl = public_url(bucket_name, 'a', chunker['format'],
+                          prefix=to_s3_chunks.config['s3_path_prefix'])
+        urllib2.urlopen(purl)
     except urllib2.HTTPError as e:
         assert e.code == 403
     else:
