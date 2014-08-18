@@ -134,21 +134,25 @@ def make_dummy_chunks(dummy_chunks, chunker, make_item, md5=False):
 
 
 def make_dummy_si_chunks(dummy_chunks, md5=False):
-    def make(name):
-        si = streamcorpus.make_stream_item('2000-01-01T12:34:00.000123Z',
-                                           name)
-        si.stream_id = name
-        si.body.clean_visible = 'clean visible test text'
-        return si
-    return make_dummy_chunks(dummy_chunks, streamcorpus.Chunk, make, md5=md5)
+    return make_dummy_chunks(dummy_chunks, streamcorpus.Chunk, make_si, md5=md5)
+
+
+def make_si(name):
+    si = streamcorpus.make_stream_item('2000-01-01T12:34:00.000123Z',
+                                       name)
+    si.stream_id = name
+    si.body.clean_visible = 'clean visible test text'
+    return si
 
 
 def make_dummy_fc_chunks(dummy_chunks, md5=False):
-    def make(name):
-        fc = FeatureCollection()
-        fc['canonical_name'][name] = 1
-        return fc
-    return make_dummy_chunks(dummy_chunks, ICChunk, make, md5=md5)
+    return make_dummy_chunks(dummy_chunks, ICChunk, make_fc, md5=md5)
+
+
+def make_fc(name):
+    fc = FeatureCollection()
+    fc['canonical_name'][name] = 1
+    return fc
 
 
 # Avoid testing feature collections when dossier is not present.
