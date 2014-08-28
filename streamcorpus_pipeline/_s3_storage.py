@@ -69,28 +69,22 @@ def _retry(func):
                 break
             except OSError as exc:
                 ## OSError: [Errno 24] Too many open files
-                logger.critical(traceback.format_exc(exc))
-                raise exc
+                logger.error('assuming OSError unrecoverable')
+                raise
             except FailedExtraction as exc:
                 ## pass through exc to caller
-                logger.critical(traceback.format_exc(exc))
-                logger.critical('FAIL(%d): %s' % (tries, exc.message))
-                raise exc
+                logger.error('FAIL(%d)', tries, exc_info=True)
+                raise
             except FailedVerification as exc:
-                logger.critical(traceback.format_exc(exc))
-                logger.critical('FAIL(%d): %s' % (tries, exc.message))
+                logger.warn('FAIL(%d)', tries, exc_info=True)
                 if tries >= self.config['tries']:
-                    raise FailedExtraction(exc.message)
+                    raise
             except Exception as exc:
-                logger.critical(traceback.format_exc(exc))
-                msg = 'FAIL(%d): having I/O trouble with S3: %s' % \
-                    (tries, traceback.format_exc(exc))
-                logger.info(msg)
+                logger.warn('FAIL(%d): having I/O trouble with S3', tries, exc_info=True)
                 if tries >= self.config['tries']:
-                    raise FailedExtraction(msg)
+                    raise
 
-            logger.critical('RETRYING (%d left)'
-                            % (self.config['tries'] - tries))
+            logger.warn('RETRYING (%d left)', self.config['tries'] - tries)
             time.sleep(3 * tries)
             tries += 1
                     
@@ -409,6 +403,7 @@ class to_s3_chunks(Configured):
         Load chunk from t_path and put it into the right place in s3
         using the output_name template from the config
         '''
+        logger.info('to_s3_chunks.call(t_path=%r, name_info=%r, i_str=%r)', t_path, name_info, i_str)
         # Getting name info actually assembles an entire chunk in memory
         # from `t_path`, so we now need to tell it which chunk type to use.
         self.name_info = dict(name_info,
