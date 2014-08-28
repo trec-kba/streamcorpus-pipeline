@@ -16,6 +16,21 @@ def get_name_info(chunk_path, assert_one_date_hour=False, i_str=None,
                   chunk_type=Chunk):
     '''
     takes a chunk blob and obtains the date_hour, md5, num
+
+    makes fields:
+    i_str
+    input_fname
+    input_md5 - parsed from input filename if it contains '-%(md5)s-'
+    md5
+    num
+    epoch_ticks
+    target_names
+    doc_ids_8
+    date_hour
+    rand8
+    date_now
+    time_now
+    date_time_now
     '''
     assert i_str is not None, 'must provide i_str as keyword arg'
 
