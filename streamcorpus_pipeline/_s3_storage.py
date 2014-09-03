@@ -216,6 +216,7 @@ class from_s3_chunks(Configured):
     def __init__(self, config):
         super(from_s3_chunks, self).__init__(config)
         self.bucket = get_bucket(self.config)
+        self.gpg_decryption_key_path = config.get('gpg_decryption_key_path')
 
     def __call__(self, i_str):
         '''
@@ -273,7 +274,7 @@ class from_s3_chunks(Configured):
 
         _errors, data = decrypt_and_uncompress(
             data, 
-            self.config['gpg_decryption_key_path'],
+            self.gpg_decryption_key_path,
             tmp_dir=self.config['tmp_dir_path'],
             )
         logger.info( '\n'.join(_errors) )
