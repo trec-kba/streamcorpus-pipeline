@@ -13,10 +13,15 @@ from streamcorpus_pipeline._hyperlink_labels import hyperlink_labels
 
 def test_make_clean_html_nyt(test_data_dir, tmpdir):
     path = os.path.join(test_data_dir, 'test')
-    tmpdir.join('nytimes-index-clean.html').open('wb').write(
-        make_clean_html(open(os.path.join(path, 'nytimes-index.html')).read().decode('utf8')))
-    generated = open(os.path.join(path, 'nytimes-index-clean.html')).read()
+    generated = make_clean_html(open(os.path.join(path, 'nytimes-index.html')).read().decode('utf8'))
     stable    = open(os.path.join(path, 'nytimes-index-clean-stable.html')).read()
+
+    if generated != stable:
+        outf = os.path.join(path, 'nytimes-index-clean-new-{}.html'.format(time.strftime('%Y%m%d_%H%M%S')))
+        sys.stderr.write('writing unmatching output to {!r}\n'.format(outf))
+        sys.stderr.write('diff -u {} {}\n'.format(os.path.join(path, 'nytimes-index-clean-stable.html'), outf))
+        with open(outf, 'wb') as fout:
+            fout.write(generated)
     assert generated == stable
 
     assert '<script' not in generated
