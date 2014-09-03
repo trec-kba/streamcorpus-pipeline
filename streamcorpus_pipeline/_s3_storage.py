@@ -87,7 +87,7 @@ def _retry(func):
             logger.warn('RETRYING (%d left)', self.config['tries'] - tries)
             time.sleep(3 * tries)
             tries += 1
-                    
+
     return retry_func
 
 
@@ -96,8 +96,7 @@ def timedop(what, datalen, fun):
     fun()
     elapsed = time.time() - start_time
     if elapsed  > 0:
-        logger.debug('%s %.1f bytes/second'
-                     % (what, float(datalen) / float(elapsed)))
+        logger.debug('%s %.1f bytes/second', what, float(datalen) / float(elapsed))
 
 
 def verify_md5(md5_expected, data, other_errors=None):
@@ -114,19 +113,25 @@ def get_bucket(config):
         raise ConfigurationError(
             'The "bucket" parameter is required for the s3 stages.')
 
-    # If the environment variables for access/secret are set, then use those.
-    # boto pick up on those.
-    access = os.getenv('AWS_ACCESS_KEY_ID')
-    secret = os.getenv('AWS_SECRET_ACCESS_KEY')
-    if not access or not secret:
+    # get AWS credentials. first, from config; else, from env vars.
+    aws_access_key_id_path = config.get('aws_access_key_id_path')
+    aws_secret_access_key_path = config.get('aws_secret_access_key_path')
+
+    if (not aws_access_key_id_path) and (not aws_secret_access_key_path):
+        logger.debug('using aws credentials from environment')
+        access = os.getenv('AWS_ACCESS_KEY_ID')
+        secret = os.getenv('AWS_SECRET_ACCESS_KEY')
+        if (not access) or (not secret):
+            msg = 'aws credentials not configured in aws_access_key_id_path+aws_secret_access_key_path, and not available in environment AWS_ACCESS_KEY_ID+AWS_SECRET_ACCESS_KEY'
+            logger.error(msg)
+            raise Exception(msg)
+    else:
         try:
-            access = open(config['aws_access_key_id_path']).read().strip()
-            secret = open(config['aws_secret_access_key_path']).read().strip()
-        except KeyError:
-            raise ConfigurationError(
-                'When AWS credentials are not in the environment, the '
-                '"aws_access_key_id_path" and "aws_secret_access_key_path" '
-                'config parameters must be set.')
+            access = open(aws_access_key_id_path).read().strip()
+            secret = open(aws_secret_access_key_path).read().strip()
+        except:
+            logger.error('failed reading aws credentials from configured file', exc_info=True)
+            raise
 
     conn = S3Connection(access, secret)
     bucket = conn.get_bucket(config['bucket'])
@@ -413,16 +418,14 @@ class to_s3_chunks(Configured):
             return None
 
         o_path = self.s3key_name
-        logger.info('%s: \n\t%r\n\tfrom: %r\n\tby way of %r'
-                    % (self.__class__.__name__, o_path, i_str, t_path))
+        logger.info('%s: \n\t%r\n\tfrom: %r\n\tby way of %r', self.__class__.__name__, o_path, i_str, t_path)
 
-        t_path2, data = self.prepare_on_disk(t_path)
-        logger.debug('compressed size: %d' % len(data))
-        self.put_data(o_path, data, self.name_info['md5'])
+        t_path2 = self.prepare_on_disk(t_path)
+        data_len = os.path.getsize(t_path2)
+        self.put_data(o_path, t_path2, self.name_info['md5'], data_len)
 
         self.cleanup(t_path, t_path2)
-        logger.info('%s finished:\n\t input: %s\n\toutput: %s'
-                    % (self.__class__.__name__, i_str, o_path))
+        logger.info('%s finished:\n\t input: %s\n\toutput: %s', self.__class__.__name__, i_str, o_path)
         return o_path
 
     @property
@@ -459,8 +462,8 @@ class to_s3_chunks(Configured):
             gpg_recipient=self.config['gpg_recipient'],
             tmp_dir=self.config['tmp_dir_path'])
         if len(_errors) > 0:
-            logger.info('compress and encrypt errors: %s' % '\n'.join(_errors))
-        return t_path2, open(t_path2).read()
+            logger.error('compress and encrypt errors: %r', _errors)
+        return t_path2
 
     def cleanup(self, *files):
         if not self.config['cleanup_tmp_files']:
@@ -472,14 +475,14 @@ class to_s3_chunks(Configured):
                 logger.info('%s --> failed to remove %s' % (exc, f))
 
     @_retry
-    def put_data(self, key_path, data, md5):
-        timedop('s3 put', len(data), lambda: self.put(key_path, data))
+    def put_data(self, key_path, t_path, md5, data_len=None):
+        timedop('s3 put', data_len, lambda: self.put(key_path, t_path))
         if self.config['verify']:
-            timedop('s3 verify', len(data), lambda: self.verify(key_path, md5))
+            timedop('s3 verify', data_len, lambda: self.verify(key_path, md5))
 
-    def put(self, o_path, data):
+    def put(self, o_path, t_path):
         key = Key(self.bucket, o_path)
-        key.set_contents_from_file(StringIO(data))
+        key.set_contents_from_filename(t_path)
 
         if not self.config.get('is_private', False):
             # Makes the file have a public URL.
@@ -509,7 +512,7 @@ class to_s3_chunks(Configured):
             'bucket': self.config['bucket'],
             'o_path': o_path,
         }
-        logger.info('public fetching %r' % url)
+        logger.info('public fetching %r', url)
         return requests.get(url).content
 
     def private_data(self, o_path):
@@ -543,12 +546,12 @@ class to_s3_tarballs(to_s3_chunks):
 
     def prepare_on_disk(self, t_path):
         t_path2 = tarball_export(self.config, t_path, self.name_info)
-        data = open(t_path2).read()
         # Cheat a bit here. We are checking the md5 of the full compressed
         # archive instead of the decompressed/decrypted chunk (because this is
         # a tarball, not a chunk).
-        self.name_info['md5'] = hashlib.md5(data).hexdigest()
-        return t_path2, data
+        # TODO: if md5 is actually needed, read the file and calculate it
+        #self.name_info['md5'] = hashlib.md5(data).hexdigest()
+        return t_path2
 
     @_retry
     def redownload_verify(self, o_path, md5):
