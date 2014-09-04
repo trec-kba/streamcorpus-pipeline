@@ -275,7 +275,7 @@ class from_s3_chunks(Configured):
         _errors, data = decrypt_and_uncompress(
             data, 
             self.gpg_decryption_key_path,
-            tmp_dir=self.config['tmp_dir_path'],
+            tmp_dir=self.config.get('tmp_dir_path'),
             )
         logger.info( '\n'.join(_errors) )
         if not self.config['compare_md5_in_file_name']:
@@ -450,18 +450,18 @@ class to_s3_chunks(Configured):
         ext = 'fc' if self.outfmt == 'featurecollection' else 'sc'
         o_path = os.path.join(self.config['s3_path_prefix'],
                               '%s.%s.xz' % (o_fname, ext))
-        if self.config['gpg_encryption_key_path'] is not None:
+        if self.config.get('gpg_encryption_key_path') is not None:
             o_path += '.gpg'
         self.name_info['s3_output_path'] = o_path
         return o_path
 
     def prepare_on_disk(self, t_path):
-        logger.info('key path: %r', self.config['gpg_encryption_key_path'])
+        logger.info('key path: %r', self.config.get('gpg_encryption_key_path'))
         _errors, t_path2 = compress_and_encrypt_path(
             t_path, 
-            self.config['gpg_encryption_key_path'],
+            self.config.get('gpg_encryption_key_path'),
             gpg_recipient=self.config['gpg_recipient'],
-            tmp_dir=self.config['tmp_dir_path'])
+            tmp_dir=self.config.get('tmp_dir_path'))
         if len(_errors) > 0:
             logger.error('compress and encrypt errors: %r', _errors)
         return t_path2
@@ -491,8 +491,8 @@ class to_s3_chunks(Configured):
 
     @_retry
     def verify(self, o_path, md5):
-        if self.config['gpg_encryption_key_path'] \
-                and not self.config['gpg_decryption_key_path']:
+        if self.config.get('gpg_encryption_key_path') \
+                and not self.config.get('gpg_decryption_key_path'):
             raise ConfigurationError(
                 'When "verify=true" and "gpg_encryption_key_path" is set, '
                 '"gpg_decryption_key_path" must also be set.')
@@ -504,7 +504,7 @@ class to_s3_chunks(Configured):
         errors, data = decrypt_and_uncompress(
             rawdata,
             self.config.get('gpg_decryption_key_path'),
-            tmp_dir=self.config['tmp_dir_path'])
+            tmp_dir=self.config.get('tmp_dir_path'))
         logger.info('got back SIs: %d' % len(list(Chunk(data=data))))
         return verify_md5(md5, data, other_errors=errors)
 
