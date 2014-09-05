@@ -101,6 +101,8 @@ from abc import ABCMeta, abstractmethod
 from collections import Callable, MutableMapping
 import imp
 import logging
+import time
+
 import pkg_resources
 
 import yakonfig
@@ -332,6 +334,7 @@ class IncrementalTransform(Configured, Callable):
 class PipelineStages(StageRegistry):
     '''The list of stages, preloaded with streamcorpus_pipeline stages.'''
     def __init__(self, *args, **kwargs):
+        start = time.time()
         super(PipelineStages, self).__init__(*args, **kwargs)
 
         # data source readers (read data from somewhere into pipeline)
@@ -396,4 +399,6 @@ class PipelineStages(StageRegistry):
                 stage_constructor = entry_point.load()
                 self[name] = stage_constructor
             except:
-                logger.error('failure loading plugin entry point', exc_info=True)
+                logger.error('failure loading plugin entry point: %r', entry_point and entry_point.name, exc_info=True)
+
+        logger.debug('streamcorpus_pipeline.PipelineStages init in %s sec', time.time() - start)

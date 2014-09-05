@@ -93,19 +93,29 @@ def _retry(func):
 
 def timedop(what, datalen, fun):
     start_time = time.time()
-    fun()
+    try:
+        retval = fun()
+    except:
+        elapsed = time.time() - start_time
+        if elapsed  > 0:
+            logger.debug('%s %.1f bytes/second ERROR', what, float(datalen) / float(elapsed), exc_info=True)
+        raise
+
     elapsed = time.time() - start_time
     if elapsed  > 0:
         logger.debug('%s %.1f bytes/second', what, float(datalen) / float(elapsed))
+    return retval
 
 
 def verify_md5(md5_expected, data, other_errors=None):
+    "return True if okay, raise Exception if not"  # O_o ?
     md5_recv = hashlib.md5(data).hexdigest()
     if md5_expected != md5_recv:
         if other_errors is not None:
             logger.critical('\n'.join(other_errors))
         raise FailedVerification('original md5 = %r != %r = received md5' \
                                  % (md5_expected, md5_recv))
+    return True
 
 
 def get_bucket(config):
@@ -276,6 +286,10 @@ class from_s3_chunks(Configured):
             self.config['gpg_decryption_key_path'],
             tmp_dir=self.config['tmp_dir_path'],
             )
+        if not data:
+            msg = 'decrypt_and_uncompress got no data for {!r}, from {} bytes downloaded, errors: {}'.format(key_path, len(data), '\n'.join(_errors))
+            logger.error(msg)
+            raise FailedExtraction(msg)
         logger.info( '\n'.join(_errors) )
         if not self.config['compare_md5_in_file_name']:
             logger.warn('not checking md5 in file name, consider setting '
@@ -478,7 +492,9 @@ class to_s3_chunks(Configured):
     def put_data(self, key_path, t_path, md5, data_len=None):
         timedop('s3 put', data_len, lambda: self.put(key_path, t_path))
         if self.config['verify']:
-            timedop('s3 verify', data_len, lambda: self.verify(key_path, md5))
+            ok = timedop('s3 verify', data_len, lambda: self.verify(key_path, md5))
+            if not ok:
+                raise Exception('verify failed putting {!r}'.format(key_path))
 
     def put(self, o_path, t_path):
         key = Key(self.bucket, o_path)
@@ -504,7 +520,10 @@ class to_s3_chunks(Configured):
             rawdata,
             self.config.get('gpg_decryption_key_path'),
             tmp_dir=self.config['tmp_dir_path'])
-        logger.info('got back SIs: %d' % len(list(Chunk(data=data))))
+        if not data:
+            logger.error('got no data back from decrypting %r, (size=%r), errors: %r', o_path, os.path.getsize(o_path), errors)
+            return False
+        logger.info('got back SIs: %d', len(list(Chunk(data=data))))
         return verify_md5(md5, data, other_errors=errors)
 
     def public_data(self, o_path):
