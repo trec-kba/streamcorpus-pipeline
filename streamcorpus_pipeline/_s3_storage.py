@@ -19,7 +19,7 @@ import requests
 
 from yakonfig import ConfigurationError
 
-from kvlayer.instance_collection import Chunk as ICChunk
+from dossier.fc import FeatureCollectionChunk as FCChunk
 
 import streamcorpus
 from streamcorpus import decrypt_and_uncompress, compress_and_encrypt_path, Chunk
@@ -263,7 +263,7 @@ class from_s3_chunks(Configured):
             message = _message_versions[ver]
             return streamcorpus.Chunk(data=data, message=message)
         elif informat == 'featurecollection':
-            return ICChunk(data=data)
+            return FCChunk(data=data)
         else:
             raise ConfigurationError(
                 'from_s3_chunks unknown input_format = %r'
@@ -450,7 +450,7 @@ class to_s3_chunks(Configured):
     @property
     def chunk_type(self):
         if self.outfmt == 'featurecollection':
-            return ICChunk
+            return FCChunk
         elif self.outfmt == 'streamitem':
             return streamcorpus.Chunk
         else:

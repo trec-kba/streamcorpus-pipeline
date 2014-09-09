@@ -15,11 +15,7 @@ import uuid
 import pytest
 from backports import lzma
 
-from kvlayer.instance_collection import Chunk as ICChunk
-try:
-    from dossier.fc import FeatureCollection
-except ImportError:
-    pass
+from dossier.fc import FeatureCollection, FeatureCollectionChunk
 import yakonfig
 
 import streamcorpus
@@ -146,7 +142,8 @@ def make_si(name):
 
 
 def make_dummy_fc_chunks(dummy_chunks, md5=False):
-    return make_dummy_chunks(dummy_chunks, ICChunk, make_fc, md5=md5)
+    return make_dummy_chunks(dummy_chunks, FeatureCollectionChunk,
+                             make_fc, md5=md5)
 
 
 def make_fc(name):
@@ -196,7 +193,7 @@ def public_url(bucket_name, key, format, prefix=''):
 
 def read_chunk(chunk_data, format):
     fc = format.lower() == 'featurecollection'
-    chunk_type = ICChunk if fc else streamcorpus.Chunk
+    chunk_type = FeatureCollectionChunk if fc else streamcorpus.Chunk
     return chunk_type(data=chunk_data)
 
 
