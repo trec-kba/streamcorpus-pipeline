@@ -15,7 +15,10 @@ import uuid
 import pytest
 from backports import lzma
 
-from dossier.fc import FeatureCollection, FeatureCollectionChunk
+try:
+    from dossier.fc import FeatureCollection, FeatureCollectionChunk
+except ImportError:
+    pass
 import yakonfig
 
 import streamcorpus

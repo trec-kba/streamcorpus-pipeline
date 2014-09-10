@@ -120,7 +120,6 @@ setup(
         'ftfy',
         'gevent',
         'kvlayer >= 0.4.11',
-        'dossier-stack >= 0.1.1',
         'rejester',
         'protobuf',
         'requests',

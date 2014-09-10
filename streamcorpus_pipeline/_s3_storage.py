@@ -19,7 +19,10 @@ import requests
 
 from yakonfig import ConfigurationError
 
-from dossier.fc import FeatureCollectionChunk as FCChunk
+try:
+    from dossier.fc import FeatureCollectionChunk as FCChunk
+except ImportError:
+    FCChunk = None
 
 import streamcorpus
 from streamcorpus import decrypt_and_uncompress, compress_and_encrypt_path, Chunk
@@ -262,7 +265,7 @@ class from_s3_chunks(Configured):
 
             message = _message_versions[ver]
             return streamcorpus.Chunk(data=data, message=message)
-        elif informat == 'featurecollection':
+        elif informat == 'featurecollection' and FCChunk is not None:
             return FCChunk(data=data)
         else:
             raise ConfigurationError(
@@ -449,7 +452,7 @@ class to_s3_chunks(Configured):
 
     @property
     def chunk_type(self):
-        if self.outfmt == 'featurecollection':
+        if self.outfmt == 'featurecollection' and FCChunk is not None:
             return FCChunk
         elif self.outfmt == 'streamitem':
             return streamcorpus.Chunk
