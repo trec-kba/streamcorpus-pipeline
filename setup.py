@@ -119,7 +119,7 @@ setup(
         'thrift',
         'ftfy',
         'gevent',
-        'kvlayer >= 0.4.11',
+        'kvlayer >= 0.4.10',
         'rejester',
         'protobuf',
         'requests',
