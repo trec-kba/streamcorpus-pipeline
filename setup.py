@@ -135,7 +135,7 @@ setup(
         'sortedcollection',
         'python-docx',
         'pdfminer',
-        'backports.lzma',
+        'backports.lzma!=0.0.4',
     ],
     entry_points={
         'console_scripts': [
