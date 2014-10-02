@@ -13,7 +13,6 @@ import logging
 import os
 import re
 import time
-import traceback
 
 import requests
 
@@ -25,7 +24,8 @@ except ImportError:
     FCChunk = None
 
 import streamcorpus
-from streamcorpus import decrypt_and_uncompress, compress_and_encrypt_path, Chunk
+from streamcorpus import decrypt_and_uncompress, \
+    compress_and_encrypt_path, Chunk
 from streamcorpus_pipeline._exceptions import FailedExtraction
 from streamcorpus_pipeline._get_name_info import get_name_info
 from streamcorpus_pipeline._spinn3r_feed_storage import _generate_stream_items
@@ -408,6 +408,7 @@ class to_s3_chunks(Configured):
         # require: bucket, output_name, aws_access_key_id_path,
         #          aws_secret_access_key_path
     }
+
     def __init__(self, config):
         super(to_s3_chunks, self).__init__(config)
 
@@ -426,7 +427,8 @@ class to_s3_chunks(Configured):
         Load chunk from t_path and put it into the right place in s3
         using the output_name template from the config
         '''
-        logger.info('to_s3_chunks.call(t_path=%r, name_info=%r, i_str=%r)', t_path, name_info, i_str)
+        logger.info('to_s3_chunks.call(t_path=%r, name_info=%r, i_str=%r)',
+                    t_path, name_info, i_str)
         # Getting name info actually assembles an entire chunk in memory
         # from `t_path`, so we now need to tell it which chunk type to use.
         self.name_info = dict(name_info,
@@ -436,15 +438,17 @@ class to_s3_chunks(Configured):
             return None
 
         o_path = self.s3key_name
-        logger.info('%s: \n\t%r\n\tfrom: %r\n\tby way of %r', self.__class__.__name__, o_path, i_str, t_path)
+        logger.info('%s: \n\t%r\n\tfrom: %r\n\tby way of %r',
+                    self.__class__.__name__, o_path, i_str, t_path)
 
         t_path2 = self.prepare_on_disk(t_path)
         data_len = os.path.getsize(t_path2)
         self.put_data(o_path, t_path2, self.name_info['md5'], data_len)
 
         self.cleanup(t_path, t_path2)
-        logger.info('%s finished:\n\t input: %s\n\toutput: %s', self.__class__.__name__, i_str, o_path)
-        return o_path
+        logger.info('%s finished:\n\t input: %s\n\toutput: %s',
+                    self.__class__.__name__, i_str, o_path)
+        return [o_path]
 
     @property
     def outfmt(self):

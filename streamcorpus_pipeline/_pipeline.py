@@ -512,9 +512,9 @@ class Pipeline(object):
 
         ## advance start_count for next loop
         #logger.info('advancing start_count from %d to %d', start_count, next_idx)
-        
 
-    def _process_output_chunk(self, start_count, next_idx, sources, i_str, t_path):
+    def _process_output_chunk(self, start_count, next_idx, sources, i_str,
+                              t_path):
         '''
         for the current output chunk (which should be closed):
           1. run batch transforms
@@ -522,24 +522,26 @@ class Pipeline(object):
           3. run 'writers' to load-out the data to files or other storage
         return list of paths that writers wrote to
         '''
-        ## gather the paths as the writers run
+        # gather the paths as the writers run
         o_paths = []
         if len(self.t_chunk) > 0:
-            ## only batch transform and load if the chunk
-            ## isn't empty, which can happen when filtering
-            ## with stages like "find"
+            # only batch transform and load if the chunk
+            # isn't empty, which can happen when filtering
+            # with stages like "find"
 
-            ## batch transforms act on the whole chunk in-place
-            logger.info('running batch transforms on %d StreamItems', len(self.t_chunk))
+            # batch transforms act on the whole chunk in-place
+            logger.info('running batch transforms on %d StreamItems',
+                        len(self.t_chunk))
             self._run_batch_transforms(t_path)
 
             self._maybe_run_post_batch_incremental_transforms(t_path)
 
             # only proceed if above transforms left us with something
             if (self.t_chunk) and (len(self.t_chunk) >= 0):
-                self._run_writers(start_count, next_idx, sources, i_str, t_path, o_paths)
+                o_paths = self._run_writers(start_count, next_idx, sources,
+                                            i_str, t_path)
         if self.t_chunk is not None:
-            self.t_chunk.close()                
+            self.t_chunk.close()
         return o_paths
 
     def _run_batch_transforms(self, chunk_path):
@@ -563,21 +565,22 @@ class Pipeline(object):
 
             os.rename(t_path2, t_path)
 
-    def _run_writers(self, start_count, next_idx, sources, i_str, t_path, o_paths):
-        ## writers put the chunk somewhere, and could delete it
+    def _run_writers(self, start_count, next_idx, sources, i_str, t_path):
+        # writers put the chunk somewhere, and could delete it
         name_info = dict(
-            first = start_count,
-            #num and md5 computed in each writers
-            source = sources.pop(),
+            first=start_count,
+            # num and md5 computed in each writers
+            source=sources.pop(),
             )
 
+        all_o_paths = []
         for writer in self.writers:
             logger.debug('running %r on %r: %r', writer, i_str, name_info)
-            o_path = writer(t_path, name_info, i_str) 
+            o_paths = writer(t_path, name_info, i_str)
             logger.debug('loaded (%d, %d) of %r into %r',
-                         start_count, next_idx - 1, i_str, o_path)
-            if o_path:
-                o_paths.append( o_path )
+                         start_count, next_idx - 1, i_str, o_paths)
+            all_o_paths += o_paths
+        return all_o_paths
 
     def _run_incremental_transforms(self, si, transforms):
         '''

@@ -2,25 +2,22 @@
 Provides classes for loading chunk files from local storage and
 putting them out into local storage.
 
-This software is released under an MIT/X11 open source license.
+.. This software is released under an MIT/X11 open source license.
+   Copyright 2012-2014 Diffeo, Inc.
 
-Copyright 2012-2014 Diffeo, Inc.
 '''
 from __future__ import absolute_import
-import os
-import sys
-import time
 import errno
-import shutil
-import hashlib
 import logging
-import traceback
-from cStringIO import StringIO
+import os
+import shutil
+import time
 
 import streamcorpus
 from streamcorpus_pipeline._get_name_info import get_name_info
 from streamcorpus_pipeline.stages import Configured
 from streamcorpus_pipeline._tarball_export import tarball_export
+from yakonfig import ConfigurationError
 
 logger = logging.getLogger(__name__)
 
@@ -29,12 +26,15 @@ _message_versions = {
     'v0_2_0': streamcorpus.StreamItem_v0_2_0,
     'v0_3_0': streamcorpus.StreamItem_v0_3_0,
     }
+
+
 def _check_version(config, name):
     if config['streamcorpus_version'] not in _message_versions:
-        raise yakonfig.ConfigurationError(
+        raise ConfigurationError(
             'invalid {} streamcorpus_version {}'
             .format(name, config['streamcorpus_version']))
-            
+
+
 class from_local_chunks(Configured):
     '''
     may use config['max_retries'] (default 1)
@@ -46,6 +46,7 @@ class from_local_chunks(Configured):
         'max_backoff': 300,
         'streamcorpus_version': 'v0_3_0',
     }
+
     @staticmethod
     def check_config(config, name):
         _check_version(config, name)
@@ -161,7 +162,8 @@ class to_local_chunks(Configured):
     * ``%(epoch_ticks)d``: timestamp of the first item in the chunk file
     * ``%(target_names)s``: hyphenated list of rating target names
     * ``%(source)s``: source name for items in the chunk file
-    * ``%(doc_ids_8)s``: hyphenated list of 8-character suffixes of document IDs
+    * ``%(doc_ids_8)s``: hyphenated list of 8-character suffixes of
+      document IDs
     * ``%(date_hour)s``: partial timestamp including date and hour
     * ``%(rand8)s``: 8-byte random hex string
 
@@ -189,8 +191,8 @@ class to_local_chunks(Configured):
 
     def __call__(self, t_path, name_info, i_str):
         o_type = self.config['output_type']
-        
-        name_info.update( get_name_info( t_path, i_str=i_str ) )
+
+        name_info.update(get_name_info(t_path, i_str=i_str))
 
         if name_info['num'] == 0:
             return None
@@ -203,27 +205,26 @@ class to_local_chunks(Configured):
                 i_fname = i_fname[:-3]
             if i_fname.endswith('.sc'):
                 i_fname = i_fname[:-3]
-            name_info['input_fname'] = i_fname 
+            name_info['input_fname'] = i_fname
 
-        ## prepare to compress the output
+        # prepare to compress the output
         compress = self.config.get('compress', None)
 
         if o_type == 'samedir':
-            ## assume that i_str was a local path
+            # assume that i_str was a local path
             assert i_str[-3:] == '.sc', repr(i_str[-3:])
             o_path = i_str[:-3] + '-%s.sc' % self.config['output_name']
             if compress:
                 o_path += '.xz'
-            #print 'creating %s' % o_path
-            
+            # print 'creating %s' % o_path
+
         elif o_type == 'inplace':
-            ## replace the input chunks with the newly created
+            # replace the input chunks with the newly created
             o_path = i_str
             if o_path.endswith('.xz'):
                 compress = True
 
         elif o_type == 'otherdir':
-            ## put the 
             if not self.config['output_path'].startswith('/'):
                 o_dir = os.path.join(os.getcwd(), self.config['output_path'])
             else:
@@ -240,18 +241,15 @@ class to_local_chunks(Configured):
         logger.info('writing chunk file to {}'.format(o_path))
         logger.debug('temporary chunk in {}'.format(t_path))
 
-        ## if dir is missing make it
+        # if dir is missing make it
         dirname = os.path.dirname(o_path)
         if dirname and not os.path.exists(dirname):
             os.makedirs(dirname)
 
         if compress:
             assert o_path.endswith('.xz'), o_path
-            logger.info('compress_and_encrypt_path(%r, tmp_dir=%r)', 
+            logger.info('compress_and_encrypt_path(%r, tmp_dir=%r)',
                         t_path, self.config['tmp_dir_path'])
-
-            ## forcibly collect dereferenced objects
-            #gc.collect()
 
             errors, t_path2 = streamcorpus.compress_and_encrypt_path(
                 t_path, tmp_dir=self.config['tmp_dir_path'])
@@ -264,51 +262,54 @@ class to_local_chunks(Configured):
                     os.rename(t_path2, o_path)
                     logger.debug('renamed(%r, %r)', t_path2, o_path)
                 except OSError, exc:
-                    if exc.errno==18:
+                    if exc.errno == errno.EXDEV:
                         logger.debug('resorting to patient_move(%r, %r)',
                                      t_path2, o_path, exc_info=True)
                         patient_move(t_path2, o_path)
                         logger.debug('patient_move succeeded')
                     else:
-                        logger.critical('rename failed (%r -> %r)', t_path2, o_path, exc_info=True)
+                        logger.error('rename failed (%r -> %r)',
+                                     t_path2, o_path, exc_info=True)
                         raise
-                return o_path
+                return [o_path]
             else:
                 # for debugging, leave temp file, copy to output
                 shutil.copy(t_path2, o_path)
                 logger.info('copied %r -> %r', t_path2, o_path)
-                return o_path
+                return [o_path]
 
         if self.config['cleanup_tmp_files']:
-            ## do an atomic renaming
+            # do an atomic renaming
             try:
                 logger.debug('attemping os.rename(%r, %r)', t_path, o_path)
                 os.rename(t_path, o_path)
-            except OSError, exc:                
-                if exc.errno==18:
+            except OSError, exc:
+                if exc.errno == errno.EXDEV:
                     patient_move(t_path, o_path)
                 else:
-                    logger.critical(
-                        'failed shutil.copy2(%r, %r) and/or os.remove(t_path)',
+                    logger.error(
+                        'failed shutil.copy2(%r, %r) and/or '
+                        'os.remove(t_path)',
                         t_path, o_path, exc_info=True)
                     raise
             except Exception, exc:
-                logger.critical('failed os.rename(%r, %r)', t_path, o_path, exc_info=True)
+                logger.error('failed os.rename(%r, %r)', t_path, o_path,
+                             exc_info=True)
                 raise
         else:
             # for debugging, leave the tmp file, copy to output position
             shutil.copy(t_path, o_path)
-            ogger.info('copied %r -> %r', t_path, o_path)
+            logger.info('copied %r -> %r', t_path, o_path)
 
-        ## return the final output path
-        return o_path
+        # return the final output path
+        return [o_path]
 
 
 class to_local_tarballs(Configured):
     config_name = 'to_local_tarballs'
 
     def __call__(self, t_path, name_info, i_str):
-        name_info.update( get_name_info( t_path, i_str=i_str ) )
+        name_info.update(get_name_info(t_path, i_str=i_str))
 
         if name_info['num'] == 0:
             return None
@@ -317,28 +318,28 @@ class to_local_tarballs(Configured):
         o_dir = self.config['output_path']
         o_path = os.path.join(o_dir, o_fname + '.tar.gz')
 
-        ## if dir is missing make it
+        # if dir is missing make it
         dirname = os.path.dirname(o_path)
         if dirname and not os.path.exists(dirname):
             os.makedirs(dirname)
 
         t_path2 = tarball_export(self.config, t_path, name_info)
 
-        ## do an atomic renaming    
+        # do an atomic renaming
         try:
             logger.debug('attemping os.rename(%r, %r)' % (t_path2, o_path))
             os.rename(t_path2, o_path)
-        except OSError, exc:                
-            if exc.errno==18:
+        except OSError, exc:
+            if exc.errno == errno.EXDEV:
                 patient_move(t_path2, o_path)
             else:
-                msg = 'failed shutil.copy2(%r, %r) and/or os.remove(t_path)\n%s'\
-                    % (t_path2, o_path, traceback.format_exc(exc))
-                logger.critical(traceback.format_exc(exc))
+                logger.error('failed shutil.copy2(%r, %r) and/or '
+                             'os.remove(t_path)',
+                             t_path2, o_path, exc_info=True)
                 raise
         except Exception, exc:
-            msg = 'failed os.rename(%r, %r) -- %s' % (t_path, o_path, traceback.format_exc(exc))
-            logger.critical(msg)
+            logger.error('failed os.rename(%r, %r)',
+                         t_path, o_path, exc_info=True)
             raise
 
         try:
@@ -348,5 +349,5 @@ class to_local_tarballs(Configured):
 
         logger.info('to_local_tarballs created %s' % o_path)
 
-        ## return the final output path
-        return o_path
+        # return the final output path
+        return [o_path]

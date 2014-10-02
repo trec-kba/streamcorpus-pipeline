@@ -1,9 +1,7 @@
-'''
-Provides classes for loading StreamItem objects to/from kvlayer
+'''Read and write stream items to/from :mod:`kvlayer`.
 
-This software is released under an MIT/X11 open source license.
-
-Copyright 2012-2014 Diffeo, Inc.
+.. This software is released under an MIT/X11 open source license.
+   Copyright 2012-2014 Diffeo, Inc.
 '''
 from __future__ import absolute_import
 import ctypes
@@ -17,6 +15,7 @@ from streamcorpus_pipeline.stages import Configured
 import yakonfig
 
 logger = logging.getLogger(__name__)
+
 
 def epoch_ticks_to_uuid(ticks):
     '''Convert seconds since the Unix epoch to a UUID type.
@@ -32,6 +31,7 @@ def epoch_ticks_to_uuid(ticks):
     '''
     return uuid.UUID(int=ctypes.c_ulonglong(int(ticks)).value)
 
+
 def uuid_to_epoch_ticks(u):
     '''Convert a UUID type to seconds since the Unix epoch.
 
@@ -39,6 +39,33 @@ def uuid_to_epoch_ticks(u):
 
     '''
     return ctypes.c_longlong(u.int).value
+
+
+def stream_id_to_kvlayer_key(stream_id):
+    '''Convert a text stream ID to a kvlayer key.'''
+    # Reminder: stream_id is 1234567890-123456789abcdef...0
+    # where the first part is the (decimal) epoch_ticks and the second
+    # part is the (hex) doc_id
+    parts = stream_id.split('-')
+    if len(parts) != 2:
+        raise KeyError('invalid stream_id ' + stream_id)
+    epoch_ticks_s = parts[0]
+    doc_id_s = parts[1]
+    if not epoch_ticks_s.isdigit():
+        raise KeyError('invalid stream_id ' + stream_id)
+    if doc_id_s.lstrip(string.hexdigits) != '':
+        raise KeyError('invalid stream_id ' + stream_id)
+    epoch_ticks = epoch_ticks_to_uuid(epoch_ticks_s)
+    doc_id = uuid.UUID(hex=doc_id_s)
+    return (epoch_ticks, doc_id)
+
+
+def kvlayer_key_to_stream_id(k):
+    '''Convert a kvlayer key to a text stream ID.'''
+    (epoch_ticks, doc_id) = k
+    epoch_ticks_s = str(uuid_to_epoch_ticks(epoch_ticks))
+    doc_id_s = doc_id.hex
+    return epoch_ticks_s + '-' + doc_id_s
 
 class from_kvlayer(Configured):
     '''
@@ -52,6 +79,7 @@ class from_kvlayer(Configured):
     That is, half-open ranges are not supported.
     '''
     config_name = 'from_kvlayer'
+
     @staticmethod
     def check_config(config, name):
         yakonfig.check_toplevel_config(kvlayer, name)
@@ -64,7 +92,8 @@ class from_kvlayer(Configured):
 
     def __call__(self, i_str):
         if i_str:
-            epoch_ticks_1, doc_id_1, epoch_ticks_2, doc_id_2 = i_str.split(',')
+            (epoch_ticks_1, doc_id_1, epoch_ticks_2,
+             doc_id_2) = i_str.split(',')
             epoch_ticks_1 = epoch_ticks_to_uuid(epoch_ticks_1)
             epoch_ticks_2 = epoch_ticks_to_uuid(epoch_ticks_2)
             if doc_id_1:
@@ -80,9 +109,10 @@ class from_kvlayer(Configured):
         else:
             key_ranges = []
 
-        for key, data in self.client.scan( 'stream_items', *key_ranges ):
+        for key, data in self.client.scan('stream_items', *key_ranges):
             errors, data = streamcorpus.decrypt_and_uncompress(data)
             yield streamcorpus.deserialize(data)
+
 
 def get_kvlayer_stream_item(client, stream_id):
     '''Retrieve a :class:`streamcorpus.StreamItem` from :mod:`kvlayer`.
@@ -105,29 +135,17 @@ def get_kvlayer_stream_item(client, stream_id):
       not correspond to anything in the database
 
     '''
-    # Reminder: stream_id is 1234567890-123456789abcdef...0
-    # where the first part is the (decimal) epoch_ticks and the second
-    # part is the (hex) doc_id
-    parts = stream_id.split('-')
-    if len(parts) != 2:
-        raise KeyError('invalid stream_id ' + stream_id)
-    timestr = parts[0]
-    dochex = parts[1]
-    if not timestr.isdigit():
-        raise KeyError('invalid stream_id ' + stream_id)
-    if dochex.lstrip(string.hexdigits) != '':
-        raise KeyError('invalid stream_id ' + stream_id)
-
-    key = (uuid.UUID(int=int(timestr)), uuid.UUID(hex=dochex))
-    for k,v in client.get('stream_items', key):
+    key = stream_id_to_kvlayer_key(stream_id)
+    for k, v in client.get('stream_items', key):
         if v is not None:
             errors, bytestr = streamcorpus.decrypt_and_uncompress(v)
             return streamcorpus.deserialize(bytestr)
     raise KeyError(stream_id)
 
-class to_kvlayer(Configured):
 
-    '''
+class to_kvlayer(Configured):
+    '''Writer that puts stream items in :mod:`kvlayer`.
+
     stores StreamItems in a kvlayer table called "stream_items" in the
     namespace specified in the config dict for this stage.
 
@@ -151,7 +169,8 @@ class to_kvlayer(Configured):
     index name.
     '''
     config_name = 'to_kvlayer'
-    default_config = { 'indexes': [ 'doc_id_epoch_ticks' ] }
+    default_config = {'indexes': ['doc_id_epoch_ticks']}
+
     @staticmethod
     def check_config(config, name):
         yakonfig.check_toplevel_config(kvlayer, name)
@@ -169,17 +188,20 @@ class to_kvlayer(Configured):
     def __init__(self, *args, **kwargs):
         super(to_kvlayer, self).__init__(*args, **kwargs)
         self.client = kvlayer.client()
-        tables = { 'stream_items': 2 }
+        tables = {'stream_items': 2}
         for ndx in self.config['indexes']:
             tables['stream_items_' + ndx] = self.index_sizes[ndx]
         self.client.setup_namespace(tables)
 
     def __call__(self, t_path, name_info, i_str):
         indexes = {}
-        for ndx in self.config['indexes']: indexes[ndx] = []
+        for ndx in self.config['indexes']:
+            indexes[ndx] = []
+
         # The idea here is that the actual documents can be pretty big,
         # so we don't want to keep them in memory, but the indexes
-        # will just be UUID tuples.  So the iterator produces
+        # will just be UUID tuples.  So the iterator produces...
+
         def keys_and_values():
             for si in streamcorpus.Chunk(t_path):
                 key1 = epoch_ticks_to_uuid(si.stream_time.epoch_ticks)
@@ -194,7 +216,8 @@ class to_kvlayer(Configured):
                     if ndx == 'doc_id_epoch_ticks':
                         kvp = ((key2, key1), r'')
                     elif ndx == 'with_source':
-                        ## si.source can be None but we can't write None blobs to kvlayer
+                        # si.source can be None but we can't write
+                        # None blobs to kvlayer
                         if si.source:
                             kvp = ((key1, key2), si.source)
                         else:
@@ -203,6 +226,9 @@ class to_kvlayer(Configured):
                         assert False, ('invalid index type ' + ndx)
                     indexes[ndx].append(kvp)
 
-        self.client.put( 'stream_items', *list(keys_and_values()))
+        si_kvps = list(keys_and_values())
+        self.client.put('stream_items', *si_kvps)
         for ndx, kvps in indexes.iteritems():
             self.client.put('stream_items_' + ndx, *kvps)
+
+        return [kvlayer_key_to_stream_id(k) for k, v in si_kvps]
