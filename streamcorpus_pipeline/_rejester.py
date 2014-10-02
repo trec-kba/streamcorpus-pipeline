@@ -38,20 +38,15 @@ such as NFS, or use network-based reader and writer stages such as
 
 '''
 from __future__ import absolute_import
-import argparse
-import sys
 import time
-
-import json
 
 import dblogger
 import kvlayer
 import streamcorpus_pipeline
-from streamcorpus_pipeline.run import instantiate_config
 from streamcorpus_pipeline._pipeline import PipelineFactory
-from streamcorpus_pipeline._exceptions import ConfigurationError
 from streamcorpus_pipeline.stages import PipelineStages
 import yakonfig
+
 
 def rejester_run_function(work_unit):
     with yakonfig.defaulted_config([dblogger, kvlayer, streamcorpus_pipeline],
@@ -69,6 +64,7 @@ def rejester_run_function(work_unit):
         work_unit.data['start_chunk_time'] = time.time()
         work_unit.data['start_count'] = 0
         pipeline._process_task(work_unit)
+
 
 def rejester_terminate_function(work_unit):
     pass
