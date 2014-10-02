@@ -155,31 +155,24 @@ create :class:`Pipeline` objects from the resulting configuration.
 '''
 
 from __future__ import absolute_import
-import itertools
 import logging
-import math
 import os
-import re
-import shutil
-import sys
 import time
 import uuid
 
 try:
     import gevent
 except:
-    ## only load gevent if it is available :-)
+    # only load gevent if it is available :-)
     gevent = None
 
 import streamcorpus
-import yakonfig
-from streamcorpus_pipeline.stages import BatchTransform
-from streamcorpus_pipeline._exceptions import FailedExtraction, \
-    GracefulShutdown, ConfigurationError, PipelineOutOfMemory, \
-    PipelineBaseException, TransformGivingUp
+from streamcorpus_pipeline._exceptions import TransformGivingUp, \
+    InvalidStreamItem
 from streamcorpus_pipeline.util import rmtree
 
 logger = logging.getLogger(__name__)
+
 
 class PipelineFactory(object):
     '''Factory to create `Pipeline` objects from configuration.
@@ -228,16 +221,17 @@ class PipelineFactory(object):
             tmp_dir_path=config['tmp_dir_path'],
             assert_single_source=config['assert_single_source'],
             output_chunk_max_count=config.get('output_chunk_max_count'),
-            output_max_clean_visible_bytes=
-                config.get('output_max_clean_visible_bytes'),
+            output_max_clean_visible_bytes=config.get(
+                'output_max_clean_visible_bytes'),
             reader=self._init_stage(config, 'reader'),
-            incremental_transforms=
-                self._init_stages(config, 'incremental_transforms'),
+            incremental_transforms=self._init_stages(
+                config, 'incremental_transforms'),
             batch_transforms=self._init_stages(config, 'batch_transforms'),
-            post_batch_incremental_transforms=
-                self._init_stages(config, 'post_batch_incremental_transforms'),
+            post_batch_incremental_transforms=self._init_stages(
+                config, 'post_batch_incremental_transforms'),
             writers=self._init_stages(config, 'writers'),
         )
+
 
 class Pipeline(object):
     '''Pipeline for extracting data into StreamItem instances.
@@ -306,11 +300,11 @@ class Pipeline(object):
         self.writers = writers
 
         # current Chunk output file for incremental transforms
-        self.t_chunk = None  
+        self.t_chunk = None
         # context allows stages to communicate with later stages
         self.context = dict(
-            i_str = None,
-            data = None, 
+            i_str=None,
+            data=None,
             )
         self.work_unit = None
 
@@ -416,7 +410,7 @@ class Pipeline(object):
 
                 ## insist that every chunk has only one source string
                 if si:
-                    sources.add( si.source )
+                    sources.add(si.source)
                     if self.assert_single_source and len(sources) != 1:
                         raise InvalidStreamItem(
                             'stream item %r had source %r, not %r '
@@ -429,13 +423,11 @@ class Pipeline(object):
                     #logger.debug('len(si.body.clean_visible)=%d' % int(10 * int(math.floor(float(len(si.body.clean_visible)) / 2**10)/10)))
                     #logger.debug('len(si.body.clean_visible)=%d' % len(si.body.clean_visible))
 
-
-                if (self.output_chunk_max_count is not None and
-                    len(self.t_chunk) == self.output_chunk_max_count):
+                if ((self.output_chunk_max_count is not None and
+                     len(self.t_chunk) == self.output_chunk_max_count)):
                     logger.info('reached output_chunk_max_count (%d) at: %d',
                                 len(self.t_chunk), next_idx)
-                    self.t_chunk.close()
-                    self._intermediate_output_chunk(
+                    self._process_output_chunk(
                         start_count, next_idx, sources, i_str, t_path)
                     start_count = next_idx
 
@@ -448,32 +440,18 @@ class Pipeline(object):
                         self.output_chunk_max_clean_visible_bytes,
                         len_clean_visible)
                     len_clean_visible = 0
-                    self.t_chunk.close()
-                    self._intermediate_output_chunk(
+                    self._process_output_chunk(
                         start_count, next_idx, sources, i_str, t_path)
                     start_count = next_idx
 
                 input_item_count += 1
-                if ((self.input_item_limit is not None) and
-                    (input_item_count > self.input_item_limit)):
+                if (((self.input_item_limit is not None) and
+                     (input_item_count > self.input_item_limit))):
                     break
 
-            ## bool(t_chunk) is False if t_chunk has no data, but we still
-            ## want to make sure it gets closed.
             if self.t_chunk is not None:
-                self.t_chunk.close()
-                o_paths = self._process_output_chunk(
+                self._process_output_chunk(
                     start_count, next_idx, sources, i_str, t_path)
-                self.t_chunk = None
-            else:
-                o_paths = None
-
-            ## set start_count and o_paths in work_unit and updated
-            data = dict(start_count=next_idx, o_paths=o_paths)
-            logger.debug('WorkUnit.update() data=%r', data)
-            if self.work_unit is not None:
-                self.work_unit.data.update(data)
-                self.work_unit.update()
 
             ## return how many stream items we processed
             return next_idx
@@ -485,45 +463,23 @@ class Pipeline(object):
                 transform.shutdown()
             if self.cleanup_tmp_files:
                 rmtree(self.tmp_dir_path)
-            
-
-    def _intermediate_output_chunk(self, start_count, next_idx, sources, i_str, t_path):
-        '''save a chunk that is smaller than the input chunk
-        '''
-        o_paths = self._process_output_chunk(start_count, next_idx, sources, i_str, t_path)
-
-        ## set start_count and o_paths in work_unit and updated
-        data = dict(start_count=next_idx, o_paths=o_paths)
-        logger.debug('WorkUnit.update() data=%r', data)
-        if self.work_unit is not None:
-            self.work_unit.data.update(data)
-            self.work_unit.update()
-
-        ## reset t_chunk, so we get it again
-        self.t_chunk = None
-
-        # TODO: bring this back? dropped due to not wanting to pass around start_chunk_time
-        # elapsed = time.time() - start_chunk_time
-        # if elapsed > 0:
-        #     rate = float(next_idx) / elapsed
-        #     logger.info(
-        #         '%d more of %d in %.1f --> %.1f per sec on (post-partial_commit) %s',
-        #         next_idx - start_count, next_idx, elapsed, rate, i_str)
-
-        ## advance start_count for next loop
-        #logger.info('advancing start_count from %d to %d', start_count, next_idx)
 
     def _process_output_chunk(self, start_count, next_idx, sources, i_str,
                               t_path):
         '''
-        for the current output chunk (which should be closed):
+        for the current output chunk (which should be open):
           1. run batch transforms
           2. run post-batch incremental transforms
           3. run 'writers' to load-out the data to files or other storage
         return list of paths that writers wrote to
         '''
+        if not self.t_chunk:
+            # nothing to do
+            return []
+        self.t_chunk.close()
+
         # gather the paths as the writers run
-        o_paths = []
+        o_paths = None
         if len(self.t_chunk) > 0:
             # only batch transform and load if the chunk
             # isn't empty, which can happen when filtering
@@ -540,11 +496,20 @@ class Pipeline(object):
             if (self.t_chunk) and (len(self.t_chunk) >= 0):
                 o_paths = self._run_writers(start_count, next_idx, sources,
                                             i_str, t_path)
-        if self.t_chunk is not None:
-            self.t_chunk.close()
-        return o_paths
+
+        # we're now officially done with the chunk
+        self.t_chunk = None
+
+        # If we wrote some paths, update the data dictionary of outputs
+        if self.work_unit:
+            old_o_paths = self.work_unit.data.get('output', [])
+            o_paths = old_o_paths + o_paths
+            self.work_unit.data['start_count'] = next_idx
+            self.work_unit.data['output'] = o_paths
+            self.work_unit.update()
 
     def _run_batch_transforms(self, chunk_path):
+        '''Run all of the batch transforms over some intermediate chunk.'''
         for transform in self.batch_transforms:
             transform.process_path(chunk_path)
 
@@ -566,6 +531,18 @@ class Pipeline(object):
             os.rename(t_path2, t_path)
 
     def _run_writers(self, start_count, next_idx, sources, i_str, t_path):
+        '''Run all of the writers over some intermediate chunk.
+
+        :param int start_count: index of the first item
+        :param int next_idx: index of the next item (after the last
+          item in this chunk)
+        :param list sources: source strings included in this chunk
+          (usually only one source)
+        :param str i_str: name of input file or other input
+        :param str t_path: location of intermediate chunk on disk
+        :return: list of output file paths or other outputs
+
+        '''
         # writers put the chunk somewhere, and could delete it
         name_info = dict(
             first=start_count,
