@@ -142,6 +142,7 @@ setup(
             'streamcorpus_pipeline = streamcorpus_pipeline.run:main',
             'streamcorpus_directory = streamcorpus_pipeline._directory:main',
             'streamcorpus_pipeline_test = streamcorpus_pipeline.tests.run:main',
+            'streamcorpus_pipeline_kvlayer = streamcorpus_pipeline._kvlayer:main',
         ]
     },
     data_files = [

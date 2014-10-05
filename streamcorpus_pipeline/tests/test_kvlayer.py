@@ -7,7 +7,7 @@ import pytest
 
 import kvlayer
 import streamcorpus
-from streamcorpus_pipeline._kvlayer import from_kvlayer, to_kvlayer
+from streamcorpus_pipeline._kvlayer import from_kvlayer, to_kvlayer, search, HASH_KEYWORDS, HASH_TF_DOC_ID_EPOCH_TICKS
 from streamcorpus_pipeline.tests._test_data import get_test_v0_3_0_chunk_path
 import yakonfig
 
@@ -180,3 +180,25 @@ def test_kvlayer_both_indexes(configurator, test_data_dir):
         for k,v in client.scan('stream_items_with_source'):
             for kk,sixz in client.get('stream_items', k):
                 pass
+
+
+@pytest.mark.slow
+def test_kvlayer_keyword_indexes(configurator, test_data_dir):
+    overlay = {
+        'streamcorpus_pipeline': {
+            'to_kvlayer': {
+                'indexes': [ HASH_KEYWORDS, HASH_TF_DOC_ID_EPOCH_TICKS ],
+            },
+        },
+    }
+    with chunks(configurator, test_data_dir, overlay) as (path, client):
+        assert len(list(search('elephant'))) == 0
+        assert len(list(search('ipad'))) == 1
+        assert len(list(search('lunar'))) == 1
+        assert len(list(search('francais'))) == 4
+        assert len(list(search('auto'))) == 2
+        count = 0
+        for si in search('fachabteilungen'):
+            count += 1
+            assert 'fachabteilungen' in si.body.clean_visible.lower()
+        assert count == 1
