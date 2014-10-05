@@ -11,10 +11,14 @@ import string
 import struct
 import uuid
 
-from backports import lzma
-from sklearn.feature_extraction.text import CountVectorizer
-from many_stop_words import get_stop_words
-import mmh3
+try:
+    from backports import lzma
+    from sklearn.feature_extraction.text import CountVectorizer
+    from many_stop_words import get_stop_words
+    import mmh3
+    indexing_dependencies_failed = None
+except ImportError, exc:
+    indexing_dependencies_failed = str(exc)
 
 import kvlayer
 import streamcorpus
@@ -205,6 +209,9 @@ class to_kvlayer(Configured):
             tables[STREAM_ITEMS_TABLE + '_' + ndx] = self.index_sizes[ndx]
         self.client.setup_namespace(tables)
         if HASH_KEYWORDS in self.config['indexes']:
+            if indexing_dependencies_failed:
+                raise Exception('indexing is not enabled: {}'
+                                .format(indexing_dependencies_failed))
             self.analyzer = build_analyzer()
 
     def __call__(self, t_path, name_info, i_str):

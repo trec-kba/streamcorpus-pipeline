@@ -137,6 +137,13 @@ setup(
         'pdfminer',
         'backports.lzma!=0.0.4',
     ],
+    extras_require = {
+        'keyword_indexing': [
+            'many_stop_words',
+            'sklearn',
+            'mmh3',
+        ],
+    },
     entry_points={
         'console_scripts': [
             'streamcorpus_pipeline = streamcorpus_pipeline.run:main',
