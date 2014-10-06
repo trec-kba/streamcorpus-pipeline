@@ -7,7 +7,7 @@ import pytest
 
 import kvlayer
 import streamcorpus
-from streamcorpus_pipeline._kvlayer import from_kvlayer, to_kvlayer, search, HASH_KEYWORDS, HASH_TF_DOC_ID_EPOCH_TICKS
+from streamcorpus_pipeline._kvlayer import from_kvlayer, to_kvlayer, search, HASH_KEYWORD, HASH_TF_DOC_ID_EPOCH_TICKS
 from streamcorpus_pipeline.tests._test_data import get_test_v0_3_0_chunk_path
 import yakonfig
 
@@ -187,7 +187,7 @@ def test_kvlayer_keyword_indexes(configurator, test_data_dir):
     overlay = {
         'streamcorpus_pipeline': {
             'to_kvlayer': {
-                'indexes': [ HASH_KEYWORDS, HASH_TF_DOC_ID_EPOCH_TICKS ],
+                'indexes': [ HASH_KEYWORD, HASH_TF_DOC_ID_EPOCH_TICKS ],
             },
         },
     }

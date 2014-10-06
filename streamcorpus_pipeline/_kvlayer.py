@@ -29,7 +29,7 @@ logger = logging.getLogger(__name__)
 
 STREAM_ITEMS_TABLE = 'stream_items'
 HASH_TF_DOC_ID_EPOCH_TICKS = 'hash_tf_doc_id_epoch_ticks'
-HASH_KEYWORDS   = 'hash_keywords'
+HASH_KEYWORD   = 'hash_keywords'
 
 def epoch_ticks_to_uuid(ticks):
     '''Convert seconds since the Unix epoch to a UUID type.
@@ -104,6 +104,11 @@ class from_kvlayer(Configured):
         self.client.setup_namespace(
             dict(stream_items=2))
 
+    ## TODO: make this able to take a keyword query as input for
+    ## processing stream_ids that match a keyword query; will use the
+    ## HASH_TF_DOC_ID_EPOCH_TICKS index created by to_kvlayer;
+    ## probably also needs a table about the state of completion of
+    ## each StreamItem
     def __call__(self, i_str):
         if i_str:
             (epoch_ticks_1, doc_id_1, epoch_ticks_2,
@@ -194,25 +199,44 @@ class to_kvlayer(Configured):
                     'invalid {} indexes type {!r}'
                     .format(name, ndx))
 
+    ## TODO:
+    # replace existing index keys with non-UUID keys -- cleanup
+    # make the stream_ids look more like the bit-packed IDs in keyword index -- optimization
+    # add a detected language-type index for prioritizing taggers by language
+
     index_sizes = {
         'doc_id_epoch_ticks': 2,
         'with_source': 2,
+        ## keyword index on StreamItems
         HASH_TF_DOC_ID_EPOCH_TICKS: (str,),
-        HASH_KEYWORDS: (int,),
+        ## revere mapping of murmur3 hashes
+        HASH_KEYWORD: (int, str),
     }
 
     def __init__(self, *args, **kwargs):
         super(to_kvlayer, self).__init__(*args, **kwargs)
+        self.validate_config()
         self.client = kvlayer.client()
         tables = {STREAM_ITEMS_TABLE: 2}
         for ndx in self.config['indexes']:
             tables[STREAM_ITEMS_TABLE + '_' + ndx] = self.index_sizes[ndx]
         self.client.setup_namespace(tables)
-        if HASH_KEYWORDS in self.config['indexes']:
+
+        if HASH_KEYWORD in self.config['indexes']:
+            self.analyzer = build_analyzer()
+
+    def validate_config(self):
+        if HASH_TF_DOC_ID_EPOCH_TICKS in self.config['indexes'] and \
+           HASH_KEYWORD not in self.config['indexes']:
+                raise Exception('{} set but {} is not; need both or neither'
+                                .format(HASH_TF_DOC_ID_EPOCH_TICKS, HASH_KEYWORD))
+        if HASH_KEYWORD in self.config['indexes']:
             if indexing_dependencies_failed:
                 raise Exception('indexing is not enabled: {}'
                                 .format(indexing_dependencies_failed))
-            self.analyzer = build_analyzer()
+            if HASH_TF_DOC_ID_EPOCH_TICKS not in self.config['indexes']:
+                raise Exception('{} set but {} is not; need both or neither'
+                                .format(HASH_KEYWORD, HASH_TF_DOC_ID_EPOCH_TICKS))
 
     def __call__(self, t_path, name_info, i_str):
         indexes = {}
@@ -244,13 +268,16 @@ class to_kvlayer(Configured):
                         else:
                             continue
                     elif ndx == HASH_TF_DOC_ID_EPOCH_TICKS:
+                        ## create both "word barrels" style keyword
+                        ## reverse index, and also a mapping from
+                        ## murmur3 hash value to the input strings.
                         hash_to_word = dict()
                         self.client.put(STREAM_ITEMS_TABLE + '_' + HASH_TF_DOC_ID_EPOCH_TICKS,
                                         *list(keywords(si, self.analyzer, hash_to_word)))
-                        self.client.put(STREAM_ITEMS_TABLE + '_' + HASH_KEYWORDS,
+                        self.client.put(STREAM_ITEMS_TABLE + '_' + HASH_KEYWORD,
                                         *hash_to_word.items())
                         continue
-                    elif ndx == HASH_KEYWORDS:
+                    elif ndx == HASH_KEYWORD:
                         ## done above
                         continue
                     else:
@@ -265,8 +292,16 @@ class to_kvlayer(Configured):
         return [kvlayer_key_to_stream_id(k) for k, v in si_kvps]
 
 
+## used in manipulating 128-bit doc_id hashes into two 64-bit Q ints
 max_int64 = 0xFFFFFFFFFFFFFFFF
 min_int64 = 0x0000000000000000
+
+### This defines the keyword index keys
+## big-endian preserves sorting order
+## i = 4-byte signed int
+## B = unsigned byte int (character)
+## Q = unsigned 8-byte int
+### see below for what goes in these fields
 reverse_index_packing = '>iBQi'
 
 def keywords(si, analyzer, hash_to_word):
@@ -293,14 +328,21 @@ def keywords(si, analyzer, hash_to_word):
         raise Exception('si.doc_id does not look like an md5 hash: %r' % si.doc_id)
     epoch_ticks = int(si.stream_time.epoch_ticks)
     doc_id = int(si.doc_id, 16)
+    ## split doc_id into two 8-byte things, we only use the first below
     doc_id_1, doc_id_2 = (doc_id >> 64) & max_int64, doc_id & max_int64
     for tok, count in Counter(analyzer(si.body.clean_visible)).items():
-        tok_hash = mmh3.hash(tok.encode('utf8'))
-        hash_to_word[(tok_hash,)] = tok
+        tok_encoded = tok.encode('utf8')
+        tok_hash = mmh3.hash(tok_encoded)
+        ## put both tok_hash and tok in the key, so we get all
+        ## meanings of a hash even if collisions occur
+        hash_to_word[(tok_hash, tok_encoded)] = r''
+        ## force count to fit within a single byte
         count = max(count, 2**8 - 1)
         ## can drop doc_id_2 and still have 10**19 document space to
         ## avoid collisions; epoch_ticks last allows caller to select
         ## only the last document.
+        ### this yields kvlayer-style tuple(key-tuple, value) with all
+        ### the info in the key:
         yield (struct.pack(reverse_index_packing, tok_hash, count, doc_id_1, epoch_ticks),), r''
 
 
@@ -308,12 +350,21 @@ def build_analyzer():
     '''builds an sklearn `CountVectorizer` using `many_stop_words`
 
     '''
+    ## sensible defaults; could need configuration eventually
     cv = CountVectorizer(
         stop_words=get_stop_words(),
         strip_accents='unicode',
     )
     return cv.build_analyzer()
 
+def invert_hash(tok_hash, kvl):
+    '''returns a list of all the Unicode strings that have been mapped to
+the `tok_hash` integer
+
+    '''
+    return [tok_encoded.decode('utf8') 
+            for (_, tok_encoded) in 
+            kvl.scan(STREAM_ITEMS_TABLE + '_' + HASH_KEYWORD, ((tok_hash,), (tok_hash + 1,)))]
 
 def search(query_string):
     '''queries the keyword index for `word` and yields
@@ -322,8 +373,14 @@ def search(query_string):
 
     warning: this is a very rudimentary search capability
 
+    An analyzer generated by `build_analyzer` is used to tokenize and
+    filter the `query_string`.  This can remove tokens.  Results for
+    each token are yielded separately, which is equivalent to
+    combining the separate tokens in a Boolean OR query.
+
     '''
     client = kvlayer.client()
+    ## this is also done in __init__ above, and could be abstracted out
     tables = {STREAM_ITEMS_TABLE: 2}
     for ndx in to_kvlayer.index_sizes.keys():
         tables[STREAM_ITEMS_TABLE + '_' + ndx] = to_kvlayer.index_sizes[ndx]
@@ -332,21 +389,27 @@ def search(query_string):
     analyzer = build_analyzer()
     for tok in analyzer(query_string):
         #import pdb; pdb.set_trace()
+        ## build a range query around this token's hash
         tok_hash = mmh3.hash(tok.encode('utf8'))
         tok_start = struct.pack(reverse_index_packing, tok_hash    , 0, 0, 0)
         tok_end   = struct.pack(reverse_index_packing, tok_hash + 1, 0, 0, 0)
-        logger.info('%r --> %s' % (tok_hash, client.get(HASH_KEYWORDS, tok_hash)))
+        logger.info('%r --> %s' % (tok_hash, invert_hash(tok_hash, client)))
+        ## query the keyword index
         for (key,), _ in client.scan(STREAM_ITEMS_TABLE + '_' + HASH_TF_DOC_ID_EPOCH_TICKS,
                                ((tok_start,), (tok_end,))):
             _tok_hash, count, doc_id_1, epoch_ticks = struct.unpack(reverse_index_packing, key)
+            ## assert that logic around big-endianness preserving sort
+            ## order worked:
             assert tok_start <= key <= tok_end
             assert tok_hash <= _tok_hash <= tok_hash + 1
+            ## build a range query around this epoch_ticks-half_doc_id
             doc_id_max_int = (doc_id_1 << 64) | max_int64
             doc_id_min_int = (doc_id_1 << 64) | min_int64
             key1 = epoch_ticks_to_uuid(epoch_ticks)
             key2_max = uuid.UUID(int=doc_id_max_int)
             key2_min = uuid.UUID(int=doc_id_min_int)
             for _, xz_blob in client.scan(STREAM_ITEMS_TABLE, ((key1, key2_min), (key1, key2_max))):
+                ## given the half-doc_id this could yield some false positives
                 thrift_blob = lzma.decompress(xz_blob)
                 yield streamcorpus.deserialize(thrift_blob)
 
@@ -354,8 +417,8 @@ def search(query_string):
 def main():
     import streamcorpus_pipeline
     import argparse
-    parser = argparse.ArgumentParser()
-    parser.add_argument('query_string', nargs='+', help='enter one or more query words')
+    parser = argparse.ArgumentParser(description='accepts a query string as input and print stream_ids of documents that match *any* of the terms')
+    parser.add_argument('query_string', nargs='+', help='enter one or more query words; will be combined with OR')
 
     modules = [yakonfig, kvlayer]
     args = yakonfig.parse_args(parser, modules)
