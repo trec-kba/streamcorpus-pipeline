@@ -1,13 +1,18 @@
 from __future__ import absolute_import
+from collections import defaultdict
 import contextlib
 import logging
 import uuid
 
-import pytest
-
+from backports import lzma
 import kvlayer
+import pytest
 import streamcorpus
-from streamcorpus_pipeline._kvlayer import from_kvlayer, to_kvlayer, search, HASH_KEYWORD, HASH_TF_DOC_ID_EPOCH_TICKS
+
+from streamcorpus_pipeline._kvlayer import from_kvlayer, to_kvlayer
+from streamcorpus_pipeline._kvlayer_keyword_search import keyword_indexer
+from streamcorpus_pipeline._kvlayer_table_names import table_name, all_tables, \
+    WITH_SOURCE, DOC_ID_EPOCH_TICKS, HASH_KEYWORD, HASH_TF_SID
 from streamcorpus_pipeline.tests._test_data import get_test_v0_3_0_chunk_path
 import yakonfig
 
@@ -101,9 +106,7 @@ def chunks(configurator, test_data_dir, overlay={}):
         writer(path, name_info, i_str)
 
         client = kvlayer.client()
-        client.setup_namespace({'stream_items': 2,
-                                'stream_items_doc_id_epoch_ticks': 2,
-                                'stream_items_with_source': 2})
+        client.setup_namespace(all_tables())
         yield path, client
 
 @pytest.mark.slow
@@ -112,7 +115,7 @@ def test_kvlayer_reader_and_writer(configurator, test_data_dir):
         ## check that index table was created
         all_doc_ids = set()
         all_epoch_ticks = set()
-        for (doc_id, epoch_ticks), empty_data in client.scan('stream_items_doc_id_epoch_ticks'):
+        for (doc_id, epoch_ticks), empty_data in client.scan(table_name(DOC_ID_EPOCH_TICKS)):
             all_doc_ids.add(doc_id)
             all_epoch_ticks.add(epoch_ticks)
         all_doc_ids = sorted(all_doc_ids)
@@ -187,18 +190,42 @@ def test_kvlayer_keyword_indexes(configurator, test_data_dir):
     overlay = {
         'streamcorpus_pipeline': {
             'to_kvlayer': {
-                'indexes': [ HASH_KEYWORD, HASH_TF_DOC_ID_EPOCH_TICKS ],
+                'indexes': [ HASH_KEYWORD, HASH_TF_SID ],
             },
         },
     }
+    truth_data = {
+        'elephant': 0,
+        'ipad': 1,
+        'lunar': 1,
+        'francais': 4,
+        'auto': 2,
+        'fachabteilungen': 1
+        }
+        
     with chunks(configurator, test_data_dir, overlay) as (path, client):
-        assert len(list(search('elephant'))) == 0
-        assert len(list(search('ipad'))) == 1
-        assert len(list(search('lunar'))) == 1
-        assert len(list(search('francais'))) == 4
-        assert len(list(search('auto'))) == 2
-        count = 0
-        for si in search('fachabteilungen'):
-            count += 1
-            assert 'fachabteilungen' in si.body.clean_visible.lower()
-        assert count == 1
+
+        indexer = keyword_indexer(client)
+
+        ## check that our truth counts above match the corpus
+        found = defaultdict(set)
+        for _, xz_blob in client.scan(table_name()):
+            thrift_blob = lzma.decompress(xz_blob)
+            si = streamcorpus.deserialize(thrift_blob)
+            tokens = set(indexer.analyzer(si.body.clean_visible))
+            for keyword in truth_data:
+                if keyword in tokens:
+                    found[keyword].add(si)
+
+        for keyword in found:
+            found_count = len(found[keyword])
+            assert found_count == truth_data[keyword], keyword
+
+        ## verify that precision is perfect for this small data set
+        for keyword, expected_count in truth_data.items():
+            count = 0
+            for si in indexer.search(keyword):
+                count += 1
+                tokens = set(indexer.analyzer(si.body.clean_visible))
+                assert keyword in tokens
+            assert count == expected_count
