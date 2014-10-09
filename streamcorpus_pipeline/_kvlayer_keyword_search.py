@@ -11,9 +11,8 @@ import uuid
 
 import streamcorpus
 from streamcorpus_pipeline._kvlayer_table_names import table_name, \
-    epoch_ticks_to_uuid, uuid_to_epoch_ticks, \
-    stream_id_to_kvlayer_key, kvlayer_key_to_stream_id, \
-    HASH_TF_SID, HASH_KEYWORD
+    epoch_ticks_to_uuid, HASH_TF_SID, HASH_KEYWORD
+from yakonfig import ConfigurationError
 
 logger = logging.getLogger(__name__)
 
@@ -92,15 +91,18 @@ simple token-based search.
         ## called by streamcorpus_pipeline._kvlayer.{to,from}_kvlayer.check_config
         if HASH_TF_SID in config['indexes'] and \
            HASH_KEYWORD not in config['indexes']:
-                raise Exception('{} set but {} is not; need both or neither'
-                                .format(HASH_TF_SID, HASH_KEYWORD))
+                raise ConfigurationError(
+                    '{} set but {} is not; need both or neither'
+                    .format(HASH_TF_SID, HASH_KEYWORD))
         if HASH_KEYWORD in config['indexes']:
             if INDEXING_DEPENDENCIES_FAILED:
-                raise Exception('indexing is not enabled: {}'
-                                .format(INDEXING_DEPENDENCIES_FAILED))
+                raise ConfigurationError(
+                    'indexing is not enabled: {}'
+                    .format(INDEXING_DEPENDENCIES_FAILED))
             if HASH_TF_SID not in config['indexes']:
-                raise Exception('{} set but {} is not; need both or neither'
-                                .format(HASH_KEYWORD, HASH_TF_SID))
+                raise ConfigurationError(
+                    '{} set but {} is not; need both or neither'
+                    .format(HASH_KEYWORD, HASH_TF_SID))
 
     def __init__(self, kvl):
         '''`kvl` is a kvlayer client that has been configured and had
@@ -115,6 +117,9 @@ simple token-based search.
         '''builds an sklearn `CountVectorizer` using `many_stop_words`
 
         '''
+        if INDEXING_DEPENDENCIES_FAILED:
+            raise ConfigurationError('indexing is not enabled: {}'
+                                     .format(INDEXING_DEPENDENCIES_FAILED))
         ## sensible defaults; could need configuration eventually
         cv = CountVectorizer(
             stop_words=get_stop_words(),

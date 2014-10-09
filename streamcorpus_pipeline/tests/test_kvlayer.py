@@ -10,9 +10,10 @@ import pytest
 import streamcorpus
 
 from streamcorpus_pipeline._kvlayer import from_kvlayer, to_kvlayer
-from streamcorpus_pipeline._kvlayer_keyword_search import keyword_indexer
-from streamcorpus_pipeline._kvlayer_table_names import table_name, all_tables, \
-    WITH_SOURCE, DOC_ID_EPOCH_TICKS, HASH_KEYWORD, HASH_TF_SID
+from streamcorpus_pipeline._kvlayer_keyword_search import keyword_indexer, \
+    INDEXING_DEPENDENCIES_FAILED
+from streamcorpus_pipeline._kvlayer_table_names import table_name, \
+    all_tables, DOC_ID_EPOCH_TICKS, HASH_KEYWORD, HASH_TF_SID
 from streamcorpus_pipeline.tests._test_data import get_test_v0_3_0_chunk_path
 import yakonfig
 
@@ -186,6 +187,8 @@ def test_kvlayer_both_indexes(configurator, test_data_dir):
 
 
 @pytest.mark.slow
+@pytest.mark.skipif('INDEXING_DEPENDENCIES_FAILED is not None',
+                    INDEXING_DEPENDENCIES_FAILED)
 def test_kvlayer_keyword_indexes(configurator, test_data_dir):
     overlay = {
         'streamcorpus_pipeline': {
