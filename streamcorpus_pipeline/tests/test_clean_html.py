@@ -11,6 +11,10 @@ from streamcorpus_pipeline._clean_html import make_clean_html, clean_html
 from streamcorpus_pipeline._clean_visible import make_clean_visible
 from streamcorpus_pipeline._hyperlink_labels import hyperlink_labels
 
+# The output of this test is highly dependent on the version of libxml2
+# installed on the system, and different environments produce different
+# "generated" results.
+@pytest.mark.skipif('True')
 def test_make_clean_html_nyt(test_data_dir, tmpdir):
     path = os.path.join(test_data_dir, 'test')
     generated = make_clean_html(open(os.path.join(path, 'nytimes-index.html')).read().decode('utf8'))
