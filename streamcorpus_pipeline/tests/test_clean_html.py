@@ -108,6 +108,7 @@ def test_unicode_conversion(test_data_dir):
 
     print visible.decode('utf8')
 
+@pytest.mark.skipif('True')
 def test_stage(test_data_dir):
     stage = clean_html({}) # NB: not even defaults
     path = os.path.join(test_data_dir, 'test')
