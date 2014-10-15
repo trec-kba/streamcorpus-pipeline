@@ -5,6 +5,7 @@
 '''
 import uuid
 import ctypes
+import string
 
 STREAM_ITEMS_TABLE = 'stream_items'
 HASH_TF_SID = 'hash_tf_sid'
