@@ -24,20 +24,17 @@ one StreamItem into the rest of the pipeline.
 `from_spinn3r_feed` is the main reader.  It is exported to the
 pipeline configuration in `streamcorpus_pipeline.stages`.
 
-The spinn3r data can be injected externally.  Set
-`from_spinn3r_feed._prefetched[key]` to the protostream data from
-spinn3r, set a configuration parameter ``use_prefetched: true``, and
-invoke the pipeline with the provided key as the input filename.  The
-key can be any valid string.
+The spinn3r data can be injected externally.  Create a dictionary
+mapping keys to the protostream data from spinn3r, cause it to be
+passed to the stage constructor, set a configuration parameter
+``use_prefetched: true``, and invoke the pipeline with the provided
+key as the input filename.  The key can be any valid string.
 
 `ProtoStreamReader` will read chunks of the spinn3r document, typically
 in the spinn3rApi_pb2.Entry Google protobuf format.
 
------
-
-This software is released under an MIT/X11 open source license.
-
-Copyright 2014 Diffeo, Inc.
+.. This software is released under an MIT/X11 open source license.
+   Copyright 2014 Diffeo, Inc.
 
 """
 
@@ -47,7 +44,6 @@ import itertools
 import json
 import logging
 from StringIO import StringIO
-import time
 import zlib
 
 from google.protobuf.internal.decoder import _DecodeVarint
@@ -60,6 +56,7 @@ from streamcorpus_pipeline._spinn3r.spinn3rApi_pb2 import Entry
 from streamcorpus_pipeline.stages import Configured
 
 logger = logging.getLogger(__name__)
+
 
 class ProtoStreamReader(object):
     """Reader object for spinn3r "protostream" files.
@@ -121,7 +118,7 @@ class ProtoStreamReader(object):
     def _read_varint(self):
         """Read exactly a varint out of the underlying file."""
         buf = self._read(8)
-        (n,l) = _DecodeVarint(buf, 0)
+        (n, l) = _DecodeVarint(buf, 0)
         self._unread(buf[l:])
         return n
 
@@ -137,7 +134,7 @@ class ProtoStreamReader(object):
         o = cls()
         o.ParseFromString(self._read_block())
         return o
-    
+
     def _bootstrap(self):
         """Read the header block out of the underlying file.
         After this (and forevermore afterwards) the file will point
@@ -146,18 +143,21 @@ class ProtoStreamReader(object):
 
     @property
     def header(self):
-        if self._header is None: self._bootstrap()
+        if self._header is None:
+            self._bootstrap()
         return self._header
 
     def __iter__(self):
         """Iterate through the objects in the file."""
-        if self._header is None: self._bootstrap()
+        if self._header is None:
+            self._bootstrap()
         while True:
             delim = self._read_a(ProtoStreamDelimiter)
             if delim.delimiter_type == ProtoStreamDelimiter.END:
                 return
             assert delim.delimiter_type == ProtoStreamDelimiter.ENTRY
             yield self._read_a(self._entry_type)
+
 
 class from_spinn3r_feed(Configured):
     """streamcorpus-pipeline reader for spinn3r.com feeds.
@@ -171,31 +171,40 @@ class from_spinn3r_feed(Configured):
       If set, only return stream items whose publisher type in the
       spinn3r feed exactly matches this string
 
-    There is a class-level field, ``_prefetched``, which is a
-    dictionary from input location to prefetched data.  It can be set
-    externally before invoking the pipeline.
+    A dictionary from URL to prefetched data can be passed as a
+    parameter to the stage constructor.  If `use_prefetched` is
+    :const:`True` then all input strings must be present in the
+    prefetch dictionary, and this stage never makes an outgoing
+    network connection.  If `use_prefetched` is :const:`False` then
+    the prefetch dictionary is ignored.  Otherwise if an input string
+    is present in the prefetch dictionary, then the prefetched data is
+    used, and if not, it is fetched from the network.
 
     """
     config_name = 'from_spinn3r_feed'
 
-    _prefetched = {}
+    def __init__(self, config={}, prefetched=None):
+        super(from_spinn3r_feed, self).__init__(config)
+        if prefetched is None:
+            prefetched = {}
+        self.prefetched = prefetched
 
     def __call__(self, i_str):
         # Do we have prefetched data for i_str?  Can/should/must we
         # use it?
-        if (self.config.get('use_prefetched', False) and
-            i_str not in from_spinn3r_feed._prefetched):
+        if ((self.config.get('use_prefetched', False) and
+             i_str not in self.prefetched)):
             raise ConfigurationError('from_spinn3r_feed "use_prefetched" '
                                      'is set, but prefetched content is '
                                      'missing')
-        if (self.config.get('use_prefetched', True) and
-            i_str in from_spinn3r_feed._prefetched):
+        if ((self.config.get('use_prefetched', True) and
+             i_str in self.prefetched)):
             logger.debug('using prefetched content for {}'.format(i_str))
-            stream = StringIO(from_spinn3r_feed._prefetched[i_str])
+            stream = StringIO(self.prefetched[i_str])
         else:
             logger.debug('getting local content from {}'.format(i_str))
             stream = open(i_str, 'rb')
-            
+
         try:
             count = 0
             # spinn3r publisher type == streamitem source
@@ -209,8 +218,10 @@ class from_spinn3r_feed(Configured):
         finally:
             stream.close()
 
+
 def _generate_stream_items(data):
     return _make_stream_items(StringIO(data))
+
 
 def _make_stream_items(f):
     """Given a spinn3r feed, produce a sequence of valid StreamItems.
@@ -227,6 +238,7 @@ def _make_stream_items(f):
     return itertools.ifilter(
         lambda x: x is not None,
         itertools.imap(_make_stream_item, reader))
+
 
 def _make_stream_item(entry):
     """Given a single spinn3r feed entry, produce a single StreamItem.
@@ -256,8 +268,10 @@ def _make_stream_item(entry):
     si.body = _make_content_item(
         pe.content,
         alternate_data=entry.feed_entry.content.data)
-    if not si.body: return None
-    if not si.body.raw: return None
+    if not si.body:
+        return None
+    if not si.body.raw:
+        return None
 
     if pe.content_extract.data:
         si.other_content['extract'] = _make_content_item(pe.content_extract)
@@ -273,15 +287,16 @@ def _make_stream_item(entry):
         si.other_content['feed_entry'] = _make_content_item(
             entry.feed_entry.content)
     si.source_metadata['lang'] = pe.lang[0].code
-    si.source_metadata['author'] = json.dumps( 
+    si.source_metadata['author'] = json.dumps(
         dict(
-            name = pe.author[0].name,
-            email = pe.author[0].email,
-            link = pe.author[0].link[0].href,
+            name=pe.author[0].name,
+            email=pe.author[0].email,
+            link=pe.author[0].link[0].href,
         )
     )
     si.source = entry.source.publisher_type
     return si
+
 
 def _make_content_item(node, mime_type=None, alternate_data=None):
     """Create a ContentItem from a node in the spinn3r data tree.
@@ -307,8 +322,8 @@ def _make_content_item(node, mime_type=None, alternate_data=None):
             if alternate_data is not None:
                 try:
                     raw = zlib.decompress(alternate_data)
-                except Exception, eee:
-                    raise exc # the original exception
+                except Exception:
+                    raise exc  # the original exception
                 else:
                     raise
     if mime_type is None:
