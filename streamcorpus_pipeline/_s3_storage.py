@@ -443,6 +443,7 @@ class to_s3_chunks(Configured):
 
         t_path2 = self.prepare_on_disk(t_path)
         data_len = os.path.getsize(t_path2)
+        logger.debug('prepared %s bytes of %r', data_len, t_path2)
         self.put_data(o_path, t_path2, self.name_info['md5'], data_len)
 
         self.cleanup(t_path, t_path2)
@@ -529,7 +530,7 @@ class to_s3_chunks(Configured):
             self.config.get('gpg_decryption_key_path'),
             tmp_dir=self.config.get('tmp_dir_path'))
         if not data:
-            logger.error('got no data back from decrypting %r, (size=%r), errors: %r', o_path, os.path.getsize(o_path), errors)
+            logger.error('got no data back from decrypting %r, (size=%r), errors: %r', o_path, len(rawdata), errors)
             return False
         logger.info('got back SIs: %d', len(list(Chunk(data=data))))
         return verify_md5(md5, data, other_errors=errors)
