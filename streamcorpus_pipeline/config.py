@@ -133,9 +133,14 @@ def normalize_config(config):
 
     # ensure that tmp_dir_path is unique to this process, so Pipeline
     # can remove it and anything left in it by various stages.
-    config['tmp_dir_path'] = os.path.join(config['tmp_dir_path'], uuid.uuid4().hex)
+    tmp_dir_path = config.get('tmp_dir_path', None)
+    if tmp_dir_path is None:
+        logger.warn('need config streamcorpus_pipeline.tmp_dir_path - something may crash')
+        return
 
-    tmp_dir_path = config['tmp_dir_path']
+    tmp_dir_path = os.path.join(tmp_dir_path, uuid.uuid4().hex)
+    config['tmp_dir_path'] = tmp_dir_path
+
     logger.debug('tmp_dir_path --> %s', tmp_dir_path)
 
     third_dir_path = config.get('third_dir_path')
