@@ -285,16 +285,27 @@ class from_s3_chunks(Configured):
             raise FailedExtraction('%s: no data (does the key exist?)'
                                    % key.key)
 
-        _errors, data = decrypt_and_uncompress(
-            data, 
-            self.gpg_decryption_key_path,
-            tmp_dir=self.config.get('tmp_dir_path'),
-            )
-        if not data:
-            msg = 'decrypt_and_uncompress got no data for {!r}, from {} bytes downloaded, errors: {}'.format(key_path, len(data), '\n'.join(_errors))
-            logger.error(msg)
-            raise FailedExtraction(msg)
-        logger.info( '\n'.join(_errors) )
+        if key_path.endswith('.gpg'):
+            if not self.gpg_decryption_key_path:
+                raise FailedExtraction('%s ends with ".gpg" but gpg_decryption_key_path=%s'
+                                       % (key.key, self.gpg_decryption_key_path))
+            if not key_path.endswith('.xz.gpg'):
+                raise FailedExtraction("current implementation requires GPG'ed data also be XZ-compressed")
+
+        _errors = []
+        if key_path.endswith(('.xz', '.xz.gpg')):
+            _errors, data = decrypt_and_uncompress(
+                data, 
+                self.gpg_decryption_key_path,
+                tmp_dir=self.config.get('tmp_dir_path'),
+                )
+            if not data:
+                msg = 'decrypt_and_uncompress got no data for {!r}, from {} bytes' \
+                    + ' downloaded, errors: {}' \
+                        .format(key_path, len(data), '\n'.join(_errors))
+                logger.error(msg)
+                raise FailedExtraction(msg)
+            logger.info( '\n'.join(_errors) )
         if not self.config['compare_md5_in_file_name']:
             logger.warn('not checking md5 in file name, consider setting '
                         'from_s3_chunks:compare_md5_in_file_name')
