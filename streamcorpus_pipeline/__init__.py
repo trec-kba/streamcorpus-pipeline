@@ -58,6 +58,11 @@ The general flow of the pipeline is as follows:
 
 .. automodule:: streamcorpus_pipeline.run
 
+:command:`streamcorpus_directory`
+=================================
+
+.. automodule:: streamcorpus_pipeline._directory
+
 Pipeline configuration and execution
 ====================================
 

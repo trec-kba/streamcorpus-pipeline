@@ -7,26 +7,29 @@ pipeline.
 
 .. program:: streamcorpus_pipeline
 
-.. option:: --config <config.yaml>, -c <config.yaml>
+The supplied configuration must have a :mod:`streamcorpus_pipeline`
+section.  Other required configuration depends on the specific stages
+in use and the rest of the operating environment; for instance, if the
+:class:`~streamcorpus_pipeline._kvlayer.to_kvlayer` writer stage is in
+use, then the configuration must also contain a top-level
+:mod:`kvlayer` section.
 
-YAML configuration file for the pipeline.  This must have a
-``streamcorpus_pipeline`` section as described below.  It may also
-have a ``logging`` section for :mod:`dblogger`, a ``kvlayer`` section
-for :mod:`kvlayer` if the
-:class:`~streamcorpus_pipeline._kvlayer.to_kvlayer` stage is in use,
-and a ``rejester`` section if :mod:`rejester` is used for distributed
-work.
+This supports the standard :option:`--config <yakonfig --config>`,
+:option:`--dump-config <yakonfig --dump-config>`, :option:`--verbose
+<dblogger --verbose>`, :option:`--quiet <dblogger --quiet>`, and
+:option:`--debug <dblogger --debug>` options.  It supports the
+following additional options:
 
 .. option:: --input <file.sc>, -i <file.sc>
 
-Names the input file.  If the file name is ``-`` then standard input
-is used, if this makes sense.  Some reader stages may use the file
-name specially.
+   Names the input file.  If the file name is ``-`` then standard
+   input is used, if this makes sense.  Some reader stages may use the
+   file name specially.
 
 .. option:: --in-glob <pattern>
 
-Runs the pipeline once for each file matching the shell :mod:`glob`
-``pattern``.
+   Runs the pipeline once for each file matching the shell :mod:`glob`
+   `pattern`.
 
 '''
 from __future__ import absolute_import

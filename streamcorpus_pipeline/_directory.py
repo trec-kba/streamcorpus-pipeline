@@ -3,9 +3,6 @@
 .. This software is released under an MIT/X11 open source license.
    Copyright 2014 Diffeo, Inc.
 
-streamcorpus_directory
-======================
-
 :command:`streamcorpus_directory` reads an entire directory through
 the streamcorpus pipeline.  This allows work to be distributed using
 the :mod:`rejester` distributed work system, with an implied
@@ -14,11 +11,51 @@ namespace have access to the local file storage space, either because
 the only worker is on the local system or because the named directory
 is on a shared networked filesystem.
 
+The command is followed by a list of directory names, or other inputs.
+By default each named directory is scanned, and each file in each
+directory is submitted as an input to the pipeline.  A :mod:`rejester`
+job is created for each file.
+
+Note that :mod:`rejester` is typically used to distribute jobs acress
+a cluster of systems.  This program only submits the file names as
+jobs; it does not submit actual file contents.  If the pipeline is
+configured with a reader such as
+:mod:`~streamcorpus_pipeline._s3_storage.from_s3_chunks`, this tool
+can be used to submit a sequence of S3 source paths, either on the
+command line directly using the :option:`--files
+<streamcorpus_directory --files>` option, or by collecting the paths
+into a text file and using :option:`--file-lists
+<streamcorpus_directory --file-lists>`.  If the pipeline is configured
+with a reader such as
+:mod:`~streamcorpus_pipeline._local_storage.from_local_chunks`, the
+caller must ensure that every system running a worker process has a
+copy of the source files.
+
+This supports the standard :option:`--config <yakonfig --config>`,
+:option:`--dump-config <yakonfig --dump-config>`, :option:`--verbose
+<dblogger --verbose>`, :option:`--quiet <dblogger --quiet>`, and
+:option:`--debug <dblogger --debug>` options.  It supports the
+following additional options:
+
 .. program:: streamcorpus_directory
 
-.. option:: -c <yaml>, --config <yaml>
+.. option:: --directories
 
-   Specify a YAML configuration file.
+   The positional arguments are interpreted as directory names.  Each
+   named directory is scanned recursively, and every file in or under
+   that directory is used as an input to the pipeline.  This is the
+   default mode.
+
+.. option:: --files
+
+   The positional arguments are interpreted as file names.  Each named
+   file is used as an input to the pipeline.
+
+.. option:: --file-lists
+
+   The positional arguments are file names.  Each named file is a text
+   file containing a list of input filenames or other sources, one to
+   a line.  These are used as inputs to the pipeline.
 
 .. option:: --standalone
 
@@ -28,12 +65,19 @@ is on a shared networked filesystem.
 
 .. option:: --rejester
 
-   Create :mod:`rejester` work units, then exit.  The work spec will
-   be named ``streamcorpus_directory``.  The configuration must contain
-   complete :mod:`rejester` configuration.  This is the default mode.
+   Create :mod:`rejester` work units, then exit.  The configuration
+   must contain complete :mod:`rejester` configuration.  This is the
+   default mode.
 
-Module Contents
-===============
+.. option:: --work-spec <name>
+
+   Use `name` as the name of the :mod:`rejester` work spec.  Defaults
+   to ``streamcorpus_directory``.
+
+.. option:: --nice <n>
+
+   Deprioritize the submitted jobs in :mod:`rejester`.  `n` can be
+   a relative score between 0 and 20.
 
 '''
 from __future__ import absolute_import
