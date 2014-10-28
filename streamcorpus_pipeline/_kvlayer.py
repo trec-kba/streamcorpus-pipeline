@@ -28,6 +28,26 @@ import yakonfig
 
 logger = logging.getLogger(__name__)
 
+
+class WrongNumberException(Exception):
+    pass
+
+def iter_one_or_ex(gen):
+    # for when you want exactly one result out of an iterable.
+    # raise WrongNumberException otherwise.
+    val = None
+    any = False
+    for tv in gen:
+        if not any:
+            any = True
+            val = tv
+        else:
+            raise WrongNumberException("only wanted one, but got another")
+    if not any:
+        raise WrongNumberException("didn't get any")
+    return val
+
+
 class from_kvlayer(Configured):
     '''
     loads StreamItems from a kvlayer table based an i_str passed to
@@ -58,6 +78,25 @@ class from_kvlayer(Configured):
     ## each StreamItem
     def __call__(self, i_str):
         if i_str:
+            # try to parse '{ticks:d}-{doc_id:x}'
+            try:
+                k = stream_id_to_kvlayer_key(i_str)
+                logger.debug('k %r', k)
+                key, data = iter_one_or_ex(self.client.get('stream_items', k))
+                logger.debug('data! len=%s', len(data))
+                errors, data = streamcorpus.decrypt_and_uncompress(data)
+                if errors:
+                    raise errors
+                yield streamcorpus.deserialize(data)
+                return
+            except WrongNumberException:
+                logger.debug('wanted exactly one result', exc_info=True)
+                # fall through to try i_str parsed the other way
+            except KeyError:
+                logger.debug('not a stream-id %r', i_str)
+                # fall through to try i_str parsed the other way
+
+            # parse ticks,docid,ticks,docid range key pair
             (epoch_ticks_1, doc_id_1, epoch_ticks_2,
              doc_id_2) = i_str.split(',')
             epoch_ticks_1 = epoch_ticks_to_uuid(epoch_ticks_1)

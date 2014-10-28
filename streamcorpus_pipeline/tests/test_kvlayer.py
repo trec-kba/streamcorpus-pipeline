@@ -61,7 +61,9 @@ def test_kvlayer_simple(configurator, tmpdir):
     with configurator():
         writer = to_kvlayer(yakonfig.get_global_config(
             'streamcorpus_pipeline', 'to_kvlayer'))
-        writer(chunkfile, {}, '')
+        stream_ids = writer(chunkfile, {}, '')
+        assert len(stream_ids) == 1
+        assert stream_ids[0] == '946730040-985c1e3ed73256cd9a399919fe93cf76'
 
         kvlclient = kvlayer.client()
         kvlclient.setup_namespace({'stream_items': 2})
@@ -75,6 +77,14 @@ def test_kvlayer_simple(configurator, tmpdir):
         reader = from_kvlayer(yakonfig.get_global_config(
             'streamcorpus_pipeline', 'from_kvlayer'))
         sis = list(reader(''))
+        assert len(sis) == 1
+        assert sis[0].stream_time.epoch_ticks == si.stream_time.epoch_ticks
+        assert sis[0].abs_url == si.abs_url
+
+        # test streamid "{time}-{hash}" i_str format
+        reader = from_kvlayer(yakonfig.get_global_config(
+            'streamcorpus_pipeline', 'from_kvlayer'))
+        sis = list(reader(stream_ids[0]))
         assert len(sis) == 1
         assert sis[0].stream_time.epoch_ticks == si.stream_time.epoch_ticks
         assert sis[0].abs_url == si.abs_url
