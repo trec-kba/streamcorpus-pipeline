@@ -235,8 +235,11 @@ OVERRIDE kba_write_serifxml_to_chunk:         true
         tmp_dir = os.path.join(scp_config['tmp_dir_path'], str(uuid.uuid4()))
         os.mkdir(tmp_dir)
         par_file = self.config['par']
-        tagger_root_path = os.path.join(self.config['third_dir_path'], 
-                                        self.config['path_in_third'])
+        third_dir_path = self.config.get('third_dir_path')
+        assert third_dir_path, 'need config serif.third_dir_path, config={!r}'.format(self.config)
+        path_in_third = self.config.get('path_in_third')
+        assert path_in_third, 'need config serif.path_in_third, config={!r}'.format(self.config)
+        tagger_root_path = os.path.join(third_dir_path, path_in_third)
 
         par_path = self._write_config_par(tmp_dir, par_file, tagger_root_path)
 
