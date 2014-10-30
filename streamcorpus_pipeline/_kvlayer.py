@@ -217,13 +217,10 @@ class to_kvlayer(Configured):
 
         def keys_and_values():
             for si in streamcorpus.Chunk(t_path):
-                key1 = epoch_ticks_to_uuid(si.stream_time.epoch_ticks)
-                key2 = uuid.UUID(hex=si.doc_id)
-                data = streamcorpus.serialize(si)
-                errors, data = streamcorpus.compress_and_encrypt(data)
-                assert not errors, errors
+                key_key, data = streamitem_to_key_data(si)
+                yield key_key, data
 
-                yield (key1, key2), data
+                key1, key2 = key_key
 
                 for ndx in indexes:
                     if ndx == DOC_ID_EPOCH_TICKS:
@@ -252,3 +249,17 @@ class to_kvlayer(Configured):
 
         return [kvlayer_key_to_stream_id(k) for k, v in si_kvps]
 
+
+def streamitem_to_key_data(si):
+    '''
+    extract the parts of a StreamItem that go into a kvlayer key, convert StreamItem to blob for storage.
+
+    return (kvlayer key tuple), data blob
+    '''
+    key1 = epoch_ticks_to_uuid(si.stream_time.epoch_ticks)
+    key2 = uuid.UUID(hex=si.doc_id)
+    data = streamcorpus.serialize(si)
+    errors, data = streamcorpus.compress_and_encrypt(data)
+    assert not errors, errors
+
+    return (key1, key2), data
