@@ -176,8 +176,12 @@ def names_in_chains(stream_item, aligner_data):
     ## make inverted index equiv_id --> (names, tokens)
     equiv_ids = make_chains_with_names( stream_item.body.sentences )
 
+    required_annotator_id = aligner_data.get('annotator_id')
+
     for annotator_id, ratings in stream_item.ratings.items():
-        if annotator_id == aligner_data['annotator_id']:
+        if (required_annotator_id is not None) and (annotator_id != required_annotator_id):
+            continue
+        else:
             for rating in ratings:
                 label = Label(annotator=rating.annotator,
                               target=rating.target)
@@ -190,14 +194,28 @@ def names_in_chains(stream_item, aligner_data):
 
                 ## stream_item passed by reference, so nothing to return
 
+def _get_tagger_id(stream_item, aligner_data):
+    available_taggings = stream_item.body.sentences.keys()
+    if len(available_taggings) == 1:
+        default_tagger_id = available_taggings[0]
+    else:
+        default_tagger_id = None
+    tagger_id = aligner_data.get('tagger_id', default_tagger_id)
+    if not tagger_id:
+        raise Exception('need tagger_id, available taggings: %r', available_taggings)
+    return tagger_id
+
 
 def line_offset_labels(stream_item, aligner_data):
     ## get a set of tokens -- must have OffsetType.LINES in them.
-    sentences = stream_item.body.sentences.get(aligner_data['tagger_id'], [])
+    tagger_id = _get_tagger_id(stream_item, aligner_data)
+    sentences = stream_item.body.sentences.get(tagger_id, [])
+
+    required_annotator_id = aligner_data.get('annotator_id')
 
     ## if labels on ContentItem, then make labels on Tokens
     for annotator_id in stream_item.body.labels:
-        if annotator_id != aligner_data['annotator_id']:
+        if (required_annotator_id is not None) and (annotator_id != required_annotator_id):
             continue
         for label in stream_item.body.labels[annotator_id]:
 
@@ -232,7 +250,6 @@ def line_offset_labels(stream_item, aligner_data):
                           for t in toks],
                          label_off.value))
 
-
 def byte_offset_labels(stream_item, aligner_data):
     _offset_labels(stream_item, aligner_data, offset_type='BYTES')
 
@@ -245,7 +262,8 @@ def _offset_labels(stream_item, aligner_data, offset_type='BYTES'):
     otype_str = offset_type
     offset_type = OffsetType._NAMES_TO_VALUES[offset_type]
 
-    sentences = stream_item.body.sentences.get(aligner_data['tagger_id'], [])
+    tagger_id = _get_tagger_id(stream_item, aligner_data)
+    sentences = stream_item.body.sentences.get(tagger_id, [])
 
     ## These next few steps are probably the most
     ## memory intensive, because they fully
@@ -256,9 +274,11 @@ def _offset_labels(stream_item, aligner_data, offset_type='BYTES'):
         key=lambda tok: tok.offsets[offset_type].first
         )
 
+    required_annotator_id = aligner_data.get('annotator_id')
+
     ## if labels on ContentItem, then make labels on Tokens
     for annotator_id in stream_item.body.labels:
-        if annotator_id != aligner_data['annotator_id']:
+        if (required_annotator_id is not None) and (annotator_id != aligner_data['annotator_id']):
             continue
         for label in stream_item.body.labels[annotator_id]:
             if offset_type not in label.offsets:
@@ -378,7 +398,8 @@ def multi_token_match(stream_item, aligner_data):
     iterate through tokens looking for near-exact matches to strings
     in si.ratings...mentions
     '''    
-    sentences = stream_item.body.sentences.get(aligner_data['tagger_id'])
+    tagger_id = _get_tagger_id(stream_item, aligner_data)
+    sentences = stream_item.body.sentences.get(tagger_id)
     if not sentences:
         return
     ## construct a list of tuples, where the first part of each tuple
@@ -386,8 +407,9 @@ def multi_token_match(stream_item, aligner_data):
     ## Token object from which it came.
     tokens = map(lambda tok: (cleanse(tok.token.decode('utf8')).split(' '), tok), 
                  itertools.chain(*[sent.tokens for sent in sentences]))    
+    required_annotator_id = aligner_data['annotator_id']
     for annotator_id, ratings in stream_item.ratings.items():
-        if annotator_id == aligner_data['annotator_id']:
+        if (required_annotator_id is None) or (annotator_id == required_annotator_id):
             for rating in ratings:
                 label = Label(annotator=rating.annotator,
                               target=rating.target)
@@ -456,14 +478,21 @@ def _aligner_core(t_path1, aligner, aligner_data):
         shutil.copy(t_path2, t_path1)
 
 
-class _aligner_batch_transform(streamcorpus_pipeline.stages.BatchTransform):
+class _aligner_batch_transform(streamcorpus_pipeline.stages.BatchTransform, streamcorpus_pipeline.stages.IncrementalTransform):
     # aligner needs to be a single element tuple containing a function pointer,
     # because otherwise a function pointer assigned at class definition scope becomes
     # "bound" to the class and will be called with a suprious first 'self' argument.
     aligner = None
 
     def process_path(self, chunk_path):
+        # implement BatchTransform
         _aligner_core(chunk_path, self.aligner[0], self.config)
+
+    def process_item(self, stream_item, context):
+        # implement IncrementalTransform
+        aligner = self.aligner[0]
+        aligner(stream_item, self.config)
+        return stream_item
 
     def shutdown(self):
         pass
@@ -475,12 +504,15 @@ class name_align_labels(_aligner_batch_transform):
     requires config['annotator_id'] (which person/org did manual labelling)
     '''
     config_name = 'name_align_labels'
+    default_config = {
+        'chain_selector': 'ALL'
+    }
     @staticmethod
     def check_config(config, name):
         if 'chain_selector' not in config:
             raise ConfigurationError('{} requires chain_selector'.format(name))
-        if 'annotator_id' not in config:
-            raise ConfigurationError('{} requires annotator_id'.format(name))
+        if config['chain_selector'] not in _CHAIN_SELECTORS:
+            raise ConfigurationError('chain_selector must be one of: {!r}'.format(_CHAIN_SELECTORS.keys()))
     aligner = (names_in_chains,)
 
 class line_offset_align_labels(_aligner_batch_transform):
@@ -489,12 +521,6 @@ class line_offset_align_labels(_aligner_batch_transform):
     requires config['tagger_id'] (which software did tagging to process)
     '''
     config_name = 'line_offset_align_labels'
-    @staticmethod
-    def check_config(config, name):
-        if 'annotator_id' not in config:
-            raise ConfigurationError('{} requires annotator_id'.format(name))
-        if 'tagger_id' not in config:
-            raise ConfigurationError('{} requires tagger_id'.format(name))
     aligner = (line_offset_labels,)
 
 class byte_offset_align_labels(_aligner_batch_transform):
@@ -503,12 +529,6 @@ class byte_offset_align_labels(_aligner_batch_transform):
     requires config['tagger_id'] (which software did tagging to process)
     '''
     config_name = 'byte_offset_align_labels'
-    @staticmethod
-    def check_config(config, name):
-        if 'annotator_id' not in config:
-            raise ConfigurationError('{} requires annotator_id'.format(name))
-        if 'tagger_id' not in config:
-            raise ConfigurationError('{} requires tagger_id'.format(name))
     aligner = (byte_offset_labels,)
 
 class char_offset_align_labels(_aligner_batch_transform):
@@ -517,12 +537,6 @@ class char_offset_align_labels(_aligner_batch_transform):
     requires config['tagger_id'] (which software did tagging to process)
     '''
     config_name = 'char_offset_align_labels'
-    @staticmethod
-    def check_config(config, name):
-        if 'annotator_id' not in config:
-            raise ConfigurationError('{} requires annotator_id'.format(name))
-        if 'tagger_id' not in config:
-            raise ConfigurationError('{} requires tagger_id'.format(name))
     aligner = (char_offset_labels,)
 
 class multi_token_match_align_labels(_aligner_batch_transform):
@@ -531,13 +545,8 @@ class multi_token_match_align_labels(_aligner_batch_transform):
     requires config['tagger_id'] (which software did tagging to process)
     '''
     config_name = 'multi_token_match_align_labels'
-    @staticmethod
-    def check_config(config, name):
-        if 'annotator_id' not in config:
-            raise ConfigurationError('{} requires annotator_id'.format(name))
-        if 'tagger_id' not in config:
-            raise ConfigurationError('{} requires tagger_id'.format(name))
     aligner = (multi_token_match,)
+
 
 class TaggerBatchTransform(streamcorpus_pipeline.stages.BatchTransform):
     '''
