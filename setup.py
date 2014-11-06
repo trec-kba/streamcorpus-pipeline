@@ -86,7 +86,7 @@ setup(
     name=PROJECT,
     version=VERSION,
     description=DESC,
-    license=read_file('LICENSE.txt'),
+    license='MIT/X11 license http://opensource.org/licenses/MIT',
     long_description=read_file('README.md'),
     #source_label=SOURCE_LABEL,
     author=AUTHOR,
