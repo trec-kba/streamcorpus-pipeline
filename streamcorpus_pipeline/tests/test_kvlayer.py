@@ -202,8 +202,8 @@ def test_kvlayer_both_indexes(configurator, test_data_dir):
 
 
 @pytest.mark.slow
-@pytest.mark.skipif('INDEXING_DEPENDENCIES_FAILED is not None',
-                    INDEXING_DEPENDENCIES_FAILED)
+@pytest.mark.skipif(INDEXING_DEPENDENCIES_FAILED is not None,
+                    reason=str(INDEXING_DEPENDENCIES_FAILED))
 def test_kvlayer_keyword_indexes(configurator, test_data_dir):
     overlay = {
         'streamcorpus_pipeline': {
