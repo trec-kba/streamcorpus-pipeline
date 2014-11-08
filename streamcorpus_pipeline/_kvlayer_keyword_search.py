@@ -71,7 +71,7 @@ def keywords(si, analyzer, hash_to_word):
         ## meanings of a hash even if collisions occur
         hash_to_word[(tok_hash, tok_encoded)] = r''
         ## force count to fit within a single byte
-        count = max(count, 2**8 - 1)
+        count = min(count, 2**8 - 1)
         ## can drop doc_id_2 and still have 10**19 document space to
         ## avoid collisions; epoch_ticks last allows caller to select
         ## only the last document.
