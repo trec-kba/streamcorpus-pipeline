@@ -32,8 +32,8 @@ class MiniScp(object):
 def configurator(request, namespace_string, redis_address):
     base_config = {
         'kvlayer': {
-            'storage_type': 'redis',
-            'storage_addresses': [redis_address],
+            'storage_type': 'local',
+            #'storage_addresses': [redis_address],
             'app_name': 'streamcorpus_pipeline',
             'namespace': namespace_string,
         },

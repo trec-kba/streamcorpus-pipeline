@@ -72,6 +72,10 @@ def keywords(si, analyzer, hash_to_word):
         hash_to_word[(tok_hash, tok_encoded)] = r''
         ## force count to fit within a single byte
         count = min(count, 2**8 - 1)
+        ## from debugging https://diffeo.atlassian.net/browse/DIFFEO-804
+        #if tok_hash == 2054597875:
+        #    logger.info('*** keywords: %r %r %r %r %r', tok, tok_hash, count, doc_id_1, epoch_ticks)
+        #    logger.info('*** %r', struct.pack(reverse_index_packing, tok_hash, count, doc_id_1, epoch_ticks))
         ## can drop doc_id_2 and still have 10**19 document space to
         ## avoid collisions; epoch_ticks last allows caller to select
         ## only the last document.
@@ -165,13 +169,17 @@ simple token-based search.
             #import pdb; pdb.set_trace()
             ## build a range query around this token's hash
             tok_hash = mmh3.hash(tok.encode('utf8'))
-            tok_start = struct.pack(reverse_index_packing, tok_hash    , 0, 0, 0)
-            tok_end   = struct.pack(reverse_index_packing, tok_hash + 1, 0, 0, 0)
-            logger.info('%r --> %s' % (tok_hash, self.invert_hash(tok_hash)))
+            ## the [:2] is a local work around for https://diffeo.atlassian.net/browse/DIFFEO-804
+            tok_start = struct.pack(reverse_index_packing[:2], tok_hash    )
+            tok_end   = struct.pack(reverse_index_packing[:2], tok_hash + 1)
+            #logger.info('%r --> %s' % (tok_hash, self.invert_hash(tok_hash)))
+            #logger.info('from %r', tok_start)
+            #logger.info('to   %r', tok_end)
             ## query the keyword index
             for (key,), _ in self.client.scan(table_name(HASH_TF_SID),
                                    ((tok_start,), (tok_end,))):
                 _tok_hash, count, doc_id_1, epoch_ticks = struct.unpack(reverse_index_packing, key)
+                #logger.info('found %d %d', _tok_hash, count)
                 ## assert that logic around big-endianness preserving sort
                 ## order worked:
                 assert tok_start <= key <= tok_end
