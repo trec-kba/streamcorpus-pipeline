@@ -19,6 +19,19 @@ from streamcorpus_pipeline.stages import Configured
 logger = logging.getLogger(__name__)
 
 
+class dump_stream_id_abs_url(Configured):
+    '''print :attr:`~streamcorpus.StreamItem.stream_id`,
+    :attr:`~streamcorpus.StreamItem.abs_url` strings to stdout and do
+    not pass any :class:`~streamcorpus.StreamItems` down the pipeline
+
+    '''
+    config_name = 'dump_abs_url'
+    default_config = {}
+    def __call__(self, si, context):
+        print si.stream_id, si.abs_url
+        return None
+
+
 class debug_filter(Configured):
     '''Remove all stream items except specified ones.
 
@@ -42,6 +55,7 @@ class debug_filter(Configured):
             return si
         else:
             return None
+
 
 class id_filter(Configured):
     '''Include or exclude specific stream items by doc_id or stream_id

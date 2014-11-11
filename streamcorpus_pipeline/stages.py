@@ -45,6 +45,7 @@ Incremental transforms
 .. autoclass:: streamcorpus_pipeline._upgrade_streamcorpus.keep_annotated
 .. autoclass:: streamcorpus_pipeline._language.language
 .. autoclass:: streamcorpus_pipeline._filters.remove_raw
+.. autoclass:: streamcorpus_pipeline._filters.dump_stream_id_abs_url
 .. autoclass:: streamcorpus_pipeline._upgrade_streamcorpus.upgrade_streamcorpus
 .. autoclass:: streamcorpus_pipeline._upgrade_streamcorpus_v0_3_0.upgrade_streamcorpus_v0_3_0
 .. autoclass:: streamcorpus_pipeline._tokenizer.nltk_tokenizer
@@ -372,6 +373,7 @@ class PipelineStages(StageRegistry):
         self.tryload_stage('_upgrade_streamcorpus', 'keep_annotated', 'keep_annotatoted')
         self.tryload_stage('_language', 'language')
         self.tryload_stage('_filters', 'remove_raw')
+        self.tryload_stage('_filters', 'dump_stream_id_abs_url')
         self.tryload_stage('_upgrade_streamcorpus', 'upgrade_streamcorpus')
         self.tryload_stage('_upgrade_streamcorpus_v0_3_0', 'upgrade_streamcorpus_v0_3_0')
         self.tryload_stage('_tokenizer', 'nltk_tokenizer')
