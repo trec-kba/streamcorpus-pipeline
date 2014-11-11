@@ -8,6 +8,7 @@ putting them out into local storage.
 '''
 from __future__ import absolute_import, division, print_function
 from cStringIO import StringIO
+import gzip
 import hashlib
 import logging
 import os
@@ -306,6 +307,10 @@ class from_s3_chunks(Configured):
                 logger.error(msg)
                 raise FailedExtraction(msg)
             logger.info( '\n'.join(_errors) )
+
+        if key_path.endswith('.gz'):
+            data = gzip.GzipFile(fileobj=StringIO(data)).read()
+
         if not self.config['compare_md5_in_file_name']:
             logger.warn('not checking md5 in file name, consider setting '
                         'from_s3_chunks:compare_md5_in_file_name')
