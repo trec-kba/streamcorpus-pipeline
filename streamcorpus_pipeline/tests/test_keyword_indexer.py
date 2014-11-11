@@ -9,38 +9,17 @@ import logging
 import time
 
 import kvlayer
-import pytest
 import streamcorpus
 import yakonfig
 
 import streamcorpus_pipeline
-from streamcorpus_pipeline._kvlayer import from_kvlayer, to_kvlayer
-from streamcorpus_pipeline._kvlayer_keyword_search import keyword_indexer, keywords
-from streamcorpus_pipeline._kvlayer_table_names import table_name, all_tables, \
-    WITH_SOURCE, DOC_ID_EPOCH_TICKS, HASH_KEYWORD, HASH_TF_SID
-from streamcorpus_pipeline.tests._test_data import get_test_v0_3_0_chunk_path
+from streamcorpus_pipeline._kvlayer_keyword_search import keyword_indexer, \
+    keywords
 from streamcorpus_pipeline._kvlayer_table_names import all_tables
-from streamcorpus_pipeline.tests.test_kvlayer import configurator
 
 
 logger = logging.getLogger(__name__)
 
-
-@pytest.mark.slow
-def test_keywords_throughput(configurator, test_data_dir):
-    overlay = {
-        'streamcorpus_pipeline': {
-            'to_kvlayer': {
-                'indexes': [ HASH_KEYWORD, HASH_TF_SID ],
-            },
-        },
-    }
-
-    with configurator(overlay):
-        path = get_test_v0_3_0_chunk_path(test_data_dir)
-        config = yakonfig.get_global_config('streamcorpus_pipeline',
-                                            'to_kvlayer')
-        profile_chunk(path)
 
 def profile_chunk(path):
     client = kvlayer.client()
