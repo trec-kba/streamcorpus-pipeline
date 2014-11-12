@@ -38,7 +38,7 @@ def profile_chunk(path):
         num_bytes += si.body.clean_visible and len(si.body.clean_visible) or 0
         for tok in keywords(si, indexer.analyzer, hash_to_word):
             num_tokens += 1
-            num_tok_bytes += len(tok)
+            num_tok_bytes += len(tok[0][0])
     elapsed = time.time() - start
     logger.info('%d SIs, %.1f clean_visible MB, %d tokens, %.1f index MB in %d seconds'
                 ' --> %.1f SI/sec, %.1f MB/sec, %.1f tokens/sec, %.1f index MB/sec',
