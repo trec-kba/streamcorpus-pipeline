@@ -152,7 +152,7 @@ def main():
     work_spec = {
         'name': scdconfig.get('name', 'streamcorpus_directory'),
         'desc': 'read files from a directory',
-        'min_gb': 8,
+        'min_gb': 1,
         'config': gconfig,
         'module': 'streamcorpus_pipeline._rejester',
         'run_function': 'rejester_run_function',
