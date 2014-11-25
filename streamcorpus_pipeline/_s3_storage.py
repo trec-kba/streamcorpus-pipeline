@@ -177,10 +177,11 @@ class from_s3_chunks(Configured):
     When the input format is ``featurecollection``, then this reader
     produces a generator of ``dossier.fc.FeatureCollection`` instances.
 
-    The following configuration options are mandatory:
-    ``bucket`` is the s3 bucket to use. ``aws_access_key_id_path``
-    and ``aws_secret_access_key_path`` should point to files
-    containing your s3 credentials.
+    ``bucket`` is the s3 bucket to use if input paths are not full
+    s3://{bucket}{path} URIs. ``aws_access_key_id_path`` and
+    ``aws_secret_access_key_path`` should point to files containing
+    your s3 credentials. Alternatley credentials can be in environment
+    variables ```AWS_ACCESS_KEY_ID`` and ``AWS_SECRET_ACCESS_KEY``
 
     The rest of the configuration options are optional and are described
     in the following example:
@@ -188,9 +189,12 @@ class from_s3_chunks(Configured):
     .. code-block:: yaml
 
         from_s3_chunks:
-          # Mandatory, indicate how to connect to S3
+          # How to connect to S3
+          # bucket can also come from input path if full uri s3://{bucket}{path}
           bucket: aws-publicdatasets
+          # can also come from environment variable AWS_ACCESS_KEY_ID
           aws_access_key_id_path: keys/aws_access_key_id
+          # can also come from environment variable AWS_SECRET_ACCESS_KEY
           aws_secret_access_key_path: keys/aws_secret_access_key
 
           # Optional parameters.
