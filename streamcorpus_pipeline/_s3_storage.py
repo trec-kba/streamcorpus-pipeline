@@ -122,10 +122,21 @@ def verify_md5(md5_expected, data, other_errors=None):
     return True
 
 
-def get_bucket(config):
-    if 'bucket' not in config:
-        raise ConfigurationError(
-            'The "bucket" parameter is required for the s3 stages.')
+def get_bucket(config, bucket_name=None):
+    '''This function is mostly about managing configuration, and then
+    finally returns a boto.Bucket object.
+
+    AWS credentials come first from config keys
+    aws_access_key_id_path, aws_secret_access_key_path (paths to one
+    line files); secondly from environment variables
+    AWS_ACCESS_KEY_ID, AWS_SECRET_ACCESS_KEY.
+
+    '''
+    if not bucket_name:
+        if 'bucket' not in config:
+            raise ConfigurationError(
+                'The "bucket" parameter is required for the s3 stages.')
+        bucket_name = config['bucket']
 
     # get AWS credentials. first, from config; else, from env vars.
     aws_access_key_id_path = config.get('aws_access_key_id_path')
@@ -148,7 +159,7 @@ def get_bucket(config):
             raise
 
     conn = S3Connection(access, secret)
-    bucket = conn.get_bucket(config['bucket'])
+    bucket = conn.get_bucket(bucket_name)
     return bucket
 
 
@@ -229,7 +240,6 @@ class from_s3_chunks(Configured):
 
     def __init__(self, config):
         super(from_s3_chunks, self).__init__(config)
-        self.bucket = get_bucket(self.config)
         self.gpg_decryption_key_path = config.get('gpg_decryption_key_path')
 
     def __call__(self, i_str):
@@ -237,10 +247,17 @@ class from_s3_chunks(Configured):
         Takes a path suffix as a string over stdin and generates chunks from
         s3://<bucket><s3_prefix_path>/{i_str}.
         '''
-        kpath = os.path.join(self.config['s3_path_prefix'].strip(),
-                             i_str.strip())
-        logger.info('from_s3_chunks: %r' % kpath)
-        return self.get_chunk(kpath)
+        if i_str.startswith('s3://'):
+            # full path including bucket name
+            bucket_name, kpath = i_str[5:].split('/', 1)
+            assert bucket_name and kpath, 'bad s3 url {!r}'.format(i_str)
+        else:
+            # get bucket_name from config
+            bucket_name = None
+            kpath = os.path.join(self.config['s3_path_prefix'].strip(),
+                                 i_str.strip())
+        logger.info('from_s3_chunks: %s / %r', bucket_name, kpath)
+        return self.get_chunk(bucket_name, kpath)
 
     def _decode(self, data):
         '''
@@ -274,8 +291,11 @@ class from_s3_chunks(Configured):
                 % informat)
 
     @_retry
-    def get_chunk(self, key_path):
-        key = self.bucket.get_key(key_path)
+    def get_chunk(self, bucket_name, key_path):
+        '''return Chunk object full of records
+        bucket_name may be None'''
+        bucket = get_bucket(self.config, bucket_name=bucket_name)
+        key = bucket.get_key(key_path)
         if key is None:
             raise FailedExtraction('Key "%s" does not exist.' % key_path)
 
