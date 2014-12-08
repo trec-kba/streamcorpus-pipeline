@@ -8,6 +8,7 @@ putting them out into local storage.
 '''
 from __future__ import absolute_import, division, print_function
 from cStringIO import StringIO
+from functools import partial
 import gzip
 import hashlib
 import logging
@@ -510,6 +511,8 @@ class to_s3_chunks(Configured):
     @property
     def chunk_type(self):
         if self.outfmt == 'featurecollection' and FCChunk is not None:
+            if self.config.get('verify'):
+                return partial(FCChunk, inline_md5=True)
             return FCChunk
         elif self.outfmt == 'streamitem':
             return streamcorpus.Chunk
