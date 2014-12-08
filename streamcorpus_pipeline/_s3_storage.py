@@ -8,7 +8,6 @@ putting them out into local storage.
 '''
 from __future__ import absolute_import, division, print_function
 from cStringIO import StringIO
-from functools import partial
 import gzip
 import hashlib
 import logging
@@ -460,6 +459,8 @@ class to_s3_chunks(Configured):
             raise Exception('to_s3_chunks "compression: %r" not in %r' % (
                 self.compression, known_compression_schemes))
 
+        logger.critical('compression: %s' % self.config.get('compression'))
+
         # Backwards compatibility.
         if 'verify_via_http' in self.config:
             logger.warning('Update your config! Use "verify" instead of '
@@ -492,6 +493,8 @@ class to_s3_chunks(Configured):
 
         t_path2 = self.prepare_on_disk(t_path)
         data_len = os.path.getsize(t_path2)
+        if data_len == 0:
+            logger.critical('data is now zero bytes!')
         logger.debug('prepared %s bytes of %r', data_len, t_path2)
         self.put_data(o_path, t_path2, self.name_info['md5'], data_len)
 
@@ -586,6 +589,10 @@ class to_s3_chunks(Configured):
             rawdata = self.private_data(o_path)
         else:
             rawdata = self.public_data(o_path)
+
+        if not rawdata:
+            logger.error('got no data out of reading the data')
+
         errors, data = decrypt_and_uncompress(
             rawdata,
             self.config.get('gpg_decryption_key_path'),
@@ -593,7 +600,7 @@ class to_s3_chunks(Configured):
             compression=compression,
         )
         if not data:
-            logger.error('got no data back from decrypting %r, (size=%r), errors: %r', o_path, len(rawdata), errors)
+            logger.error('got no data back from decrypt_and_uncompress %r, (size=%r), errors: %r', o_path, len(rawdata), errors)
             return False
         logger.info('num %r received: %d', chunk_format, len(list(self.chunk_type(data=data))))
         return verify_md5(md5, data, other_errors=errors)
