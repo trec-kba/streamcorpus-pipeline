@@ -1,9 +1,11 @@
-'''
-This software is released under an MIT/X11 open source license.
+'''exceptions used in streamcorpus_pipeline
 
-Copyright 2012-2013 Diffeo, Inc.
+.. This software is released under an MIT/X11 open source license.
+   Copyright 2012-2014 Diffeo, Inc.
 '''
 
+
+import yakonfig
 
 class PipelineBaseException(Exception):
     pass
@@ -26,9 +28,14 @@ class TaskQueueUnreachable(PipelineBaseException):
 class GracefulShutdown(PipelineBaseException):
     pass
 
-class ConfigurationError(PipelineBaseException):
+class ConfigurationError(PipelineBaseException, yakonfig.ConfigurationError):
     pass
 
 class InvalidStreamItem(PipelineBaseException):
     '''Some content in a stream item was invalid.'''
+    pass
+
+class FailedVerification(Exception):
+    '''Raised when an md5 verification fails.
+    '''
     pass
