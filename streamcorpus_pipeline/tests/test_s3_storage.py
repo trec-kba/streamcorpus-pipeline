@@ -5,6 +5,8 @@ except ImportError:
     from StringIO import StringIO
 from functools import partial
 import hashlib
+import logging
+from operator import itemgetter
 import os
 import os.path as path
 import tarfile
@@ -22,8 +24,12 @@ except ImportError:
 import yakonfig
 
 import streamcorpus
-from streamcorpus_pipeline._exceptions import FailedExtraction
+from streamcorpus_pipeline._exceptions import FailedExtraction, \
+    ConfigurationError, FailedVerification
 import streamcorpus_pipeline._s3_storage as s3stage
+
+
+logger = logging.getLogger(__name__)
 
 
 # Skip all tests in this module if the AWS credentials are not in the
@@ -81,6 +87,7 @@ def to_s3_chunks(bucket_name):
             'tarinfo_uname': 'utartest',
             'tarinfo_gname': 'gtartest',
             's3_path_prefix': uuid.uuid4().hex,
+            #'compression': '',
         },
     }
     defconf = yakonfig.defaulted_config([s3stage.to_s3_chunks], config=testc)
@@ -95,6 +102,7 @@ def to_s3_tarballs(to_s3_chunks):
 
 
 def run_to_s3(to_s3_chunks, keydata):
+    logger.info('running run_to_s3(..., %s)', keydata['key'])
     pfx = 'tmp_%s_' % keydata['key']
     # We don't delete it because `to_s3_storage` will do it.
     tmp = tempfile.NamedTemporaryFile(mode='w+b', prefix=pfx,
@@ -102,14 +110,17 @@ def run_to_s3(to_s3_chunks, keydata):
     with tmp as tmpf:
         tmpf.write(keydata['raw'])
         tmpf.flush()
-        to_s3_chunks(tmpf.name, {'num': 1}, keydata['key'])
+        paths = to_s3_chunks(tmpf.name, {'num': 1}, keydata['key'])
+        #assert os.path.basename(paths[0]) == keydata['key']
 
 
 def md5_key(k, data):
-    return k + '-' + hashlib.md5(data).hexdigest()
+    parts = k.split('.')
+    parts.insert(1, hashlib.md5(data).hexdigest())
+    return '.'.join(parts)
 
 
-def make_dummy_chunks(dummy_chunks, chunker, make_item, md5=False):
+def make_dummy_chunks(dummy_chunks, chunker, make_item, md5=False, pre_compress=True):
     chunks = {}
     for chunk_key_name, sinames in dummy_chunks.items():
         cdata = StringIO()
@@ -118,22 +129,26 @@ def make_dummy_chunks(dummy_chunks, chunker, make_item, md5=False):
                 c.add(make_item(n))
             c.flush()
 
-            errs, data = streamcorpus.compress_and_encrypt(cdata.getvalue())
-            assert len(errs) == 0
-
+            data = cdata.getvalue()
             if md5:
                 # The md5 is on the uncompressed and unencrypted data.
-                new_key = md5_key(chunk_key_name, cdata.getvalue())
+                new_key = md5_key(chunk_key_name, data)
             else:
                 new_key = chunk_key_name
+
+            if pre_compress:
+                errs, data = streamcorpus.compress_and_encrypt(data)
+                assert len(errs) == 0
+
             chunks[chunk_key_name] = {
                     'key': new_key, 'data': data, 'raw': cdata.getvalue(),
             }
     return chunks
 
 
-def make_dummy_si_chunks(dummy_chunks, md5=False):
-    return make_dummy_chunks(dummy_chunks, streamcorpus.Chunk, make_si, md5=md5)
+def make_dummy_si_chunks(dummy_chunks, md5=False, pre_compress=True):
+    return make_dummy_chunks(dummy_chunks, streamcorpus.Chunk, make_si, 
+                             md5=md5, pre_compress=pre_compress)
 
 
 def make_si(name):
@@ -144,9 +159,9 @@ def make_si(name):
     return si
 
 
-def make_dummy_fc_chunks(dummy_chunks, md5=False):
-    return make_dummy_chunks(dummy_chunks, FeatureCollectionChunk,
-                             make_fc, md5=md5)
+def make_dummy_fc_chunks(dummy_chunks, md5=False, pre_compress=True):
+    return make_dummy_chunks(dummy_chunks, FeatureCollectionChunk, make_fc, 
+                             md5=md5, pre_compress=pre_compress)
 
 
 def make_fc(name):
@@ -155,12 +170,7 @@ def make_fc(name):
     return fc
 
 
-# Avoid testing feature collections when dossier is not present.
-# TODO: Remove this when dossier is released.
-formats = ['streamitem']
-if 'FeatureCollection' in globals():
-    formats.append('featurecollection')
-@pytest.fixture(params=formats)
+@pytest.fixture(params=['streamitem', 'featurecollection'])
 def chunker(request):
     if request.param == 'streamitem':
         make_chunks = make_dummy_si_chunks
@@ -178,12 +188,12 @@ def put_chunks(bucket, chunks, prefix=''):
 
 def get_chunks(bucket, chunks, format, prefix=''):
     # Used for fetching chunks after putting them with to_s3_storage.
-    ext = 'fc' if format.lower() == 'featurecollection' else 'sc'
     datas = {}
     for chunk_key_name, info in chunks.items():
-        k = bucket.new_key(path.join(prefix, '%s.%s.xz' % (info['key'], ext)))
+        k = bucket.new_key(path.join(prefix, info['key']))
         raw = k.get_contents_as_string()
-        errs, datas[chunk_key_name] = streamcorpus.decrypt_and_uncompress(raw)
+        chunk_format, compression, encryption = streamcorpus.parse_file_extensions(info['key'])
+        errs, datas[chunk_key_name] = streamcorpus.decrypt_and_uncompress(raw, compression=compression)
         assert len(errs) == 0
     return datas
 
@@ -191,7 +201,7 @@ def get_chunks(bucket, chunks, format, prefix=''):
 def public_url(bucket_name, key, format, prefix=''):
     ext = 'fc' if format.lower() == 'featurecollection' else 'sc'
     u = 'https://s3.amazonaws.com/%s/' % bucket_name
-    return path.join(u, prefix, '%s.%s.xz' % (key, ext))
+    return path.join(u, prefix, key)
 
 
 def read_chunk(chunk_data, format):
@@ -213,10 +223,22 @@ def name_from_item(item):
     else:
         return item['canonical_name'].keys()[0]
 
+def fix_extensions(dummies, chunker):
+    '''now that to_s3_chunks uses the file extension to detect the
+    compression and type, this test has to make real filenames with
+    proper extesions.
+
+    '''
+    ext = 'fc' if chunker['format'].lower() == 'featurecollection' else 'sc'
+    for k in dummies.keys():
+        new_k = '.'.join([k, ext, 'xz'])
+        dummies[new_k] = dummies.pop(k)
+
 
 def test_to_s3_chunks_count(bucket, to_s3_chunks, chunker):
     dummies = {'a': ['a1'], 'b': ['b1', 'b2'], 'c': ['c1']}
-    chunks = chunker['make_chunks'](dummies)
+    fix_extensions(dummies, chunker)
+    chunks = chunker['make_chunks'](dummies, pre_compress=False)
     to_s3_chunks.config['output_format'] = chunker['format']
     map(partial(run_to_s3, to_s3_chunks), chunks.values())
 
@@ -244,6 +266,7 @@ def test_to_s3_tarballs_count(bucket, to_s3_tarballs, chunker):
 
 def test_from_s3_chunks_count(bucket, from_s3_chunks, chunker):
     dummies = {'a': ['a1'], 'b': ['b1', 'b2'], 'c': ['c1']}
+    fix_extensions(dummies, chunker)
     from_s3_chunks.config['input_format'] = chunker['format']
     put_chunks(bucket, chunker['make_chunks'](dummies),
                prefix=from_s3_chunks.config['s3_path_prefix'])
@@ -252,7 +275,8 @@ def test_from_s3_chunks_count(bucket, from_s3_chunks, chunker):
 
 def test_to_s3_chunks_read(bucket, to_s3_chunks, chunker):
     dummies = {'a': ['a1'], 'b': ['b1', 'b2'], 'c': ['c1']}
-    chunks = chunker['make_chunks'](dummies)
+    fix_extensions(dummies, chunker)
+    chunks = chunker['make_chunks'](dummies, pre_compress=False)
     to_s3_chunks.config['output_format'] = chunker['format']
     map(partial(run_to_s3, to_s3_chunks), chunks.values())
 
@@ -267,6 +291,7 @@ def test_to_s3_chunks_read(bucket, to_s3_chunks, chunker):
 
 def test_from_s3_chunks_read(bucket, from_s3_chunks, chunker):
     dummies = {'a': ['a1'], 'b': ['b1', 'b2'], 'c': ['c1']}
+    fix_extensions(dummies, chunker)
     from_s3_chunks.config['input_format'] = chunker['format']
     put_chunks(bucket, chunker['make_chunks'](dummies),
                prefix=from_s3_chunks.config['s3_path_prefix'])
@@ -278,6 +303,7 @@ def test_from_s3_chunks_read(bucket, from_s3_chunks, chunker):
 
 def test_from_s3_si_chunks_md5(bucket, from_s3_chunks, chunker):
     dummies = {'a': ['a1'], 'b': ['b1', 'b2'], 'c': ['c1']}
+    fix_extensions(dummies, chunker)
     from_s3_chunks.config['input_format'] = chunker['format']
     chunks = chunker['make_chunks'](dummies, md5=True)
     put_chunks(bucket, chunks, prefix=from_s3_chunks.config['s3_path_prefix'])
@@ -302,20 +328,22 @@ def test_from_s3_chunks_md5_invalid(bucket, from_s3_chunks, chunker):
 
 def test_from_s3_chunks_md5_corrupt(bucket, from_s3_chunks, chunker):
     dummies = {'a': ['a1']}
+    fix_extensions(dummies, chunker)
     chunks = chunker['make_chunks'](dummies, md5=True)
     put_chunks(bucket, chunks, prefix=from_s3_chunks.config['s3_path_prefix'])
 
     from_s3_chunks.config['input_format'] = chunker['format']
     from_s3_chunks.config['compare_md5_in_file_name'] = True
 
+    the_key = dummies.keys()[0]
     # Corrupt the data so the md5 won't match.
     fullkey = path.join(from_s3_chunks.config['s3_path_prefix'],
-                        chunks['a']['key'])
+                        chunks[the_key]['key'])
     key = bucket.get_key(fullkey)
     key.set_contents_from_string(lzma.compress('FUBAR'))
 
-    with pytest.raises(FailedExtraction):
-        from_s3_chunks(chunks['a']['key'])
+    with pytest.raises(FailedVerification):
+        from_s3_chunks(chunks[the_key]['key'])
 
 
 def test_from_s3_chunks_bad_informat(bucket, from_s3_chunks, chunker):
@@ -325,7 +353,7 @@ def test_from_s3_chunks_bad_informat(bucket, from_s3_chunks, chunker):
                prefix=from_s3_chunks.config['s3_path_prefix'])
 
     from_s3_chunks.config['input_format'] = 'FUBAR'
-    with pytest.raises(FailedExtraction):
+    with pytest.raises(ConfigurationError):
         from_s3_chunks('a')
 
 
@@ -334,7 +362,7 @@ def test_to_s3_chunks_bad_outformat(bucket, to_s3_chunks, chunker):
     chunks = chunker['make_chunks'](dummies)
 
     to_s3_chunks.config['output_format'] = 'FUBAR'
-    with pytest.raises(FailedExtraction):
+    with pytest.raises(ConfigurationError):
         run_to_s3(to_s3_chunks, chunks['a'])
 
 
@@ -344,9 +372,12 @@ def test_to_s3_chunks_verify(bucket, to_s3_chunks, chunker):
     # Ideally, we could write a test that causes verification to
     # fail, but I don't know the best way to do that.
     dummies = {'a': ['a1'], 'b': ['b1', 'b2'], 'c': ['c1']}
-    chunks = chunker['make_chunks'](dummies)
+    fix_extensions(dummies, chunker)
+    chunks = chunker['make_chunks'](dummies, pre_compress=False, md5=False)
+    logger.info(map(itemgetter('key'), chunks.values()))
+    #import pdb; pdb.set_trace()
     to_s3_chunks.config['output_format'] = chunker['format']
-    to_s3_chunks.config['verify'] = True
+    to_s3_chunks.config['verify'] = True    
     map(partial(run_to_s3, to_s3_chunks), chunks.values())
 
     its = get_chunk_items(bucket, chunks, chunker['format'],
@@ -356,25 +387,29 @@ def test_to_s3_chunks_verify(bucket, to_s3_chunks, chunker):
 
 def test_to_s3_chunks_public(bucket_name, bucket, to_s3_chunks, chunker):
     dummies = {'a': ['a1']}
-    chunks = chunker['make_chunks'](dummies)
+    fix_extensions(dummies, chunker)
+    chunks = chunker['make_chunks'](dummies, pre_compress=False)
     to_s3_chunks.config['output_format'] = chunker['format']
     to_s3_chunks.config['is_private'] = False
 
-    run_to_s3(to_s3_chunks, chunks['a'])
-    purl = public_url(bucket_name, 'a', chunker['format'],
+    the_key = dummies.keys()[0]
+    run_to_s3(to_s3_chunks, chunks[the_key])
+    purl = public_url(bucket_name, the_key, chunker['format'],
                       prefix=to_s3_chunks.config['s3_path_prefix'])
     urllib2.urlopen(purl)
 
 
 def test_to_s3_chunks_private(bucket_name, bucket, to_s3_chunks, chunker):
     dummies = {'a': ['a1']}
-    chunks = chunker['make_chunks'](dummies)
+    fix_extensions(dummies, chunker)
+    chunks = chunker['make_chunks'](dummies, pre_compress=False)
     to_s3_chunks.config['output_format'] = chunker['format']
     to_s3_chunks.config['is_private'] = True
 
-    run_to_s3(to_s3_chunks, chunks['a'])
+    the_key = dummies.keys()[0]
+    run_to_s3(to_s3_chunks, chunks[the_key])
     try:
-        purl = public_url(bucket_name, 'a', chunker['format'],
+        purl = public_url(bucket_name, the_key, chunker['format'],
                           prefix=to_s3_chunks.config['s3_path_prefix'])
         urllib2.urlopen(purl)
     except urllib2.HTTPError as e:

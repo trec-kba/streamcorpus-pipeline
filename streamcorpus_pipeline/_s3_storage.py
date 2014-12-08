@@ -17,8 +17,6 @@ import time
 
 import requests
 
-from yakonfig import ConfigurationError
-
 try:
     from dossier.fc import FeatureCollectionChunk as FCChunk
 except ImportError:
@@ -26,8 +24,10 @@ except ImportError:
 
 import streamcorpus
 from streamcorpus import decrypt_and_uncompress, \
+    parse_file_extensions, known_compression_schemes, \
     compress_and_encrypt_path, Chunk
-from streamcorpus_pipeline._exceptions import FailedExtraction
+from streamcorpus_pipeline._exceptions import FailedExtraction, \
+    FailedVerification, ConfigurationError
 from streamcorpus_pipeline._get_name_info import get_name_info
 from streamcorpus_pipeline._spinn3r_feed_storage import _generate_stream_items
 from streamcorpus_pipeline.stages import Configured
@@ -49,12 +49,6 @@ if not boto.config.has_section('Boto'):
     boto.config.add_section('Boto')
 boto.config.set('Boto', 'num_retries', '0')
 
-
-class FailedVerification(Exception):
-    '''
-    Raised when an md5 verification fails.
-    '''
-    pass
 
 
 def _retry(func):
@@ -286,19 +280,19 @@ class from_s3_chunks(Configured):
             raise FailedExtraction('%s: no data (does the key exist?)'
                                    % key.key)
 
-        if key_path.endswith('.gpg'):
+        chunk_type, compression, encryption = parse_file_extensions(key_path)
+        if encryption == 'gpg':
             if not self.gpg_decryption_key_path:
                 raise FailedExtraction('%s ends with ".gpg" but gpg_decryption_key_path=%s'
                                        % (key.key, self.gpg_decryption_key_path))
-            if not key_path.endswith('.xz.gpg'):
-                raise FailedExtraction("current implementation requires GPG'ed data also be XZ-compressed")
 
         _errors = []
-        if key_path.endswith(('.xz', '.xz.gpg')):
+        if compression or encryption:
             _errors, data = decrypt_and_uncompress(
                 data, 
                 self.gpg_decryption_key_path,
                 tmp_dir=self.config.get('tmp_dir_path'),
+                compression=compression,
                 )
             if not data:
                 msg = 'decrypt_and_uncompress got no data for {!r}, from {} bytes' \
@@ -307,9 +301,6 @@ class from_s3_chunks(Configured):
                 logger.error(msg)
                 raise FailedExtraction(msg)
             logger.info( '\n'.join(_errors) )
-
-        if key_path.endswith('.gz'):
-            data = gzip.GzipFile(fileobj=StringIO(data)).read()
 
         if not self.config['compare_md5_in_file_name']:
             logger.warn('not checking md5 in file name, consider setting '
@@ -326,6 +317,7 @@ class from_s3_chunks(Configured):
                     % key.key)
 
             i_content_md5 = m.group(1)
+            #import pdb; pdb.set_trace()
             verify_md5(i_content_md5, data, other_errors=_errors)
         return self._decode(data)
 
@@ -348,7 +340,7 @@ class to_s3_chunks(Configured):
 
     ``output_name`` is also required and is expanded in the same way as
     the :class:`~streamcorpus_pipeline._local_storage.to_local_chunks`
-    writer.  The filename always has ``.{sc,fc}.xz`` appended to it
+    writer.  The filename always has ``.{sc,fc}.{xz,gz,sz}`` appended to it
     (depending on the output format specified), and correspondingly,
     the output file is always compressed.  If GPG keys are provided,
     then ``.gpg`` is appended and the file is encrypted.
@@ -408,6 +400,15 @@ class to_s3_chunks(Configured):
           # Uses your system's default tmp directory (usually `/tmp`)
           # by default.
           tmp_dir_path: /tmp
+
+          # Change compression scheme; default is .xz for greatest
+          # compression of archival content (S3 charges by the byte).
+          # xz is also the slowest, so other options can make more
+          # sense in some applications.  Snappy (.sz) is the fastest
+          # and still much better than no compression at all.  Choices
+          # are "xz", "sz", "gz", ""
+          compression: xz
+
     '''
     config_name = 'to_s3_chunks'
     default_config = {
@@ -421,12 +422,18 @@ class to_s3_chunks(Configured):
         'output_format': 'StreamItem',
         'tmp_dir_path': '/tmp',
         'cleanup_tmp_files': True,
+        'compression': 'xz',
         # require: bucket, output_name, aws_access_key_id_path,
         #          aws_secret_access_key_path
     }
 
     def __init__(self, config):
         super(to_s3_chunks, self).__init__(config)
+
+        ## TODO: use something like verify_config
+        if self.compression not in known_compression_schemes:
+            raise Exception('to_s3_chunks "compression: %r" not in %r' % (
+                self.compression, known_compression_schemes))
 
         # Backwards compatibility.
         if 'verify_via_http' in self.config:
@@ -447,9 +454,10 @@ class to_s3_chunks(Configured):
                     t_path, name_info, i_str)
         # Getting name info actually assembles an entire chunk in memory
         # from `t_path`, so we now need to tell it which chunk type to use.
-        self.name_info = dict(name_info,
-                              **get_name_info(t_path, i_str=i_str,
-                                              chunk_type=self.chunk_type))
+        more_name_info = get_name_info(t_path, i_str=i_str,
+                                  chunk_type=self.chunk_type)
+        self.name_info = dict(name_info, **more_name_info)
+
         if self.name_info['num'] == 0:
             return None
 
@@ -472,13 +480,17 @@ class to_s3_chunks(Configured):
         return self.config['output_format'].lower()
 
     @property
+    def compression(self):
+        return self.config['compression'].lower()
+
+    @property
     def chunk_type(self):
         if self.outfmt == 'featurecollection' and FCChunk is not None:
             return FCChunk
         elif self.outfmt == 'streamitem':
             return streamcorpus.Chunk
         else:
-            raise FailedExtraction(
+            raise ConfigurationError(
                 'Invalid output format: "%s". Choose one of StreamItem '
                 'or FeatureCollection.' % self.config['output_format'])
 
@@ -487,7 +499,9 @@ class to_s3_chunks(Configured):
         o_fname = self.config['output_name'] % self.name_info
         ext = 'fc' if self.outfmt == 'featurecollection' else 'sc'
         o_path = os.path.join(self.config['s3_path_prefix'],
-                              '%s.%s.xz' % (o_fname, ext))
+                              '%s.%s' % (o_fname, ext))
+        if self.compression:
+            o_path += '.' + self.compression
         if self.config.get('gpg_encryption_key_path') is not None:
             o_path += '.gpg'
         self.name_info['s3_output_path'] = o_path
@@ -499,7 +513,9 @@ class to_s3_chunks(Configured):
             t_path, 
             self.config.get('gpg_encryption_key_path'),
             gpg_recipient=self.config['gpg_recipient'],
-            tmp_dir=self.config.get('tmp_dir_path'))
+            tmp_dir=self.config.get('tmp_dir_path'),
+            compression=self.config.get('compression'),
+        )
         if len(_errors) > 0:
             logger.error('compress and encrypt errors: %r', _errors)
         return t_path2
@@ -531,6 +547,8 @@ class to_s3_chunks(Configured):
 
     @_retry
     def verify(self, o_path, md5):
+        chunk_format, compression, encryption = parse_file_extensions(o_path)
+        logger.info('verifying %s --> %r, %r, %r', o_path, chunk_format, compression, encryption)
         if self.config.get('gpg_encryption_key_path') \
                 and not self.config.get('gpg_decryption_key_path'):
             raise ConfigurationError(
@@ -544,11 +562,13 @@ class to_s3_chunks(Configured):
         errors, data = decrypt_and_uncompress(
             rawdata,
             self.config.get('gpg_decryption_key_path'),
-            tmp_dir=self.config.get('tmp_dir_path'))
+            tmp_dir=self.config.get('tmp_dir_path'),
+            compression=compression,
+        )
         if not data:
             logger.error('got no data back from decrypting %r, (size=%r), errors: %r', o_path, len(rawdata), errors)
             return False
-        logger.info('got back SIs: %d', len(list(Chunk(data=data))))
+        logger.info('num %r received: %d', chunk_format, len(list(self.chunk_type(data=data))))
         return verify_md5(md5, data, other_errors=errors)
 
     def public_data(self, o_path):
