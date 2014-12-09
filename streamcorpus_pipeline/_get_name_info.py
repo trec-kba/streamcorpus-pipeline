@@ -7,8 +7,12 @@ e.g. to_local_chunks and to_s3_chunks
 
 import random
 import datetime
+import hashlib
+import logging
 from streamcorpus import Chunk
 import re
+
+logger = logging.getLogger(__name__)
 
 is_hex_32 = re.compile('[a-fA-F0-9]{32}')
 
@@ -59,20 +63,32 @@ def get_name_info(chunk_path, assert_one_date_hour=False, i_str=None,
     doc_ids = set()
     epoch_ticks = None
     count = 0
-    for si in ch:
-        if chunk_type is Chunk:
-            if epoch_ticks is None:
-                epoch_ticks = si.stream_time.epoch_ticks
-            date_hours.add( si.stream_time.zulu_timestamp[:13] )
-            doc_ids.add( si.doc_id )
-            for annotator_id, ratings in si.ratings.items():
-                for rating in ratings:
-                    target_name = rating.target.target_id.split('/')[-1]
-                    target_names.add( target_name )
-        count += 1
+    try:
+        for si in ch:
+            if chunk_type is Chunk:
+                if epoch_ticks is None:
+                    epoch_ticks = si.stream_time.epoch_ticks
+                date_hours.add( si.stream_time.zulu_timestamp[:13] )
+                doc_ids.add( si.doc_id )
+                for annotator_id, ratings in si.ratings.items():
+                    for rating in ratings:
+                        target_name = rating.target.target_id.split('/')[-1]
+                        target_names.add( target_name )
+            count += 1
+    except Exception, exc:
+        logger.critical('failed to iter over chunk', exc_info=True)
+        
 
     ## create the md5 property, so we can use it in the filename
-    name_info['md5'] = ch.md5_hexdigest
+    if hasattr(ch, 'md5_hexdigest'):
+        name_info['md5'] = ch.md5_hexdigest
+    else:
+        try:
+            data = open(chunk_path).read()
+            name_info['md5'] = hashlib.md5(data).hexdigest()
+        except Exception, exc:
+            logger.critical('failed to compute md5', exc_info=True)
+            name_info['md5'] = 'broken'
     name_info['num'] = count
     name_info['epoch_ticks'] = epoch_ticks
 

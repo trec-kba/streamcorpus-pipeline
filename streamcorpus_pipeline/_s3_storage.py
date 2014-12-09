@@ -481,8 +481,12 @@ class to_s3_chunks(Configured):
                     t_path, name_info, i_str)
         # Getting name info actually assembles an entire chunk in memory
         # from `t_path`, so we now need to tell it which chunk type to use.
-        more_name_info = get_name_info(t_path, i_str=i_str,
-                                  chunk_type=self.chunk_type)
+        try:
+            more_name_info = get_name_info(t_path, i_str=i_str,
+                                           chunk_type=self.chunk_type)
+        except Exception, exc:
+            logger.critical('failed get_name_info(%r, %r', t_path, i_str, exc_info=True)
+            sys.exit(str(exc))
         self.name_info = dict(name_info, **more_name_info)
 
         if self.name_info['num'] == 0:
@@ -539,7 +543,7 @@ class to_s3_chunks(Configured):
         return o_path
 
     def prepare_on_disk(self, t_path):
-        logger.info('key path: %r', self.config.get('gpg_encryption_key_path'))
+        logger.debug('gpg_encryption_key_path: %r', self.config.get('gpg_encryption_key_path'))
         _errors, t_path2 = compress_and_encrypt_path(
             t_path, 
             self.config.get('gpg_encryption_key_path'),
