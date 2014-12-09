@@ -621,12 +621,27 @@ class to_s3_chunks(Configured):
             logger.error('got no data back from decrypt_and_uncompress %r, (size=%r), errors: %r', o_path, len(rawdata), errors)
             return False
 
-        try:
-            count = len(list(self.chunk_type(data=data)))
-        except Exception, exc:
-            count = None
-            logger.critical('\n\n********\n\nfailure on %r\n\n********\n\n', o_path, exc_info=True)
-        logger.info('attempting verify of %r %r in %r', count, chunk_format, o_path)
+        ### Let's not use both belt and suspenders.  md5 is enough.
+        ### Of note, if this gets killed by something, e.g. rejester
+        ### fork_worker parent, then since this is one of the slowest
+        ### parts, you might see cbor getting killed, which can look
+        ### like this:
+        ##    >>> c = list(f)
+        ##    ^CTraceback (most recent call last):
+        ##    File "<stdin>", line 1, in <module>
+        ##    File "/ebs/home/jrf/streamcorpus/py/src/streamcorpus/_chunk.py", line 381, in __iter__
+        ##    for msg in self.read_msg_impl():
+        ##    File "/ebs/home/jrf/streamcorpus/py/src/streamcorpus/_cbor_chunk.py", line 111, in read_msg_impl
+        ##    ob = cbor.load(self._i_chunk_fh)
+        ##    RuntimeError: unknown error decoding TAG...
+        #
+        #try:
+        #    count = len(list(self.chunk_type(data=data)))
+        #except Exception, exc:
+        #    count = None
+        #    logger.critical('\n\n********\n\nfailure on %r\n\n********\n\n', o_path, exc_info=True)
+        #logger.info('attempting verify of %r %r in %r', count, chunk_format, o_path)
+        logger.info('attempting verify of %r in %r', chunk_format, o_path)
         return verify_md5(md5, data, other_errors=errors)
 
     def public_data(self, o_path):
