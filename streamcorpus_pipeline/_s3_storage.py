@@ -8,6 +8,7 @@ putting them out into local storage.
 '''
 from __future__ import absolute_import, division, print_function
 from cStringIO import StringIO
+from functools import partial
 import gzip
 import hashlib
 import logging
