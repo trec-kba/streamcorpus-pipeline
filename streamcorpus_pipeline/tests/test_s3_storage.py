@@ -17,19 +17,20 @@ import uuid
 import pytest
 from backports import lzma
 
+logger = logging.getLogger(__name__)
+
 try:
     from dossier.fc import FeatureCollection, FeatureCollectionChunk
 except ImportError:
-    pass
+    logger.info('failed to load dossier.fc', exc_info=True)
+    dossier = None
+
 import yakonfig
 
 import streamcorpus
 from streamcorpus_pipeline._exceptions import FailedExtraction, \
     ConfigurationError, FailedVerification
 import streamcorpus_pipeline._s3_storage as s3stage
-
-
-logger = logging.getLogger(__name__)
 
 
 # Skip all tests in this module if the AWS credentials are not in the

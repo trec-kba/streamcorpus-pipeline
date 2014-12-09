@@ -14,6 +14,7 @@ import hashlib
 import logging
 import os
 import re
+import sys
 import time
 
 import requests
@@ -486,7 +487,8 @@ class to_s3_chunks(Configured):
                                            chunk_type=self.chunk_type)
         except Exception, exc:
             logger.critical('failed get_name_info(%r, %r', t_path, i_str, exc_info=True)
-            sys.exit(str(exc))
+            raise
+
         self.name_info = dict(name_info, **more_name_info)
 
         if self.name_info['num'] == 0:
