@@ -78,7 +78,11 @@ def _retry(func):
             except FailedVerification as exc:
                 logger.warn('FAIL(%d)', tries, exc_info=True)
                 if tries >= self.config['tries']:
-                    raise
+                    if self.config.get('suppress_failures'):
+                        logger.warn('suppressing failure and breaking out of this loop; data may be corrupt, downstream will have to cope')
+                        break
+                    else:
+                        raise
             except Exception as exc:
                 logger.warn('FAIL(%d): having I/O trouble with S3', tries, exc_info=True)
                 if tries >= self.config['tries']:
@@ -349,8 +353,7 @@ class from_s3_chunks(Configured):
 
 
 class to_s3_chunks(Configured):
-    '''
-    Copies chunk files on disk to Amazon S3. The type of data written
+    '''Copies chunk files on disk to Amazon S3. The type of data written
     can be specified with the ``output_format`` config option. The
     following values are legal: ``streamitem`` and ``featurecollection``.
     
@@ -403,6 +406,13 @@ class to_s3_chunks(Configured):
           # Default: true
           verify: true
 
+          # If verification fails `tries` times, then the default
+          # behavior is to exit, which can cause a rejester
+          # fork_worker parent to retry the whole job.
+          #
+          # Default: false
+          suppress_failures: false
+
           # This is prepended to every key given. Namely, all s3 URLs
           # are formed by `s3://{bucket}/{s3_path_prefix}/{input-key-name}`.
           # By default, it is empty.
@@ -444,6 +454,7 @@ class to_s3_chunks(Configured):
         'gpg_decryption_key_path': None,
         'gpg_recipient': 'trec-kba',
         'verify': True,
+        'suppress_failures': False,
         'is_private': False,
         'output_format': 'StreamItem',
         'tmp_dir_path': '/tmp',
