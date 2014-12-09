@@ -609,7 +609,13 @@ class to_s3_chunks(Configured):
         if not data:
             logger.error('got no data back from decrypt_and_uncompress %r, (size=%r), errors: %r', o_path, len(rawdata), errors)
             return False
-        logger.info('num %r received: %d', chunk_format, len(list(self.chunk_type(data=data))))
+
+        try:
+            count = len(list(self.chunk_type(data=data)))
+        except Exception, exc:
+            count = None
+            logger.critical('\n\n********\n\nfailure on %r\n\n********\n\n', o_path, exc_info=True)
+        logger.info('attempting verify of %r %r in %r', count, chunk_format, o_path)
         return verify_md5(md5, data, other_errors=errors)
 
     def public_data(self, o_path):
