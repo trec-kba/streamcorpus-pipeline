@@ -356,7 +356,8 @@ class clean_html(Configured):
                 return stream_item
 
         if stream_item.body and stream_item.body.raw \
-                and stream_item.body.media_type == 'text/html':
+                and stream_item.body.media_type \
+                and stream_item.body.media_type.startswith('text/html'):
 
             logger.debug('making clean html for %s %r' % (
                     stream_item.stream_id, stream_item.body.language))
