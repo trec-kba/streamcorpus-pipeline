@@ -342,17 +342,28 @@ class clean_html(Configured):
         self.log_dir_path = self.config.get('log_dir_path', None)
 
     def __call__(self, stream_item, context):
+        if not stream_item.body:
+            logger.warn('stream_item.body is %r!!', stream_item.body)
+            return stream_item
+
         if self.require_code:
-            ## need to check stream_item for language
+            if not stream_item.body.language:
+                logger.warn('body.language = %r, did you run `language` transform',
+                            stream_item.body.language)
             if not stream_item.body.language or \
                     self.require_code != stream_item.body.language.code:
-                ## either missing or different
+                logger.warn('skipping clean_html creation because %r != %r',
+                            self.require_code, stream_item.body.language.code)
                 return stream_item
 
         elif self.codes:
+            if not stream_item.body.language:
+                logger.warn('body.language = %r, did you run `language` transform',
+                            stream_item.body.language)
             if stream_item.body.language and \
                     stream_item.body.language.code not in self.codes:
-                ## has code and not the right one
+                logger.warn('skipping clean_html creation because %r not in %r',
+                            stream_item.body.language.code, self.codes)
                 return stream_item
 
         if stream_item.body and stream_item.body.raw \
@@ -366,6 +377,11 @@ class clean_html(Configured):
                 stream_item.body.raw, 
                 stream_item=stream_item,
                 log_dir_path=self.log_dir_path)
+
+        else:
+            logger.info('skipping clean_html creation: len(raw)=%d, media_type=%r',
+                        stream_item.body.raw and len(stream_item.body.raw) or 0,
+                        stream_item.body.media_type)
 
         return stream_item
 
