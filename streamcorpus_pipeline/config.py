@@ -100,7 +100,7 @@ def check_config(config, name):
     check_subconfig(config, name, reader)
 
     # (3) Check all of the intermediate and writers
-    for phase in ['incremental_transforms', 'batch_transforms', 
+    for phase in ['incremental_transforms', 'batch_transforms',
                   'post_batch_incremental_transforms', 'writers']:
         if phase not in config:
             raise ConfigurationError('{} requires {} stage list'
@@ -111,7 +111,7 @@ def check_config(config, name):
         for stagename in config[phase]:
             try:
                 stage = stages[stagename]
-            except ValueError, e:
+            except KeyError, e:
                 raise ConfigurationError(
                     'invalid {} {} {}'
                     .format(name, phase, stagename))
