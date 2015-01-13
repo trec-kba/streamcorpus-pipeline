@@ -120,7 +120,85 @@ def patient_move(path1, path2, max_tries=30):
     raise Exception('weird error inside patient_move(%r, %r)' % (path1, path2))
 
 
+class from_local_files(Configured):
+    '''Read plain text or other raw content from local files.
+
+    Each input filename is taken as an actual filename.  This produces
+    one stream item per file.  This can be configured as follows:
+
+    .. code-block:: yaml
+
+        abs_url: null
+        url_prefix: file://
+        absolute_filename: true
+        epoch_ticks: file
+
+    If `abs_url` is provided in configuration, this value is used
+    as-is as the corresponding field in the stream item.  Otherwise,
+    the path is converted to an absolute path if `absolute_filename`
+    is true, and then `url_prefix` is prepended to it.
+
+    `epoch_ticks` indicates the corresponding time stamp in the stream
+    item.  This may be an integer for specific seconds since the Unix
+    epoch, the string ``file`` indicating to use the last-modified
+    time of the file, or the string ``now`` for the current time.
+
+    The values shown above are the defaults.  If reading in files
+    in a directory structure matching a URL hierarchy, an alternate
+    configuration could be
+
+    .. code-block:: yaml
+
+        url_prefix: "http://home.example.com/"
+        absolute_path: false
+
+    '''
+    config_name = 'from_local_files'
+    default_config = {
+        'abs_url': None,
+        'url_prefix': 'file://',
+        'absolute_filename': True,
+        'epoch_ticks': 'file',
+    }
+
+    def __init__(self, config):
+        super(from_local_files, self).__init__(config)
+        self.abs_url = self.config.get('abs_url', None)
+        self.url_prefix = self.config.get('url_prefix', '')
+        self.absolute_filename = self.config.get('absolute_filename', False)
+        self.epoch_ticks = self.config.get('epoch_ticks', 'file')
+
+        if ((not isinstance(self.epoch_ticks, int) and
+             self.epoch_ticks not in ['file', 'now'])):
+            self.epoch_ticks = 'file'
+
+    def __call__(self, i_str):
+        if self.epoch_ticks == 'file':
+            st = os.stat(i_str)
+            epoch_ticks = st.st_mtime
+        elif self.epoch_ticks == 'now':
+            epoch_ticks = time.time()
+        else:
+            epoch_ticks = self.epoch_ticks
+
+        if self.abs_url:
+            abs_url = self.abs_url
+        else:
+            abs_url = i_str
+            if self.absolute_filename:
+                abs_url = os.path.abspath(abs_url)
+            if self.url_prefix:
+                abs_url = self.url_prefix + abs_url
+
+        si = streamcorpus.make_stream_item(epoch_ticks, abs_url)
+        with open(i_str, 'rb') as f:
+            si.body.raw = f.read()
+
+        yield si
+
+
 class to_local_chunks(Configured):
+
     '''Write output to a local chunk file.
 
     .. warning:: This stage must be listed last in the ``writers`` list.

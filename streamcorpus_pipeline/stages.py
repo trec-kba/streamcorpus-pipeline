@@ -13,6 +13,7 @@ Readers
 
 .. autoclass:: streamcorpus_pipeline._convert_kba_json.convert_kba_json
 .. autoclass:: streamcorpus_pipeline._local_storage.from_local_chunks
+.. autoclass:: streamcorpus_pipeline._local_storage.from_local_files
 .. autoclass:: streamcorpus_pipeline._kvlayer.from_kvlayer
 .. autoclass:: streamcorpus_pipeline._s3_storage.from_s3_chunks
 .. autoclass:: streamcorpus_pipeline._john_smith.john_smith
@@ -106,9 +107,8 @@ import time
 
 import pkg_resources
 
-import yakonfig
-
 logger = logging.getLogger(__name__)
+
 
 class StageRegistry(MutableMapping):
     '''List of known stages for a pipeline.
@@ -243,19 +243,21 @@ class StageRegistry(MutableMapping):
         ctor = self[name]
         return ctor(subconfig)
 
+
 class Configured(object):
     '''Any object containing a configuration.
 
     The configuration is passed to the constructor.
 
     .. attribute:: config
-    
+
         The configuration dictionary for this object.
 
     '''
     def __init__(self, config, *args, **kwargs):
         super(Configured, self).__init__(*args, **kwargs)
         self.config = config
+
 
 class BatchTransform(Configured):
     '''Transform that acts on an entire :class:`streamcorpus.Chunk` file.'''
@@ -332,6 +334,7 @@ class IncrementalTransform(Configured, Callable):
         '''
         pass
 
+
 class PipelineStages(StageRegistry):
     '''The list of stages, preloaded with streamcorpus_pipeline stages.'''
     def __init__(self, *args, **kwargs):
@@ -341,6 +344,7 @@ class PipelineStages(StageRegistry):
         # data source readers (read data from somewhere into pipeline)
         self.tryload_stage('_convert_kba_json', 'convert_kba_json')
         self.tryload_stage('_local_storage', 'from_local_chunks')
+        self.tryload_stage('_local_storage', 'from_local_files')
         self.tryload_stage('_kvlayer', 'from_kvlayer')
         self.tryload_stage('_s3_storage', 'from_s3_chunks')
         self.tryload_stage('_john_smith', 'john_smith')
