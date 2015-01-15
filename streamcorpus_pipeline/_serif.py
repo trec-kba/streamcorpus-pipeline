@@ -1,10 +1,9 @@
 #!/usr/bin/env python
-'''
-streamcorpus_pipeline.BatchTransform for Serif
+'''streamcorpus_pipeline.BatchTransform for Serif
 
-This software is released under an MIT/X11 open source license.
+.. This software is released under an MIT/X11 open source license.
+   Copyright 2012-2015 Diffeo, Inc.
 
-Copyright 2012-2014 Diffeo, Inc.
 '''
 from __future__ import absolute_import
 import gc
@@ -12,18 +11,19 @@ import logging
 import os
 import shutil
 import subprocess
-import sys
 import time
 import traceback
 import uuid
+
+from yakonfig import ConfigurationError
 
 from streamcorpus_pipeline.stages import BatchTransform
 from streamcorpus_pipeline._taggers import make_memory_info_msg, align_labels
 from streamcorpus_pipeline._exceptions import PipelineOutOfMemory, \
     PipelineBaseException
-import yakonfig
 
 logger = logging.getLogger(__name__)
+
 
 class serif(BatchTransform):
     '''Batch transform to parse and tag documents with Serif.
@@ -55,7 +55,7 @@ class serif(BatchTransform):
             aligner_data:
               chain_selector: ALL
               annotator_id: annotator
-    
+
     Configuration options include:
 
     `path_in_third` (required)
@@ -65,7 +65,7 @@ class serif(BatchTransform):
     `serif_exe` (default: bin/x86_64/Serif)
       Relative path within `path_in_third` to the Serif executable file
 
-    `par` (required)
+    `par` (default: streamcorpus_one_step)
       Serif policy configuration; this is typically ``streamcorpus_one_step``,
       but may also be ``streamcorpus_read_serifxml`` or
       ``streamcorpus_generate_serifxml``
@@ -84,8 +84,25 @@ class serif(BatchTransform):
     config_name = 'serif'
     tagger_id = 'serif'
 
-    ## These two serif parameter files came from BBN via email,
-    ## the full docs are in ../../../docs/serif*txt
+    default_config = {
+        'path_in_third': 'serif/serif-latest',
+        'par': 'streamcorpus_one_step',
+        'par_additions': {},
+        'cleanup_tmp_files': True,
+        'serif_exe': 'bin/x86_64/Serif',
+    }
+
+    @staticmethod
+    def check_config(config, name):
+        # We expect the pipeline to force in tmp_dir_path and
+        # third_dir_path; but these are required
+        for k in ['path_in_third', 'serif_exe', 'par', 'cleanup_tmp_files']:
+            if k not in config:
+                raise ConfigurationError('{} requires {} setting'
+                                         .format(name, k))
+
+    # These two serif parameter files came from BBN via email,
+    # the full docs are in ../../../docs/serif*txt
 
     serif_global_config = '''
 #######################################################################
@@ -161,7 +178,7 @@ OVERRIDE document_splitter_max_size: 20000
 
 # Usage: Serif streamcorpus_read_serifxml.par CHUNK_FILES -o OUT_DIR
 #
-# This parameter file is used in cases where SERIF has already been 
+# This parameter file is used in cases where SERIF has already been
 # run on each stream item, and the SerifXML is stored in the tagging.
 # This version does not need to load any SERIF models, since it
 # expects that all serif processing has already been done.
@@ -198,7 +215,7 @@ OVERRIDE source_format:                       serifxml
 # This parameter file is identical to streamcorpus_one_step.par, except
 # that: (1) it saves the serifxml output to the stream items; and (2)
 # it does *not* save the sentence & relation annotations.  I used this
-# parameter file to generate test inputs for the 
+# parameter file to generate test inputs for the
 # streamcorpus_read_serifxml.par parameter file.
 
 # (streamcorpus_one_step.par is defined above)
@@ -209,12 +226,15 @@ OVERRIDE kba_write_serifxml_to_chunk:         true
 
     def __init__(self, *args, **kwargs):
         super(serif, self).__init__(*args, **kwargs)
+        self.tagger_root_path = os.path.join(self.config['third_dir_path'],
+                                             self.config['path_in_third'])
         self._child = None
 
-    def _write_config_par(self, tmp_dir, par_file, tagger_root_path):
+    def _write_config_par(self, tmp_dir, par_file):
         if par_file == 'streamcorpus_generate_serifxml':
             # streamcorpus_generate_serifxml INCLUDEs streamcorpus_one_step
-            self._write_config_par(tmp_dir, 'streamcorpus_one_step', tagger_root_path)
+            self._write_config_par(tmp_dir, 'streamcorpus_one_step',
+                                   self.tagger_root_path)
         par_data = getattr(self, par_file)
         for line in self.config.get('par_additions', {}).get(par_file, []):
             par_data += '\n'
@@ -223,30 +243,25 @@ OVERRIDE kba_write_serifxml_to_chunk:         true
         fout = open(fpath, 'wb')
         fout.write(
             par_data.format(
-                serif_home_par=os.path.join(tagger_root_path, 'par')
+                serif_home_par=os.path.join(self.tagger_root_path, 'par')
             )
         )
         fout.close()
-        logger.debug('wrote %s (%s bytes) to %r', par_file, len(par_data), fpath)
+        logger.debug('wrote %s (%s bytes) to %r', par_file, len(par_data),
+                     fpath)
         return fpath
 
     def process_path(self, chunk_path):
-        scp_config = yakonfig.get_global_config('streamcorpus_pipeline')
-        tmp_dir = os.path.join(scp_config['tmp_dir_path'], str(uuid.uuid4()))
+        tmp_dir = os.path.join(self.config['tmp_dir_path'], str(uuid.uuid4()))
         os.mkdir(tmp_dir)
         par_file = self.config['par']
-        third_dir_path = self.config.get('third_dir_path')
-        assert third_dir_path, 'need config serif.third_dir_path, config={!r}'.format(self.config)
-        path_in_third = self.config.get('path_in_third')
-        assert path_in_third, 'need config serif.path_in_third, config={!r}'.format(self.config)
-        tagger_root_path = os.path.join(third_dir_path, path_in_third)
+        par_path = self._write_config_par(tmp_dir, par_file)
 
-        par_path = self._write_config_par(tmp_dir, par_file, tagger_root_path)
-
-        tmp_chunk_path = os.path.join(tmp_dir, 'output', os.path.basename(chunk_path))
+        tmp_chunk_path = os.path.join(tmp_dir, 'output',
+                                      os.path.basename(chunk_path))
 
         cmd = [
-            os.path.join(tagger_root_path, self.config.get('serif_exe', 'bin/x86_64/Serif')),
+            os.path.join(self.tagger_root_path, self.config['serif_exe']),
             par_path,
             '-o', tmp_dir,
             chunk_path,
@@ -255,13 +270,14 @@ OVERRIDE kba_write_serifxml_to_chunk:         true
         logger.info('serif cmd: %r', cmd)
 
         start_time = time.time()
-        ## make sure we are using as little memory as possible
+        # make sure we are using as little memory as possible
         gc.collect()
         try:
-            self._child = subprocess.Popen(cmd, stderr=subprocess.PIPE, shell=False)
+            self._child = subprocess.Popen(cmd, stderr=subprocess.PIPE,
+                                           shell=False)
         except OSError, exc:
             logger.error('error running serif cmd %r', cmd, exc_info=True)
-            msg = traceback.format_exc(exc) 
+            msg = traceback.format_exc(exc)
             msg += make_memory_info_msg()
             logger.critical(msg)
             raise
@@ -275,32 +291,31 @@ OVERRIDE kba_write_serifxml_to_chunk:         true
                 # maybe get a tail of /var/log/messages
                 raise PipelineOutOfMemory(msg)
             elif 'Exception' in errors:
-                logger.error('child code %s errorlen=%s', self._child.returncode, len(errors))
+                logger.error('child code %s errorlen=%s',
+                             self._child.returncode, len(errors))
                 raise PipelineBaseException(errors)
             else:
-                raise PipelineBaseException('tagger exited with %r' % self._child.returncode)
+                raise PipelineBaseException('tagger exited with %r' %
+                                            self._child.returncode)
 
-        ## generated new tokens, so align labels with them
+        # generated new tokens, so align labels with them
         align_labels(tmp_chunk_path, self.config)
 
         if self.config.get('cleanup_tmp_files', True):
-            ## default: cleanup tmp directory
-            logger.info('atomic rename: %r --> %r', tmp_chunk_path, chunk_path)
+            # default: cleanup tmp directory
             os.rename(tmp_chunk_path, chunk_path)
-            logger.debug('done renaming, rm tmp_dir %r', tmp_dir)
             shutil.rmtree(tmp_dir)
         else:
-            ## for development, no cleanup, leave tmp_file
-            chunk_path_save = '{0}_pre_serif_{1}'.format(chunk_path, os.path.getmtime(chunk_path))
-            logger.debug('save tmp %r -> %r', chunk_path, chunk_path_save)
+            # for development, no cleanup, leave tmp_file
+            chunk_path_save = ('{0}_pre_serif_{1}'
+                               .format(chunk_path,
+                                       os.path.getmtime(chunk_path)))
             os.rename(chunk_path, chunk_path_save)
-            logger.info('copy %r -> %r', tmp_chunk_path, chunk_path)
             shutil.copy(tmp_chunk_path, chunk_path)
 
         elapsed = time.time() - start_time
         logger.info('finished tagging in %.1f seconds' % elapsed)
         return elapsed
-
 
     def shutdown(self):
         '''
@@ -311,6 +326,8 @@ OVERRIDE kba_write_serifxml_to_chunk:         true
                 self._child.terminate()
             except OSError, exc:
                 if exc.errno == 3:
-                    ## child is already gone, possibly because it ran
-                    ## out of memory and caused us to shutdown
+                    # child is already gone, possibly because it ran
+                    # out of memory and caused us to shutdown
                     pass
+                else:
+                    raise
