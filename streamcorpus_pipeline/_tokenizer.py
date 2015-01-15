@@ -61,7 +61,7 @@ class nltk_tokenizer(IncrementalTransform):
             except ValueError:
                 label = None
             if label:
-                off = label.offsets[OffsetType.BYTES]
+                off = label.offsets[OffsetType.CHARS]
                 end = max(off.first + off.length, end)
             previous_end = end
             sent_str = clean_visible[start:end]
@@ -75,7 +75,7 @@ class nltk_tokenizer(IncrementalTransform):
 
         self.label_index = SortedCollection(
             labels,
-            key=lambda label: label.offsets[OffsetType.BYTES].first)
+            key=lambda label: label.offsets[OffsetType.CHARS].first)
 
     def make_sentences(self, stream_item):
         'assemble Sentence and Token objects'
@@ -94,8 +94,8 @@ class nltk_tokenizer(IncrementalTransform):
                     token=token_str,
                     sentence_pos=sentence_pos,
                 )
-                tok.offsets[OffsetType.BYTES] = Offset(
-                    type=OffsetType.BYTES, 
+                tok.offsets[OffsetType.CHARS] = Offset(
+                    type=OffsetType.CHARS, 
                     first=sent_start + start,
                     length = end - start,
                 )
@@ -107,7 +107,7 @@ class nltk_tokenizer(IncrementalTransform):
                 except ValueError:
                     label = None
                 if label:
-                    off = label.offsets[OffsetType.BYTES]
+                    off = label.offsets[OffsetType.CHARS]
                     if off.first + off.length > sent_start + start:
                         logger.info('overlapping label: %r' % label.target.target_id)
                         ## overlaps
