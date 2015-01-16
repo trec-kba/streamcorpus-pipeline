@@ -15,10 +15,10 @@ import kvlayer
 import pytest
 import streamcorpus
 
-from streamcorpus_pipeline._kvlayer import from_kvlayer, to_kvlayer
+from streamcorpus_pipeline._kvlayer import from_kvlayer, to_kvlayer, serialize_si_key
 from streamcorpus_pipeline._kvlayer_keyword_search import keyword_indexer, \
     INDEXING_DEPENDENCIES_FAILED
-from streamcorpus_pipeline._kvlayer_table_names import STREAM_ITEMS_TABLE, HASH_KEYWORD, HASH_TF_SID, STREAM_ITEM_TABLE_DEFS
+from streamcorpus_pipeline._kvlayer_table_names import STREAM_ITEMS_TABLE, HASH_KEYWORD, HASH_TF_SID, STREAM_ITEM_TABLE_DEFS, STREAM_ITEMS_SOURCE_INDEX
 from streamcorpus_pipeline.tests._test_data import get_test_v0_3_0_chunk_path
 import yakonfig
 
@@ -132,14 +132,10 @@ def chunks(configurator, test_data_dir, overlay={}):
 def test_kvlayer_reader_and_writer(configurator, test_data_dir):
     with chunks(configurator, test_data_dir) as (path, client):
         ## check that index table was created
-        all_doc_ids = set()
-        all_epoch_ticks = set()
-        for (doc_id, epoch_ticks), empty_data in client.scan(STREAM_ITEMS_TABLE):
-            all_doc_ids.add(doc_id)
-            all_epoch_ticks.add(epoch_ticks)
-        all_doc_ids = sorted(all_doc_ids)
-        all_epoch_ticks = sorted(all_epoch_ticks)
-        logger.info('%d doc_ids', len(all_doc_ids))
+        all_si_keys = []
+        for si_key in client.scan_keys(STREAM_ITEMS_TABLE):
+            all_si_keys.append(si_key)
+        logger.info('%d doc_ids', len(all_si_keys))
 
         ## make an reader
         config = yakonfig.get_global_config('streamcorpus_pipeline',
@@ -147,9 +143,10 @@ def test_kvlayer_reader_and_writer(configurator, test_data_dir):
         reader = from_kvlayer(config)
 
         ## test it with different i_str inputs:
-        for i_str in ['', '0,,%d,' % 10**10, '%d,%s,%d,%s' %
-                      (all_epoch_ticks[0],  all_doc_ids[0],
-                       all_epoch_ticks[-1], all_doc_ids[-1]) ]:
+        all_keys_istr = serialize_si_key(all_si_keys[0]) + '<' + serialize_si_key(all_si_keys[-1])
+        for i_str in [
+                '',
+                all_keys_istr]:
             stream_ids = []
             for si in reader(i_str):
                 stream_ids.append(si.stream_id)
@@ -172,13 +169,10 @@ def test_kvlayer_index_with_source(configurator, test_data_dir):
         },
     }
     with chunks(configurator, test_data_dir, overlay) as (path, client):
-        # We should not have written the doc_id_epoch_ticks index at all
-        for k,v in client.scan('stream_items_doc_id_epoch_ticks'):
-            assert False, 'epoch_ticks present! k={!r}'.format(k)
         # Every item in the ...with_source index should match a real item
-        for k,v in client.scan('stream_items_with_source'):
+        for k,v in client.scan(STREAM_ITEMS_SOURCE_INDEX):
             assert v == 'WEBLOG' # by inspection
-            for kk,sixz in client.get('stream_items', k):
+            for kk,sixz in client.get(STREAM_ITEMS_TABLE, k):
                 errs,sibytes = streamcorpus.decrypt_and_uncompress(sixz)
                 assert errs == []
                 for si in streamcorpus.Chunk(data=sibytes):
@@ -194,14 +188,14 @@ def test_kvlayer_both_indexes(configurator, test_data_dir):
         },
     }
     with chunks(configurator, test_data_dir, overlay) as (path, client):
-        for k,v in client.scan('stream_items_doc_id_epoch_ticks'):
-            assert v == r''
-            (k2,k1) = k
-            for kk,sixz in client.get('stream_items', (k1,k2)):
-                pass
-        for k,v in client.scan('stream_items_with_source'):
-            for kk,sixz in client.get('stream_items', k):
-                pass
+        total = 0
+        for k,v in client.scan(STREAM_ITEMS_SOURCE_INDEX):
+            total += 1
+            count = 0
+            for kk,sixz in client.get(STREAM_ITEMS_TABLE, k):
+                count += 1
+            assert count == 1
+        assert total == 31
 
 
 @pytest.mark.slow

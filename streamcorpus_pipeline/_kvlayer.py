@@ -23,7 +23,7 @@ from streamcorpus_pipeline._kvlayer_table_names import \
     HASH_TF_SID, HASH_KEYWORD, \
     stream_id_to_kvlayer_key, kvlayer_key_to_stream_id, \
     STREAM_ITEM_TABLE_DEFS, INDEX_TABLE_NAMES, \
-    STREAM_ITEMS_TABLE
+    STREAM_ITEMS_TABLE, STREAM_ITEMS_SOURCE_INDEX
 
 
 import yakonfig
@@ -126,7 +126,7 @@ def parse_keys_and_ranges(i_str, keyfunc, rangefunc):
             i_str = i_str[SI_KEY_LENGTH+1+SI_KEY_LENGTH:]
             keya = parse_si_key(keya)
             keyb = parse_si_key(keyb)
-            for retval in self._loadrange(keya, keyb):
+            for retval in rangefunc(keya, keyb):
                 yield retval
         elif splitc == ';':
             # keya is single key to load
@@ -172,7 +172,7 @@ def get_kvlayer_stream_item(client, stream_id):
 class to_kvlayer(Configured):
     '''Writer that puts stream items in :mod:`kvlayer`.
 
-    stores StreamItems in a kvlayer table called "stream_items" in the
+    stores StreamItems in a kvlayer table in the
     namespace specified in the config dict for this stage.
 
     each StreamItem is serialized and xz compressed and stored on the
@@ -217,8 +217,10 @@ class to_kvlayer(Configured):
             self.keyword_indexer = keyword_indexer(self.client)
 
     def __call__(self, t_path, name_info, i_str):
+        si_keys = []
         for si_key in put_stream_items(self.client, streamcorpus.Chunk(t_path), self.config):
-            yield serialize_si_key(si_key)
+            si_keys.append(serialize_si_key(si_key))
+        return si_keys
 
 
 SI_KEY_LENGTH = 20
