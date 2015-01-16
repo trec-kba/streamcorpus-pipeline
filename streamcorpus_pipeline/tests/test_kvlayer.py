@@ -6,6 +6,7 @@
 from __future__ import absolute_import
 from collections import defaultdict
 import contextlib
+import hashlib
 import logging
 import uuid
 
@@ -17,8 +18,7 @@ import streamcorpus
 from streamcorpus_pipeline._kvlayer import from_kvlayer, to_kvlayer
 from streamcorpus_pipeline._kvlayer_keyword_search import keyword_indexer, \
     INDEXING_DEPENDENCIES_FAILED
-from streamcorpus_pipeline._kvlayer_table_names import table_name, \
-    all_tables, DOC_ID_EPOCH_TICKS, HASH_KEYWORD, HASH_TF_SID
+from streamcorpus_pipeline._kvlayer_table_names import STREAM_ITEMS_TABLE, HASH_KEYWORD, HASH_TF_SID, STREAM_ITEM_TABLE_DEFS
 from streamcorpus_pipeline.tests._test_data import get_test_v0_3_0_chunk_path
 import yakonfig
 
@@ -52,8 +52,9 @@ def configurator(request, namespace_string, redis_address):
     return make_config
 
 def test_kvlayer_simple(configurator, tmpdir):
+    abs_url = 'test://test.stream.item/'
     si = streamcorpus.make_stream_item('2000-01-01T12:34:00.000123Z',
-                                       'test://test.stream.item/')
+                                       abs_url)
     chunkfile = str(tmpdir.join('chunk.sc.xz'))
     with streamcorpus.Chunk(path=chunkfile, mode='wb') as chunk:
         chunk.add(si)
@@ -62,16 +63,16 @@ def test_kvlayer_simple(configurator, tmpdir):
         writer = to_kvlayer(yakonfig.get_global_config(
             'streamcorpus_pipeline', 'to_kvlayer'))
         stream_ids = writer(chunkfile, {}, '')
+        stream_ids = list(stream_ids)
         assert len(stream_ids) == 1
-        assert stream_ids[0] == '946730040-985c1e3ed73256cd9a399919fe93cf76'
+        assert stream_ids[0] == '\x98\\\x1e>\xd72V\xcd\x9a9\x99\x19\xfe\x93\xcfv8m\xf48'
 
         kvlclient = kvlayer.client()
-        kvlclient.setup_namespace({'stream_items': 2})
-        print repr(list(kvlclient.scan_keys('stream_items')))
+        kvlclient.setup_namespace(STREAM_ITEM_TABLE_DEFS)
+        print repr(list(kvlclient.scan_keys(STREAM_ITEMS_TABLE)))
         for (k,v) in kvlclient.get(
-                'stream_items',
-                (uuid.UUID(int=946730040),
-                 uuid.UUID(hex='985c1e3ed73256cd9a399919fe93cf76'))):
+                STREAM_ITEMS_TABLE,
+                (hashlib.md5(abs_url).digest(), 946730040)):
             assert v is not None
 
         reader = from_kvlayer(yakonfig.get_global_config(
@@ -99,7 +100,9 @@ def test_kvlayer_negative(configurator, tmpdir):
     with configurator():
         writer = to_kvlayer(yakonfig.get_global_config(
             'streamcorpus_pipeline', 'to_kvlayer'))
-        writer(chunkfile, {}, '')
+        stream_ids = writer(chunkfile, {}, '')
+        for sid in stream_ids:
+            pass # exercise the generator
 
         reader = from_kvlayer(yakonfig.get_global_config(
             'streamcorpus_pipeline', 'from_kvlayer'))
@@ -122,7 +125,7 @@ def chunks(configurator, test_data_dir, overlay={}):
         writer(path, name_info, i_str)
 
         client = kvlayer.client()
-        client.setup_namespace(all_tables())
+        client.setup_namespace(STREAM_ITEM_TABLE_DEFS)
         yield path, client
 
 @pytest.mark.slow
@@ -131,7 +134,7 @@ def test_kvlayer_reader_and_writer(configurator, test_data_dir):
         ## check that index table was created
         all_doc_ids = set()
         all_epoch_ticks = set()
-        for (doc_id, epoch_ticks), empty_data in client.scan(table_name(DOC_ID_EPOCH_TICKS)):
+        for (doc_id, epoch_ticks), empty_data in client.scan(STREAM_ITEMS_TABLE):
             all_doc_ids.add(doc_id)
             all_epoch_ticks.add(epoch_ticks)
         all_doc_ids = sorted(all_doc_ids)
@@ -186,7 +189,7 @@ def test_kvlayer_both_indexes(configurator, test_data_dir):
     overlay = {
         'streamcorpus_pipeline': {
             'to_kvlayer': {
-                'indexes': [ 'with_source', 'doc_id_epoch_ticks' ],
+                'indexes': [ 'with_source' ],
             },
         },
     }

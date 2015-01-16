@@ -10,8 +10,7 @@ import struct
 import uuid
 
 import streamcorpus
-from streamcorpus_pipeline._kvlayer_table_names import table_name, \
-    epoch_ticks_to_uuid, HASH_TF_SID, HASH_KEYWORD
+from streamcorpus_pipeline._kvlayer_table_names import HASH_TF_SID, HASH_KEYWORD
 from yakonfig import ConfigurationError
 
 logger = logging.getLogger(__name__)

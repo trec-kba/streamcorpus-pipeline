@@ -3,55 +3,41 @@
 .. This software is released under an MIT/X11 open source license.
    Copyright 2012-2014 Diffeo, Inc.
 '''
-import uuid
-import ctypes
+import base64
 import string
 
-STREAM_ITEMS_TABLE = 'stream_items'
-HASH_TF_SID = 'hash_tf_sid'
-HASH_KEYWORD = 'hash_keyword'
-DOC_ID_EPOCH_TICKS = 'doc_id_epoch_ticks'
-WITH_SOURCE = 'with_source'
+# table names:
 
-def table_name(suffix=None):
-    if suffix is None or suffix == STREAM_ITEMS_TABLE:
-        return STREAM_ITEMS_TABLE
-    return STREAM_ITEMS_TABLE + '_' + suffix
+# kvlayer table name
+STREAM_ITEMS_TABLE = 'si'
+# key: stream item primary key; value: StreamItem.source. presence means StreamItem.source is not null.
+STREAM_ITEMS_SOURCE_INDEX = 'sisi'
+# this pair of tables is the keyword index
+HASH_TF_INDEX_TABLE = 'sitf'
+HASH_KEYWORD_INDEX_TABLE = 'sihk'
 
-all_table_sizes = {
-    STREAM_ITEMS_TABLE: 2,
-    DOC_ID_EPOCH_TICKS: 2,
-    WITH_SOURCE: 2,
-    HASH_TF_SID: (str,),
-    HASH_KEYWORD: (int, str),
+STREAM_ITEM_TABLE_DEFS = {
+    # StreamItem primary key is:
+    # (binay 16 byte md5 of abs_url, timestamp)
+    STREAM_ITEMS_TABLE: (str, int),
+    # same stream item primary key
+    STREAM_ITEMS_SOURCE_INDEX: (str, int),
+    # keyword index tables:
+    HASH_TF_INDEX_TABLE: (str,),
+    HASH_KEYWORD_INDEX_TABLE: (int, str),
+    # TODO: maybe reintroduce index-by-time
 }
 
-def all_tables():
-    return {table_name(name): spec for name, spec in all_table_sizes.items()}
+# index names, used for configuration, not kvlayer table names
+HASH_TF_SID = 'hash_tf_sid'
+HASH_KEYWORD = 'hash_keyword'
+WITH_SOURCE = 'with_source'
 
-
-def epoch_ticks_to_uuid(ticks):
-    '''Convert seconds since the Unix epoch to a UUID type.
-
-    The actual value is seconds since the Unix epoch, expressed as a
-    64-bit signed int, left-padded with 64 zero bits.
-
-    >>> epoch_ticks_to_uuid(946730040)
-    UUID('00000000-0000-0000-0000-0000386df438')
-    >>> epoch_ticks_to_uuid(-14182920)
-    UUID('00000000-0000-0000-ffff-ffffff2795f8')
-
-    '''
-    return uuid.UUID(int=ctypes.c_ulonglong(int(ticks)).value)
-
-
-def uuid_to_epoch_ticks(u):
-    '''Convert a UUID type to seconds since the Unix epoch.
-
-    This undoes :func:`epoch_ticks_to_uuid`.
-
-    '''
-    return ctypes.c_longlong(u.int).value
+INDEX_TABLE_NAMES = {
+    WITH_SOURCE: STREAM_ITEMS_SOURCE_INDEX,
+    HASH_KEYWORD: HASH_KEYWORD_INDEX_TABLE,
+    HASH_TF_SID: HASH_TF_INDEX_TABLE,
+}
 
 
 def stream_id_to_kvlayer_key(stream_id):
@@ -68,15 +54,11 @@ def stream_id_to_kvlayer_key(stream_id):
         raise KeyError('invalid stream_id ' + stream_id)
     if doc_id_s.lstrip(string.hexdigits) != '':
         raise KeyError('invalid stream_id ' + stream_id)
-    epoch_ticks = epoch_ticks_to_uuid(epoch_ticks_s)
-    doc_id = uuid.UUID(hex=doc_id_s)
-    return (epoch_ticks, doc_id)
+    return (base64.b16decode(doc_id_s.upper()), int(epoch_ticks_s))
 
 
 def kvlayer_key_to_stream_id(k):
     '''Convert a kvlayer key to a text stream ID.'''
-    (epoch_ticks, doc_id) = k
-    epoch_ticks_s = str(uuid_to_epoch_ticks(epoch_ticks))
-    doc_id_s = doc_id.hex
-    return epoch_ticks_s + '-' + doc_id_s
+    abs_url_hash, epoch_ticks = k
+    return '{}-{}'.format(epoch_ticks, base64.b16encode(abs_url_hash).lower())
 

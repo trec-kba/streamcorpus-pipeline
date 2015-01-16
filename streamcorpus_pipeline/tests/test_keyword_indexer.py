@@ -15,15 +15,14 @@ import yakonfig
 import streamcorpus_pipeline
 from streamcorpus_pipeline._kvlayer_keyword_search import keyword_indexer, \
     keywords
-from streamcorpus_pipeline._kvlayer_table_names import all_tables
-
+from streamcorpus_pipeline._kvlayer_table_names import STREAM_ITEM_TABLE_DEFS
 
 logger = logging.getLogger(__name__)
 
 
 def profile_chunk(path):
     client = kvlayer.client()
-    client.setup_namespace(all_tables())
+    client.setup_namespace(STREAM_ITEM_TABLE_DEFS)
 
     indexer = keyword_indexer(client)
 

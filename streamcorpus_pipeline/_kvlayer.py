@@ -6,8 +6,10 @@
 from __future__ import absolute_import
 import ctypes
 from collections import Counter
+import hashlib
 import logging
 import string
+import struct
 import uuid
 
 
@@ -17,11 +19,11 @@ from streamcorpus_pipeline.stages import Configured
 from streamcorpus_pipeline._kvlayer_keyword_search import \
     INDEXING_DEPENDENCIES_FAILED, keyword_indexer
 from streamcorpus_pipeline._kvlayer_table_names import \
-    table_name, all_table_sizes, \
-    WITH_SOURCE, DOC_ID_EPOCH_TICKS, \
+    WITH_SOURCE, \
     HASH_TF_SID, HASH_KEYWORD, \
-    epoch_ticks_to_uuid, uuid_to_epoch_ticks, \
-    stream_id_to_kvlayer_key, kvlayer_key_to_stream_id
+    stream_id_to_kvlayer_key, kvlayer_key_to_stream_id, \
+    STREAM_ITEM_TABLE_DEFS, INDEX_TABLE_NAMES, \
+    STREAM_ITEMS_TABLE
 
 
 import yakonfig
@@ -68,8 +70,23 @@ class from_kvlayer(Configured):
     def __init__(self, *args, **kwargs):
         super(from_kvlayer, self).__init__(*args, **kwargs)
         self.client = kvlayer.client()
-        self.client.setup_namespace(
-            dict(stream_items=2))
+        self.client.setup_namespace(STREAM_ITEM_TABLE_DEFS)
+
+
+    def _loadkey(self, k):
+        key, data = iter_one_or_ex(self.client.get(STREAM_ITEMS_TABLE, k))
+        errors, data = streamcorpus.decrypt_and_uncompress(data)
+        if errors:
+            raise errors
+        yield streamcorpus.deserialize(data)
+
+    def _loadrange(self, keya, keyb):
+        for key, data in self.client.scan(STREAM_ITEMS_TABLE, (keya, keyb)):
+            errors, data = streamcorpus.decrypt_and_uncompress(data)
+            if errors:
+                logger.error('could not decrypet_and_uncompress %s: %s', key, errors)
+                continue
+            yield streamcorpus.deserialize(data)
 
     ## TODO: make this able to take a keyword query as input for
     ## processing stream_ids that match a keyword query; will use the
@@ -77,46 +94,50 @@ class from_kvlayer(Configured):
     ## probably also needs a table about the state of completion of
     ## each StreamItem
     def __call__(self, i_str):
-        if i_str:
-            # try to parse '{ticks:d}-{doc_id:x}'
-            try:
-                k = stream_id_to_kvlayer_key(i_str)
-                logger.debug('k %r', k)
-                key, data = iter_one_or_ex(self.client.get('stream_items', k))
-                logger.debug('data! len=%s', len(data))
-                errors, data = streamcorpus.decrypt_and_uncompress(data)
-                if errors:
-                    raise errors
-                yield streamcorpus.deserialize(data)
-                return
-            except WrongNumberException:
-                logger.debug('wanted exactly one result', exc_info=True)
-                # fall through to try i_str parsed the other way
-            except KeyError:
-                logger.debug('not a stream-id %r', i_str)
-                # fall through to try i_str parsed the other way
+        if not i_str:
+            for si in self._loadrange(None, None):
+                yield si
+            return
+        for si in parse_keys_and_ranges(i_str, self._loadkey, self._loadrange):
+            yield si
 
-            # parse ticks,docid,ticks,docid range key pair
-            (epoch_ticks_1, doc_id_1, epoch_ticks_2,
-             doc_id_2) = i_str.split(',')
-            epoch_ticks_1 = epoch_ticks_to_uuid(epoch_ticks_1)
-            epoch_ticks_2 = epoch_ticks_to_uuid(epoch_ticks_2)
-            if doc_id_1:
-                assert doc_id_2, (doc_id_1, doc_id_2)
-                doc_id_1 = uuid.UUID(hex=doc_id_1)
-                doc_id_2 = uuid.UUID(hex=doc_id_2)
-                key1 = (epoch_ticks_1, doc_id_1)
-                key2 = (epoch_ticks_2, doc_id_2)
-            else:
-                key1 = (epoch_ticks_1, )
-                key2 = (epoch_ticks_2, )
-            key_ranges = [(key1, key2)]
+
+def parse_keys_and_ranges(i_str, keyfunc, rangefunc):
+    '''
+    parse 20 byte key blobs (16 bytes md5 hash, 4 bytes timestamp) split by ';' or '<'
+    e.g.
+    'a<f;x' loads scans keys a through f and loads singly key x
+
+    keyfunc and rangefunc are run as generators and their yields are yielded from this function.
+    '''
+    while i_str:
+        if len(i_str) == SI_KEY_LENGTH:
+            # one key, get it.
+            key = parse_si_key(i_str)
+            for retval in keyfunc(key):
+                yield retval
+            return
+
+        keya = i_str[:SI_KEY_LENGTH]
+        splitc = i_str[SI_KEY_LENGTH]
+        if splitc == '<':
+            # range
+            keyb = i_str[SI_KEY_LENGTH+1:SI_KEY_LENGTH+1+SI_KEY_LENGTH]
+            i_str = i_str[SI_KEY_LENGTH+1+SI_KEY_LENGTH:]
+            keya = parse_si_key(keya)
+            keyb = parse_si_key(keyb)
+            for retval in self._loadrange(keya, keyb):
+                yield retval
+        elif splitc == ';':
+            # keya is single key to load
+            keya = parse_si_key(keya)
+            for retval in keyfunc(keya):
+                yield retval
+            i_str = i_str[SI_KEY_LENGTH+1+1:]
         else:
-            key_ranges = []
-
-        for key, data in self.client.scan('stream_items', *key_ranges):
-            errors, data = streamcorpus.decrypt_and_uncompress(data)
-            yield streamcorpus.deserialize(data)
+            logger.error('bogus key splitter %s, %r', splitc, i_str)
+            return
+        # continue parsing i_str
 
 
 def get_kvlayer_stream_item(client, stream_id):
@@ -125,7 +146,7 @@ def get_kvlayer_stream_item(client, stream_id):
     This function requires that `client` already be set up properly::
 
         client = kvlayer.client()
-        client.setup_namespace({'stream_items': 2})
+        client.setup_namespace(STREAM_ITEM_TABLE_DEFS)
         si = get_kvlayer_stream_item(client, stream_id)
 
     `stream_id` is in the form of
@@ -141,7 +162,7 @@ def get_kvlayer_stream_item(client, stream_id):
 
     '''
     key = stream_id_to_kvlayer_key(stream_id)
-    for k, v in client.get('stream_items', key):
+    for k, v in client.get(STREAM_ITEMS_TABLE, key):
         if v is not None:
             errors, bytestr = streamcorpus.decrypt_and_uncompress(v)
             return streamcorpus.deserialize(bytestr)
@@ -174,80 +195,50 @@ class to_kvlayer(Configured):
     index name.
     '''
     config_name = 'to_kvlayer'
-    default_config = {'indexes': ['doc_id_epoch_ticks']}
+    default_config = {'indexes': []}
 
     @staticmethod
     def check_config(config, name):
         yakonfig.check_toplevel_config(kvlayer, name)
         for ndx in config['indexes']:
-            if ndx not in to_kvlayer.index_sizes:
+            if ndx not in INDEX_TABLE_NAMES:
                 raise yakonfig.ConfigurationError(
                     'invalid {} indexes type {!r}'
                     .format(name, ndx))
 
         keyword_indexer.check_config(config, name)
 
-
-    ## TODO:
-    # replace existing index keys with non-UUID keys -- cleanup
-    # make the stream_ids look more like the bit-packed IDs in keyword index -- optimization
-    # add a detected language-type index for prioritizing taggers by language
-
-    index_sizes = all_table_sizes
-
     def __init__(self, *args, **kwargs):
         super(to_kvlayer, self).__init__(*args, **kwargs)
         self.client = kvlayer.client()
-        tables = {table_name(): 2}
-        for ndx in self.config['indexes']:
-            tables[table_name(ndx)] = self.index_sizes[ndx]
-        self.client.setup_namespace(tables)
+        self.client.setup_namespace(STREAM_ITEM_TABLE_DEFS)
 
         if HASH_KEYWORD in self.config['indexes']:
             self.keyword_indexer = keyword_indexer(self.client)
 
     def __call__(self, t_path, name_info, i_str):
-        indexes = {}
-        for ndx in self.config['indexes']:
-            indexes[ndx] = []
+        for si_key in put_stream_items(self.client, streamcorpus.Chunk(t_path), self.config):
+            yield serialize_si_key(si_key)
 
-        # The idea here is that the actual documents can be pretty big,
-        # so we don't want to keep them in memory, but the indexes
-        # will just be UUID tuples.  So the iterator produces...
 
-        def keys_and_values():
-            for si in streamcorpus.Chunk(t_path):
-                key_key, data = streamitem_to_key_data(si)
-                yield key_key, data
+SI_KEY_LENGTH = 20
 
-                key1, key2 = key_key
 
-                for ndx in indexes:
-                    if ndx == DOC_ID_EPOCH_TICKS:
-                        kvp = ((key2, key1), r'')
-                    elif ndx == WITH_SOURCE:
-                        # si.source can be None but we can't write
-                        # None blobs to kvlayer
-                        if si.source:
-                            kvp = ((key1, key2), si.source)
-                        else:
-                            continue
-                    elif ndx == HASH_TF_SID:
-                        self.keyword_indexer.index(si)
-                        continue
-                    elif ndx == HASH_KEYWORD:
-                        ## done above
-                        continue
-                    else:
-                        assert False, ('invalid index type ' + ndx)
-                    indexes[ndx].append(kvp)
+def serialize_si_key(si_key):
+    '''
+    Return packed bytes representation of StreamItem kvlayer key.
+    The result is 20 bytes, 16 of md5 hash, 4 of int timestamp.
+    '''
+    assert len(si_key[0]) == 16, 'bad StreamItem key, expected 16 byte md5 hash binary digest, got: {!r}'.format(si_key)
+    return struct.pack('>16si', si_key[0], si_key[1])
 
-        si_kvps = list(keys_and_values())
-        self.client.put(table_name(), *si_kvps)
-        for ndx, kvps in indexes.iteritems():
-            self.client.put(table_name(ndx), *kvps)
 
-        return [kvlayer_key_to_stream_id(k) for k, v in si_kvps]
+def parse_si_key(si_key_bytes):
+    '''
+    Parse result of serialize_si_key()
+    Return kvlayer key tuple.
+    '''
+    return struct.unpack('>16si', si_key_bytes)
 
 
 def streamitem_to_key_data(si):
@@ -256,10 +247,87 @@ def streamitem_to_key_data(si):
 
     return (kvlayer key tuple), data blob
     '''
-    key1 = epoch_ticks_to_uuid(si.stream_time.epoch_ticks)
-    key2 = uuid.UUID(hex=si.doc_id)
+    key = key_for_stream_item(si)
     data = streamcorpus.serialize(si)
     errors, data = streamcorpus.compress_and_encrypt(data)
     assert not errors, errors
+    return key, data
 
-    return (key1, key2), data
+
+def key_for_stream_item(si):
+    '''
+    Return kvlayer key for a StreamItem
+    key is (bytes of hash of abs_url, int(timestamp))
+    '''
+    # get binary 16 byte digest
+    urlhash = hashlib.md5(si.abs_url).digest()
+    return (urlhash, int(si.stream_time.epoch_ticks))
+
+
+KVLAYER_DEFAULT_CONFIG = {
+    'indexes': [],
+}
+
+
+def index_source(si):
+    '''
+    yield (table name, (key, value))
+    '''
+    if si.source:
+        yield (STREAM_ITEMS_SOURCE_INDEX, (key_for_stream_item(si), si.source))
+
+
+# functions take a StreamItem and yield (table name, (key, value))
+INDEX_FUNCTIONS = {
+    WITH_SOURCE: index_source,
+}
+
+
+class TableBuffer(object):
+    def __init__(self, kvl, table_name, buffer_count=100):
+        self.kvl = kvl
+        self.table_name = table_name
+        self.buffer_count = buffer_count
+        self.buffer = []
+
+    def put(self, key, value):
+        self.buffer.append( (key, value) )
+        if len(self.buffer) >= self.buffer_count:
+            self.kvl.put(self.table_name, *self.buffer)
+            self.buffer = []
+
+    def flush(self):
+        self.kvl.put(self.table_name, *self.buffer)
+        self.buffer = []
+
+
+def put_stream_items(kvl, itemiter, config=None):
+    '''
+    Puts StreamItem objects from itemiter.
+    Yields kvlayer key tuples.
+    '''
+    if config is None:
+        config = KVLAYER_DEFAULT_CONFIG
+    sitable = TableBuffer(kvl, STREAM_ITEMS_TABLE)
+    outputs = {}
+    indexes = config.get('indexes', [])
+    for index_name in indexes:
+        itn = INDEX_TABLE_NAMES[index_name]
+        outputs[itn] = TableBuffer(kvl, itn)
+
+    for si in itemiter:
+        si_key = key_for_stream_item(si)
+        data = streamcorpus.serialize(si)
+        errors, data = streamcorpus.compress_and_encrypt(data)
+        assert not errors, errors
+        sitable.put(si_key, data)
+        yield si_key
+
+        for index_name in indexes:
+            index_func = INDEX_FUNCTIONS[index_name]
+            for tablename, kv in index_func(si):
+                outputs[tablename].put(*kv)
+
+    sitable.flush()
+    for outbuf in outputs.itervalues():
+        outbuf.flush()

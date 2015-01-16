@@ -4,7 +4,7 @@
    Copyright 2012-2014 Diffeo, Inc.
 '''
 from __future__ import absolute_import
-from streamcorpus_pipeline._kvlayer_table_names import all_tables
+from streamcorpus_pipeline._kvlayer_table_names import STREAM_ITEM_TABLE_DEFS
 from streamcorpus_pipeline._kvlayer_keyword_search import keyword_indexer
 import kvlayer
 import yakonfig
@@ -20,7 +20,7 @@ def main():
     config = yakonfig.get_global_config()
 
     kvl = kvlayer.client()
-    kvl.setup_namespace(all_tables())
+    kvl.setup_namespace(STREAM_ITEM_TABLE_DEFS)
 
     indexer = keyword_indexer(kvl)
 
