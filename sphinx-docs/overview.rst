@@ -8,7 +8,9 @@ extractors, such as Serif and Factorie, and unifies their output.
 StreamCorpus pipline can store documents in S3, Accumulo, or flat
 files.
 
-StreamCorpus is used extensively in `TREC KBA <http://trec-kba.org/>`_
+StreamCorpus is used extensively in `TREC KBA <http://trec-kba.org/>`_, 
+`TREC Temporal Summarization <http://trec-ts.org/>`_, 
+`TREC Dynamic Domain <http://trec-dd.org/>`_, 
 and at `Diffeo <http://diffeo.com/>`_.
 
 Ask more at `StreamCorpus Google Group <http://groups.google.com/group/streamcorpus>`_

@@ -1,211 +1,61 @@
 #!/usr/bin/env python
-'''
-Pipeline "transform" for converting raw text into clean_html
+'''Convert raw text into cleaned HTML.
 
-This software is released under an MIT/X11 open source license.
+.. This software is released under an MIT/X11 open source license.
+   Copyright 2012-2015 Diffeo, Inc.
 
-Copyright 2012-2014 Diffeo, Inc.
+.. autoclass:: clean_html
+
 '''
 from __future__ import absolute_import
 import logging
-import os
 import re
 import string
-import traceback
 
 import lxml.html
 import lxml.html.clean
 import lxml.html.soupparser
 from BeautifulSoup import UnicodeDammit
 
-import streamcorpus
 from streamcorpus_pipeline.stages import Configured
-from streamcorpus_pipeline import _exceptions
 
 logger = logging.getLogger(__name__)
 
 encoding_re = re.compile(
-    '''(?P<start_xml>([^<]|\n)*?\<\?xml[^>]*)''' + \
+    '''(?P<start_xml>([^<]|\n)*?\<\?xml[^>]*)'''
     '''(?P<encoding>encoding=.*?)(?P<remainder>(\s|\?\>)(.|\n)*)''',
     re.I)
 
-def valid_XML_char_ordinal(ord_c):
-    ## http://stackoverflow.com/questions/8733233/filtering-out-certain-bytes-in-python
-    return ( # conditions ordered by presumed frequency
-        0x20 <= ord_c <= 0xD7FF 
-        or ord_c in (0x9, 0xA, 0xD)
-        or 0xE000 <= ord_c <= 0xFFFD
-        or 0x10000 <= ord_c <= 0x10FFFF
-        )
-
-def drop_invalid_XML_chars(possibly_invalid_string):
-    return ''.join(
-        c if valid_XML_char_ordinal(ord(c)) else ' '
-        for c in possibly_invalid_string         
-        )
-
-def lower_utf8_char(ord_c):
-    return (  
-        0x20 <= ord_c <= 0xD7FF 
-        or ord_c in (0x9, 0xA, 0xD)
-        or 0xE000 <= ord_c <= 0xFFFD
-        )
 
 def drop_invalid_and_upper_utf8_chars(possibly_invalid_string):
-    return ''.join(
-        c if lower_utf8_char(ord(c)) else ' '
-        for c in possibly_invalid_string         
-        )
+    '''Clean unexpected Unicode characters, including non-BMP.
 
-def make_traceback_log(all_exc):
-    ## convert array of Exceptions into a string of tracebacks
-    traceback_log = ''
-    for num, exc in enumerate(all_exc):
-        traceback_log += '\n\nexc #%d\n%s' % (num, traceback.format_exc(exc))
-    return traceback_log
+    Returns a copy of `possibly_invalid_string` with the following
+    replaced by space (U+0020): ASCII control characters other than
+    tab, carriage return, and newline; reserved code points for
+    surrogate pairs; invalid characters U+FFFE and U+FFFF; and
+    supplementary characters U+10000 and higher.
 
-def make_clean_html_super(raw, stream_item=None, log_dir_path=None):
+    :param unicode possibly_invalid_string: string to clean
+    :return: cleaned string
+    :returntype: :class:`unicode`
+
     '''
-    Treat 'raw' as though it is HTML, even if we have no idea what it
-    really is, and attempt to get a properly formatted HTML document
-    with all HTML-escaped characters converted to their unicode.
-    '''
-    ## attempt to get HTML and force it to unicode
-    fixed_html = None
+    return re.sub(ur'[^\t\r\n\u0020-\ud7ff\ue000-\ufffd]', u' ',
+                  possibly_invalid_string)
 
-    ## count the number of attempts, so can get progressively more
-    ## aggressive with forcing the character set
-    attempt = 0
-
-    ## keep all the tracebacks, so we can read them if we want to
-    ## analyze a particular document
-    all_exc = []
-
-    ## the last attempt leads sets this to True to end the looping
-    no_more_attempts = False
-    while not no_more_attempts:
-        attempt += 1
-
-        try:
-            ## default attempt uses vanilla lxml.html
-            root = lxml.html.fromstring(raw)
-            ## if that worked, then we will be able to generate a
-            ## valid HTML string
-            fixed_html = lxml.html.tostring(root, encoding='unicode')
-
-        except UnicodeDecodeError, exc:
-            ## most common failure is a bogus encoding
-            all_exc.append(exc)
-            try:
-                converted = UnicodeDammit(raw, isHTML=True)
-                if not converted.unicode:
-                    raise Exception(
-                        'UnicodeDammit failed, appeared to be %r tried [%s]' % (
-                            converted.originalEncoding,
-                            ', '.join(converted.triedEncodings)))
-
-                encoding_m = encoding_re.match(converted.unicode)
-                if encoding_m:
-                    converted.unicode = \
-                        encoding_m.group('start_xml') + \
-                        encoding_m.group('remainder')
-
-                root = lxml.html.fromstring(converted.unicode)
-                ## if that worked, then we will be able to generate a
-                ## valid HTML string
-                fixed_html = lxml.html.tostring(root, encoding='unicode')
-
-                ## hack in a logging step here so we can manually inspect
-                ## this fallback stage.
-                if log_dir_path and stream_item:
-                    stream_item.body.clean_html = fixed_html.encode('utf8')
-                    stream_item.body.logs.append( make_traceback_log(all_exc) )
-
-            except Exception, exc:
-                ## UnicodeDammit failed
-                all_exc.append(exc)
-                fixed_html = None
-
-        except Exception, exc:
-            ## lxml.html failed with something other than UnicodeDecodeError
-            all_exc.append(exc)
-            fixed_html = None
-
-        if fixed_html is None:
-            try:
-                ## can soupparser build a valid tree?
-                root = lxml.html.soupparser.fromstring(raw)
-                fixed_html = lxml.html.tostring(root, encoding='unicode')
-
-                ## hack in a logging step here so we can manually inspect
-                ## this fallback stage.
-                if log_dir_path and stream_item:
-                    stream_item.body.clean_html = fixed_html.encode('utf8')
-                    stream_item.body.logs.append( make_traceback_log(all_exc) )
-
-            except Exception, exc:
-                ## soupparser failed
-                all_exc.append(exc)
-                fixed_html = None
-
-        if fixed_html is not None:
-            ## success!  Stop looping and process fixed_html
-            break
-
-        elif attempt == 1:
-            ## try stripping control characters from the beginning
-            initial_100 = raw[:100]
-            fixed_initial_100 = drop_invalid_XML_chars(initial_100)
-            raw = fixed_initial_100 + raw[100:]
-            ## now it will loop through again
-
-        elif attempt == 2:
-            ## try stripping control characters from entire text
-            raw = drop_invalid_XML_chars(raw)
-            ## now it will loop through again
-
-        elif attempt == 3:
-            ## force latin1, which often is often the right thing to
-            ## do anyway, because someone set utf8 as a default header
-            ## when they meant latin1
-            raw = raw.decode('latin-1', 'replace')
-
-        else:
-            no_more_attempts = True
-
-    ## out of the loop, if we didn't get fixed_html, then raise all
-    ## the traceback strings together.
-    if not fixed_html:
-        raise Exception(make_traceback_log(all_exc))
-
-    ## construct a Cleaner that removes any ``<script>`` tags,
-    ## Javascript, like an ``onclick`` attribute, comments, style
-    ## tags or attributes, ``<link>`` tags
-    cleaner = lxml.html.clean.Cleaner(
-        scripts=True, javascript=True, 
-        comments=True, 
-        style=True, links=True)
-
-    ## now get the really sanitized HTML
-    _clean_html = cleaner.clean_html(fixed_html)
-
-    ## generate pretty HTML in utf-8
-    _clean_html = lxml.html.tostring(
-        lxml.html.document_fromstring(_clean_html), 
-        method='html', encoding='utf-8',
-        pretty_print=True, 
-        #include_meta_content_type=True
-        )
-
-    ## remove any ^M characters
-    _clean_html = string.replace( _clean_html, '\r', '' )
-
-    return _clean_html
 
 def force_unicode(raw):
-    '''
-    Uses BeautifulSoup.UnicodeDammit to try to force to unicode, and
-    if that fails, it assumes utf8 and just ignores all errors.
+    '''Try really really hard to get a Unicode copy of a string.
+
+    First try :class:`BeautifulSoup.UnicodeDammit` to try to force
+    to Unicode; if that fails, assume UTF-8 encoding, and ignore
+    all errors.
+
+    :param str raw: string to coerce
+    :return: Unicode approximation of `raw`
+    :returntype: :class:`unicode`
+
     '''
     converted = UnicodeDammit(raw, isHTML=True)
     if not converted.unicode:
@@ -219,16 +69,23 @@ def force_unicode(raw):
 
     return converted.unicode
 
-def make_clean_html(raw, stream_item=None, log_dir_path=None):
-    '''
-    Treat 'raw' as though it is HTML, even if we have no idea what it
+
+def make_clean_html(raw, stream_item=None):
+    '''Get a clean text representation of presumed HTML.
+
+    Treat `raw` as though it is HTML, even if we have no idea what it
     really is, and attempt to get a properly formatted HTML document
     with all HTML-escaped characters converted to their unicode.
+
+    :param str raw: raw text to clean up
+    :param stream_item: optional stream item with encoding metadata
+    :type stream_item: :class:`streamcorpus.StreamItem`
+    :returns: UTF-8-encoded byte string of cleaned HTML text
+    :returntype: :class:`str`
+
     '''
-    #logger.debug('repr(raw):')
-    #logger.debug(repr(raw))
     if stream_item and stream_item.body and stream_item.body.encoding:
-        ## if we know an encoding, then attempt to use it
+        # if we know an encoding, then attempt to use it
         try:
             raw_decoded = raw.decode(stream_item.body.encoding)
         except:
@@ -236,73 +93,51 @@ def make_clean_html(raw, stream_item=None, log_dir_path=None):
     else:
         raw_decoded = raw
 
+    # default attempt uses vanilla lxml.html
     try:
-        ## default attempt uses vanilla lxml.html
-        try:
-            root = lxml.html.document_fromstring(raw_decoded)
-        except ValueError, exc:
-            if 'with encoding declaration' in str(exc):
-                root = lxml.html.document_fromstring(raw)
-            else:
-                raise exc
-        ## if that worked, then we will be able to generate a
-        ## valid HTML string
-        fixed_html = lxml.html.tostring(root, encoding=unicode)
-    except (TypeError, lxml.etree.ParserError, UnicodeDecodeError), exc:
-        logger.critical( '_clean_html.make_clean_html caught %s' % exc )
-        raise _exceptions.TransformGivingUp()
+        root = lxml.html.document_fromstring(raw_decoded)
+    except ValueError, exc:
+        if 'with encoding declaration' in str(exc):
+            root = lxml.html.document_fromstring(raw)
+        else:
+            raise
+    # if that worked, then we will be able to generate a
+    # valid HTML string
+    fixed_html = lxml.html.tostring(root, encoding=unicode)
 
-    #logger.debug( 'repr(fixed_html):' )
-    #logger.debug( repr(fixed_html) )
+    # remove any ^M characters
+    fixed_html = string.replace(fixed_html, '\r', ' ')
 
-    ## remove any ^M characters
-    fixed_html = string.replace( fixed_html, '\r', ' ' )
-
-    ## remove any invalid chars, such as those resulting from this
-    ## bogus HTML-escaped entity &#822050+ that reulted from someone
-    ## failing to put the ";" between "&#8220;" and "50+"
-
-    #logger.debug( 'first' )
-    #logger.debug( fixed_html.encode('utf8') )
-
-    ## We drop utf8 characters that are above 0xFFFF as 
-    ## Lingpipe seems to be doing the wrong thing with them. 
+    # We drop utf8 characters that are above 0xFFFF as
+    # Lingpipe seems to be doing the wrong thing with them.
     fixed_html = drop_invalid_and_upper_utf8_chars(fixed_html)
 
-    #logger.debug( 'second' )
-    #logger.debug( fixed_html.encode('utf8') )
-
-    ## construct a Cleaner that removes any ``<script>`` tags,
-    ## Javascript, like an ``onclick`` attribute, comments, style
-    ## tags or attributes, ``<link>`` tags
+    # construct a Cleaner that removes any ``<script>`` tags,
+    # Javascript, like an ``onclick`` attribute, comments, style
+    # tags or attributes, ``<link>`` tags
     cleaner = lxml.html.clean.Cleaner(
-        scripts=True, javascript=True, 
-        comments=True, 
-        ## do not remove <html> <head> <title> etc
+        scripts=True, javascript=True,
+        comments=True,
+        # do not remove <html> <head> <title> etc
         page_structure=False,
         style=True, links=True)
 
-    ## now get the really sanitized HTML
+    # now get the really sanitized HTML
     _clean_html = cleaner.clean_html(fixed_html)
 
-    #logger.debug( 'third' )
-    #logger.debug( _clean_html.encode('utf8') )
-
-    ## generate pretty HTML in utf-8
+    # generate pretty HTML in utf-8
     _clean_html = lxml.html.tostring(
-        lxml.html.document_fromstring(_clean_html), 
+        lxml.html.document_fromstring(_clean_html),
         method='html', encoding='utf-8',
-        pretty_print=True, 
-        #include_meta_content_type=True
+        pretty_print=True,
+        # include_meta_content_type=True
         )
-
-    #logger.debug( 'fourth' )
-    #logger.debug( _clean_html )
 
     return _clean_html
 
+
 class clean_html(Configured):
-    '''Create body.clean_html from body.raw.
+    '''Create `body.clean_html` from `body.raw`.
 
     Configuration options:
 
@@ -321,67 +156,51 @@ class clean_html(Configured):
     language code is one of the specified values; pass others on
     unchanged.  Defaults to empty list (process all languages).
 
-    .. code-block:: yaml
-
-        log_dir_path: yes
-
-    If set, record any Unicode decoding errors and other exceptions in
-    body.logs on the stream item.  Note that this looks like a "path"
-    variable and will be rewritten to an absolute path, so its value
-    must be a string, but it only matters that the value is non-empty;
-    the actual value is unused.  Defaults to unset.
-
     '''
     config_name = 'clean_html'
-    default_config = {'include_language_codes': [] }
+    default_config = {'include_language_codes': []}
 
     def __init__(self, *args, **kwargs):
         super(clean_html, self).__init__(*args, **kwargs)
         self.require_code = self.config.get('require_language_code')
         self.codes = self.config.get('include_language_codes', [])
-        self.log_dir_path = self.config.get('log_dir_path', None)
 
     def __call__(self, stream_item, context):
-        if not stream_item.body:
-            logger.warn('stream_item.body is %r!!', stream_item.body)
+        if not stream_item.body or not stream_item.body.raw:
+            logger.warn('dropping stream_item %s with missing body',
+                        stream_item.stream_id)
+            return None
+
+        if (((not stream_item.body.language) and
+             (self.require_code or self.codes))):
+            logger.warn('skipping stream_item %s with missing language '
+                        '(did you run the "language" transform?)',
+                        stream_item.stream_id)
             return stream_item
 
-        if self.require_code:
-            if not stream_item.body.language:
-                logger.warn('body.language = %r, did you run `language` transform',
-                            stream_item.body.language)
-            if not stream_item.body.language or \
-                    self.require_code != stream_item.body.language.code:
-                logger.warn('skipping clean_html creation because %r != %r',
-                            self.require_code, stream_item.body.language.code)
-                return stream_item
+        if ((self.require_code and
+             self.require_code != stream_item.body.language.code)):
+            logger.debug('skipping stream_item %s with language %r, '
+                         'not required language %r',
+                         stream_item.stream_id,
+                         stream_item.body.language.code,
+                         self.require_code)
+            return stream_item
 
-        elif self.codes:
-            if not stream_item.body.language:
-                logger.warn('body.language = %r, did you run `language` transform',
-                            stream_item.body.language)
-            if stream_item.body.language and \
-                    stream_item.body.language.code not in self.codes:
-                logger.warn('skipping clean_html creation because %r not in %r',
-                            stream_item.body.language.code, self.codes)
-                return stream_item
+        if self.codes and stream_item.body.language.code not in self.codes:
+            logger.debug('skipping stream_item %s with language %r, '
+                         'not one of included codes %r',
+                         stream_item.stream_id,
+                         stream_item.body.language.code,
+                         self.codes)
 
-        if stream_item.body and stream_item.body.raw \
-                and stream_item.body.media_type \
-                and stream_item.body.media_type.startswith('text/html'):
-
-            logger.debug('making clean html for %s %r' % (
-                    stream_item.stream_id, stream_item.body.language))
-
+        if ((stream_item.body.media_type and
+             stream_item.body.media_type.startswith('text/html'))):
             stream_item.body.clean_html = make_clean_html(
-                stream_item.body.raw, 
-                stream_item=stream_item,
-                log_dir_path=self.log_dir_path)
-
+                stream_item.body.raw,
+                stream_item=stream_item)
         else:
-            logger.info('skipping clean_html creation: len(raw)=%d, media_type=%r',
-                        stream_item.body.raw and len(stream_item.body.raw) or 0,
-                        stream_item.body.media_type)
+            logger.debug('skipping stream_item %s with non-HTML media_type %r',
+                         stream_item.stream_id, stream_item.body.media_type)
 
         return stream_item
-

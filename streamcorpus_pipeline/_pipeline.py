@@ -2,7 +2,7 @@
 '''Configuration and execution of the actual pipeline.
 
 .. This software is released under an MIT/X11 open source license.
-   Copyright 2012-2014 Diffeo, Inc.
+   Copyright 2012-2015 Diffeo, Inc.
 
 The :class:`Pipeline` itself consists of a series of
 :mod:`~streamcorpus_pipeline.stages`.  These are broken into several
@@ -33,10 +33,6 @@ A typical coniguration looks like:
 .. code-block:: yaml
 
     streamcorpus_pipeline:
-      # This setting is REQUIRED, it is typically set to a unique
-      # path per execution that can be easily cleaned up.
-      tmp_dir_path: /tmp/streamcorpus_pipeline-987
-
       # Lists of stages
       reader: from_local_chunks
       incremental_transforms: [clean_html, language]
@@ -64,11 +60,17 @@ omitted, use the current directory.
 
     tmp_dir_path: directory
 
-Intermediate files are stored in :file:`directory`.  The pipeline
-execution will make an effort to clean this up.
+Intermediate files are stored in a subdirectory of :file:`directory`.
+The pipeline execution will make an effort to clean this up.  If
+omitted, defaults to :file:`/tmp`.
 
-.. note:: The user is *required* to set ``tmp_dir_path``, there is no
-          default.
+.. code-block:: yaml
+
+    third_dir_path: directory
+
+External packages such as NLP taggers are stored in subdirectories
+of :file:`directory`; these are typically individually configured
+with `path_in_third` options relative to this directory.
 
 .. code-block:: yaml
 
@@ -88,7 +90,8 @@ process the entire stream)
 
     cleanup_tmp_files: true
 
-After execution finishes, delete ``tmp_dir_path``.
+After execution finishes, delete the per-execution subdirectory of
+``tmp_dir_path``.
 
 .. code-block:: yaml
 
@@ -105,7 +108,7 @@ value)
     output_max_chunk_count: 500
 
 After this many items have been written, close and re-open the output.
-(Default: write entire output in one batch)
+(Default: 500 items)
 
 .. code-block:: yaml
 
@@ -157,6 +160,7 @@ create :class:`Pipeline` objects from the resulting configuration.
 from __future__ import absolute_import
 import logging
 import os
+import threading
 import time
 import uuid
 
@@ -175,20 +179,46 @@ logger = logging.getLogger(__name__)
 
 
 class PipelineFactory(object):
-    '''Factory to create `Pipeline` objects from configuration.
+    '''Factory to create :class:`Pipeline` objects from configuration.
 
-    Call this to get a `Pipeline` object.  Typical programmatic use:
+    Call this to get a :class:`Pipeline` object.  Typical programmatic
+    use:
 
-    >>> parser = argparse.ArgumentParser()
-    >>> args = yakonfig.parse_args([yakonfig, streamcorpus_pipeline])
-    >>> factory = PipelineFactory(StageRegistry())
-    >>> pipeline = factory(yakonfig.get_global_config('streamcorpus_pipeline'))
+    .. code-block:: python
+
+       parser = argparse.ArgumentParser()
+       args = yakonfig.parse_args([yakonfig, streamcorpus_pipeline])
+       factory = PipelineFactory(StageRegistry())
+       pipeline = factory(yakonfig.get_global_config('streamcorpus_pipeline'))
+
+    This factory class will instantiate all of the stages named in the
+    `streamcorpus_pipeline` configuration.  These stages will be created
+    with their corresponding configuration, except that they have two
+    keys added, ``tmp_dir_path`` and ``third_dir_path``, from the
+    top-level configuration.
 
     .. automethod:: __init__
     .. automethod:: __call__
+
+    .. attr:: registry
+
+       The :class:`streamcorpus_pipeline.stages.StageRegistry` used
+       to find pipeline stages.
+
+    .. attr:: tmp_dir_suffix
+
+       A string value that is appended to ``tmp_dir_path`` when
+       creating pipeline stages.  If :const:`None`, use the top-level
+       ``tmp_dir_path`` configuration directly.
+
+    .. attr:: lock
+
+       A :class:`threading.Lock` to protect against concurrent
+       modification of `tmp_dir_suffix`.
+
     '''
 
-    def __init__(self, registry, *args, **kwargs):
+    def __init__(self, registry):
         '''Create a pipeline factory.
 
         :param dict config: top-level "streamcorpus_pipeline" configuration
@@ -196,40 +226,196 @@ class PipelineFactory(object):
         :type registry: :class:`~streamcorpus_pipeline.stages.StageRegistry`
 
         '''
-        super(PipelineFactory, self).__init__(*args, **kwargs)
+        super(PipelineFactory, self).__init__()
         self.registry = registry
+        self.lock = threading.Lock()
+        self.tmp_dir_suffix = None
+
+    def create(self, stage, scp_config, config=None):
+        '''Create a pipeline stage.
+
+        Instantiates `stage` with `config`.  This essentially
+        translates to ``stage(config)``, except that two keys from
+        `scp_config` are injected into the configuration:
+        ``tmp_dir_path`` is an execution-specific directory from
+        combining the top-level ``tmp_dir_path`` configuration with
+        :attr:`tmp_dir_suffix`; and ``third_dir_path`` is the same
+        path from the top-level configuration.  `stage` may be either
+        a callable returning the stage (e.g. its class), or its name
+        in the configuration.
+
+        `scp_config` is the configuration for the pipeline as a
+        whole, and is required.  `config` is the configuration for
+        the stage; if it is :const:`None` then it is extracted
+        from `scp_config`.
+
+        If you already have a fully formed configuration block
+        and want to create a stage, you can call
+
+        .. code-block:: python
+
+            factory.registry[stage](stage_config)
+
+        In most cases if you have a stage class object and want to
+        instantiate it with its defaults you can call
+
+        .. code-block:: python
+
+            stage = stage_cls(stage_cls.default_config)
+
+        .. note:: This mirrors
+                  :meth:`yakonfig.factory.AutoFactory.create`, with
+                  some thought that this factory class might migrate
+                  to using that as a base in the future.
+
+        :param stage: pipeline stage class, or its name in the registry
+        :param dict scp_config: configuration block for the pipeline
+        :param dict config: configuration block for the stage, or
+          :const:`None` to get it from `scp_config`
+
+        '''
+        # Figure out what we have for a stage and its name
+        if isinstance(stage, basestring):
+            stage_name = stage
+            stage_obj = self.registry[stage_name]
+        else:
+            stage_name = getattr(stage, 'config_name', stage.__name__)
+            stage_obj = stage
+
+        # Find the configuration; get a copy we can mutate
+        if config is None:
+            config = scp_config.get(stage_name, None)
+        if config is None:
+            config = getattr(stage_obj, 'default_config', {})
+        config = dict(config)
+
+        # Fill in more values
+        if self.tmp_dir_suffix is None:
+            config['tmp_dir_path'] = scp_config['tmp_dir_path']
+        else:
+            config['tmp_dir_path'] = os.path.join(scp_config['tmp_dir_path'],
+                                                  self.tmp_dir_suffix)
+        config['third_dir_path'] = scp_config['third_dir_path']
+
+        return stage_obj(config)
 
     def _init_stage(self, config, name):
-        return self.registry.init_stage(config[name], config)
+
+        '''Create a single indirect stage.
+
+        `name` should be the name of a config item that holds the
+        name of a stage, for instance, ``reader``.  This looks up
+        the name of that stage, then creates and returns the
+        stage named.  For instance, if the config says
+
+        .. code-block:: yaml
+
+            reader: from_local_chunks
+
+        then calling ``self._init_stage(scp_config, 'reader')`` will
+        return a new instance of the
+        :class:`~streamcorpus_pipeline._local_storage.from_local_chunks`
+        stage.
+
+        :param dict config: `streamcorpus_pipeline` configuration block
+        :param str name: name of stage name entry
+        :return: new instance of the stage
+
+        '''
+        return self.create(config[name], config)
 
     def _init_stages(self, config, name):
+        '''Create a list of indirect stages.
+
+        `name` should be the name of a config item that holds a list
+        of names of stages, for instance, ``writers``.  This looks up
+        the names of those stages, then creates and returns the
+        corresponding list of stage objects.  For instance, if the
+        config says
+
+        .. code-block:: yaml
+
+            incremental_transforms: [clean_html, clean_visible]
+
+        then calling ``self._init_stages(scp_config,
+        'incremental_transforms')`` will return a list of the two
+        named stage instances.
+
+        :param dict config: `streamcorpus_pipeline` configuration block
+        :param str name: name of the stage name list entry
+        :return: list of new stage instances
+
+        '''
         if name not in config:
             return []
-        return [self.registry.init_stage(stage, config)
-                for stage in config[name]]
+        return [self.create(stage, config) for stage in config[name]]
+
+    def _init_all_stages(self, config):
+        '''Create stages that are used for the pipeline.
+
+        :param dict config: `streamcorpus_pipeline` configuration
+        :return: tuple of (reader, incremental transforms, batch
+          transforms, post-batch incremental transforms, writers,
+          temporary directory)
+
+        '''
+        reader = self._init_stage(config, 'reader')
+        incremental_transforms = self._init_stages(
+            config, 'incremental_transforms')
+        batch_transforms = self._init_stages(config, 'batch_transforms')
+        post_batch_incremental_transforms = self._init_stages(
+            config, 'post_batch_incremental_transforms')
+        writers = self._init_stages(config, 'writers')
+        tmp_dir_path = os.path.join(config['tmp_dir_path'],
+                                    self.tmp_dir_suffix)
+        return (reader, incremental_transforms, batch_transforms,
+                post_batch_incremental_transforms, writers, tmp_dir_path)
 
     def __call__(self, config):
         '''Create a :class:`Pipeline`.
 
         Pass in the configuration under the ``streamcorpus_pipeline``
         block, not the top-level configuration that contains it.
+
+        If :attr:`tmp_dir_suffix` is :const:`None`, then locks the
+        factory and creates stages with a temporary (UUID) value.  If
+        the configuration has `cleanup_tmp_files` set to :const:`True`
+        (the default) then executing the resulting pipeline will clean
+        up the directory afterwards.
+
+        :param dict config: `streamcorpus_pipeline` configuration
+        :return: new pipeline instance
+
         '''
+        tmp_dir_suffix = self.tmp_dir_suffix
+        if tmp_dir_suffix is None:
+            with self.lock:
+                self.tmp_dir_suffix = str(uuid.uuid4())
+                try:
+                    (reader, incremental_transforms, batch_transforms,
+                     pbi_transforms, writers,
+                     tmp_dir_path) = self._init_all_stages(config)
+                finally:
+                    self.tmp_dir_suffix = None
+        else:
+            (reader, incremental_transforms, batch_transforms,
+             pbi_transforms, writers,
+             tmp_dir_path) = self._init_all_stages(config)
+
         return Pipeline(
             rate_log_interval=config['rate_log_interval'],
             input_item_limit=config.get('input_item_limit'),
             cleanup_tmp_files=config['cleanup_tmp_files'],
-            tmp_dir_path=config['tmp_dir_path'],
+            tmp_dir_path=tmp_dir_path,
             assert_single_source=config['assert_single_source'],
             output_chunk_max_count=config.get('output_chunk_max_count'),
             output_max_clean_visible_bytes=config.get(
                 'output_max_clean_visible_bytes'),
-            reader=self._init_stage(config, 'reader'),
-            incremental_transforms=self._init_stages(
-                config, 'incremental_transforms'),
-            batch_transforms=self._init_stages(config, 'batch_transforms'),
-            post_batch_incremental_transforms=self._init_stages(
-                config, 'post_batch_incremental_transforms'),
-            writers=self._init_stages(config, 'writers'),
+            reader=reader,
+            incremental_transforms=incremental_transforms,
+            batch_transforms=batch_transforms,
+            post_batch_incremental_transforms=pbi_transforms,
+            writers=writers,
         )
 
 
