@@ -31,6 +31,7 @@ Incremental transforms
 .. autoclass:: streamcorpus_pipeline._title.title
 .. autoclass:: streamcorpus_pipeline._filters.debug_filter
 .. autoclass:: streamcorpus_pipeline._filters.filter_domains
+.. autoclass:: streamcorpus_pipeline._filters.filter_domains_substrings
 .. autoclass:: streamcorpus_pipeline._fix_text.fix_text
 .. autoclass:: streamcorpus_pipeline._dedup.dedup
 .. autoclass:: streamcorpus_pipeline._dump_label_stats.dump_label_stats
@@ -361,6 +362,7 @@ class PipelineStages(StageRegistry):
         self.tryload_stage('_title', 'title')
         self.tryload_stage('_filters', 'debug_filter')
         self.tryload_stage('_filters', 'filter_domains')
+        self.tryload_stage('_filters', 'filter_domains_substrings')
         self.tryload_stage('_fix_text', 'fix_text')
         self.tryload_stage('_dedup', 'dedup')
         self.tryload_stage('_dump_label_stats', 'dump_label_stats')
