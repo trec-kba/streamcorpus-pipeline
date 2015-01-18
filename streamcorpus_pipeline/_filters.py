@@ -260,7 +260,7 @@ def domain_name_left_cuts(domain):
 class filter_domains(Configured):
     '''Remove stream items that are not from a specific domain by
     inspecting first :attr:`~StreamItem.abs_url` and then
-    :attr:`~StreamItem.schost`
+    :attr:`~StreamItem.schost`.  domain name strings are cleansed.
 
     .. code-block:: yaml
 
@@ -301,6 +301,58 @@ class filter_domains(Configured):
             for cut in domain_name_left_cuts(domain_name_cleanse(thing)):
                 if cut in self.domains:
                     logger.info('found: %r', cut)
+                    return si
+
+        ## otherwise return None, which excludes the stream item
+        logger.debug('rejecting: %r %r', si.schost, si.abs_url)
+        return None
+
+
+class filter_domains_substrings(Configured):
+    '''Remove stream items that are not from a domain whose name contains
+    one of the specified strings by inspecting first
+    :attr:`~StreamItem.abs_url` and then :attr:`~StreamItem.schost`.
+    Substrings are used exactly as provided without cleansing.
+
+    .. code-block:: yaml
+
+        filter_domains_matching:
+          include_substrings: [example]
+          include_substrings_path:
+          - path-to-file-with-one-substring-per-line.txt
+          - path-to-file-with-one-substring-per-line2.txt
+
+    '''
+    config_name = 'filter_domains_substrings'
+    default_config = { 'include_substrings': [] }
+    def __init__(self, config, *args, **kwargs):
+        super(filter_domains_substrings, self).__init__(config, *args, **kwargs)
+
+        ## cleanse the input substrings lists
+        self.substrings = set()
+
+        include_substrings = self.config.get('include_substrings', [])
+        map(self.substrings.add, include_substrings)
+
+        include_substrings_path = self.config.get('include_substrings_path', [])
+        if not isinstance(include_substrings_path, list):
+            include_substrings_path = [include_substrings_path]
+        map(self.substrings.add, 
+            imap(lambda s: s.strip(), 
+                 chain(*imap(open, include_substrings_path))))
+
+        logger.info('filter_substrings configured with %d domain names',
+                    len(self.substrings))
+        logger.info('filter_domans_substrings.substrings = %r', self.substrings)
+
+    def __call__(self, si, context=None):
+        url_things = [si.abs_url, si.schost]
+        for thing in url_things:
+            if not thing:
+                continue
+            for substr in self.substrings:
+                if substr in thing:
+                    logger.info('found: %r in %r', substr, thing)
                     return si
 
         ## otherwise return None, which excludes the stream item
