@@ -68,6 +68,7 @@ class nltk_tokenizer(IncrementalTransform):
             except ValueError:
                 label = None
             if label:
+                ## avoid splitting a label
                 off = label.offsets[OffsetType.CHARS]
                 end = max(off.first + off.length, end)
             previous_end = end

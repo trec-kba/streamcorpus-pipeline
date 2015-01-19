@@ -1,8 +1,8 @@
+
 from __future__ import absolute_import
 from streamcorpus import Annotator, Label, make_stream_item, Offset, \
     OffsetType, Target
 from streamcorpus_pipeline._tokenizer import nltk_tokenizer
-
 
 def test_tokenizer():
     si = make_stream_item('2014-01-21T13:00:00.000Z',
