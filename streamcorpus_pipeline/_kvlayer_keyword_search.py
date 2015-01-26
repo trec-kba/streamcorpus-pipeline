@@ -10,7 +10,7 @@ import struct
 import uuid
 
 import streamcorpus
-from streamcorpus_pipeline._kvlayer_table_names import HASH_TF_SID, HASH_KEYWORD
+from streamcorpus_pipeline._kvlayer_table_names import HASH_KEYWORD_INDEX_TABLE, HASH_TF_INDEX_TABLE, STREAM_ITEMS_TABLE
 from yakonfig import ConfigurationError
 
 logger = logging.getLogger(__name__)
@@ -136,9 +136,9 @@ simple token-based search.
 
         '''
         hash_to_word = dict()
-        self.client.put(table_name(HASH_TF_SID),
+        self.client.put(HASH_TF_INDEX_TABLE,
                         *list(keywords(si, self.analyzer, hash_to_word)))
-        self.client.put(table_name(HASH_KEYWORD),
+        self.client.put(HASH_KEYWORD_INDEX_TABLE,
                         *hash_to_word.items())
 
 
@@ -149,7 +149,7 @@ simple token-based search.
         '''
         return [tok_encoded.decode('utf8') 
                 for (_, tok_encoded) in 
-                self.client.scan(table_name(HASH_KEYWORD), ((tok_hash,), (tok_hash + 1,)))]
+                self.client.scan(HASH_KEYWORD_INDEX_TABLE, ((tok_hash,), (tok_hash + 1,)))]
 
     def search(self, query_string):
         '''queries the keyword index for `word` and yields
@@ -175,7 +175,7 @@ simple token-based search.
             #logger.info('from %r', tok_start)
             #logger.info('to   %r', tok_end)
             ## query the keyword index
-            for (key,), _ in self.client.scan(table_name(HASH_TF_SID),
+            for (key,), _ in self.client.scan(HASH_TF_INDEX_TABLE,
                                    ((tok_start,), (tok_end,))):
                 _tok_hash, count, doc_id_1, epoch_ticks = struct.unpack(reverse_index_packing, key)
                 #logger.info('found %d %d', _tok_hash, count)
@@ -189,7 +189,7 @@ simple token-based search.
                 key1 = epoch_ticks_to_uuid(epoch_ticks)
                 key2_max = uuid.UUID(int=doc_id_max_int)
                 key2_min = uuid.UUID(int=doc_id_min_int)
-                for _, xz_blob in self.client.scan(table_name(), ((key1, key2_min), (key1, key2_max))):
+                for _, xz_blob in self.client.scan(STREAM_ITEMS_TABLE, ((key1, key2_min), (key1, key2_max))):
                     ## given the half-doc_id this could yield some false positives
                     thrift_blob = lzma.decompress(xz_blob)
                     yield streamcorpus.deserialize(thrift_blob)
