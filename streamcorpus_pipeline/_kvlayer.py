@@ -8,6 +8,7 @@ import ctypes
 from collections import Counter
 import hashlib
 import logging
+import re
 import string
 import struct
 import uuid
@@ -102,6 +103,9 @@ class from_kvlayer(Configured):
             yield si
 
 
+_STREAM_ID_RE = re.compile(r'[0-9]+-[0-9a-fA-F]{32}')
+
+
 def parse_keys_and_ranges(i_str, keyfunc, rangefunc):
     '''
     parse 20 byte key blobs (16 bytes md5 hash, 4 bytes timestamp) split by ';' or '<'
@@ -111,6 +115,16 @@ def parse_keys_and_ranges(i_str, keyfunc, rangefunc):
     keyfunc and rangefunc are run as generators and their yields are yielded from this function.
     '''
     while i_str:
+        m = _STREAM_ID_RE.match(i_str)
+        if m:
+            # old style text stream_id
+            for retval in keyfunc(stream_id_to_kvlayer_key(m.group())):
+                yield retval
+            i_str = i_str[m.end():]
+            while i_str and ((i_str[0] == ',') or (i_str[0] == ';')):
+                i_str = i_str[1:]
+            continue
+
         if len(i_str) == SI_KEY_LENGTH:
             # one key, get it.
             key = parse_si_key(i_str)
@@ -161,6 +175,9 @@ def get_kvlayer_stream_item(client, stream_id):
       not correspond to anything in the database
 
     '''
+    if client is None:
+        client = kvlayer.client()
+        client.setup_namespace(STREAM_ITEM_TABLE_DEFS)
     key = stream_id_to_kvlayer_key(stream_id)
     for k, v in client.get(STREAM_ITEMS_TABLE, key):
         if v is not None:

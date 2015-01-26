@@ -10,7 +10,7 @@ import struct
 import uuid
 
 import streamcorpus
-from streamcorpus_pipeline._kvlayer_table_names import HASH_KEYWORD_INDEX_TABLE, HASH_TF_INDEX_TABLE, STREAM_ITEMS_TABLE
+from streamcorpus_pipeline._kvlayer_table_names import HASH_KEYWORD_INDEX_TABLE, HASH_TF_INDEX_TABLE, STREAM_ITEMS_TABLE, HASH_TF_SID, HASH_KEYWORD
 from yakonfig import ConfigurationError
 
 logger = logging.getLogger(__name__)
