@@ -51,16 +51,22 @@ runtime_keys = {
     'tmp_dir_path': 'tmp_dir_path',
     'third_dir_path': 'third_dir_path',
 }
-sub_modules = set(stage
-                  for stage in PipelineStages().itervalues()
-                  if hasattr(stage, 'config_name'))
+# We can't find out our sub-modules just yet!  Since this gets evaluated
+# at module import time, if an entrypoint stage tries to import
+# streamcorpus_pipeline it can go wrong.
+sub_modules = set()
 
 
 def replace_config(config, name):
-    # Do we have external stages?
-    if (('external_stages_path' not in config and
-         'external_stages_modules' not in config)):
-        return streamcorpus_pipeline
+    '''Replace the top-level pipeline configurable object.
+
+    This investigates a number of sources, including
+    `external_stages_path` and `external_stages_modules` configuration
+    and `streamcorpus_pipeline.stages` entry points, and uses these to
+    find the actual :data:`sub_modules` for
+    :mod:`streamcorpus_pipeline`.
+
+    '''
     stages = PipelineStages()
     if 'external_stages_path' in config:
         path = config['external_stages_path']
