@@ -199,3 +199,18 @@ class keyword_indexer(object):
         for (_, k1, k2) in self.client.scan_keys(HASH_TF_INDEX_TABLE,
                                                  ((h,), (h,))):
             yield kvlayer_key_to_stream_id((k1, k2))
+
+    def lookup_tf(self, h):
+        '''Get stream IDs and term frequencies for a single hash.
+
+        This yields pairs of strings that can be retrieved using
+        :func:`streamcorpus_pipeline._kvlayer.get_kvlayer_stream_item`
+        and the corresponding term frequency.
+
+        ..see:: :meth:`lookup`
+
+
+        '''
+        for ((_, k1, k2), v) in self.client.scan(HASH_TF_INDEX_TABLE,
+                                                 ((h,), (h,))):
+            yield (kvlayer_key_to_stream_id((k1, k2)), v)

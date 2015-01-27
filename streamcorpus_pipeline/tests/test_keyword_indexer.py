@@ -187,6 +187,25 @@ def test_lookup(corpus, indexer):
     ]
 
 
+def test_lookup_tf(corpus, indexer):
+    for si in corpus.itervalues():
+        indexer.index(si)
+
+    assert list(indexer.lookup_tf(DOCUMENT_HASH_KEY)) == []
+    assert list(indexer.lookup_tf(17)) == []
+    assert list(indexer.lookup_tf(indexer.make_hash('quick'))) == [
+        (corpus['quick brown fox'].stream_id, 1),
+    ]
+    assert list(indexer.lookup_tf(indexer.make_hash('lazy'))) == [
+        (corpus['lazy dog'].stream_id, 1),
+        (corpus['lazy programmer'].stream_id, 1),
+    ]
+    assert list(indexer.lookup_tf(indexer.make_hash('dog'))) == [
+        (corpus['lazy dog'].stream_id, 1),
+        (corpus['dog eat dog'].stream_id, 2),
+    ]
+
+
 def test_e2e_writer(namespace_string, corpus, tmpdir):
     t_path = str(tmpdir.join('chunk.sc'))
     with Chunk(path=t_path, mode='wb') as chunk:
