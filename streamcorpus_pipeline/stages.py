@@ -78,6 +78,8 @@ dictionary of configuration specific to the stage.  The stage objects
 can be passed directly to the ``streamcorpus_pipeline.Pipeline``
 constructor.
 
+.. currentmodule:: streamcorpus_pipeline.stages
+
 .. autoclass:: StageRegistry
    :members:
    :show-inheritance:

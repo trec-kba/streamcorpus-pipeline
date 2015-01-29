@@ -53,6 +53,8 @@ def iter_one_or_ex(gen):
 class from_kvlayer(Configured):
     '''Read documents from a :mod:`kvlayer` supported database.
 
+    .. currentmodule:: streamcorpus_pipeline._kvlayer
+
     :mod:`kvlayer` must be included in the top-level configuration.
     Typically this reads stream items previously written by
     :class:`to_kvlayer`.
@@ -103,9 +105,6 @@ class from_kvlayer(Configured):
         ID; an encoded stream ID, a literal ``<``, and a second
         encoded stream ID to specify a range of documents; or a list
         of either of the preceding separated by literal ``;``.
-
-        .. todo:: make this something that can be entered at the
-                  command prompt
 
         .. todo:: make this support keyword index strings
 

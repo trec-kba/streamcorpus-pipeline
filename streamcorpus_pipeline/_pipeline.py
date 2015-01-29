@@ -200,18 +200,18 @@ class PipelineFactory(object):
     .. automethod:: __init__
     .. automethod:: __call__
 
-    .. attr:: registry
+    .. attribute:: registry
 
        The :class:`streamcorpus_pipeline.stages.StageRegistry` used
        to find pipeline stages.
 
-    .. attr:: tmp_dir_suffix
+    .. attribute:: tmp_dir_suffix
 
        A string value that is appended to ``tmp_dir_path`` when
        creating pipeline stages.  If :const:`None`, use the top-level
        ``tmp_dir_path`` configuration directly.
 
-    .. attr:: lock
+    .. attribute:: lock
 
        A :class:`threading.Lock` to protect against concurrent
        modification of `tmp_dir_suffix`.
