@@ -382,6 +382,7 @@ class PipelineStages(StageRegistry):
         self.tryload_stage('_language', 'language')
         self.tryload_stage('_filters', 'remove_raw')
         self.tryload_stage('_filters', 'dump_stream_id_abs_url')
+        self.tryload_stage('_set_source', 'set_source')
         self.tryload_stage('_upgrade_streamcorpus', 'upgrade_streamcorpus')
         self.tryload_stage('_upgrade_streamcorpus_v0_3_0', 'upgrade_streamcorpus_v0_3_0')
         self.tryload_stage('_tokenizer', 'nltk_tokenizer')
