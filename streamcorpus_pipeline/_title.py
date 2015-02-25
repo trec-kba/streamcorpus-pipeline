@@ -46,8 +46,12 @@ class title(Configured):
             logger.info('stream_item.body has no clean_visible')
             return stream_item
         if 'title' in stream_item.other_content:
-            logger.info('stream_item.other_content has no "title"')
-            return stream_item
+            oct = stream_item.other_content['title']
+            if hasattr(oct, 'body') and hasattr(oct.body, 'clean_visible') \
+               and oct.body.clean_visible:
+                logger.info('stream_item.other_content already has "title": %r', 
+                            oct.body.clean_visible)
+                return stream_item
 
         if stream_item.body.clean_html:
             title_m = title_re.match(stream_item.body.clean_html)
