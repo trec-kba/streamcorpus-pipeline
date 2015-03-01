@@ -152,6 +152,8 @@ def normalize_config(config):
         v = c[k]
         if v is None:
             return
+        if isinstance(v, list):
+            c[k] = [os.path.join(root_path, p) for p in v]
         if not os.path.isabs(v):
             c[k] = os.path.join(root_path, v)
 
