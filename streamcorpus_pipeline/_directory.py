@@ -80,8 +80,11 @@ following additional options:
    a relative score between 0 and 20.
 
 '''
-from __future__ import absolute_import
+from __future__ import absolute_import, print_function, division
 import argparse
+from itertools import islice
+import json
+import logging
 import os
 
 import dblogger
@@ -91,6 +94,9 @@ import streamcorpus_pipeline
 from streamcorpus_pipeline._rejester import rejester_run_function
 from streamcorpus_pipeline.run import SimpleWorkUnit
 import yakonfig
+
+logging.basicConfig()
+logger = logging.getLogger(__name__)
 
 
 class DirectoryConfig(object):
@@ -186,15 +192,23 @@ def main():
                     for filename in filenames:
                         yield os.path.abspath(os.path.join(dirpath, filename))
 
-    work_units = {filename: {'start_count': 0}
-                  for filename in get_filenames()}
+    v = {'start_count': 0}
 
     if scdconfig['engine'] == 'rejester':
+        print('creating rejester TaskMaster:\n%s' % json.dumps(gconfig['rejester'], indent=4, sort_keys=True))
         tm = rejester.build_task_master(gconfig['rejester'])
-        tm.update_bundle(work_spec, work_units, nice=args.nice)
+        fnames = list(get_filenames())
+        it = iter(fnames)
+        count = 0
+        while 1:
+            chunk = {filename: v for filename in islice(it, 5000)}
+            if not chunk: break
+            tm.update_bundle(work_spec, chunk, nice=args.nice)
+            count += len(chunk)
+            print('loaded %d of %d WorkUnits' % (count, len(fnames)))
     elif scdconfig['engine'] == 'standalone':
-        for k, v in work_units.iteritems():
-            u = SimpleWorkUnit(k)
+        for filename in get_filenames():
+            u = SimpleWorkUnit(filename)
             u.spec = work_spec
             u.data = v
             rejester_run_function(u)
