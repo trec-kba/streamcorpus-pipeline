@@ -2,3 +2,8 @@
 *.pyc
 *.pyo
 .*.swp
+RELEASE-VERSION
+.tox/
+build/
+dist/
+streamcorpus_pipeline.egg-info/
