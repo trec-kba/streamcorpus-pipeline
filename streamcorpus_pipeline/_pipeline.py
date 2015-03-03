@@ -166,8 +166,7 @@ import uuid
 
 try:
     import gevent
-except:
-    # only load gevent if it is available :-)
+except ImportError:
     gevent = None
 
 import streamcorpus
@@ -754,18 +753,6 @@ class Pipeline(object):
         '''
         ## operate each transform on this one StreamItem
         for transform in transforms:
-            #timer = gevent.Timeout.start_new(1)
-            #thread = gevent.spawn(transform, si)
-            #try:
-            #    si = thread.get(timeout=timer)
-            ### The approach above to timeouts did not work,
-            ### because when the re module hangs in a thread, it
-            ### never yields to the greenlet hub.  The only robust
-            ### way to implement timeouts is with child processes,
-            ### possibly via multiprocessing.  Another benefit of
-            ### child processes is armoring against segfaulting in
-            ### various libraries.  This probably means that each
-            ### transform should implement its own timeouts.
             try:
                 stream_id = si.stream_id
                 si = transform(si, context=self.context)

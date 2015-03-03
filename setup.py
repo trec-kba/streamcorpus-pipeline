@@ -118,7 +118,6 @@ setup(
         'python-docx',
         'thrift',
         'ftfy',
-        'gevent',
         'kvlayer >= 0.4.10',
         'rejester',
         'protobuf',
