@@ -25,6 +25,8 @@ def add_content_item(stream_item, title_m):
     title = whitespace_re.sub(' ', title_m.group('title')).strip()
     if len(title) > 60:
         title = title[:60] + '...'
+    if isinstance(title, unicode):
+        title = title.encode('utf8')
     stream_item.other_content['title'] = ContentItem(clean_visible=title)
 
 class title(Configured):
