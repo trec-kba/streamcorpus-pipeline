@@ -11,6 +11,7 @@ import logging
 import re
 import string
 import traceback
+from uuid  import uuid4
 
 import lxml.etree
 
@@ -30,6 +31,10 @@ invisible = re.compile(
     # contains newlines
     '''|<(.|\n)*?>))''',
     # ignore case
+    re.I)
+
+bracket_emails = re.compile( 
+    '''<[\w-]+(?:\.[\w-]+)*@(?:[\w-]+\.)+[a-zA-Z0-9]{2,7}>''',
     re.I)
 
 
@@ -84,6 +89,27 @@ def make_clean_visible(html, tag_replacement_char=' '):
 
     This is a simple state machine iterator without regexes
     '''
+    '''Replace all angle bracket emails with a unique key.'''
+    def key_emails(text):
+        emails = bracket_emails.findall(text)
+
+        keys = []
+        for email in emails:
+            key = str(uuid4())
+            keys.append(key)
+            text = text.replace(email,'#EMAIL-'+key)
+
+        return text, keys, emails
+
+    '''Replace email keys with original emails'''
+    def replace_keys(text, keys, emails):
+
+        numkeys = len(keys)
+        for x in range(0,numkeys):
+            text = text.replace('#EMAIL-'+keys[x], emails[x])
+
+        return text
+
     def non_tag_chars():
         n = 0
         while n < len(html):
@@ -111,8 +137,16 @@ def make_clean_visible(html, tag_replacement_char=' '):
                     n = nl + 1
                     # do not break
 
-    return ''.join(non_tag_chars())
+    # Protect emails by substituting with unique key
+    html, keys, emails = key_emails(html)
 
+    #Strip tags with previous logic
+    non_tag = ''.join(non_tag_chars())
+
+    # Replace email unique keys with original emails
+    non_tag_with_emails = replace_keys(non_tag, keys, emails)
+
+    return non_tag_with_emails
 
 class clean_visible(Configured):
     '''Create ``body.clean_visible`` from ``body.clean_html``.

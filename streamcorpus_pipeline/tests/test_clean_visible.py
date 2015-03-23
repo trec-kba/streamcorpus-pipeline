@@ -21,6 +21,12 @@ def test_make_clean_visible_tag():
     assert t == u
 
 
+def test_make_clean_visible_email():
+    s = 'The <i>quick\nbrown\nfox<user@email.com></i> jumped\nover the <b><lazy@dog.com> lazy\rdog</b>.'
+    t = 'The    quick\nbrown\nfox<user@email.com>     jumped\nover the    <lazy@dog.com> lazy\rdog    .'
+    u = make_clean_visible(s)
+    assert t == u
+
 def test_make_clean_visible_nl():
     s = 'The <i>quick\nbrown\nfox</i> jumped\nover the <b>lazy\rdog</b>.'
     t = 'The    quick\nbrown\nfox     jumped\nover the    lazy\rdog    .'
