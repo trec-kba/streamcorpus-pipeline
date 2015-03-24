@@ -40,17 +40,30 @@ id="comments-template"><h3 id="comments">4 Responses to &#822050+ Years of Digis
 <a href="http://birdingblogs.com/author/daleforbes">birdingblogs.com</a><div id="comments-template"><h3 id="comments">4 Responses to   + Years of Digiscoping History.”</h3></div>
 </body></html>
 '''
+
+    email_html_1 = '''
+<html><head/><body>This and that <user@email.com>  </body></html>
+'''
+    corrected_email_html_1 = '''<html>
+<head></head>
+<body>This and that <user@email.com>  </body>
+</html>
+'''
+
+    ## split things up around the "+" because different versions of
     ## split things up around the "+" because different versions of
     ## lxml insert different numbers of spaces!
     correct_first_half, correct_second_half = correct_test_bad_html.split('+')
     correct_first_half = correct_first_half.strip()
     correct_second_half = correct_second_half.strip()
 
+    cleaned_email_1 =  make_clean_html(email_html_1)
+    assert cleaned_email_1 == corrected_email_html_1
+
     cleaned =  make_clean_html(test_bad_html)
     cleaned_first_half, cleaned_second_half = cleaned.split('+')
     cleaned_first_half = cleaned_first_half.strip()
     cleaned_second_half = cleaned_second_half.strip()
-
     #assert cleaned == correct_test_bad_html, cleaned
     assert cleaned_first_half == correct_first_half and cleaned_second_half == correct_second_half, cleaned
 
@@ -81,7 +94,7 @@ def test_target_parsing(test_data_dir):
 
     visible2 = make_clean_visible( html2 )
 
-    #print visible2
+    print visible2
 
     assert 'target' not in visible2
     assert 'logo' not in visible2

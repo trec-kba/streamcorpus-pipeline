@@ -11,7 +11,7 @@ import logging
 import re
 import string
 import traceback
-from uuid  import uuid4
+from streamcorpus_pipeline.emails import key_emails, replace_keys
 
 import lxml.etree
 
@@ -33,11 +33,6 @@ invisible = re.compile(
     # ignore case
     re.I)
 
-bracket_emails = re.compile( 
-    '''<[\w-]+(?:\.[\w-]+)*@(?:[\w-]+\.)+[a-zA-Z0-9]{2,7}>''',
-    re.I)
-
-
 def re_based_make_clean_visible(html):
     '''
     Takes an HTML-like binary string as input and returns a binary
@@ -57,10 +52,16 @@ def re_based_make_clean_visible(html):
     This is regex based, which can occassionally just hang...
     '''
     text = ''
+    # Protect emails by substituting with unique key
+    html, keys, emails = key_emails(html)
+
+
     for m in invisible.finditer(html):
         text += m.group('before')
         text += ' ' * len(m.group('invisible'))
 
+    # Replace email unique keys with original emails
+    text = replace_keys(text, keys, emails)
     # text better be >= original
     assert len(html) >= len(text), '%d !>= %d' % (len(html), len(text))
 
@@ -74,7 +75,7 @@ def re_based_make_clean_visible(html):
     return text
 
 
-def make_clean_visible(html, tag_replacement_char=' '):
+def make_clean_visible(_html, tag_replacement_char=' '):
     '''
     Takes an HTML-like binary string as input and returns a binary
     string of the same length with all tags replaced by whitespace.
@@ -89,28 +90,7 @@ def make_clean_visible(html, tag_replacement_char=' '):
 
     This is a simple state machine iterator without regexes
     '''
-    '''Replace all angle bracket emails with a unique key.'''
-    def key_emails(text):
-        emails = bracket_emails.findall(text)
-
-        keys = []
-        for email in emails:
-            key = str(uuid4())
-            keys.append(key)
-            text = text.replace(email,'#EMAIL-'+key)
-
-        return text, keys, emails
-
-    '''Replace email keys with original emails'''
-    def replace_keys(text, keys, emails):
-
-        numkeys = len(keys)
-        for x in range(0,numkeys):
-            text = text.replace('#EMAIL-'+keys[x], emails[x])
-
-        return text
-
-    def non_tag_chars():
+    def non_tag_chars(html):
         n = 0
         while n < len(html):
             angle = html.find('<', n)
@@ -138,10 +118,10 @@ def make_clean_visible(html, tag_replacement_char=' '):
                     # do not break
 
     # Protect emails by substituting with unique key
-    html, keys, emails = key_emails(html)
+    _html, keys, emails = key_emails(_html)
 
     #Strip tags with previous logic
-    non_tag = ''.join(non_tag_chars())
+    non_tag = ''.join(non_tag_chars(_html))
 
     # Replace email unique keys with original emails
     non_tag_with_emails = replace_keys(non_tag, keys, emails)
