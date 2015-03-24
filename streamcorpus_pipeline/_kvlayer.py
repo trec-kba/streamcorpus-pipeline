@@ -83,6 +83,8 @@ class from_kvlayer(Configured):
         key, data = iter_one_or_ex(self.client.get(STREAM_ITEMS_TABLE, k))
         errors, data = streamcorpus.decrypt_and_uncompress(data)
         if errors:
+            if not isinstance(errors, Exception):
+                errors = Exception(repr(errors))
             raise errors
         yield streamcorpus.deserialize(data)
 
