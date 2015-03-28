@@ -129,7 +129,7 @@ setup(
         'BeautifulSoup',
         'boto',
         'jellyfish',
-        'nilsimsa>=0.2',
+        'nilsimsa >= 0.3',
         'chromium_compact_language_detector',
         'sortedcollection',
         'python-docx',
