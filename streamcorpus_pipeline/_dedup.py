@@ -73,7 +73,7 @@ class dedup(Configured):
 
                 ## compute and compare the nilsimsa hashes
                 nil = nilsimsa.Nilsimsa(content).hexdigest()
-                sim = nilsimsa.compare_hexdigests( nil, nil2 )
+                sim = nilsimsa.compare_digests( nil, nil2 )
 
                 if self.config['exactness_nilsimsa_threshold'] <= sim:
                     if self.config['min_clean_length'] <= len(content):
@@ -90,7 +90,7 @@ class dedup(Configured):
                 nil = nilsimsa.Nilsimsa(content).hexdigest()
 
             for doc_id, (stream_id2, abs_url2, nil2, content2, len_raw_2) in self._doc_ids.items():
-                sim = nilsimsa.compare_hexdigests( nil, nil2)
+                sim = nilsimsa.compare_digests( nil, nil2)
 
                 if sim >= self.config['log_nilsimsa_threshold']:
                     if 'log_dir_path' in self.config:
