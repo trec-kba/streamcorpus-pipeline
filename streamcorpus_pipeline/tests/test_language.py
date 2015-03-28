@@ -1,3 +1,8 @@
+'''tests for langauge detection transform
+
+.. This software is released under an MIT/X11 open source license.
+   Copyright 2012-2015 Diffeo, Inc.
+'''
 from __future__ import absolute_import
 import os
 import streamcorpus_pipeline
