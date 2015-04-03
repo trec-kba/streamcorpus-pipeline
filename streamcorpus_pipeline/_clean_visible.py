@@ -11,7 +11,7 @@ import logging
 import re
 import string
 import traceback
-from streamcorpus_pipeline.emails import key_emails, replace_keys
+from streamcorpus_pipeline.emails import fix_emails
 
 import lxml.etree
 
@@ -52,16 +52,13 @@ def re_based_make_clean_visible(html):
     This is regex based, which can occassionally just hang...
     '''
     text = ''
-    # Protect emails by substituting with unique key
-    html, keys, emails = key_emails(html)
-
+    # Fix emails
+    html = fix_emails(html)
 
     for m in invisible.finditer(html):
         text += m.group('before')
         text += ' ' * len(m.group('invisible'))
 
-    # Replace email unique keys with original emails
-    text = replace_keys(text, keys, emails)
     # text better be >= original
     assert len(html) >= len(text), '%d !>= %d' % (len(html), len(text))
 
@@ -118,15 +115,12 @@ def make_clean_visible(_html, tag_replacement_char=' '):
                     # do not break
 
     # Protect emails by substituting with unique key
-    _html, keys, emails = key_emails(_html)
+    _html = fix_emails(_html)
 
     #Strip tags with previous logic
     non_tag = ''.join(non_tag_chars(_html))
 
-    # Replace email unique keys with original emails
-    non_tag_with_emails = replace_keys(non_tag, keys, emails)
-
-    return non_tag_with_emails
+    return non_tag
 
 class clean_visible(Configured):
     '''Create ``body.clean_visible`` from ``body.clean_html``.

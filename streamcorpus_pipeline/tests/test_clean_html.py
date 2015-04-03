@@ -46,7 +46,7 @@ id="comments-template"><h3 id="comments">4 Responses to &#822050+ Years of Digis
 '''
     corrected_email_html_1 = '''<html>
 <head></head>
-<body>This and that <user@email.com>  </body>
+<body>This and that &lt;user@email.com&gt;  </body>
 </html>
 '''
 

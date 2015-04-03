@@ -17,7 +17,7 @@ import lxml.html.clean
 import lxml.html.soupparser
 from BeautifulSoup import UnicodeDammit
 
-from streamcorpus_pipeline.emails import key_emails, replace_keys
+from streamcorpus_pipeline.emails import fix_emails
 from streamcorpus_pipeline.stages import Configured
 
 logger = logging.getLogger(__name__)
@@ -85,8 +85,8 @@ def make_clean_html(raw, stream_item=None):
     :returntype: :class:`str`
 
     '''
-
-    raw, keys, emails = key_emails(raw)
+    # Fix emails by protecting the <,> from HTML
+    raw = fix_emails(raw)
 
     if stream_item and stream_item.body and stream_item.body.encoding:
         # if we know an encoding, then attempt to use it
@@ -137,7 +137,6 @@ def make_clean_html(raw, stream_item=None):
         # include_meta_content_type=True
         )
 
-    _clean_html = replace_keys(_clean_html, keys, emails)
     return _clean_html
 
 
