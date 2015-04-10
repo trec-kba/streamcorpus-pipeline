@@ -141,6 +141,9 @@ def tokens_to_xpaths(html, char_offsets):
     in correspondences with the sequence of ``char_offsets`` given.
     Namely, each ``XpathRange`` should address precisely the same
     text as that ``char_offsets`` (sans the HTML).
+
+    ``char_offsets`` must be a sorted and non-overlapping sequence
+    of character ranges. They do not have to be contiguous.
     '''
     html = uni(html)
     parser = XpathTextCollector()
