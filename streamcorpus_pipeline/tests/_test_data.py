@@ -3,6 +3,20 @@ import os
 from streamcorpus import Chunk, StreamItem_v0_2_0, add_annotation
 from StringIO import StringIO
 
+
+def get_si_wpchinese_tagged_by_basis(test_data_dir):
+    path = os.path.join(test_data_dir, 'test',
+                        'wikipedia-chinese-tagged-by-basis.sc')
+    chunk = Chunk(path=path)
+    return next(iter(chunk))
+
+
+def get_si_simple_tagged_by_basis(test_data_dir):
+    path = os.path.join(test_data_dir, 'test', 'simple-tagged-by-basis.sc')
+    chunk = Chunk(path=path)
+    return next(iter(chunk))
+
+
 def get_test_chunk_path(test_data_dir):
     path = os.path.join(test_data_dir, 'test', 'WEBLOG-100-fd5f05c8a680faa2bf8c55413e949bbf.sc.xz' )
     return path

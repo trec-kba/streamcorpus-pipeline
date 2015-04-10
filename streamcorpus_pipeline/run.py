@@ -174,7 +174,7 @@ def main():
     parser = argparse.ArgumentParser(
         description='process a sequence of stream items',
         usage='streamcorpus_pipeline --config config.yaml --input file.in')
-    parser.add_argument('-i', '--input', action='append', 
+    parser.add_argument('-i', '--input', action='append',
                         help='file paths to input instead of reading from stdin')
     parser.add_argument('--in-glob', action='append', default=[], help='path glob specifying input files')
     parser.add_argument('--third-dir-path', help='path to third-party tools directory')

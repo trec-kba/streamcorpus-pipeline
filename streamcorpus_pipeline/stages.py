@@ -61,7 +61,7 @@ Batch transforms
 .. autoclass:: streamcorpus_pipeline._taggers.name_align_labels
 .. autoclass:: streamcorpus_pipeline._lingpipe.lingpipe
 .. autoclass:: streamcorpus_pipeline._serif.serif
-        
+
 Writers
 =======
 
@@ -397,7 +397,7 @@ class PipelineStages(StageRegistry):
         self.tryload_stage('_taggers', 'multi_token_match_align_labels')
         self.tryload_stage('_lingpipe', 'lingpipe')
         self.tryload_stage('_serif', 'serif')
-        
+
         # 'writers' move data out of the pipeline
         self.tryload_stage('_local_storage', 'to_local_chunks')
         self.tryload_stage('_local_storage', 'to_local_tarballs')
