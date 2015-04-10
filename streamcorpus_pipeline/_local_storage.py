@@ -132,6 +132,7 @@ class from_local_files(Configured):
         url_prefix: file://
         absolute_filename: true
         epoch_ticks: file
+        encoding: null
 
     If `abs_url` is provided in configuration, this value is used
     as-is as the corresponding field in the stream item.  Otherwise,
@@ -142,6 +143,9 @@ class from_local_files(Configured):
     item.  This may be an integer for specific seconds since the Unix
     epoch, the string ``file`` indicating to use the last-modified
     time of the file, or the string ``now`` for the current time.
+
+    ``encoding`` should be set if you know the encoding of the files
+    you're loading. e.g., ``utf-8``.
 
     The values shown above are the defaults.  If reading in files
     in a directory structure matching a URL hierarchy, an alternate
@@ -159,6 +163,7 @@ class from_local_files(Configured):
         'url_prefix': 'file://',
         'absolute_filename': True,
         'epoch_ticks': 'file',
+        'encoding': None,
     }
 
     def __init__(self, config):
@@ -167,6 +172,7 @@ class from_local_files(Configured):
         self.url_prefix = self.config.get('url_prefix', '')
         self.absolute_filename = self.config.get('absolute_filename', False)
         self.epoch_ticks = self.config.get('epoch_ticks', 'file')
+        self.encoding = self.config.get('encoding')
 
         if ((not isinstance(self.epoch_ticks, int) and
              self.epoch_ticks not in ['file', 'now'])):
@@ -193,6 +199,8 @@ class from_local_files(Configured):
         si = streamcorpus.make_stream_item(epoch_ticks, abs_url)
         with open(i_str, 'rb') as f:
             si.body.raw = f.read()
+        if self.encoding is not None:
+            si.body.encoding = self.encoding
 
         yield si
 

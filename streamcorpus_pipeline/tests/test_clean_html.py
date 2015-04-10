@@ -68,6 +68,14 @@ id="comments-template"><h3 id="comments">4 Responses to &#822050+ Years of Digis
     assert cleaned_first_half == correct_first_half and cleaned_second_half == correct_second_half, cleaned
 
 
+def test_clean_html_simple_unicode():
+    html = '<html><body>1☃</body></html>'
+    si = StreamItem(body=ContentItem(raw=html, encoding='utf-8'))
+    cleaned = make_clean_html(html, si)
+    assert u'1' in cleaned.decode('utf-8')
+    assert u'☃' in cleaned.decode('utf-8')
+
+
 def test_target_parsing(test_data_dir):
     path = os.path.join(test_data_dir, 'test')
     test_html = open(os.path.join(path, 'target-test.html')).read()

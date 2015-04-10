@@ -77,8 +77,10 @@ def re_based_make_clean_visible(html):
 
 def make_clean_visible(_html, tag_replacement_char=' '):
     '''
-    Takes an HTML-like binary string as input and returns a binary
-    string of the same length with all tags replaced by whitespace.
+    Takes an HTML-like Unicode string as input and returns a UTF-8
+    encoded string with all tags replaced by whitespace. In particular,
+    all Unicode characters inside HTML are replaced with a single
+    whitespace character.
 
     This does not detect comments, style, script, link.  It also does
     do anything with HTML-escaped characters.  All of these are
@@ -117,6 +119,9 @@ def make_clean_visible(_html, tag_replacement_char=' '):
                     n = nl + 1
                     # do not break
 
+    if not isinstance(_html, unicode):
+        _html = unicode(_html, 'utf-8')
+
     # Protect emails by substituting with unique key
     _html, keys, emails = key_emails(_html)
 
@@ -126,7 +131,7 @@ def make_clean_visible(_html, tag_replacement_char=' '):
     # Replace email unique keys with original emails
     non_tag_with_emails = replace_keys(non_tag, keys, emails)
 
-    return non_tag_with_emails
+    return non_tag_with_emails.encode('utf-8')
 
 class clean_visible(Configured):
     '''Create ``body.clean_visible`` from ``body.clean_html``.

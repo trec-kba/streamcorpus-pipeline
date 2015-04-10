@@ -1,9 +1,21 @@
 from __future__ import absolute_import, division, print_function
 
+import cgi
 from HTMLParser import HTMLParser
-from itertools import imap
+from itertools import imap, izip
 
-from streamcorpus import XpathRange
+from streamcorpus import Offset, OffsetType, XpathRange
+
+
+# In HTML5, void elements are technically distinct from self-closing elements.
+# Void elements have a "start" but no end tag, while self-closing elements
+# have cause both the "start" and "end" events to fire.
+#
+# In our HTML parser, we need to be careful with void element handling,
+# otherwise our state gets corrupt (because we cannot assume every start
+# tag has an end tag).
+VOID_ELEMENTS = {'area', 'base', 'br', 'col', 'embed', 'hr', 'img', 'input',
+                 'keygen', 'link', 'meta', 'param', 'source', 'track', 'wbr'}
 
 
 # To be written transform.
@@ -117,24 +129,84 @@ class XpathTextCollector(HTMLParser):
 
     # Satisfy the `HTMLParser` interface.
     def handle_starttag(self, tag, attrs):
-        self.depth_stack[self.depth].append(tag)
+        print('START (void? %r)' % (tag in VOID_ELEMENTS), tag)
         self.data_start = 0
+        self.depth_stack[self.depth].append(tag)
+        if tag in VOID_ELEMENTS:
+            return
 
         self.depth += 1
         self.depth_stack[self.depth] = []
 
     def handle_endtag(self, tag):
+        print('END (void? %r)' % (tag in VOID_ELEMENTS), tag)
+        if tag in VOID_ELEMENTS:
+            return
         self.depth_stack.pop(self.depth)
         self.data_start = 0
         self.depth -= 1
+        while len(self.depth_stack[self.depth]) > 0 \
+                and self.depth_stack[self.depth][-1] != tag:
+            self.depth_stack[self.depth].pop()
+
+    def handle_startendtag(self, tag, attrs):
+        # This is *only* called for self-closing elements, e.g., `<br />`.
+        # It is NOT called for void elements, e.g., `<br>`.
+        print('START-END', tag)
+        self.depth_stack[self.depth].append(tag)
+        self.data_start = 0
 
     def handle_data(self, data):
+        print('DATA', data)
         assert isinstance(data, unicode)  # important for ensuring char offsets
         self.depth_stack[self.depth].append(None)
         self.data_start += len(data)
 
+    def handle_entityref(self, name):
+        print('ENTITY REF', name)
+        self.depth_stack[self.depth].append(None)
+        self.data_start += 2 + len(name)
 
-def tokens_to_xpaths(html, char_offsets):
+    def handle_charref(self, name):
+        print('CHAR REF', name)
+
+
+def add_xpaths_to_stream_item(si):
+    def sentences_to_xpaths(sentences):
+        tokens = sentences_to_char_tokens(sentences)
+        offsets = char_tokens_to_char_offsets(tokens)
+        return char_offsets_to_xpaths(html, offsets)
+
+    def xprange_to_offset(xprange):
+        return Offset(type=OffsetType.XPATH_CHARS,
+                      first=xprange.start_offset, length=0,
+                      xpath=xprange.start_xpath,
+                      content_form='clean_html', value=None,
+                      xpath_end=xprange.end_xpath,
+                      xpath_end_offset=xprange.end_offset)
+
+    html = unicode(si.body.clean_html, 'utf-8')
+    for sentences in si.body.sentences.itervalues():
+        tokens = sentences_to_char_tokens(sentences)
+        for token, xprange in izip(tokens, sentences_to_xpaths(sentences)):
+            offset = xprange_to_offset(xprange)
+            token.offsets[OffsetType.XPATH_CHARS] = offset
+
+
+def sentences_to_char_tokens(si_sentences):
+    for sentence in si_sentences:
+        for token in sentence.tokens:
+            if OffsetType.CHARS in token.offsets:
+                yield token
+
+
+def char_tokens_to_char_offsets(si_tokens):
+    for token in si_tokens:
+        offset = token.offsets[OffsetType.CHARS]
+        yield offset.first, offset.first + offset.length
+
+
+def char_offsets_to_xpaths(html, char_offsets):
     '''Converts HTML and a sequence of char offsets to xpath offsets.
 
     Returns a generator of :class:`streamcorpus.XpathRange` objects
@@ -145,17 +217,23 @@ def tokens_to_xpaths(html, char_offsets):
     ``char_offsets`` must be a sorted and non-overlapping sequence
     of character ranges. They do not have to be contiguous.
     '''
+    def feed(s):
+        print('feed %r' % s)
+        parser.feed(s)
+
     html = uni(html)
     parser = XpathTextCollector()
     prev_end = 0
     for start, end in char_offsets:
-        parser.feed(html[prev_end:start])
+        feed(html[prev_end:start])
         xstart = parser.xpath_offset()
-        parser.feed(html[start:end])
+        print('XSTART', xstart)
+        feed(html[start:end])
         prev_end = end
         xend = parser.xpath_offset()
+        print('XEND', xend)
         yield XpathRange(xstart[0], xstart[1], xend[0], xend[1])
-    parser.feed(html[prev_end:])
+    feed(html[prev_end:])
     parser.close()
 
 
