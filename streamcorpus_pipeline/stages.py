@@ -413,5 +413,6 @@ class PipelineStages(StageRegistry):
                 self[name] = stage_constructor
             except:
                 logger.error('failure loading plugin entry point: %r', entry_point and entry_point.name, exc_info=True)
+                logger.error('IGNORING plug loading failure and continuing on...')
 
         logger.debug('streamcorpus_pipeline.PipelineStages init in %s sec', time.time() - start)
