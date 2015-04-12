@@ -186,12 +186,12 @@ class StageRegistry(MutableMapping):
         try:
             mod = __import__(moduleName, globals(), locals(), [functionName])
         except ImportError, exc:
-            logger.warn('cannot load stage {}: cannot load module {}'
+            logger.warn('cannot load stage {0}: cannot load module {1}'
                         .format(name, moduleName), exc_info=exc)
             return
 
         if not hasattr(mod, functionName):
-            logger.warn('cannot load stage {}: module {} missing {}'
+            logger.warn('cannot load stage {0}: module {1} missing {2}'
                         .format(name, moduleName, functionName))
             return
 

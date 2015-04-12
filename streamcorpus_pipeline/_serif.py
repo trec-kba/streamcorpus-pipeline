@@ -98,7 +98,7 @@ class serif(BatchTransform):
         # third_dir_path; but these are required
         for k in ['path_in_third', 'serif_exe', 'par', 'cleanup_tmp_files']:
             if k not in config:
-                raise ConfigurationError('{} requires {} setting'
+                raise ConfigurationError('{0} requires {1} setting'
                                          .format(name, k))
 
     # These two serif parameter files came from BBN via email,

@@ -254,7 +254,7 @@ class from_s3_chunks(Configured):
         if i_str.startswith('s3://'):
             # full path including bucket name
             bucket_name, kpath = i_str[5:].split('/', 1)
-            assert bucket_name and kpath, 'bad s3 url {!r}'.format(i_str)
+            assert bucket_name and kpath, 'bad s3 url {0!r}'.format(i_str)
         else:
             # get bucket_name from config
             bucket_name = None
@@ -325,8 +325,8 @@ class from_s3_chunks(Configured):
                 compression=compression,
                 )
             if not data:
-                msg = 'decrypt_and_uncompress got no data for {!r}, from {} bytes' \
-                    + ' downloaded, errors: {}' \
+                msg = 'decrypt_and_uncompress got no data for {0!r}, from {1} bytes' \
+                    + ' downloaded, errors: {2}' \
                         .format(key_path, len(data), '\n'.join(_errors))
                 logger.error(msg)
                 raise FailedExtraction(msg)
@@ -583,7 +583,7 @@ class to_s3_chunks(Configured):
         if self.config['verify']:
             ok = timedop('s3 verify', data_len, lambda: self.verify(key_path, md5))
             if not ok:
-                raise Exception('verify failed putting {!r}'.format(key_path))
+                raise Exception('verify failed putting {0!r}'.format(key_path))
 
     def put(self, o_path, t_path):
         key = Key(self.bucket, o_path)

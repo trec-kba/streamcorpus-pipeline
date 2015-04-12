@@ -2,7 +2,6 @@
 from __future__ import absolute_import
 import os
 import sys
-import sysconfig
 
 import pytest
 
@@ -16,7 +15,15 @@ def test_data_dir(request):
 
     if cur_directory_path.startswith(os.path.abspath(sys.prefix)):
         # Running from an installed location
-        path = os.path.join(sysconfig.get_path('data'),
+        data_path = None
+        try:
+            import sysconfig
+            data_path = sysconfig.get_path('data')
+        except:
+            ## support python2.6
+            data_path = sys.prefix
+
+        path = os.path.join(data_path,
                             'data/streamcorpus-pipeline')
     else:
         # Running not installed

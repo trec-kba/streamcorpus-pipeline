@@ -21,9 +21,9 @@ def test_make_clean_html_nyt(test_data_dir, tmpdir):
     stable    = open(os.path.join(path, 'nytimes-index-clean-stable.html')).read()
 
     if generated != stable:
-        outf = os.path.join(path, 'nytimes-index-clean-new-{}.html'.format(time.strftime('%Y%m%d_%H%M%S')))
-        sys.stderr.write('writing unmatching output to {!r}\n'.format(outf))
-        sys.stderr.write('diff -u {} {}\n'.format(os.path.join(path, 'nytimes-index-clean-stable.html'), outf))
+        outf = os.path.join(path, 'nytimes-index-clean-new-{0}.html'.format(time.strftime('%Y%m%d_%H%M%S')))
+        sys.stderr.write('writing unmatching output to {0!r}\n'.format(outf))
+        sys.stderr.write('diff -u {0} {1}\n'.format(os.path.join(path, 'nytimes-index-clean-stable.html'), outf))
         with open(outf, 'wb') as fout:
             fout.write(generated)
     assert generated == stable
@@ -133,9 +133,9 @@ def test_stage(test_data_dir):
     with open(os.path.join(path, 'nytimes-index-clean-stable.html'), 'r') as f:
         stable = f.read()
     if si.body.clean_html != stable:
-        outf = os.path.join(path, 'nytimes-index-clean-new-{}.html'.format(time.strftime('%Y%m%d_%H%M%S')))
-        sys.stderr.write('writing unmatching output to {!r}\n'.format(outf))
-        sys.stderr.write('diff -u {} {}\n'.format(os.path.join(path, 'nytimes-index-clean-stable.html'), outf))
+        outf = os.path.join(path, 'nytimes-index-clean-new-{0}.html'.format(time.strftime('%Y%m%d_%H%M%S')))
+        sys.stderr.write('writing unmatching output to {0!r}\n'.format(outf))
+        sys.stderr.write('diff -u {0} {1}\n'.format(os.path.join(path, 'nytimes-index-clean-stable.html'), outf))
         with open(outf, 'wb') as fout:
             fout.write(si.body.clean_html)
     assert si.body.clean_html == stable

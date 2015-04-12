@@ -107,7 +107,7 @@ def test_basics(test_data_dir):
             line_labels.add(label.target.target_id)
 
     assert line_labels == byte_labels
-    logger.info('{:.5f} bytes, {:.5f} lines'
+    logger.info('{0:.5f} bytes, {1:.5f} lines'
                 .format(elapsed_bytes, elapsed_lines))
 
 
@@ -140,8 +140,8 @@ def test_speed(parser_type, test_data_dir):
 
     rate = len(stream_items) / elapsed
 
-    logger.debug('OffsetType: {}'.format(OffsetType))
-    logger.info('{:.1f} per second for {}'.format(rate, parser_type))
+    logger.debug('OffsetType: {0}'.format(OffsetType))
+    logger.info('{0:.1f} per second for {1}'.format(rate, parser_type))
 
 
 sample_text = u'''

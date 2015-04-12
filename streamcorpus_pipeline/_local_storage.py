@@ -31,7 +31,7 @@ _message_versions = {
 def _check_version(config, name):
     if config['streamcorpus_version'] not in _message_versions:
         raise ConfigurationError(
-            'invalid {} streamcorpus_version {}'
+            'invalid {0} streamcorpus_version {1}'
             .format(name, config['streamcorpus_version']))
 
 
@@ -316,8 +316,8 @@ class to_local_chunks(Configured):
             if compress:
                 o_path += '.xz'
 
-        logger.info('writing chunk file to {}'.format(o_path))
-        logger.debug('temporary chunk in {}'.format(t_path))
+        logger.info('writing chunk file to {0}'.format(o_path))
+        logger.debug('temporary chunk in {0}'.format(t_path))
 
         # if dir is missing make it
         dirname = os.path.dirname(o_path)

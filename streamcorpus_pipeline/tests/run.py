@@ -17,7 +17,16 @@ def main():
     args = parser.parse_args()
 
     test_dir = os.path.dirname(__file__)
-    cmd = ['-vv', '-n', '8', '--runslow', '--runperf', '--redis-address', args.redis_address]
+    try:
+        import pytest_incremental
+    except:
+        pytest_incremental = None
+
+    cmd = ['-vv']
+    if pytest_incremental is not None:
+        cmd += ['-n', '8']
+    cmd += ['--runslow', '--runperf', '--redis-address', args.redis_address]
+
     if args.third_dir:
         cmd.extend(['--third-dir', args.third_dir, '--run-integration'])
     cmd.append(test_dir)

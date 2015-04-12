@@ -240,13 +240,13 @@ class to_kvlayer(Configured):
         for ndx in config['indexes']:
             if ndx != KEYWORDS and ndx not in INDEX_TABLE_NAMES:
                 raise yakonfig.ConfigurationError(
-                    'invalid {} indexes type {!r}'
+                    'invalid {0} indexes type {1!r}'
                     .format(name, ndx))
             if isinstance(keyword_indexer, basestring):
                 if ndx in [KEYWORDS, HASH_TF_SID, HASH_FREQUENCY,
                            HASH_KEYWORD]:
                     raise yakonfig.ConfigurationError(
-                        'cannot configure {} index {}: {}'
+                        'cannot configure {0} index {1}: {2}'
                         .format(name, ndx, keyword_indexer))
 
     @staticmethod
@@ -317,7 +317,7 @@ def serialize_si_key(si_key):
     '''
     if len(si_key[0]) != 16:
         raise ValueError('bad StreamItem key, expected 16 byte '
-                         'md5 hash binary digest, got: {!r}'.format(si_key))
+                         'md5 hash binary digest, got: {0!r}'.format(si_key))
     return struct.pack('>16si', si_key[0], si_key[1])
 
 

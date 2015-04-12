@@ -510,9 +510,9 @@ class name_align_labels(_aligner_batch_transform):
     @staticmethod
     def check_config(config, name):
         if 'chain_selector' not in config:
-            raise ConfigurationError('{} requires chain_selector'.format(name))
+            raise ConfigurationError('{0} requires chain_selector'.format(name))
         if config['chain_selector'] not in _CHAIN_SELECTORS:
-            raise ConfigurationError('chain_selector must be one of: {!r}'.format(_CHAIN_SELECTORS.keys()))
+            raise ConfigurationError('chain_selector must be one of: {0!r}'.format(_CHAIN_SELECTORS.keys()))
     aligner = (names_in_chains,)
 
 class line_offset_align_labels(_aligner_batch_transform):

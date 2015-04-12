@@ -25,7 +25,7 @@ def test_tagger_transform(tagger, chain_selector, stages, tmpdir, test_data_dir)
         'chain_selector': chain_selector
     }})
     data = get_john_smith_tagged_by_lingpipe_without_labels_data(test_data_dir)
-    with tmpdir.join('{}.{}.sc'.format(tagger, chain_selector)).open('wb') as tf:
+    with tmpdir.join('{0}.{1}.sc'.format(tagger, chain_selector)).open('wb') as tf:
         tf.write(data)
         tf.flush()
         transform.process_path(tf.name)

@@ -131,7 +131,7 @@ def instantiate_config(config):
     pipeline_config['config_hash'] = make_hash(config)
     pipeline_config['config_json'] = json.dumps(config)
 
-    logger.debug('running config: {} = {!r}'
+    logger.debug('running config: {0} = {1!r}'
                  .format(pipeline_config['config_hash'], config))
 
     ## Load modules

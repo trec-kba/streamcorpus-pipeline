@@ -150,7 +150,7 @@ class clean_visible(Configured):
     @staticmethod
     def check_config(config, name):
         if not config['require_clean_html']:
-            raise yakonfig.ConfigurationError('{} only does clean_html'
+            raise yakonfig.ConfigurationError('{0} only does clean_html'
                                               .format(name))
 
     def __call__(self, stream_item, context):
@@ -234,7 +234,7 @@ def make_clean_visible_file(i_chunk, clean_visible_path):
 
 # used in 'cleanse' below
 whitespace = re.compile('''(\s|\n)+''', re.UNICODE)
-strip_punctuation = {ord(c): u' ' for c in string.punctuation}
+strip_punctuation = dict([(ord(c), u' ') for c in string.punctuation])
 penn_treebank_brackets = re.compile('''-[RL].B-''', re.UNICODE)
 
 

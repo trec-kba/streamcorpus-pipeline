@@ -8,7 +8,10 @@ import os
 import math
 import hashlib
 from itertools import ifilter, imap
-from collections import Counter
+try:
+    from collections import Counter
+except ImportError:
+    from backport_collections import Counter
 from nltk.corpus import stopwords
 from _clean_visible import cleanse
 

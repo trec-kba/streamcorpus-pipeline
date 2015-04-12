@@ -144,12 +144,12 @@ class DirectoryConfig(object):
         if (('engine' not in config or
              config['engine'] not in ['rejester', 'standalone'])):
             raise yakonfig.ConfigurationError(
-                'invalid {} engine type {!r}'
+                'invalid {0} engine type {1!r}'
                 .format(name, config.get('engine')))
         if (('mode' not in config or
              config['mode'] not in ['directories', 'files', 'file-lists'])):
             raise yakonfig.ConfigurationError(
-                'invalid {} mode {!r}'.format(name, config.get('mode')))
+                'invalid {0} mode {1!r}'.format(name, config.get('mode')))
         if config['engine'] == 'rejester':
             yakonfig.check_toplevel_config(rejester, name)
         yakonfig.check_toplevel_config(streamcorpus_pipeline, name)

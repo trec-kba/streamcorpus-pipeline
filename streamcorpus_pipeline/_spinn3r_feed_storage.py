@@ -199,10 +199,10 @@ class from_spinn3r_feed(Configured):
                                      'missing')
         if ((self.config.get('use_prefetched', True) and
              i_str in self.prefetched)):
-            logger.debug('using prefetched content for {}'.format(i_str))
+            logger.debug('using prefetched content for {0}'.format(i_str))
             stream = StringIO(self.prefetched[i_str])
         else:
-            logger.debug('getting local content from {}'.format(i_str))
+            logger.debug('getting local content from {0}'.format(i_str))
             stream = open(i_str, 'rb')
 
         try:
@@ -214,7 +214,7 @@ class from_spinn3r_feed(Configured):
                     continue
                 count += 1
                 yield si
-            logger.info('produced {} stream items'.format(count))
+            logger.info('produced {0} stream items'.format(count))
         finally:
             stream.close()
 

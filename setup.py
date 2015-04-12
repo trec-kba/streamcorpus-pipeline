@@ -106,12 +106,17 @@ setup(
         'pytest-cov',
         'pytest-xdist',
         'pytest-timeout',
-        'pytest-incremental',
         'pytest-capturelog',
+        
+        ## this does not work in python2.6
+        'pytest-incremental',
+
         'epydoc',
-        'pytest-diffeo >= 0.1.7',
     ],
     install_requires=[
+        ## these are used by streamcorpus_pipeline_test
+        'pytest-diffeo >= 0.1.7',
+
         'dblogger >= 0.4.0',
         'yakonfig >= 0.4.2',
         'importlib',
@@ -136,6 +141,7 @@ setup(
         'python-docx',
         'pdfminer',
         'backports.lzma!=0.0.4',
+        'backport_collections', # for python2.6
     ],
     extras_require = {
         'keyword_indexing': [

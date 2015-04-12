@@ -70,10 +70,9 @@ def test_rejester_john_smith_simple(task_master, test_data_dir, tmpdir):
             'run_function': 'rejester_run_function',
             'terminate_function': 'rejester_terminate_function'
         }
-        units[c] = {
-            os.path.join(test_data_dir, i): dict(start_chunk_time=0)
-            for i in inputs
-        }
+        units[c] = dict([
+            (os.path.join(test_data_dir, i), dict(start_chunk_time=0))
+            for i in inputs])
         task_master.update_bundle(work_specs[c], units[c])
 
     # kick everything off

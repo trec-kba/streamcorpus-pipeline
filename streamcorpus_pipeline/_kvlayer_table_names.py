@@ -169,7 +169,7 @@ def kvlayer_key_to_stream_id(k):
 
     '''
     abs_url_hash, epoch_ticks = k
-    return '{}-{}'.format(epoch_ticks,
+    return '{0}-{1}'.format(epoch_ticks,
                           base64.b16encode(abs_url_hash).lower())
 
 

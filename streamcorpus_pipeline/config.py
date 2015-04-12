@@ -90,7 +90,7 @@ def replace_config(config, name):
 
 def check_config(config, name):
     if 'tmp_dir_path' not in config:
-        raise ConfigurationError('{} requires tmp_dir_path setting'
+        raise ConfigurationError('{0} requires tmp_dir_path setting'
                                  .format(name))
 
     # Checking stages:
@@ -102,7 +102,7 @@ def check_config(config, name):
             stages.load_external_stages(config['external_stages_path'])
         except IOError, e:
             raise ConfigurationError(
-                'invalid {} external_stages_path {}'
+                'invalid {0} external_stages_path {1}'
                 .format(name, config['external_stages_path']), e)
     if 'external_stages_modules' in config:
             for mod in config['external_stages_modules']:
@@ -110,18 +110,18 @@ def check_config(config, name):
                     stages.load_module_stages(mod)
                 except ImportError, e:
                     raise ConfigurationError(
-                        'invalid {} external_stages_modules value {}'
+                        'invalid {0} external_stages_modules value {1}'
                         .format(name, mod), e)
 
     # (2) Check the reader;
     if 'reader' not in config:
-        raise ConfigurationError('{} requires reader stage'
+        raise ConfigurationError('{0} requires reader stage'
                                  .format(name))
     try:
         reader = stages[config['reader']]
     except ValueError, e:
         raise ConfigurationError(
-            'invalid {} reader {}'
+            'invalid {0} reader {1}'
             .format(name, config['reader']))
     check_subconfig(config, name, reader)
 
@@ -129,17 +129,17 @@ def check_config(config, name):
     for phase in ['incremental_transforms', 'batch_transforms',
                   'post_batch_incremental_transforms', 'writers']:
         if phase not in config:
-            raise ConfigurationError('{} requires {} stage list'
+            raise ConfigurationError('{0} requires {1} stage list'
                                      .format(name, phase))
         if not isinstance(config[phase], collections.Iterable):
-            raise ConfigurationError('{} {} must be a list of stages'
+            raise ConfigurationError('{0} {1} must be a list of stages'
                                      .format(name, phase))
         for stagename in config[phase]:
             try:
                 stage = stages[stagename]
             except KeyError, e:
                 raise ConfigurationError(
-                    'invalid {} {} {}'
+                    'invalid {0} {1} {2}'
                     .format(name, phase, stagename))
             check_subconfig(config, name, stage)
 
