@@ -1,7 +1,5 @@
 from __future__ import absolute_import, division, print_function
 
-import lxml.html
-
 from streamcorpus import InvalidXpath, OffsetType, XpathRange
 from streamcorpus.test_xpath import tests_roundtrip
 import streamcorpus_pipeline.offsets as offsets
@@ -13,8 +11,13 @@ def test_simple_si(test_data_dir):
     run_stream_item_roundtrip(si)
 
 
+def test_random_chinese_si(test_data_dir):
+    si = testdata.get_si_random_chinese_tagged_by_basis(test_data_dir)
+    run_stream_item_roundtrip(si)
+
+
 def test_wikipedia_chinese_si(test_data_dir):
-    si = testdata.get_si_wpchinese_tagged_by_basis(test_data_dir)
+    si = testdata.get_si_wikipedia_chinese_tagged_by_basis(test_data_dir)
     run_stream_item_roundtrip(si)
 
 
@@ -31,29 +34,33 @@ def run_stream_item_roundtrip(si):
         if err is not None:
             print(err)
         print(xprange)
-        print('expected: %r' % expected)
+        print('expected: "%s"' % expected)
         if got is not None:
-            print('got: %r' % got)
-        print('token value: %r' % token.token)
+            print('got: "%s"' % got)
+        print('token value: "%s"' % unicode(token.token, 'utf-8'))
         print('-' * 49)
         print_window(token)
         print('-' * 79)
 
     offsets.add_xpaths_to_stream_item(si)
     html = unicode(si.body.clean_html, 'utf-8')
-    html_root = lxml.html.fromstring(html)
+    html_root = XpathRange.html_node(html)
     for sentences in si.body.sentences.itervalues():
         for sentence in sentences:
             for token in sentence.tokens:
                 if OffsetType.CHARS not in token.offsets:
                     continue
                 offset = token.offsets.get(OffsetType.XPATH_CHARS)
-                assert offset is not None
+                if offset is None:
+                    continue
                 xprange = XpathRange.from_offset(offset)
                 expected = unicode(token.token, 'utf-8')
                 try:
                     got = xprange.slice_node(html_root)
                 except InvalidXpath as err:
+                    debug(token, xprange, expected, err=err)
+                    assert False
+                except NotImplementedError as err:
                     debug(token, xprange, expected, err=err)
                     assert False
 
@@ -72,14 +79,13 @@ for i, test in enumerate(tests_roundtrip):
     globals()['test_roundtrip_%d' % i] = (lambda t: lambda: run_test(t))(test)
 
 
-def run_test(test):
-    xpaths = list(offsets.char_offsets_to_xpaths(test['html'], test['tokens']))
-    expecteds = test.get('expected', [None] * len(xpaths))
-    # print(test)
-    for token, xprange, expected in zip(test['tokens'], xpaths, expecteds):
-        if expected is None:
-            expected = test['html'][token[0]:token[1]]
-        valid_html = '<html><body>' + test['html'] + '</body></html>'
-        xprange = xprange.root_at('/html/body')
-        got = xprange.slice_html(valid_html)
-        assert expected == got, '%r\nHTML: %s' % (xprange, valid_html)
+def run_test(t):
+    xpaths = list(offsets.char_offsets_to_xpaths(t['html'], t['tokens']))
+    for token, xprange, expected in zip(t['tokens'], xpaths, t['expected']):
+        if xprange is None:
+            assert expected is None
+        else:
+            valid_html = '<html><body>' + t['html'] + '</body></html>'
+            xprange = xprange.root_at('/html/body')
+            got = xprange.slice_html(valid_html)
+            assert expected == got, '%r\nHTML: %s' % (xprange, valid_html)
