@@ -1,6 +1,5 @@
 from __future__ import absolute_import, division, print_function
 
-import cgi
 from HTMLParser import HTMLParser
 from itertools import imap, izip
 
@@ -127,9 +126,22 @@ class XpathTextCollector(HTMLParser):
     def tag_count(self, depth, tag):
         return self.depth_stack[depth].count(tag)
 
+    # Some hacks to track whether the parser moved to the next state.
+    def feed(self, s):
+        # print('FEED: %r' % s)
+        self.made_progress = False
+        return HTMLParser.feed(self, s)
+
+    def progressor(meth):
+        def _(self, *args, **kwargs):
+            # print(meth.__name__, args[0])
+            self.made_progress = True
+            return meth(self, *args, **kwargs)
+        return _
+
     # Satisfy the `HTMLParser` interface.
+    @progressor
     def handle_starttag(self, tag, attrs):
-        print('START (void? %r)' % (tag in VOID_ELEMENTS), tag)
         self.data_start = 0
         self.depth_stack[self.depth].append(tag)
         if tag in VOID_ELEMENTS:
@@ -138,8 +150,8 @@ class XpathTextCollector(HTMLParser):
         self.depth += 1
         self.depth_stack[self.depth] = []
 
+    @progressor
     def handle_endtag(self, tag):
-        print('END (void? %r)' % (tag in VOID_ELEMENTS), tag)
         if tag in VOID_ELEMENTS:
             return
         self.depth_stack.pop(self.depth)
@@ -149,26 +161,31 @@ class XpathTextCollector(HTMLParser):
                 and self.depth_stack[self.depth][-1] != tag:
             self.depth_stack[self.depth].pop()
 
+    @progressor
     def handle_startendtag(self, tag, attrs):
         # This is *only* called for self-closing elements, e.g., `<br />`.
         # It is NOT called for void elements, e.g., `<br>`.
-        print('START-END', tag)
         self.depth_stack[self.depth].append(tag)
         self.data_start = 0
 
+    @progressor
     def handle_data(self, data):
-        print('DATA', data)
-        assert isinstance(data, unicode)  # important for ensuring char offsets
+        # There is a bug in `HTMLParser` where the data yielded can be
+        # hard-coded in certain state transitions. This means it could yield
+        # data that is `bytes` even though we gave it a Unicode string. ---AG
+        data = uni(data)
         self.depth_stack[self.depth].append(None)
         self.data_start += len(data)
 
+    @progressor
     def handle_entityref(self, name):
-        print('ENTITY REF', name)
         self.depth_stack[self.depth].append(None)
         self.data_start += 2 + len(name)
 
+    @progressor
     def handle_charref(self, name):
-        print('CHAR REF', name)
+        self.depth_stack[self.depth].append(None)
+        self.data_start += 3 + len(name)
 
 
 def add_xpaths_to_stream_item(si):
@@ -189,6 +206,8 @@ def add_xpaths_to_stream_item(si):
     for sentences in si.body.sentences.itervalues():
         tokens = sentences_to_char_tokens(sentences)
         for token, xprange in izip(tokens, sentences_to_xpaths(sentences)):
+            if xprange is None:
+                continue
             offset = xprange_to_offset(xprange)
             token.offsets[OffsetType.XPATH_CHARS] = offset
 
@@ -217,23 +236,44 @@ def char_offsets_to_xpaths(html, char_offsets):
     ``char_offsets`` must be a sorted and non-overlapping sequence
     of character ranges. They do not have to be contiguous.
     '''
-    def feed(s):
-        print('feed %r' % s)
-        parser.feed(s)
-
     html = uni(html)
     parser = XpathTextCollector()
     prev_end = 0
+    prev_progress = True
     for start, end in char_offsets:
-        feed(html[prev_end:start])
+        if start == end:
+            # Zero length tokens shall have no quarter!
+            # Note that this is a special case. If we let zero-length tokens
+            # be handled normally, then it will be recorded as if the parser
+            # did not make any progress. But of course, there is no progress
+            # to be had!
+            yield None
+            continue
+        if not prev_progress:
+            for i in xrange(prev_end, start):
+                parser.feed(html[i])
+                prev_end += 1
+                if parser.made_progress:
+                    break
+            # If we still haven't made progress, start feeding the
+            # current token until we do.
+            if not parser.made_progress:
+                yield None
+                continue
+        parser.feed(html[prev_end:start])
         xstart = parser.xpath_offset()
-        print('XSTART', xstart)
-        feed(html[start:end])
+        # print('XSTART', xstart)
+        parser.feed(html[start:end])
         prev_end = end
         xend = parser.xpath_offset()
-        print('XEND', xend)
-        yield XpathRange(xstart[0], xstart[1], xend[0], xend[1])
-    feed(html[prev_end:])
+        # print('XEND', xend)
+        if not parser.made_progress:
+            prev_progress = False
+            yield None
+        else:
+            prev_progress = True
+            yield XpathRange(xstart[0], xstart[1], xend[0], xend[1])
+    parser.feed(html[prev_end:])
     parser.close()
 
 
