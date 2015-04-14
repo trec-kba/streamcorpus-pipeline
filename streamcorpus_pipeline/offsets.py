@@ -2,8 +2,12 @@ from __future__ import absolute_import, division, print_function
 
 from HTMLParser import HTMLParser
 from itertools import imap, izip
+import logging
 
-from streamcorpus import Offset, OffsetType, XpathRange
+from streamcorpus import InvalidXpathError, Offset, OffsetType, XpathRange
+
+
+logger = logging.getLogger(__name__)
 
 
 # In HTML5, void elements are technically distinct from self-closing elements.
@@ -188,6 +192,26 @@ class XpathTextCollector(HTMLParser):
         self.data_start += 3 + len(name)
 
 
+class XpathMismatchError(Exception):
+    '''Raised when an Xpath offset is wrong.
+
+    This occurs when slicing ``clean_html`` with xpaths does not
+    produce the exact same string as slicing ``clean_visible``
+    with character offsets.
+
+    This class has four instance variables:
+
+    * ``clean_html`` and ``clean_visible`` are a ``unicode`` strings.
+    * ``xp_range`` is a :class:`streamcorpus.XpathRange`.
+    * ``char_range`` is a ``(int, int)`` (half-open character range).
+    '''
+    def __init__(self, html, cleanvis, xp_range, char_range):
+        self.clean_html = html
+        self.clean_visible = cleanvis
+        self.xp_range = xp_range
+        self.char_range = char_range
+
+
 def add_xpaths_to_stream_item(si):
     def sentences_to_xpaths(sentences):
         tokens = sentences_to_char_tokens(sentences)
@@ -230,11 +254,15 @@ def char_offsets_to_xpaths(html, char_offsets):
 
     Returns a generator of :class:`streamcorpus.XpathRange` objects
     in correspondences with the sequence of ``char_offsets`` given.
-    Namely, each ``XpathRange`` should address precisely the same
-    text as that ``char_offsets`` (sans the HTML).
+    Namely, each ``XpathRange`` should address precisely the same text
+    as that ``char_offsets`` (sans the HTML).
 
-    ``char_offsets`` must be a sorted and non-overlapping sequence
-    of character ranges. They do not have to be contiguous.
+    Depending on how ``char_offsets`` was tokenized, it's possible that
+    some tokens cannot have their xpaths generated reliably. In this
+    case, a ``None`` value is yielded instead of a ``XpathRange``.
+
+    ``char_offsets`` must be a sorted and non-overlapping sequence of
+    character ranges. They do not have to be contiguous.
     '''
     html = uni(html)
     parser = XpathTextCollector()
@@ -249,24 +277,46 @@ def char_offsets_to_xpaths(html, char_offsets):
             # to be had!
             yield None
             continue
+        # If we didn't make any progress on the previous token, then we'll
+        # need to try and make progress before we can start tracking offsets
+        # again. Otherwise the parser will report incorrect offset info.
+        #
+        # (The parser can fail to make progress when tokens are split at
+        # weird boundaries, e.g., `&amp` followed by `;`. The parser won't
+        # make progress after `&amp` but will once `;` is given.)
+        #
+        # Here, we feed the parser one character at a time between where the
+        # last token ended and where the next token will start. In most cases,
+        # this will be enough to nudge the parser along. Once done, we can pick
+        # up where we left off and start handing out offsets again.
+        #
+        # If this still doesn't let us make progress, then we'll have to skip
+        # this token too.
         if not prev_progress:
             for i in xrange(prev_end, start):
                 parser.feed(html[i])
                 prev_end += 1
                 if parser.made_progress:
                     break
-            # If we still haven't made progress, start feeding the
-            # current token until we do.
             if not parser.made_progress:
                 yield None
                 continue
+        # Hand the parser everything from the end of the last token to the
+        # start of this one. Then ask for the Xpath, which should be at the
+        # start of `char_offsets`.
         parser.feed(html[prev_end:start])
         xstart = parser.xpath_offset()
-        # print('XSTART', xstart)
+        # Hand it the actual token and ask for the ending offset.
         parser.feed(html[start:end])
-        prev_end = end
         xend = parser.xpath_offset()
-        # print('XEND', xend)
+        prev_end = end
+
+        # If we couldn't make progress then the xpaths generated are probably
+        # incorrect. (If the parser doesn't make progress, then we can't rely
+        # on the callbacks to have been called, which means we may not have
+        # captured all state correctly.)
+        #
+        # Therefore, we simply give up and claim this token is not addressable.
         if not parser.made_progress:
             prev_progress = False
             yield None
@@ -282,3 +332,82 @@ def uni(s):
         return unicode(s, 'utf-8')
     else:
         return s
+
+
+def stream_item_roundtrip_xpaths(si):
+    '''Roundtrip all Xpath offsets in the given stream item.
+
+    For every token that has both ``CHARS`` and ``XPATH_CHARS``
+    offsets, slice the ``clean_html`` with the ``XPATH_CHARS`` offset
+    and check that it matches slicing ``clean_visible`` with the
+    ``CHARS`` offset.
+
+    If this passes without triggering an assertion, then we're
+    guaranteed that all ``XPATH_CHARS`` offsets in the stream item are
+    correct. (Note that does not check for completeness. On occasion, a
+    token's ``XPATH_CHARS`` offset cannot be computed.)
+
+    There is copious debugging output to help make potential bugs
+    easier to track down.
+
+    This is used in tests in addition to the actual transform. It's
+    expensive to run, but not running it means silent and hard to
+    debug bugs.
+    '''
+    def debug(s):
+        logger.error(s)
+
+    def print_window(token):
+        coffset = token.offsets[OffsetType.CHARS]
+        start = max(0, coffset.first - 200)
+        end = min(len(html), coffset.first + coffset.length + 200)
+        debug(coffset)
+        debug(html[start:end])
+
+    def debug_all(token, xprange, expected, err=None, got=None):
+        debug('-' * 79)
+        if err is not None:
+            debug(err)
+        debug(xprange)
+        debug('expected: "%s"' % expected)
+        if got is not None:
+            debug('got: "%s"' % got)
+        debug('token value: "%s"' % unicode(token.token, 'utf-8'))
+        debug('-' * 49)
+        print_window(token)
+        debug('-' * 79)
+
+    def slice_clean_visible(token):
+        coffset = token.offsets[OffsetType.CHARS]
+        return cleanvis[coffset.first:coffset.first + coffset.length]
+
+    cleanvis = unicode(si.body.clean_visible, 'utf-8')
+    html = unicode(si.body.clean_html, 'utf-8')
+    html_root = XpathRange.html_node(html)
+    for sentences in si.body.sentences.itervalues():
+        for sentence in sentences:
+            for token in sentence.tokens:
+                coffset = token.offsets.get(OffsetType.CHARS)
+                if coffset is None:
+                    continue
+                xoffset = token.offsets.get(OffsetType.XPATH_CHARS)
+                if xoffset is None:
+                    continue
+                crange = (coffset.first, coffset.first + coffset.length)
+                xprange = XpathRange.from_offset(xoffset)
+                expected = slice_clean_visible(token)
+                if expected != unicode(token.token, 'utf-8'):
+                    # Yeah, apparently this can happen. Maybe it's a bug
+                    # in Basis? I'm trying to hustle, and this only happens
+                    # in two instances for the `random` document, so I'm not
+                    # going to try to reproduce a minimal counter-example.
+                    # ---AG
+                    continue
+                try:
+                    got = xprange.slice_node(html_root)
+                except InvalidXpathError as err:
+                    debug_all(token, xprange, expected, err=err)
+                    raise XpathMismatchError(html, cleanvis, xprange, crange)
+                if expected != got:
+                    debug_all(token, xprange, expected, got=got)
+                    raise XpathMismatchError(html, cleanvis, xprange, crange)
