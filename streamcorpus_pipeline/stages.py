@@ -26,6 +26,7 @@ Incremental transforms
 
 .. autoclass:: streamcorpus_pipeline._clean_html.clean_html
 .. autoclass:: streamcorpus_pipeline._clean_visible.clean_visible
+.. autoclass:: streamcorpus_pipeline.offsets.xpath_offsets
 .. autoclass:: streamcorpus_pipeline._pdf_to_text.pdf_to_text
 .. autoclass:: streamcorpus_pipeline._docx_to_text.docx_to_text
 .. autoclass:: streamcorpus_pipeline._title.title
@@ -360,6 +361,7 @@ class PipelineStages(StageRegistry):
         # (alphabetical by stage name)
         self.tryload_stage('_clean_html', 'clean_html')
         self.tryload_stage('_clean_visible', 'clean_visible')
+        self.tryload_stage('offsets', 'xpath_offsets')
         self.tryload_stage('_pdf_to_text', 'pdf_to_text')
         self.tryload_stage('_docx_to_text', 'docx_to_text')
         self.tryload_stage('_title', 'title')

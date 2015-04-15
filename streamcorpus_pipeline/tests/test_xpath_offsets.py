@@ -23,6 +23,10 @@ def test_wikipedia_chinese_si(test_data_dir):
     offsets.stream_item_roundtrip_xpaths(si)
 
 
+def test_irish_duo_si(test_data_dir):
+    si = testdata.get_si_irish_duo_tagged_by_basis(test_data_dir)
+    offsets.add_xpaths_to_stream_item(si)
+    offsets.stream_item_roundtrip_xpaths(si)
 
 
 # The code below takes a bunch of test specifications from `streamcorpus`

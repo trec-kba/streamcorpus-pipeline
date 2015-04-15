@@ -1,5 +1,6 @@
 from __future__ import absolute_import, division, print_function
 
+from collections import defaultdict
 from HTMLParser import HTMLParser
 from itertools import imap, izip
 import logging
@@ -29,8 +30,19 @@ class xpath_offsets(object):
     def __init__(self, config):
         self.config = config
 
-    def __call__(self, fc):
-        pass
+    def __call__(self, si, context=None):
+        if not si.body or not si.body.clean_html or not si.body.clean_visible:
+            logger.warning('stream item %s: has no clean_{html,visible}, '
+                           'so we will not generate Xpath offsets',
+                           si.stream_id)
+            return si
+        add_xpaths_to_stream_item(si)
+        try:
+            stream_item_roundtrip_xpaths(si, quick=True)
+        except XpathMismatchError:
+            logger.warning('stream item %s: Failed xpath roundtrip test, '
+                           'dropping', si.stream_id, exc_info=True)
+        return si
 
 
 class XpathTextCollector(HTMLParser):
@@ -74,7 +86,9 @@ class XpathTextCollector(HTMLParser):
         # The index at which the most recent data node ends. The index is
         # relative to the data node. (It is reset on every start tag.)
         self.data_start = 0
-        # depth |--> [tag | data], where `data` is represented via `None`
+        # depth |--> {'path': [tag | data], 'tags': tag |--> count}
+        #   where `data` is represented via `None`.
+        #
         # This is used to build the indices of each element in the xpath.
         # Note that data nodes are also tracked, which are used to compute
         # the data node indices.
@@ -90,7 +104,12 @@ class XpathTextCollector(HTMLParser):
         # Finally, this representation enables us to pick out the current
         # xpath by peeking at the top of each stack from the smallest to
         # largest depth.
-        self.depth_stack = {0: []}
+        #
+        # (We could compute the indices from just `path` by counting elements,
+        # but this is a perf problem. So we track the counts explicitly in
+        # a `tags` dict.)
+        self.depth_stack = {}
+        self.init_depth(0)
 
     # This is the one public method!
     def xpath_offset(self):
@@ -102,21 +121,29 @@ class XpathTextCollector(HTMLParser):
         node is empty, the offset returned is `0`.)
         '''
         datai = self.text_index()
-        return (uni(self.xpath() + '/text()[%d]' % datai), self.data_start)
+        xpath = '/' + '/'.join(self.xpath_pieces()) + ('/text()[%d]' % datai)
+        return (uni(xpath), self.data_start)
 
     # These help with xpath generation.
-    def xpath(self):
-        return '/' + '/'.join(imap(lambda (d, tag): self.xpath_node(d, tag),
-                                   enumerate(self.xpath_stack())))
+    def xpath_pieces(self):
+        '''A generator for a canonical xpath to the current node.
 
-    def xpath_stack(self):
-        for i in xrange(self.depth):
-            yield self.depth_stack[i][-1]
+        This does not include the text node.
+
+        The generator yields strings, where each string is a component
+        in the xpath. Joining them with ``/`` is valid, but it will not
+        be rooted.
+        '''
+        for d in xrange(self.depth):
+            tag = self.depth_stack[d]['path'][-1]
+            yield '%s[%d]' % (tag, self.depth_stack[d]['tags'][tag])
 
     def text_index(self):
+        '''Returns the one-based index of the current text node.'''
+        # print('TEXT INDEX %r' % self.depth_stack)
         i = 1
         last_is_data = False
-        for v in self.depth_stack[self.depth]:
+        for v in self.depth_stack[self.depth]['path']:
             if v is None and not last_is_data:
                 last_is_data = True
             elif v is not None and last_is_data:
@@ -124,53 +151,95 @@ class XpathTextCollector(HTMLParser):
                 last_is_data = False
         return i
 
-    def xpath_node(self, depth, tag):
-        return '%s[%d]' % (tag, self.tag_count(depth, tag))
-
-    def tag_count(self, depth, tag):
-        return self.depth_stack[depth].count(tag)
-
     # Some hacks to track whether the parser moved to the next state.
     def feed(self, s):
-        # print('FEED: %r' % s)
+        print('FEED', s)
+        HTMLParser.feed(self, s[0:len(s)-1])
         self.made_progress = False
-        return HTMLParser.feed(self, s)
+        HTMLParser.feed(self, s[len(s)-1:len(s)])
 
     def progressor(meth):
         def _(self, *args, **kwargs):
-            # print(meth.__name__, args[0])
+            print(meth.__name__, args[0])
             self.made_progress = True
             return meth(self, *args, **kwargs)
         return _
+
+    # Helpers.
+    def add_element(self, depth, tag):
+        d = self.depth_stack[depth]
+        d['path'].append(tag)
+        if tag not in d['tags']:
+            d['tags'][tag] = 1
+        else:
+            d['tags'][tag] += 1
+
+    def remove_element(self, depth, tag):
+        self.depth_stack[depth]['path'].pop()
+        self.depth_stack[depth]['tags'][tag] -= 1
+
+    def init_depth(self, depth):
+        self.depth_stack[depth] = {'path': [], 'tags': {}}
 
     # Satisfy the `HTMLParser` interface.
     @progressor
     def handle_starttag(self, tag, attrs):
         self.data_start = 0
-        self.depth_stack[self.depth].append(tag)
+        self.add_element(self.depth, tag)
         if tag in VOID_ELEMENTS:
+            # Void elements are special. We effectively want to ignore them
+            # completely, although we do need to make sure they affect node
+            # indexing.
             return
 
         self.depth += 1
-        self.depth_stack[self.depth] = []
+        self.init_depth(self.depth)
 
     @progressor
     def handle_endtag(self, tag):
+        d = self.depth_stack
+        import pprint
+        print('-' * 79)
+        print(tag)
+        pprint.pprint(d)
+        print('-' * 79)
+
         if tag in VOID_ELEMENTS:
+            # We don't "descend" into void elements, so we can just ignore
+            # them completely.
             return
-        self.depth_stack.pop(self.depth)
+        d.pop(self.depth)
         self.data_start = 0
         self.depth -= 1
-        while len(self.depth_stack[self.depth]) > 0 \
-                and self.depth_stack[self.depth][-1] != tag:
-            self.depth_stack[self.depth].pop()
+
+        # This pops void/data elements until we find our opening tag.
+        # while len(self.depth_stack[self.depth]['path']) > 0 \
+                # and self.depth_stack[self.depth]['path'][-1] is None:
+            # self.remove_element(self.depth, None)
+        assert d[self.depth]['path'][-1] == tag, \
+                '%s not at end of %r' % (tag, d[self.depth]['path'])
+        # self.remove_element(self.depth, tag)
 
     @progressor
     def handle_startendtag(self, tag, attrs):
         # This is *only* called for self-closing elements, e.g., `<br />`.
         # It is NOT called for void elements, e.g., `<br>`.
-        self.depth_stack[self.depth].append(tag)
+        self.add_element(self.depth, tag)
         self.data_start = 0
+
+    # The following methods handle data. They are responsible for recording
+    # enough state such that:
+    #
+    #   1) The index of the current text node can be computed.
+    #   2) The character offset of the current position in the current
+    #      text node can be computed.
+    #
+    # (1) is achieved by adding `None` elements to the xpath stack. These
+    # `None` elements are collapsed in the `text_index` method.
+    #
+    # (2) is achieved by keeping track of the length of data (in terms of
+    # Unicode codepoints) in the current text node. This length is reset
+    # whenever a new tag is opened.
 
     @progressor
     def handle_data(self, data):
@@ -178,18 +247,28 @@ class XpathTextCollector(HTMLParser):
         # hard-coded in certain state transitions. This means it could yield
         # data that is `bytes` even though we gave it a Unicode string. ---AG
         data = uni(data)
-        self.depth_stack[self.depth].append(None)
+        self.add_element(self.depth, None)
         self.data_start += len(data)
 
     @progressor
     def handle_entityref(self, name):
-        self.depth_stack[self.depth].append(None)
+        self.add_element(self.depth, None)
+        # The `2` is for the `&` and `;` in, e.g., `&amp;`.
         self.data_start += 2 + len(name)
 
     @progressor
     def handle_charref(self, name):
-        self.depth_stack[self.depth].append(None)
+        self.add_element(self.depth, None)
+        # The `3` is for the `&`, `#` and `;` in, e.g., `&#36;`.
+        # This also applies to hex codes as `name` will contain the
+        # preceding `x`.
         self.data_start += 3 + len(name)
+
+    # TODO: There are some other callbacks defined in the `HTMLParser`
+    # interface. We probably need to do something with them for complete
+    # correctness. (If they can't be handled for whatever reason, simply
+    # declare those states as not making progress---`char_offsets_to_xpaths`
+    # will handle it gracefully by not computing xpaths.) ---AG
 
 
 class XpathMismatchError(Exception):
@@ -213,6 +292,18 @@ class XpathMismatchError(Exception):
 
 
 def add_xpaths_to_stream_item(si):
+    '''Mutably tag tokens with xpath offsets.
+
+    Given some stream item, this will tag all tokens from all taggings
+    in the document that contain character offsets. Note that some
+    tokens may not have computable xpath offsets, so an xpath offset
+    for those tokens will not be set. (See the documentation and
+    comments for ``char_offsets_to_xpaths`` for what it means for a
+    token to have a computable xpath.)
+
+    If a token can have its xpath offset computed, it is added to its
+    set of offsets with a ``OffsetType.XPATH_CHARS`` key.
+    '''
     def sentences_to_xpaths(sentences):
         tokens = sentences_to_char_tokens(sentences)
         offsets = char_tokens_to_char_offsets(tokens)
@@ -237,6 +328,7 @@ def add_xpaths_to_stream_item(si):
 
 
 def sentences_to_char_tokens(si_sentences):
+    '''Convert stream item sentences to character ``Offset``s.'''
     for sentence in si_sentences:
         for token in sentence.tokens:
             if OffsetType.CHARS in token.offsets:
@@ -244,6 +336,7 @@ def sentences_to_char_tokens(si_sentences):
 
 
 def char_tokens_to_char_offsets(si_tokens):
+    '''Convert character ``Offset``s to character ranges.'''
     for token in si_tokens:
         offset = token.offsets[OffsetType.CHARS]
         yield offset.first, offset.first + offset.length
@@ -306,9 +399,11 @@ def char_offsets_to_xpaths(html, char_offsets):
         # start of `char_offsets`.
         parser.feed(html[prev_end:start])
         xstart = parser.xpath_offset()
+        print('START', xstart)
         # Hand it the actual token and ask for the ending offset.
         parser.feed(html[start:end])
         xend = parser.xpath_offset()
+        print('END', xend)
         prev_end = end
 
         # If we couldn't make progress then the xpaths generated are probably
@@ -334,7 +429,7 @@ def uni(s):
         return s
 
 
-def stream_item_roundtrip_xpaths(si):
+def stream_item_roundtrip_xpaths(si, quick=False):
     '''Roundtrip all Xpath offsets in the given stream item.
 
     For every token that has both ``CHARS`` and ``XPATH_CHARS``
@@ -355,7 +450,7 @@ def stream_item_roundtrip_xpaths(si):
     debug bugs.
     '''
     def debug(s):
-        logger.error(s)
+        logger.warning(s)
 
     def print_window(token):
         coffset = token.offsets[OffsetType.CHARS]
@@ -381,33 +476,43 @@ def stream_item_roundtrip_xpaths(si):
         coffset = token.offsets[OffsetType.CHARS]
         return cleanvis[coffset.first:coffset.first + coffset.length]
 
+    def test_token(token):
+        coffset = token.offsets.get(OffsetType.CHARS)
+        if coffset is None:
+            return False
+        xoffset = token.offsets.get(OffsetType.XPATH_CHARS)
+        if xoffset is None:
+            return False
+        crange = (coffset.first, coffset.first + coffset.length)
+        xprange = XpathRange.from_offset(xoffset)
+        expected = slice_clean_visible(token)
+        if expected != unicode(token.token, 'utf-8'):
+            # Yeah, apparently this can happen. Maybe it's a bug
+            # in Basis? I'm trying to hustle, and this only happens
+            # in two instances for the `random` document, so I'm not
+            # going to try to reproduce a minimal counter-example.
+            # ---AG
+            return False
+        try:
+            got = xprange.slice_node(html_root)
+        except InvalidXpathError as err:
+            debug_all(token, xprange, expected, err=err)
+            raise XpathMismatchError(html, cleanvis, xprange, crange)
+        if expected != got:
+            debug_all(token, xprange, expected, got=got)
+            raise XpathMismatchError(html, cleanvis, xprange, crange)
+        return True
+
     cleanvis = unicode(si.body.clean_visible, 'utf-8')
     html = unicode(si.body.clean_html, 'utf-8')
     html_root = XpathRange.html_node(html)
     for sentences in si.body.sentences.itervalues():
         for sentence in sentences:
-            for token in sentence.tokens:
-                coffset = token.offsets.get(OffsetType.CHARS)
-                if coffset is None:
-                    continue
-                xoffset = token.offsets.get(OffsetType.XPATH_CHARS)
-                if xoffset is None:
-                    continue
-                crange = (coffset.first, coffset.first + coffset.length)
-                xprange = XpathRange.from_offset(xoffset)
-                expected = slice_clean_visible(token)
-                if expected != unicode(token.token, 'utf-8'):
-                    # Yeah, apparently this can happen. Maybe it's a bug
-                    # in Basis? I'm trying to hustle, and this only happens
-                    # in two instances for the `random` document, so I'm not
-                    # going to try to reproduce a minimal counter-example.
-                    # ---AG
-                    continue
-                try:
-                    got = xprange.slice_node(html_root)
-                except InvalidXpathError as err:
-                    debug_all(token, xprange, expected, err=err)
-                    raise XpathMismatchError(html, cleanvis, xprange, crange)
-                if expected != got:
-                    debug_all(token, xprange, expected, got=got)
-                    raise XpathMismatchError(html, cleanvis, xprange, crange)
+            if quick:
+                for i in xrange(len(sentence.tokens) - 1, -1, -1):
+                    if test_token(sentence.tokens[i]):
+                        break
+            else:
+                # Exhaustive test.
+                for token in sentence.tokens:
+                    test_token(token)
