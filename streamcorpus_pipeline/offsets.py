@@ -42,6 +42,7 @@ class xpath_offsets(object):
         except XpathMismatchError:
             logger.warning('stream item %s: Failed xpath roundtrip test, '
                            'dropping', si.stream_id, exc_info=True)
+            return None
         return si
 
 
