@@ -445,12 +445,15 @@ def stream_item_roundtrip_xpaths(si, quick=False):
     def debug(s):
         logger.warning(s)
 
-    def print_window(token):
+    def print_window(token, size=200):
         coffset = token.offsets[OffsetType.CHARS]
-        start = max(0, coffset.first - 200)
-        end = min(len(html), coffset.first + coffset.length + 200)
+        start = max(0, coffset.first - size)
+        end = min(len(html), coffset.first + coffset.length + size)
+        debug('-' * 49)
         debug(coffset)
+        debug('window size: %d' % size)
         debug(html[start:end])
+        debug('-' * 49)
 
     def debug_all(token, xprange, expected, err=None, got=None):
         debug('-' * 79)
@@ -461,8 +464,10 @@ def stream_item_roundtrip_xpaths(si, quick=False):
         if got is not None:
             debug('got: "%s"' % got)
         debug('token value: "%s"' % unicode(token.token, 'utf-8'))
-        debug('-' * 49)
-        print_window(token)
+        print_window(token, size=10)
+        print_window(token, size=30)
+        print_window(token, size=100)
+        print_window(token, size=200)
         debug('-' * 79)
 
     def slice_clean_visible(token):
@@ -499,6 +504,7 @@ def stream_item_roundtrip_xpaths(si, quick=False):
     cleanvis = unicode(si.body.clean_visible, 'utf-8')
     html = unicode(si.body.clean_html, 'utf-8')
     html_root = XpathRange.html_node(html)
+    total, has_valid_xpath = 0, 0
     for sentences in si.body.sentences.itervalues():
         for sentence in sentences:
             if quick:
@@ -508,4 +514,8 @@ def stream_item_roundtrip_xpaths(si, quick=False):
             else:
                 # Exhaustive test.
                 for token in sentence.tokens:
-                    test_token(token)
+                    total += 1
+                    if test_token(token):
+                        has_valid_xpath += 1
+    logger.info('stream item %s: %d/%d tokens with valid xpaths',
+                si.stream_id, has_valid_xpath, total)
