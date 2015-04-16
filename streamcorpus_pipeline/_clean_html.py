@@ -137,15 +137,17 @@ def make_clean_html(raw, stream_item=None):
         pretty_print=True,
         # include_meta_content_type=True
         )
-
-    _clean_html = replace_keys(_clean_html, keys, emails)
-    return uniform_html(_clean_html)
+    return replace_keys(uniform_html(_clean_html), keys, emails)
 
 
 def uniform_html(html):
-    doc = html5lib.parse(html)
-    return html5lib.serializer.serialize(doc, omit_optional_tags=False,
-                                         encoding='utf-8')
+    doc = html5lib.parse(html.decode('utf-8'))
+    config = {
+        'omit_optional_tags': False,
+        'encoding': 'utf-8',
+        'quote_attr_values': True,
+    }
+    return html5lib.serializer.serialize(doc, **config)
 
 
 class clean_html(Configured):

@@ -36,21 +36,20 @@ def test_make_clean_html():
 <a href="http://birdingblogs.com/author/daleforbes">birdingblogs.com</a></div><div
 id="comments-template"><h3 id="comments">4 Responses to &#822050+ Years of Digiscoping History.&#8221;</h3>'''
 
-    correct_test_bad_html = '''<html><body>
+    correct_test_bad_html = u'''<html><head><meta charset="utf-8"></head><body>
 <a href="http://birdingblogs.com/author/daleforbes">birdingblogs.com</a><div id="comments-template"><h3 id="comments">4 Responses to   + Years of Digiscoping History.”</h3></div>
+
 </body></html>
 '''
 
     email_html_1 = '''
 <html><head/><body>This and that <user@email.com>  </body></html>
 '''
-    corrected_email_html_1 = '''<html>
-<head></head>
-<body>This and that <user@email.com>  </body>
-</html>
-'''
+    corrected_email_html_1 = '''<html><head><meta charset="utf-8"></head>
+<body>This and that <user@email.com>  ''' + '''
 
-    ## split things up around the "+" because different versions of
+</body></html>'''
+
     ## split things up around the "+" because different versions of
     ## lxml insert different numbers of spaces!
     correct_first_half, correct_second_half = correct_test_bad_html.split('+')
@@ -60,7 +59,7 @@ id="comments-template"><h3 id="comments">4 Responses to &#822050+ Years of Digis
     cleaned_email_1 =  make_clean_html(email_html_1)
     assert cleaned_email_1 == corrected_email_html_1
 
-    cleaned =  make_clean_html(test_bad_html)
+    cleaned =  make_clean_html(test_bad_html).decode('utf-8')
     cleaned_first_half, cleaned_second_half = cleaned.split('+')
     cleaned_first_half = cleaned_first_half.strip()
     cleaned_second_half = cleaned_second_half.strip()
