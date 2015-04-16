@@ -204,14 +204,8 @@ class XpathTextCollector(HTMLParser):
         d.pop(self.depth)
         self.data_start = 0
         self.depth -= 1
-
-        # This pops void/data elements until we find our opening tag.
-        # while len(self.depth_stack[self.depth]['path']) > 0 \
-                # and self.depth_stack[self.depth]['path'][-1] is None:
-            # self.remove_element(self.depth, None)
         assert d[self.depth]['path'][-1] == tag, \
                 '%s not at end of %r' % (tag, d[self.depth]['path'])
-        # self.remove_element(self.depth, tag)
 
     @progressor
     def handle_startendtag(self, tag, attrs):
