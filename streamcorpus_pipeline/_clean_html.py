@@ -12,6 +12,7 @@ import logging
 import re
 import string
 
+import html5lib
 import lxml.html
 import lxml.html.clean
 import lxml.html.soupparser
@@ -138,7 +139,13 @@ def make_clean_html(raw, stream_item=None):
         )
 
     _clean_html = replace_keys(_clean_html, keys, emails)
-    return _clean_html
+    return uniform_html(_clean_html)
+
+
+def uniform_html(html):
+    doc = html5lib.parse(html)
+    return html5lib.serializer.serialize(doc, omit_optional_tags=False,
+                                         encoding='utf-8')
 
 
 class clean_html(Configured):
