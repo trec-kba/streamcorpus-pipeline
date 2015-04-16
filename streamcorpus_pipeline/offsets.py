@@ -1,8 +1,7 @@
 from __future__ import absolute_import, division, print_function
 
-from collections import defaultdict
 from HTMLParser import HTMLParser
-from itertools import imap, izip
+from itertools import izip
 import logging
 
 from streamcorpus import InvalidXpathError, Offset, OffsetType, XpathRange
