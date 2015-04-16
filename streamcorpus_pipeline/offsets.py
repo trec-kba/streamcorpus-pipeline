@@ -140,7 +140,6 @@ class XpathTextCollector(HTMLParser):
 
     def text_index(self):
         '''Returns the one-based index of the current text node.'''
-        # print('TEXT INDEX %r' % self.depth_stack)
         i = 1
         last_is_data = False
         for v in self.depth_stack[self.depth]['path']:
@@ -153,14 +152,14 @@ class XpathTextCollector(HTMLParser):
 
     # Some hacks to track whether the parser moved to the next state.
     def feed(self, s):
-        print('FEED', s)
+        # print('FEED', s)
         HTMLParser.feed(self, s[0:len(s)-1])
         self.made_progress = False
         HTMLParser.feed(self, s[len(s)-1:len(s)])
 
     def progressor(meth):
         def _(self, *args, **kwargs):
-            print(meth.__name__, args[0])
+            # print(meth.__name__, args[0])
             self.made_progress = True
             return meth(self, *args, **kwargs)
         return _
@@ -198,12 +197,6 @@ class XpathTextCollector(HTMLParser):
     @progressor
     def handle_endtag(self, tag):
         d = self.depth_stack
-        import pprint
-        print('-' * 79)
-        print(tag)
-        pprint.pprint(d)
-        print('-' * 79)
-
         if tag in VOID_ELEMENTS:
             # We don't "descend" into void elements, so we can just ignore
             # them completely.
@@ -399,11 +392,11 @@ def char_offsets_to_xpaths(html, char_offsets):
         # start of `char_offsets`.
         parser.feed(html[prev_end:start])
         xstart = parser.xpath_offset()
-        print('START', xstart)
+        # print('START', xstart)
         # Hand it the actual token and ask for the ending offset.
         parser.feed(html[start:end])
         xend = parser.xpath_offset()
-        print('END', xend)
+        # print('END', xend)
         prev_end = end
 
         # If we couldn't make progress then the xpaths generated are probably
