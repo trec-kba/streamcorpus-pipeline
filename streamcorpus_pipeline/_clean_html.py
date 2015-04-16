@@ -142,9 +142,13 @@ def make_clean_html(raw, stream_item=None):
 
 
 def uniform_html(html):
-    doc = html5lib.parse(html)
-    return html5lib.serializer.serialize(doc, omit_optional_tags=False,
-                                         encoding='utf-8')
+    doc = html5lib.parse(html.decode('utf-8'))
+    config = {
+        'omit_optional_tags': False,
+        'encoding': 'utf-8',
+        'quote_attr_values': True,
+    }
+    return html5lib.serializer.serialize(doc, **config)
 
 
 class clean_html(Configured):
