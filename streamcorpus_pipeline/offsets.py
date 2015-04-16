@@ -384,7 +384,14 @@ def char_offsets_to_xpaths(html, char_offsets):
         # Hand the parser everything from the end of the last token to the
         # start of this one. Then ask for the Xpath, which should be at the
         # start of `char_offsets`.
-        parser.feed(html[prev_end:start])
+        if prev_end < start:
+            parser.feed(html[prev_end:start])
+            if not parser.made_progress:
+                parser.feed(html[start:end])
+                prev_progress = parser.made_progress
+                prev_end = end
+                yield None
+                continue
         xstart = parser.xpath_offset()
         # print('START', xstart)
         # Hand it the actual token and ask for the ending offset.
