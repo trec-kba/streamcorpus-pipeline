@@ -37,7 +37,7 @@ class xpath_offsets(object):
             return si
         add_xpaths_to_stream_item(si)
         try:
-            stream_item_roundtrip_xpaths(si, quick=True)
+            stream_item_roundtrip_xpaths(si, quick=False)
         except XpathMismatchError:
             logger.warning('stream item %s: Failed xpath roundtrip test, '
                            'dropping', si.stream_id, exc_info=True)
