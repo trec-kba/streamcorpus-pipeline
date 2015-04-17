@@ -518,5 +518,7 @@ def stream_item_roundtrip_xpaths(si, quick=False):
                     total += 1
                     if test_token(token):
                         has_valid_xpath += 1
-    logger.info('stream item %s: %d/%d tokens with valid xpaths',
-                si.stream_id, has_valid_xpath, total)
+    if not quick:
+        # This is nonsense if we have quick checking enabled.
+        logger.info('stream item %s: %d/%d tokens with valid xpaths',
+                    si.stream_id, has_valid_xpath, total)
