@@ -46,6 +46,7 @@ Incremental transforms
 .. autoclass:: streamcorpus_pipeline._hyperlink_labels.hyperlink_labels
 .. autoclass:: streamcorpus_pipeline._upgrade_streamcorpus.keep_annotated
 .. autoclass:: streamcorpus_pipeline._language.language
+.. autoclass:: streamcorpus_pipeline._gather_frequencies.gather_frequencies
 .. autoclass:: streamcorpus_pipeline._nilsimsa.nilsimsa
 .. autoclass:: streamcorpus_pipeline._filters.remove_raw
 .. autoclass:: streamcorpus_pipeline._filters.dump_stream_id_abs_url
@@ -381,6 +382,7 @@ class PipelineStages(StageRegistry):
         self.tryload_stage('_upgrade_streamcorpus', 'keep_annotated')
         self.tryload_stage('_upgrade_streamcorpus', 'keep_annotated', 'keep_annotatoted')
         self.tryload_stage('_language', 'language')
+        self.tryload_stage('_gather_frequencies', 'gather_frequencies')
         self.tryload_stage('_nilsimsa', 'nilsimsa')
         self.tryload_stage('_filters', 'remove_raw')
         self.tryload_stage('_filters', 'dump_stream_id_abs_url')

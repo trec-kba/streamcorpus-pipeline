@@ -66,7 +66,7 @@ class keyword_indexer(object):
         )
         return cv.build_analyzer()
 
-    def make_hash(self, tok):
+    def make_hash(tok):
         '''Get a Murmur hash for a token.
 
         `tok` may be a :class:`unicode` string or a UTF-8-encoded
@@ -78,7 +78,8 @@ class keyword_indexer(object):
         (_, h) = self.make_hash_kw(tok)
         return h
 
-    def make_hash_kw(self, tok):
+    @staticmethod
+    def make_hash_kw(tok):
         '''Get a Murmur hash and a normalized token.
 
         `tok` may be a :class:`unicode` string or a UTF-8-encoded

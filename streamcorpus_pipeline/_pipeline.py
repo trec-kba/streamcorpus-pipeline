@@ -410,6 +410,7 @@ class PipelineFactory(object):
             output_chunk_max_count=config.get('output_chunk_max_count'),
             output_max_clean_visible_bytes=config.get(
                 'output_max_clean_visible_bytes'),
+            push_only_accumulated_context=config['push_only_accumulated_context'],
             reader=reader,
             incremental_transforms=incremental_transforms,
             batch_transforms=batch_transforms,
@@ -438,6 +439,7 @@ class Pipeline(object):
     def __init__(self, rate_log_interval, input_item_limit,
                  cleanup_tmp_files, tmp_dir_path, assert_single_source,
                  output_chunk_max_count, output_max_clean_visible_bytes,
+                 push_only_accumulated_context,
                  reader, incremental_transforms, batch_transforms,
                  post_batch_incremental_transforms, writers):
         '''Create a new pipeline object.
@@ -476,6 +478,7 @@ class Pipeline(object):
         self.assert_single_source = assert_single_source
         self.output_chunk_max_count = output_chunk_max_count
         self.output_max_clean_visible_bytes = output_max_clean_visible_bytes
+        self.push_only_accumulated_context = push_only_accumulated_context
 
         # stages that get passed in:
         self.reader = reader
@@ -633,6 +636,18 @@ class Pipeline(object):
                 if (((self.input_item_limit is not None) and
                      (input_item_count > self.input_item_limit))):
                     break
+
+            if self.push_only_accumulated_context:
+                t_path = os.path.join(self.tmp_dir_path,
+                                      't_chunk-CONTEXT-%s' % uuid.uuid4().hex)
+                self.t_chunk = streamcorpus.Chunk(path=t_path, mode='wb')
+                si = streamcorpus.make_stream_item(0, 'unused-abs_url')
+                try:
+                    si.body.raw = json.dumps(self.context)
+                except:
+                    logger.critical('failed to dump context to JSON!', exc_info=True)
+                    raise
+                self.t_chunk.add(si)
 
             if self.t_chunk is not None:
                 self._process_output_chunk(

@@ -44,6 +44,7 @@ default_config = {
     'post_batch_incremental_transforms': [],
     'cleanup_tmp_files': True,
     'assert_single_source': True,
+    'push_only_accumulated_context': False,
     'reader': 'from_local_chunks',
     'writers': ['to_local_chunks'],
 }
