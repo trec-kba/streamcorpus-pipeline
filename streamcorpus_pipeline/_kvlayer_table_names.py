@@ -23,11 +23,13 @@ need to access these tables should call:
 .. autodata:: STREAM_ITEM_VALUE_DEFS
 .. autodata:: STREAM_ITEMS_TABLE
 .. autodata:: STREAM_ITEMS_SOURCE_INDEX
+.. autodata:: STREAM_ITEMS_TIME_INDEX
 .. autodata:: HASH_TF_INDEX_TABLE
 .. autodata:: HASH_FREQUENCY_TABLE
 .. autodata:: HASH_KEYWORD_INDEX_TABLE
 .. autodata:: INDEX_TABLE_NAMES
 .. autodata:: WITH_SOURCE
+.. autodata:: BY_TIME
 .. autodata:: KEYWORDS
 .. autodata:: HASH_TF_SID
 .. autodata:: HASH_FREQUENCY
@@ -55,6 +57,12 @@ STREAM_ITEMS_TABLE = 'si'
 #: for a given stream item, its source is :const:`None`.
 STREAM_ITEMS_SOURCE_INDEX = 'sisi'
 
+#: Name of the table holding stream item keys ordered by time.
+#: Keys are the reverse of :data:`STREAM_ITEMS_TABLE`, pairs of
+#: an :class:`int` holding the stream time and a 16-byte binary
+#: string holding the document ID.  Values are empty.
+STREAM_ITEMS_TIME_INDEX = 'siti'
+
 #: Name of the table holding keyword index data.  Keys are tuples of
 #: the Murmur hash of the keyword, the document ID, and the stream time;
 #: the last two parts make up the stream ID.  Values are ints with the
@@ -79,6 +87,7 @@ STREAM_ITEM_TABLE_DEFS = {
     # (binary 16 byte md5 of abs_url, timestamp)
     STREAM_ITEMS_TABLE: (str, int),
     STREAM_ITEMS_SOURCE_INDEX: (str, int),
+    STREAM_ITEMS_TIME_INDEX: (int, str),
 
     # keyword index tables:
     HASH_TF_INDEX_TABLE: (int, str, int),
@@ -120,11 +129,16 @@ HASH_KEYWORD = 'hash_keyword'
 #: configuration to generate the source-type index.
 WITH_SOURCE = 'with_source'
 
+#: :class:`~streamcorpus_pipeline._kvlayer.to_kvlayer` index
+#: configuration to generate the timestamp index.
+BY_TIME = 'by_time'
+
 #: Dictionary mapping a configuration name from the
 #: :class:`~streamcorpus_pipeline._kvlayer.to_kvlayer` writer to
 #: its underlying table name.
 INDEX_TABLE_NAMES = {
     WITH_SOURCE: STREAM_ITEMS_SOURCE_INDEX,
+    BY_TIME: STREAM_ITEMS_TIME_INDEX,
     HASH_FREQUENCY: HASH_FREQUENCY_TABLE,
     HASH_KEYWORD: HASH_KEYWORD_INDEX_TABLE,
     HASH_TF_SID: HASH_TF_INDEX_TABLE,
@@ -170,7 +184,7 @@ def kvlayer_key_to_stream_id(k):
     '''
     abs_url_hash, epoch_ticks = k
     return '{0}-{1}'.format(epoch_ticks,
-                          base64.b16encode(abs_url_hash).lower())
+                            base64.b16encode(abs_url_hash).lower())
 
 
 def key_for_stream_item(si):

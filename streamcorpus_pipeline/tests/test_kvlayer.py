@@ -15,7 +15,8 @@ import streamcorpus
 from streamcorpus_pipeline._kvlayer import from_kvlayer, to_kvlayer, \
     serialize_si_key
 from streamcorpus_pipeline._kvlayer_table_names import STREAM_ITEMS_TABLE, \
-    STREAM_ITEM_TABLE_DEFS, STREAM_ITEM_VALUE_DEFS, STREAM_ITEMS_SOURCE_INDEX
+    STREAM_ITEM_TABLE_DEFS, STREAM_ITEM_VALUE_DEFS, \
+    STREAM_ITEMS_SOURCE_INDEX, STREAM_ITEMS_TIME_INDEX
 from streamcorpus_pipeline.tests._test_data import get_test_v0_3_0_chunk_path
 import yakonfig
 
@@ -187,21 +188,19 @@ def test_kvlayer_index_with_source(configurator, test_data_dir):
                     assert si.source == v
 
 
+# TODO: This is such a simple test that it's kind of nuts for it to
+# be marked slow, come up with a saner data set for it
 @pytest.mark.slow
-def test_kvlayer_both_indexes(configurator, test_data_dir):
+def test_kvlayer_index_by_time(configurator, test_data_dir):
     overlay = {
         'streamcorpus_pipeline': {
             'to_kvlayer': {
-                'indexes': ['with_source'],
+                'indexes': ['by_time'],
             },
         },
     }
     with chunks(configurator, test_data_dir, overlay) as (path, client):
-        total = 0
-        for k, v in client.scan(STREAM_ITEMS_SOURCE_INDEX):
-            total += 1
-            count = 0
-            for kk, sixz in client.get(STREAM_ITEMS_TABLE, k):
-                count += 1
-            assert count == 1
-        assert total == 31
+        stream_item_keys = list(client.scan_keys(STREAM_ITEMS_TABLE))
+        swapped_keys = [(key[1], key[0]) for key in stream_item_keys]
+        expected = [(key, '') for key in sorted(swapped_keys)]
+        assert list(client.scan(STREAM_ITEMS_TIME_INDEX)) == expected

@@ -16,10 +16,11 @@ import kvlayer
 import streamcorpus
 from streamcorpus_pipeline.stages import Configured
 from streamcorpus_pipeline._kvlayer_table_names import \
-    WITH_SOURCE, KEYWORDS, HASH_TF_SID, HASH_FREQUENCY, HASH_KEYWORD, \
+    BY_TIME, WITH_SOURCE, KEYWORDS, HASH_TF_SID, HASH_FREQUENCY, \
+    HASH_KEYWORD, \
     stream_id_to_kvlayer_key, key_for_stream_item, \
     STREAM_ITEM_TABLE_DEFS, STREAM_ITEM_VALUE_DEFS, INDEX_TABLE_NAMES, \
-    STREAM_ITEMS_TABLE, STREAM_ITEMS_SOURCE_INDEX
+    STREAM_ITEMS_TABLE, STREAM_ITEMS_SOURCE_INDEX, STREAM_ITEMS_TIME_INDEX
 import yakonfig
 
 try:
@@ -222,6 +223,7 @@ class to_kvlayer(Configured):
     This writer has one configuration parameter: `indexes` adds
     additional indexes on the data.  Supported index types include
     :data:`~streamcorpus_pipeline._kvlayer_table_names.WITH_SOURCE`,
+    :data:`~streamcorpus_pipeline._kvlayer_table_names.BY_TIME`,
     :data:`~streamcorpus_pipeline._kvlayer_table_names.HASH_TF_SID`,
     :data:`~streamcorpus_pipeline._kvlayer_table_names.HASH_FREQUENCIES`,
     and
@@ -351,9 +353,15 @@ def index_source(si):
         yield (STREAM_ITEMS_SOURCE_INDEX, (key_for_stream_item(si), si.source))
 
 
+def index_time(si):
+    key = key_for_stream_item(si)
+    yield (STREAM_ITEMS_TIME_INDEX, ((key[1], key[0]), ''))
+
+
 # functions take a StreamItem and yield (table name, (key, value))
 INDEX_FUNCTIONS = {
     WITH_SOURCE: index_source,
+    BY_TIME: index_time,
 }
 
 
