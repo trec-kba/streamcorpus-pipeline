@@ -1,5 +1,7 @@
 from __future__ import absolute_import, division, print_function
 
+import pytest
+
 from streamcorpus.test_xpath import tests_roundtrip
 import streamcorpus_pipeline.offsets as offsets
 import streamcorpus_pipeline.tests._test_data as testdata
@@ -11,12 +13,14 @@ def test_simple_si(test_data_dir):
     offsets.stream_item_roundtrip_xpaths(si)
 
 
+@pytest.mark.xfail
 def test_random_chinese_si(test_data_dir):
     si = testdata.get_si_random_chinese_tagged_by_basis(test_data_dir)
     offsets.add_xpaths_to_stream_item(si)
     offsets.stream_item_roundtrip_xpaths(si)
 
 
+@pytest.mark.xfail
 def test_wikipedia_chinese_si(test_data_dir):
     si = testdata.get_si_wikipedia_chinese_tagged_by_basis(test_data_dir)
     offsets.add_xpaths_to_stream_item(si)
