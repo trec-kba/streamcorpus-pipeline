@@ -83,3 +83,4 @@ from config import config_name, default_config, runtime_keys, sub_modules, \
     replace_config, check_config, normalize_config
 from _pipeline import Pipeline, PipelineFactory
 from _rejester import rejester_run_function, rejester_terminate_function
+from streamcorpus_pipeline._clean_visible import cleanse
