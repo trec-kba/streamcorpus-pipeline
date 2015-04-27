@@ -232,6 +232,14 @@ class to_kvlayer(Configured):
     :data:`~streamcorpus_pipeline._kvlayer_table_names.KEYWORDS`
     expands to all of the keyword-index tables.
 
+    If keyword indexing is enabled, it indexes the tokens generated
+    by some or all of the taggers that have been run, less a set of
+    stop words.  The configuration parameter `keyword_tagger_ids` may
+    be set to a list of tagger IDs; if it is set, only the tokens
+    from those tagger IDs will be indexed.  If it is set to ``null``
+    or left unset, all taggers' tokens will be indexed as distinct
+    words.
+
     '''
     config_name = 'to_kvlayer'
     default_config = {'indexes': []}

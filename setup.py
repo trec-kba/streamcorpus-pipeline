@@ -146,8 +146,7 @@ setup(
     ],
     extras_require = {
         'keyword_indexing': [
-            'many_stop_words',
-            'scikit-learn',
+            'many_stop_words >= 0.2.0',
             'mmh3',
         ],
     },
