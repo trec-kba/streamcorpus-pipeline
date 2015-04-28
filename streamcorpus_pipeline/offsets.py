@@ -17,8 +17,9 @@ logger = logging.getLogger(__name__)
 # In our HTML parser, we need to be careful with void element handling,
 # otherwise our state gets corrupt (because we cannot assume every start
 # tag has an end tag).
-VOID_ELEMENTS = {'area', 'base', 'br', 'col', 'embed', 'hr', 'img', 'input',
-                 'keygen', 'link', 'meta', 'param', 'source', 'track', 'wbr'}
+VOID_ELEMENTS = set(['area', 'base', 'br', 'col', 'embed', 'hr', 'img',
+                     'input', 'keygen', 'link', 'meta', 'param', 'source',
+                     'track', 'wbr'])
 
 
 # To be written transform.

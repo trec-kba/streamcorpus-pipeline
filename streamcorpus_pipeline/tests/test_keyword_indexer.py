@@ -10,7 +10,7 @@ import pytest
 
 import kvlayer
 from kvlayer._local_memory import LocalStorage
-from streamcorpus import Chunk, make_stream_item
+from streamcorpus import Chunk, make_stream_item, Sentence, Token
 import streamcorpus_pipeline
 from streamcorpus_pipeline._kvlayer import to_kvlayer
 from streamcorpus_pipeline._kvlayer_table_names import STREAM_ITEM_TABLE_DEFS, \
@@ -59,6 +59,10 @@ def corpus(phrases):
         si = make_stream_item(1234567890, abs_url)
         si.body.raw = phrase
         si.body.clean_visible = phrase
+        si.body.sentences['test'] = [Sentence(tokens=[
+            Token(token_num=n, token=word, sentence_pos=n)
+            for (n, word) in enumerate(phrase.split())
+        ])]
         corpus[phrase] = si
     return corpus
 

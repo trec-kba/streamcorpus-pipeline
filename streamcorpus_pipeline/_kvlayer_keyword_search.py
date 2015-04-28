@@ -8,9 +8,9 @@ from collections import Counter, defaultdict
 import logging
 
 import mmh3
-from sklearn.feature_extraction.text import CountVectorizer
 
 from many_stop_words import get_stop_words
+from streamcorpus_pipeline._clean_visible import cleanse
 from streamcorpus_pipeline._kvlayer_table_names import \
     HASH_TF_INDEX_TABLE, HASH_FREQUENCY_TABLE, HASH_KEYWORD_INDEX_TABLE, \
     kvlayer_key_to_stream_id, key_for_stream_item
@@ -34,7 +34,7 @@ class keyword_indexer(object):
     '''
 
     def __init__(self, kvl, hash_docs=True, hash_frequencies=True,
-                 hash_keywords=True):
+                 hash_keywords=True, keyword_tagger_ids=None):
         '''Create a new keyword indexer.
 
         `kvl` should be preconfigured to handle the
@@ -51,20 +51,19 @@ class keyword_indexer(object):
 
         '''
         self.client = kvl
-        self.analyzer = self.build_analyzer()
         self.hash_docs = hash_docs
         self.hash_frequencies = hash_frequencies
         self.hash_keywords = hash_keywords
+        self.keyword_tagger_ids = keyword_tagger_ids
 
-    @staticmethod
-    def build_analyzer():
-        '''builds an sklearn `CountVectorizer` using `many_stop_words`'''
-        # sensible defaults; could need configuration eventually
-        cv = CountVectorizer(
-            stop_words=get_stop_words(),
-            strip_accents='unicode',
-        )
-        return cv.build_analyzer()
+    # Class static, initialized on first use
+    _stop_words = None
+
+    @property
+    def stop_words(self):
+        if self._stop_words is None:
+            self.__class__._stop_words = get_stop_words()
+        return self._stop_words
 
     def make_hash(self, tok):
         '''Get a Murmur hash for a token.
@@ -97,6 +96,34 @@ class keyword_indexer(object):
             h = DOCUMENT_HASH_KEY_REPLACEMENT
         return (tok, h)
 
+    def collect_words(self, si):
+        '''Collect all of the words to be indexed from a stream item.
+
+        This scans `si` for all of the configured tagger IDs.  It
+        collects all of the token values (the
+        :attr:`streamcorpus.Token.token`) and returns a
+        :class:`collections.Counter` of them.
+
+        :param si: stream item to scan
+        :type si: :class:`streamcorpus.StreamItem`
+        :return: counter of :class:`unicode` words to index
+        :returntype: :class:`collections.Counter`
+
+        '''
+        counter = Counter()
+        for tagger_id, sentences in si.body.sentences.iteritems():
+            if ((self.keyword_tagger_ids is not None
+                 and tagger_id not in self.keyword_tagger_ids)):
+                continue
+            for sentence in sentences:
+                for token in sentence.tokens:
+                    term = token.token  # always a UTF-8 byte string
+                    term = term.decode('utf-8')
+                    term = cleanse(term)
+                    if term not in self.stop_words:
+                        counter[term] += 1
+        return counter
+
     def index(self, si):
         '''Record index records for a single document.
 
@@ -115,7 +142,7 @@ class keyword_indexer(object):
         hash_counts = defaultdict(int)
         hash_counts[DOCUMENT_HASH_KEY] = 1
         hash_kw = defaultdict(int)
-        words = Counter(self.analyzer(si.body.clean_visible))
+        words = self.collect_words(si)
         for tok, count in words.iteritems():
             (tok, tok_hash) = self.make_hash_kw(tok)
             hash_counts[tok_hash] += count
