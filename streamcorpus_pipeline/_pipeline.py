@@ -686,7 +686,7 @@ class Pipeline(object):
         self.t_chunk = None
 
         # If we wrote some paths, update the data dictionary of outputs
-        if self.work_unit:
+        if self.work_unit and o_paths:
             old_o_paths = self.work_unit.data.get('output', [])
             o_paths = old_o_paths + o_paths
             self.work_unit.data['start_count'] = next_idx
