@@ -125,6 +125,7 @@ def make_clean_html(raw, stream_item=None):
         comments=True,
         # do not remove <html> <head> <title> etc
         page_structure=False,
+        remove_tags=['base'],
         style=True, links=True)
 
     # now get the really sanitized HTML

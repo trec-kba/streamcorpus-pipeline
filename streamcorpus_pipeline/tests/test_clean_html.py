@@ -6,7 +6,6 @@ import sys
 import time
 
 from streamcorpus import StreamItem, ContentItem
-import streamcorpus_pipeline
 from streamcorpus_pipeline._clean_html import make_clean_html, clean_html
 from streamcorpus_pipeline._clean_visible import make_clean_visible
 from streamcorpus_pipeline._hyperlink_labels import hyperlink_labels
@@ -73,6 +72,15 @@ def test_clean_html_simple_unicode():
     cleaned = make_clean_html(html, si)
     assert u'1' in cleaned.decode('utf-8')
     assert u'☃' in cleaned.decode('utf-8')
+
+
+def test_clean_html_remove_base():
+    html = '<html><body><base href="http://foo.com"><p>foo</p></body></html>'
+    si = StreamItem(body=ContentItem(raw=html, encoding='utf-8'))
+    cleaned = make_clean_html(html, si)
+    assert cleaned.decode('utf-8') == '''
+<html><head><meta charset="utf-8"></head><body><p>foo</p>
+</body></html>'''.strip()
 
 
 def test_target_parsing(test_data_dir):
