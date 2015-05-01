@@ -406,6 +406,7 @@ class PipelineStages(StageRegistry):
         self.tryload_stage('_kvlayer', 'to_kvlayer')
         self.tryload_stage('_s3_storage', 'to_s3_chunks')
         self.tryload_stage('_s3_storage', 'to_s3_tarballs')
+        self.tryload_stage('_word_frequency_writer', 'to_s3_frequencies')
 
         # load from setuptools 'entry_points' of other installed packages
         for entry_point in pkg_resources.iter_entry_points('streamcorpus_pipeline.stages'):
