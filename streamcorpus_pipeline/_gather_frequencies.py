@@ -28,25 +28,31 @@ class gather_frequencies(Configured):
     def __call__(self, si, context):
         if 'string_counts' not in context:
             context['string_counts'] = Counter()
+        if 'num_docs' not in context:
+            context['num_docs'] = 0
+        context['num_docs'] += 1
         tagger_id = self.config['tagger_id']
         if not si.body.sentences or tagger_id not in si.body.sentences:
             return None
         sentences = si.body.sentences[tagger_id]
         tokens = list(itertools.chain(*[sent.tokens for sent in sentences]))
+        tok_set = set()
 
         def add_tokens(multitoken):
             full_str = ' '.join(multitoken)
             cleansed_string = cleanse(full_str.decode('utf8')).encode('utf8')
             if cleansed_string == '':
                 return
-            context['string_counts'][cleansed_string] += 1
+            #context['string_counts'][cleansed_string] += 1
+            tok_set.add(cleansed_string)
 
             if len(multitoken) > 1:
                 for tok in multitoken:
                     cleansed_token = cleanse(tok.decode('utf8')).encode('utf8')
                     if cleansed_token == '':
                         return
-                    context['string_counts'][cleansed_token] += 1
+                    #context['string_counts'][cleansed_token] += 1
+                    tok_set.add(cleansed_token)
 
         curr_mention_id = -1
         multitoken = []
@@ -63,5 +69,8 @@ class gather_frequencies(Configured):
                     multitoken.append(tok.token)
         if len(multitoken) > 0:
             add_tokens(multitoken)
+
+        for tok_str in tok_set:
+            context['string_counts'][tok_str] += 1
 
         return si

@@ -27,7 +27,7 @@ class to_s3_frequencies(to_s3_chunks):
         for si in chunk:
             si = freq_xform(si, context)
         json_path = t_path + '.json'
-        json.dump(context['string_counts'], open(json_path, 'w'))
+        json.dump(context, open(json_path, 'w'))
         return json_path
 
     @property
