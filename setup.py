@@ -126,7 +126,7 @@ setup(
         'ftfy',
         'kvlayer >= 0.4.10',
         'rejester',
-        'protobuf',
+        'protobuf < 3',
         'requests',
         'streamcorpus>=0.3.48',
         'pyyaml',
