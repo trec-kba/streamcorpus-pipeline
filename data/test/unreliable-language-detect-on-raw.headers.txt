@@ -1,0 +1,24 @@
+--2015-05-04 03:34:20--  http://bbs.sjtu.edu.cn/bbsanc?path=%2Fgroups%2FGROUP_0%2Fmessage%2FD4EFC2634%2FD7AC8E3A8%2FG.1092960050.A
+Resolving bbs.sjtu.edu.cn (bbs.sjtu.edu.cn)... 202.120.58.161
+Connecting to bbs.sjtu.edu.cn (bbs.sjtu.edu.cn)|202.120.58.161|:80... connected.
+HTTP request sent, awaiting response... 
+  HTTP/1.1 200 OK
+  Server: nginx/1.0.6
+  Date: Mon, 04 May 2015 03:34:20 GMT
+  Content-Type: text/html; charset=gb2312
+  Transfer-Encoding: chunked
+  Connection: keep-alive
+  X-Powered-By: fweb2
+  Last-Modified: Mon, 04-May-2015 03:34:20 GMT
+  Cache-control: max-age=3600
+Length: unspecified [text/html]
+Saving to: ‘f.html’
+
+     0K .......... .......... .......... .......... .......... 48.0K
+    50K .......... .......... .......... .......... .......... 96.1K
+   100K .......... .......... .......... .......... ..........  192K
+   150K .......... .......... .......... .......... ..........  192K
+   200K .......... .......... .......... ........              38.7M=2.1s
+
+2015-05-04 03:34:22 (115 KB/s) - ‘f.html’ saved [244712]
+
