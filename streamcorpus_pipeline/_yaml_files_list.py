@@ -319,7 +319,12 @@ class yaml_files_list(Configured):
 
             ## heuristically split the slots string on white space and
             ## use each token as a separate mention.
-            rating.mentions = [cleanse(unicode(slot[1], 'utf-8')) for slot in slots]
+            rating.mentions = []
+            for slot in slots:
+                mention = slot[1]
+                if isinstance(mention, unicode):
+                    mention = mention.encode('utf8')
+                rating.mentions.append(mention)
 
             ## put this one label in the array of labels
             streamcorpus.add_annotation(stream_item, rating)
