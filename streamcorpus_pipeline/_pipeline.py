@@ -105,7 +105,7 @@ value)
 
 .. code-block:: yaml
 
-    output_max_chunk_count: 500
+    output_chunk_max_count: 500
 
 After this many items have been written, close and re-open the output.
 (Default: 500 items)
