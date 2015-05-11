@@ -49,7 +49,7 @@ class pdf_to_text(Configured):
                          stream_item.stream_id)
 
             try:
-                stream_item.body.clean_visible = \
+                stream_item.body.clean_html = \
                     convert_pdf_to_text(stream_item.body.raw)
             except Exception as exc:
                 logger.exception('failed to convert %s from pdf',

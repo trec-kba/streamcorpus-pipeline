@@ -31,7 +31,7 @@ class docx_to_text(Configured):
                          stream_item.stream_id)
 
             try:
-                stream_item.body.clean_visible = \
+                stream_item.body.clean_html = \
                     extract_text(stream_item.body.raw)
             except Exception as exc:
                 logger.exception('failed to convert %s from docx',
