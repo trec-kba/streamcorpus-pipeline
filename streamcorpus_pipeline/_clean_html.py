@@ -13,6 +13,7 @@ import re
 import string
 
 import html5lib
+import lxml.etree
 import lxml.html
 import lxml.html.clean
 import lxml.html.soupparser
@@ -106,6 +107,12 @@ def make_clean_html(raw, stream_item=None):
             root = lxml.html.document_fromstring(raw)
         else:
             raise
+
+    # While we have the document parsed as a DOM, let's strip attributes.
+    # (The HTML cleaner seems to only support whitelisting attributes.
+    # As of now, we just want to blacklist a few.)
+    lxml.etree.strip_attributes(root, 'class', 'id')
+
     # if that worked, then we will be able to generate a
     # valid HTML string
     fixed_html = lxml.html.tostring(root, encoding=unicode)

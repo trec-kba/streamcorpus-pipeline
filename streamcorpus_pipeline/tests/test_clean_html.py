@@ -36,7 +36,7 @@ def test_make_clean_html():
 id="comments-template"><h3 id="comments">4 Responses to &#822050+ Years of Digiscoping History.&#8221;</h3>'''
 
     correct_test_bad_html = u'''<html><head><meta charset="utf-8"></head><body>
-<a href="http://birdingblogs.com/author/daleforbes">birdingblogs.com</a><div id="comments-template"><h3 id="comments">4 Responses to   + Years of Digiscoping History.”</h3></div>
+<a href="http://birdingblogs.com/author/daleforbes">birdingblogs.com</a><div><h3>4 Responses to   + Years of Digiscoping History.”</h3></div>
 
 </body></html>
 '''
@@ -74,6 +74,15 @@ def test_clean_html_simple_unicode():
     assert u'☃' in cleaned.decode('utf-8')
 
 
+def test_clean_html_attr_strip():
+    html = '<html><body><span class="foo" id="bar">foobar</span></body></html>'
+    si = StreamItem(body=ContentItem(raw=html, encoding='utf-8'))
+    cleaned = make_clean_html(html, si)
+    assert cleaned.decode('utf-8') == '''
+<html><head><meta charset="utf-8"></head><body><span>foobar</span>
+</body></html>'''.strip()
+
+
 def test_clean_html_remove_base():
     html = '<html><body><base href="http://foo.com"><p>foo</p></body></html>'
     si = StreamItem(body=ContentItem(raw=html, encoding='utf-8'))
@@ -89,12 +98,12 @@ def test_target_parsing(test_data_dir):
 
     html = make_clean_html( test_html )
 
-    assert 'logo' in html
+    assert 'charset="utf-8"' in html
     assert 'target' in html
 
     visible = make_clean_visible( html )
 
-    assert 'logo' not in visible
+    assert 'charset="utf-8"' not in visible
     assert 'target' not in visible
 
     stage = hyperlink_labels(config={
@@ -112,8 +121,7 @@ def test_target_parsing(test_data_dir):
     print visible2
 
     assert 'target' not in visible2
-    assert 'logo' not in visible2
-
+    assert 'charset="utf-8"' not in visible2
 
 
 @pytest.mark.xfail  # pylint: disable=E1101
