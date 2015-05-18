@@ -7,3 +7,4 @@ RELEASE-VERSION
 build/
 dist/
 streamcorpus_pipeline.egg-info/
+tmp
