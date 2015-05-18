@@ -194,15 +194,14 @@ class clean_html(Configured):
                         stream_item.stream_id)
             return None
 
-        if (((not stream_item.body.language) and
-             (self.require_code or self.codes))):
+        lang = stream_item.body.language
+        if not lang and (self.require_code or self.codes):
             logger.warn('skipping stream_item %s with missing language '
                         '(did you run the "language" transform?)',
                         stream_item.stream_id)
             return stream_item
 
-        if ((self.require_code and
-             self.require_code != stream_item.body.language.code)):
+        if self.require_code and self.require_code != lang.code:
             logger.debug('skipping stream_item %s with language %r, '
                          'not required language %r',
                          stream_item.stream_id,
@@ -210,20 +209,17 @@ class clean_html(Configured):
                          self.require_code)
             return stream_item
 
-        if self.codes and stream_item.body.language.code not in self.codes:
+        if self.codes and lang.code not in self.codes:
             logger.debug('skipping stream_item %s with language %r, '
                          'not one of included codes %r',
-                         stream_item.stream_id,
-                         stream_item.body.language.code,
-                         self.codes)
+                         stream_item.stream_id, lang.code, self.codes)
 
-        if ((stream_item.body.media_type and
-             stream_item.body.media_type.startswith('text/html'))):
+        mediaty = stream_item.body.media_type
+        if mediaty and mediaty.startswith('text/html'):
             stream_item.body.clean_html = make_clean_html(
                 stream_item.body.raw,
                 stream_item=stream_item)
         else:
             logger.debug('skipping stream_item %s with non-HTML media_type %r',
-                         stream_item.stream_id, stream_item.body.media_type)
-
+                         stream_item.stream_id, mediaty)
         return stream_item
