@@ -144,6 +144,58 @@ def test_unicode_conversion(test_data_dir):
 
     print visible.decode('utf8')
 
+
+TEST_STAGE_RAW = '<html><body><h1>Foobar</h1></body></html>'
+TEST_STAGE_CLEANED = '''
+<html><head><meta charset="utf-8"></head><body><h1>Foobar</h1>
+</body></html>'''.strip()
+
+
+def test_stage_defaults():
+    si = StreamItem(body=ContentItem(raw=TEST_STAGE_RAW, encoding='utf-8',
+                                     media_type='text/html'))
+    clean_html({})(si, None)
+    assert si.body.clean_html.decode('utf-8') == TEST_STAGE_CLEANED
+
+
+def test_stage_no_media_type():
+    # Checks that the default configuration doesn't touch stream items
+    # with no media type.
+    si = StreamItem(body=ContentItem(raw=TEST_STAGE_RAW, encoding='utf-8'))
+    clean_html({})(si, None)
+    assert si.body.clean_html is None
+
+
+def test_stage_unrecognized_media_type():
+    # Checks that the default configuration doesn't touch stream items
+    # with an unrecognized media type.
+    si = StreamItem(body=ContentItem(raw=TEST_STAGE_RAW, encoding='utf-8',
+                                     media_type='text/plain'))
+    clean_html({})(si, None)
+    assert si.body.clean_html is None
+
+
+def test_stage_no_media_type_allowed():
+    si = StreamItem(body=ContentItem(raw=TEST_STAGE_RAW, encoding='utf-8'))
+    clean_html({'include_mime_types': []})(si, None)
+    assert si.body.clean_html.decode('utf-8') == TEST_STAGE_CLEANED
+
+
+def test_stage_any_media_type():
+    si = StreamItem(body=ContentItem(raw=TEST_STAGE_RAW, encoding='utf-8',
+                                     media_type='text/plain'))
+    clean_html({'include_mime_types': []})(si, None)
+    assert si.body.clean_html.decode('utf-8') == TEST_STAGE_CLEANED
+
+
+def test_stage_no_text_html():
+    # This test seems crazy, but it's allowed...
+    si = StreamItem(body=ContentItem(raw=TEST_STAGE_RAW, encoding='utf-8',
+                                     media_type='text/html'))
+    clean_html({'include_mime_types': ['text/plain']})(si, None)
+    assert si.body.clean_html is None
+
+
 @pytest.mark.skipif('True')
 def test_stage(test_data_dir):
     stage = clean_html({}) # NB: not even defaults

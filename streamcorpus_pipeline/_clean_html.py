@@ -179,14 +179,38 @@ class clean_html(Configured):
     language code is one of the specified values; pass others on
     unchanged.  Defaults to empty list (process all languages).
 
+    .. code-block:: yaml
+
+        include_mime_types: ['text/html']
+
+    If set to a non-empty list, only work on stream items whose
+    mime type matches one of the specified values. If set to an
+    empty list, then all stream items (assuming they match the
+    above language criteria) will have ``clean_html`` populated
+    from ``body.raw``. Default to list of just ``text/html``.
+
     '''
     config_name = 'clean_html'
-    default_config = {'include_language_codes': []}
+    default_config = {
+        'include_language_codes': [],
+        'include_mime_types': ['text/html'],
+    }
 
     def __init__(self, *args, **kwargs):
         super(clean_html, self).__init__(*args, **kwargs)
-        self.require_code = self.config.get('require_language_code', False)
+        self.require_code = self.config.get('require_language_code')
         self.codes = self.config.get('include_language_codes', [])
+        self.include_mime_types = \
+            [s.lower()
+             for s in self.config.get('include_mime_types', ['text/html'])]
+
+    def is_matching_mime_type(self, mime_type):
+        if len(self.include_mime_types) == 0:
+            return True
+        if mime_type is None:
+            return False
+        mime_type = mime_type.lower()
+        return any(mime_type.startswith(mt) for mt in self.include_mime_types)
 
     def __call__(self, stream_item, context):
         if not stream_item.body or not stream_item.body.raw:
@@ -214,12 +238,13 @@ class clean_html(Configured):
                          'not one of included codes %r',
                          stream_item.stream_id, lang.code, self.codes)
 
-        mediaty = stream_item.body.media_type
-        if mediaty and mediaty.startswith('text/html'):
+        if self.is_matching_mime_type(stream_item.body.media_type):
             stream_item.body.clean_html = make_clean_html(
                 stream_item.body.raw,
                 stream_item=stream_item)
         else:
-            logger.debug('skipping stream_item %s with non-HTML media_type %r',
-                         stream_item.stream_id, mediaty)
+            logger.debug('skipping stream_item %s with unrecognized '
+                         'media_type %r (allowed mime types: %r)',
+                         stream_item.stream_id, stream_item.body.media_type,
+                         self.include_mime_types or 'EVERYTHING')
         return stream_item
