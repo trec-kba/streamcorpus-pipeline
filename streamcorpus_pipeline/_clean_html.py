@@ -185,7 +185,7 @@ class clean_html(Configured):
 
     def __init__(self, *args, **kwargs):
         super(clean_html, self).__init__(*args, **kwargs)
-        self.require_code = self.config.get('require_language_code')
+        self.require_code = self.config.get('require_language_code', False)
         self.codes = self.config.get('include_language_codes', [])
 
     def __call__(self, stream_item, context):
