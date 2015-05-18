@@ -6,8 +6,10 @@ import sys
 import time
 
 from streamcorpus import StreamItem, ContentItem
+from streamcorpus_pipeline.force_clean_html import force_clean_html
 from streamcorpus_pipeline._clean_html import make_clean_html, clean_html
 from streamcorpus_pipeline._clean_visible import make_clean_visible
+from streamcorpus_pipeline._exceptions import InvalidStreamItem
 from streamcorpus_pipeline._hyperlink_labels import hyperlink_labels
 
 # The output of this test is highly dependent on the version of libxml2
@@ -194,6 +196,31 @@ def test_stage_no_text_html():
                                      media_type='text/html'))
     clean_html({'include_mime_types': ['text/plain']})(si, None)
     assert si.body.clean_html is None
+
+
+def test_force_neither_visible_nor_html():
+    # If a stream item has neither body.clean_visible nor body.clean_html,
+    # then something has gone wrong.
+    si = StreamItem(body=ContentItem(raw=TEST_STAGE_RAW, encoding='utf-8',
+                                     media_type='text/html'))
+    with pytest.raises(InvalidStreamItem):
+        force_clean_html({})(si, None)
+
+
+def test_force_clean_html_from_visible():
+    # This gives a stream item on body.raw and body.clean_visible.
+    # force_clean_html should generate clean_html and also re-generate
+    # clean_visible so that invariants between them are preserved.
+    si = StreamItem(body=ContentItem(raw=TEST_STAGE_RAW, encoding='utf-8',
+                                     media_type='text/html',
+                                     clean_visible=TEST_STAGE_RAW))
+    force_clean_html({})(si, None)
+    expected_clean_html = make_clean_html('<pre>%s</pre>' % TEST_STAGE_RAW)
+    expected_clean_vis = make_clean_visible(expected_clean_html)
+    assert si.body.clean_visible.decode('utf-8') \
+            == expected_clean_vis.decode('utf-8')
+    assert si.body.clean_html.decode('utf-8') \
+            == expected_clean_html.decode('utf-8')
 
 
 @pytest.mark.skipif('True')
