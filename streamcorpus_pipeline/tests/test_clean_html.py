@@ -207,6 +207,15 @@ def test_force_neither_visible_nor_html():
         force_clean_html({})(si, None)
 
 
+def test_force_already_has_clean_html():
+    # If a stream item has neither body.clean_visible nor body.clean_html,
+    # then something has gone wrong.
+    si = StreamItem(body=ContentItem(raw=TEST_STAGE_RAW, encoding='utf-8',
+                                     media_type='text/html',
+                                     clean_html='foo', clean_visible='foo'))
+    assert force_clean_html({})(si, None) is not None
+
+
 def test_force_clean_html_from_visible():
     # This gives a stream item on body.raw and body.clean_visible.
     # force_clean_html should generate clean_html and also re-generate
