@@ -18,15 +18,14 @@ logger = logging.getLogger(__name__)
 
 
 class force_clean_html(Configured):
+    '''force :attr:`~StreamItem.body.clean_html` to be populated or
+    rejects the StreamItem.
+
+    '''
     config_name = 'force_clean_html'
-    default_config = {}
-
-    def __init__(self, *args, **kwargs):
-        super(force_clean_html, self).__init__(*args, **kwargs)
-
     def __call__(self, stream_item, context):
         if stream_item.body.clean_html is not None:
-            return
+            return stream_item
         if stream_item.body.clean_visible is None:
             logger.warning('stream item %s has neither clean_visible nor '
                            'clean_html', stream_item.stream_id)

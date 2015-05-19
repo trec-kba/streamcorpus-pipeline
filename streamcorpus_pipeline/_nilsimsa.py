@@ -10,11 +10,11 @@ from nilsimsa import Nilsimsa
 
 from streamcorpus_pipeline.stages import Configured
 from streamcorpus_pipeline._clean_visible import cleanse
-from streamcorpus import make_stream_item, ContentItem
+from streamcorpus import ContentItem
 
 
 class nilsimsa(Configured):
-    ''':attr:`~streamcorpus.StreamItem.other_content` with key `nilsimsa`
+    '''Creates :attr:`~streamcorpus.StreamItem.other_content` with key `nilsimsa`
     and a `raw` property set to
     `Nilsimsa(cleanse(si.body.clean_visible)).hexdigest()`
 
