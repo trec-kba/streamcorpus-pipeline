@@ -2,7 +2,7 @@
 '''Registry of stages for streamcorpus_pipeline.
 
 .. This software is released under an MIT/X11 open source license.
-   Copyright 2012-2014 Diffeo, Inc.
+   Copyright 2012-2015 Diffeo, Inc.
 
 Stages are implemented as callable Python objects.  In almost all
 cases the name of the stage in the configuration file is the same as
@@ -50,6 +50,7 @@ Incremental transforms
 .. autoclass:: streamcorpus_pipeline._language.language
 .. autoclass:: streamcorpus_pipeline._nilsimsa.nilsimsa
 .. autoclass:: streamcorpus_pipeline._filters.remove_raw
+.. autoclass:: streamcorpus_pipeline._filters.replace_raw
 .. autoclass:: streamcorpus_pipeline._filters.dump_stream_id_abs_url
 .. autoclass:: streamcorpus_pipeline._upgrade_streamcorpus.upgrade_streamcorpus
 .. autoclass:: streamcorpus_pipeline._upgrade_streamcorpus_v0_3_0.upgrade_streamcorpus_v0_3_0
@@ -387,6 +388,7 @@ class PipelineStages(StageRegistry):
         self.tryload_stage('_language', 'language')
         self.tryload_stage('_nilsimsa', 'nilsimsa')
         self.tryload_stage('_filters', 'remove_raw')
+        self.tryload_stage('_filters', 'replace_raw')
         self.tryload_stage('_filters', 'dump_stream_id_abs_url')
         self.tryload_stage('_set_source', 'set_source')
         self.tryload_stage('_upgrade_streamcorpus', 'upgrade_streamcorpus')

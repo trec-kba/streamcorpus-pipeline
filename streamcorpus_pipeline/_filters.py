@@ -230,6 +230,26 @@ class remove_raw(Configured):
         return si
 
 
+class replace_raw(Configured):
+    '''Replace the `raw` form of the content with `clean_html`, or delete
+    the StreamItem if it lacks `clean_html`.
+
+    While the :attr:`~streamcorpus.StreamItem.body`
+    :attr:`~streamcorpus.ContentItem.raw` form is important as inputs
+    to create the "clean" forms, it may be bulky and not useful later.
+    This strips the raw form, replacing it with clean_html.
+
+    '''
+    config_name = 'remove_raw'
+    default_config = {}
+    def __call__(self, si, context=None):
+        if si.body.clean_html:
+            si.body.raw = si.body.clean_html
+            return si
+        else:
+            return None # delete
+
+
 def domain_name_cleanse(raw_string):
     '''extract a lower-case, no-slashes domain name from a raw string
     that might be a URL

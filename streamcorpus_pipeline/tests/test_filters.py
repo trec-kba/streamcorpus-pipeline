@@ -2,7 +2,23 @@
 from streamcorpus import make_stream_item
 from streamcorpus_pipeline._filters import filter_domains, \
     filter_domains_substrings, \
+    replace_raw, \
     domain_name_cleanse, domain_name_left_cuts
+
+def test_replace_raw(tmpdir):
+    
+    stage = replace_raw({})
+    si = make_stream_item(0, 'http://dogs.com/')
+    si.body.raw = 'foo'
+    si.body.clean_html = 'bar'
+
+    si = stage(si)
+    assert si.body.raw == 'bar'
+    assert si.body.clean_html == 'bar'
+
+    si.body.clean_html = ''
+    assert stage(si) is None
+
 
 def test_filter_domains(tmpdir):
 
