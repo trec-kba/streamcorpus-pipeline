@@ -240,7 +240,7 @@ class replace_raw(Configured):
     This strips the raw form, replacing it with clean_html.
 
     '''
-    config_name = 'remove_raw'
+    config_name = 'replace_raw'
     default_config = {}
     def __call__(self, si, context=None):
         if si.body.clean_html:
