@@ -1,0 +1,28 @@
+
+      streamcorpus_pipeline:
+        reader: yaml_files_list
+        incremental_transforms:
+          - pdf_to_text
+          - docx_to_text
+          - language
+          - clean_html
+          - clean_visible
+          - force_clean_html
+          - nilsimsa
+          - title
+          - nltk_tokenizer
+        batch_transforms:
+          - multi_token_match_align_labels
+        post_batch_incremental_transforms:
+          - xpath_offsets
+        writers: [to_local_chunks]
+        clean_html:
+          include_mime_types: []
+        multi_token_match_align_labels:
+          annotator_id: "bagga-and-baldwin"
+          tagger_id: nltk_tokenizer
+        to_local_chunks:
+          output_type: otherdir
+          output_path: data/john-smith/
+          output_name: "john-smith-nltk-%(date_hour)s-%(md5)s"
+          compress: xz
