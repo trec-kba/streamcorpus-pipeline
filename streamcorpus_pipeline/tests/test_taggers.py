@@ -4,9 +4,11 @@ from streamcorpus import Chunk, make_stream_item, add_annotation, \
     Sentence, Token, Annotator, Target, Rating
 
 import streamcorpus_pipeline.stages
-from streamcorpus_pipeline.tests._test_data import get_john_smith_tagged_by_lingpipe_without_labels_data
+from streamcorpus_pipeline.tests._test_data import \
+    get_john_smith_tagged_by_lingpipe_without_labels_data
 
-from streamcorpus_pipeline._taggers import multi_token_match
+from streamcorpus_pipeline._taggers import multi_token_match, \
+    look_ahead_match
 
 @pytest.fixture(scope='module')
 def stages():
@@ -71,3 +73,31 @@ def test_multi_token_match():
     assert si.body.sentences[tagger_id][0].tokens[-3].labels
     assert si.body.sentences[tagger_id][0].tokens[-2].labels
     assert si.body.sentences[tagger_id][0].tokens[-1].labels
+
+
+def test_look_ahead_match():
+    '''Verify that look_ahead_match detects tokens based on both regexes
+    and string match.
+
+    '''
+
+    rating = Rating(mentions=['''John ur"^Smith[a-z]*$"''', '''bob'''])
+    tokens = [(['The'], False),
+              (['cat'], False),
+              (['and'], False),
+              (['the'], False),
+              (['John'], 1),
+              (['Smithee'], 2),
+              (['John'], 3),
+              (['Smith'], 4),
+              (['said'], False),
+              (['hi'], False),
+              (['to'], False),
+              (['Bob'], 5),
+              (['.'], False),
+              ]
+
+    for boolean in look_ahead_match(rating, tokens):
+        assert boolean
+
+    assert set(look_ahead_match(rating, tokens)) == set([1, 2, 3, 4, 5])

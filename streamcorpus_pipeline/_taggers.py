@@ -19,6 +19,8 @@ import sys
 import time
 import traceback
 
+import regex as re
+
 import xml.dom.minidom
 
 import streamcorpus
@@ -344,24 +346,39 @@ def _offset_labels(stream_item, aligner_data, offset_type='BYTES'):
 
 
 def look_ahead_match(rating, tokens):
-    '''
-    iterate through all tokens looking for matches of cleansed tokens,
-    skipping tokens left empty by cleansing and coping with Token
-    objects that produce multiple space-separated strings when
-    cleansed.
+    '''iterate through all tokens looking for matches of cleansed tokens
+    or token regexes, skipping tokens left empty by cleansing and
+    coping with Token objects that produce multiple space-separated
+    strings when cleansed.  Yields tokens that match.
+
     '''
     ## this ensures that all cleansed tokens are non-zero length
-    clean_mentions = []
+    all_mregexes = []
     for m in rating.mentions:
-        mtoks = cleanse(m.decode('utf8')).split(' ')
-        if mtoks and  mtoks != ['']:
-            clean_mentions.append(mtoks)
-        else:
+        mregexes = []
+        mpatterns = m.decode('utf8').split(' ')
+        for mpat in mpatterns:
+            if mpat.startswith('ur"^') and mpat.endswith('$"'): # is not regex
+                ## chop out the meat of the regex so we can reconstitute it below
+                mpat = mpat[4:-2]
+            else:
+                mpat = cleanse(mpat)
+            if mpat:
+                ## make a unicode raw string
+                ## https://docs.python.org/2/reference/lexical_analysis.html#string-literals
+                mpat = ur'^%s$' % mpat
+                logger.debug('look_ahead_match compiling regex: %s', mpat)
+                mregexes.append(re.compile(mpat, re.UNICODE | re.IGNORECASE))
+
+        if not mregexes:
             logger.warn('got empty cleansed mention: %r\nrating=%r' % (m, rating))
 
+        all_mregexes.append(mregexes)
+
+    ## now that we have all_mregexes, go through all the tokens
     for i in range(len(tokens)):
-        for mtoks in clean_mentions:
-            if tokens[i][0][0] == mtoks[0]:
+        for mregexes in all_mregexes:
+            if mregexes[0].match(tokens[i][0][0]):
                 ## found the start of a possible match, so iterate
                 ## through the tuples of cleansed strings for each
                 ## Token while stepping through the cleansed strings
@@ -370,7 +387,7 @@ def look_ahead_match(rating, tokens):
                 i_j = 0
                 last_token_matched = 0
                 matched = True
-                while m_j < len(mtoks):
+                while m_j < len(mregexes):
                     i_j += 1
                     if i_j == len(tokens[i + last_token_matched][0]):
                         i_j = 0
@@ -378,9 +395,11 @@ def look_ahead_match(rating, tokens):
                         if i + last_token_matched == len(tokens):
                             matched = False
                             break
-                    if mtoks[m_j] == tokens[i + last_token_matched][0][i_j]:
+                    target_token = tokens[i + last_token_matched][0][i_j]
+                    ## this next line is the actual string comparison
+                    if mregexes[m_j].match(target_token):
                         m_j += 1
-                    elif tokens[i + last_token_matched][0][i_j] == '':
+                    elif target_token == '':
                         continue
                     else:
                         matched = False
