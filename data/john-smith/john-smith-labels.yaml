@@ -9,143 +9,143 @@ entities:
 - doc_path:
   - {abs_url: 'https://raw.githubusercontent.com/trec-kba/streamcorpus-pipeline/master/data/john-smith/original/2/970708.4',
     doc_path: data/john-smith/original/2/970708.4}
-  slots: [John Smith]
+  slots: ['John ur"^smith[a-z]*$"']
   target_id: '2'
 - doc_path:
   - {abs_url: 'https://raw.githubusercontent.com/trec-kba/streamcorpus-pipeline/master/data/john-smith/original/3/960304.742',
     doc_path: data/john-smith/original/3/960304.742}
-  slots: [John Smith]
+  slots: ['John ur"^smith[a-z]*$"']
   target_id: '3'
 - doc_path:
   - {abs_url: 'https://raw.githubusercontent.com/trec-kba/streamcorpus-pipeline/master/data/john-smith/original/5/970823.176',
     doc_path: data/john-smith/original/5/970823.176}
-  slots: [John Smith]
+  slots: ['John ur"^smith[a-z]*$"']
   target_id: '5'
 - doc_path:
   - {abs_url: 'https://raw.githubusercontent.com/trec-kba/streamcorpus-pipeline/master/data/john-smith/original/6/961011.655',
     doc_path: data/john-smith/original/6/961011.655}
-  slots: [John Smith]
+  slots: ['John ur"^smith[a-z]*$"']
   target_id: '6'
 - doc_path:
   - {abs_url: 'https://raw.githubusercontent.com/trec-kba/streamcorpus-pipeline/master/data/john-smith/original/7/971001.979',
     doc_path: data/john-smith/original/7/971001.979}
-  slots: [John Smith]
+  slots: ['John ur"^smith[a-z]*$"']
   target_id: '7'
 - doc_path:
   - {abs_url: 'https://raw.githubusercontent.com/trec-kba/streamcorpus-pipeline/master/data/john-smith/original/8/970429.552',
     doc_path: data/john-smith/original/8/970429.552}
-  slots: [John Smith]
+  slots: ['John ur"^smith[a-z]*$"']
   target_id: '8'
 - doc_path:
   - {abs_url: 'https://raw.githubusercontent.com/trec-kba/streamcorpus-pipeline/master/data/john-smith/original/9/970730.527',
     doc_path: data/john-smith/original/9/970730.527}
-  slots: [John Smith]
+  slots: ['John ur"^smith[a-z]*$"']
   target_id: '9'
 - doc_path:
   - {abs_url: 'https://raw.githubusercontent.com/trec-kba/streamcorpus-pipeline/master/data/john-smith/original/10/970416.398',
     doc_path: data/john-smith/original/10/970416.398}
-  slots: [John Smith]
+  slots: ['John ur"^smith[a-z]*$"']
   target_id: '10'
 - doc_path:
   - {abs_url: 'https://raw.githubusercontent.com/trec-kba/streamcorpus-pipeline/master/data/john-smith/original/11/960822.669',
     doc_path: data/john-smith/original/11/960822.669}
-  slots: [John Smith]
+  slots: ['John ur"^smith[a-z]*$"']
   target_id: '11'
 - doc_path:
   - {abs_url: 'https://raw.githubusercontent.com/trec-kba/streamcorpus-pipeline/master/data/john-smith/original/12/960810.116',
     doc_path: data/john-smith/original/12/960810.116}
-  slots: [John Smith]
+  slots: ['John ur"^smith[a-z]*$"']
   target_id: '12'
 - doc_path:
   - {abs_url: 'https://raw.githubusercontent.com/trec-kba/streamcorpus-pipeline/master/data/john-smith/original/14/970317.818',
     doc_path: data/john-smith/original/14/970317.818}
-  slots: [John Smith]
+  slots: ['John ur"^smith[a-z]*$"']
   target_id: '14'
 - doc_path:
   - {abs_url: 'https://raw.githubusercontent.com/trec-kba/streamcorpus-pipeline/master/data/john-smith/original/17/970108.268',
     doc_path: data/john-smith/original/17/970108.268}
-  slots: [John Smith]
+  slots: ['John ur"^smith[a-z]*$"']
   target_id: '17'
 - doc_path:
   - {abs_url: 'https://raw.githubusercontent.com/trec-kba/streamcorpus-pipeline/master/data/john-smith/original/18/970111.202',
     doc_path: data/john-smith/original/18/970111.202}
-  slots: [John Smith]
+  slots: ['John ur"^smith[a-z]*$"']
   target_id: '18'
 - doc_path:
   - {abs_url: 'https://raw.githubusercontent.com/trec-kba/streamcorpus-pipeline/master/data/john-smith/original/19/970227.644',
     doc_path: data/john-smith/original/19/970227.644}
-  slots: [John Smith]
+  slots: ['John ur"^smith[a-z]*$"']
   target_id: '19'
 - doc_path:
   - {abs_url: 'https://raw.githubusercontent.com/trec-kba/streamcorpus-pipeline/master/data/john-smith/original/20/970723.737',
     doc_path: data/john-smith/original/20/970723.737}
-  slots: [John Smith]
+  slots: ['John ur"^smith[a-z]*$"']
   target_id: '20'
 - doc_path:
   - {abs_url: 'https://raw.githubusercontent.com/trec-kba/streamcorpus-pipeline/master/data/john-smith/original/21/970908.758',
     doc_path: data/john-smith/original/21/970908.758}
-  slots: [John Smith]
+  slots: ['John ur"^smith[a-z]*$"']
   target_id: '21'
 - doc_path:
   - {abs_url: 'https://raw.githubusercontent.com/trec-kba/streamcorpus-pipeline/master/data/john-smith/original/22/960328.241',
     doc_path: data/john-smith/original/22/960328.241}
-  slots: [John Smith]
+  slots: ['John ur"^smith[a-z]*$"']
   target_id: '22'
 - doc_path:
   - {abs_url: 'https://raw.githubusercontent.com/trec-kba/streamcorpus-pipeline/master/data/john-smith/original/23/970420.80',
     doc_path: data/john-smith/original/23/970420.80}
-  slots: [John Smith]
+  slots: ['John ur"^smith[a-z]*$"']
   target_id: '23'
 - doc_path:
   - {abs_url: 'https://raw.githubusercontent.com/trec-kba/streamcorpus-pipeline/master/data/john-smith/original/25/971110.688',
     doc_path: data/john-smith/original/25/971110.688}
-  slots: [John Smith]
+  slots: ['John ur"^smith[a-z]*$"']
   target_id: '25'
 - doc_path:
   - {abs_url: 'https://raw.githubusercontent.com/trec-kba/streamcorpus-pipeline/master/data/john-smith/original/26/960108.526',
     doc_path: data/john-smith/original/26/960108.526}
-  slots: [John Smith]
+  slots: ['John ur"^smith[a-z]*$"']
   target_id: '26'
 - doc_path:
   - {abs_url: 'https://raw.githubusercontent.com/trec-kba/streamcorpus-pipeline/master/data/john-smith/original/29/960311.408',
     doc_path: data/john-smith/original/29/960311.408}
-  slots: [John Smith]
+  slots: ['John ur"^smith[a-z]*$"']
   target_id: '29'
 - doc_path:
   - {abs_url: 'https://raw.githubusercontent.com/trec-kba/streamcorpus-pipeline/master/data/john-smith/original/32/961028.9',
     doc_path: data/john-smith/original/32/961028.9}
-  slots: [John Smith]
+  slots: ['John ur"^smith[a-z]*$"']
   target_id: '32'
 - doc_path:
   - {abs_url: 'https://raw.githubusercontent.com/trec-kba/streamcorpus-pipeline/master/data/john-smith/original/33/960318.662',
     doc_path: data/john-smith/original/33/960318.662}
-  slots: [John Smith]
+  slots: ['John ur"^smith[a-z]*$"']
   target_id: '33'
 - doc_path:
   - {abs_url: 'https://raw.githubusercontent.com/trec-kba/streamcorpus-pipeline/master/data/john-smith/original/34/970221.681',
     doc_path: data/john-smith/original/34/970221.681}
-  slots: [John Smith]
+  slots: ['John ur"^smith[a-z]*$"']
   target_id: '34'
 - doc_path:
   - {abs_url: 'https://raw.githubusercontent.com/trec-kba/streamcorpus-pipeline/master/data/john-smith/original/4/970701.861',
     doc_path: data/john-smith/original/4/970701.861}
   - {abs_url: 'https://raw.githubusercontent.com/trec-kba/streamcorpus-pipeline/master/data/john-smith/original/4/970708.827',
     doc_path: data/john-smith/original/4/970708.827}
-  slots: [John Smith]
+  slots: ['John ur"^smith[a-z]*$"']
   target_id: '4'
 - doc_path:
   - {abs_url: 'https://raw.githubusercontent.com/trec-kba/streamcorpus-pipeline/master/data/john-smith/original/27/961230.449',
     doc_path: data/john-smith/original/27/961230.449}
   - {abs_url: 'https://raw.githubusercontent.com/trec-kba/streamcorpus-pipeline/master/data/john-smith/original/27/961231.74',
     doc_path: data/john-smith/original/27/961231.74}
-  slots: [John Smith]
+  slots: ['John ur"^smith[a-z]*$"']
   target_id: '27'
 - doc_path:
   - {abs_url: 'https://raw.githubusercontent.com/trec-kba/streamcorpus-pipeline/master/data/john-smith/original/31/970612.420',
     doc_path: data/john-smith/original/31/970612.420}
   - {abs_url: 'https://raw.githubusercontent.com/trec-kba/streamcorpus-pipeline/master/data/john-smith/original/31/970909.422',
     doc_path: data/john-smith/original/31/970909.422}
-  slots: [John Smith]
+  slots: ['John ur"^smith[a-z]*$"']
   target_id: '31'
 - doc_path:
   - {abs_url: 'https://raw.githubusercontent.com/trec-kba/streamcorpus-pipeline/master/data/john-smith/original/13/960920.114',
@@ -156,7 +156,7 @@ entities:
     doc_path: data/john-smith/original/13/960920.17}
   - {abs_url: 'https://raw.githubusercontent.com/trec-kba/streamcorpus-pipeline/master/data/john-smith/original/13/960919.533',
     doc_path: data/john-smith/original/13/960919.533}
-  slots: [John Smith]
+  slots: ['John ur"^smith[a-z]*$"']
   target_id: '13'
 - doc_path:
   - {abs_url: 'https://raw.githubusercontent.com/trec-kba/streamcorpus-pipeline/master/data/john-smith/original/15/971222.150',
@@ -167,7 +167,7 @@ entities:
     doc_path: data/john-smith/original/15/971222.198}
   - {abs_url: 'https://raw.githubusercontent.com/trec-kba/streamcorpus-pipeline/master/data/john-smith/original/15/971222.210',
     doc_path: data/john-smith/original/15/971222.210}
-  slots: [John Smith]
+  slots: ['John ur"^smith[a-z]*$"']
   target_id: '15'
 - doc_path:
   - {abs_url: 'https://raw.githubusercontent.com/trec-kba/streamcorpus-pipeline/master/data/john-smith/original/1/970630.222',
@@ -180,7 +180,7 @@ entities:
     doc_path: data/john-smith/original/1/960701.76}
   - {abs_url: 'https://raw.githubusercontent.com/trec-kba/streamcorpus-pipeline/master/data/john-smith/original/1/960701.288',
     doc_path: data/john-smith/original/1/960701.288}
-  slots: [John Smith]
+  slots: ['John ur"^smith[a-z]*$"']
   target_id: '1'
 - doc_path:
   - {abs_url: 'https://raw.githubusercontent.com/trec-kba/streamcorpus-pipeline/master/data/john-smith/original/24/970519.191',
@@ -201,7 +201,7 @@ entities:
     doc_path: data/john-smith/original/24/970521.155}
   - {abs_url: 'https://raw.githubusercontent.com/trec-kba/streamcorpus-pipeline/master/data/john-smith/original/24/970521.158',
     doc_path: data/john-smith/original/24/970521.158}
-  slots: [John Smith]
+  slots: ['John ur"^smith[a-z]*$"']
   target_id: '24'
 - doc_path:
   - {abs_url: 'https://raw.githubusercontent.com/trec-kba/streamcorpus-pipeline/master/data/john-smith/original/28/970501.727',
@@ -234,7 +234,7 @@ entities:
     doc_path: data/john-smith/original/28/960402.646}
   - {abs_url: 'https://raw.githubusercontent.com/trec-kba/streamcorpus-pipeline/master/data/john-smith/original/28/960413.55',
     doc_path: data/john-smith/original/28/960413.55}
-  slots: [John Smith]
+  slots: ['John ur"^smith[a-z]*$"']
   target_id: '28'
 - doc_path:
   - {abs_url: 'https://raw.githubusercontent.com/trec-kba/streamcorpus-pipeline/master/data/john-smith/original/0/960114.114',
@@ -277,7 +277,7 @@ entities:
     doc_path: data/john-smith/original/0/970218.938}
   - {abs_url: 'https://raw.githubusercontent.com/trec-kba/streamcorpus-pipeline/master/data/john-smith/original/0/960703.505',
     doc_path: data/john-smith/original/0/960703.505}
-  slots: [John Smith]
+  slots: ['John ur"^smith[a-z]*$"']
   target_id: '0'
 - doc_path:
   - {abs_url: 'https://raw.githubusercontent.com/trec-kba/streamcorpus-pipeline/master/data/john-smith/original/30/960223.15',
@@ -324,7 +324,7 @@ entities:
     doc_path: data/john-smith/original/30/970804.26}
   - {abs_url: 'https://raw.githubusercontent.com/trec-kba/streamcorpus-pipeline/master/data/john-smith/original/30/970210.851',
     doc_path: data/john-smith/original/30/970210.851}
-  slots: [John Smith]
+  slots: ['John ur"^smith[a-z]*$"']
   target_id: '30'
 - doc_path:
   - {abs_url: 'https://raw.githubusercontent.com/trec-kba/streamcorpus-pipeline/master/data/john-smith/original/16/960731.417',
@@ -503,7 +503,7 @@ entities:
     doc_path: data/john-smith/original/16/970630.489}
   - {abs_url: 'https://raw.githubusercontent.com/trec-kba/streamcorpus-pipeline/master/data/john-smith/original/16/971104.433',
     doc_path: data/john-smith/original/16/971104.433}
-  slots: [John Smith]
+  slots: ['John ur"^smith[a-z]*$"']
   target_id: '16'
 root_path: .
 source: bagga-and-baldwin

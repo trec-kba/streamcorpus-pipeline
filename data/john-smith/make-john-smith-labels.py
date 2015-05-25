@@ -40,7 +40,7 @@ for target_id, fnames in sorted(dd.items(), key=lambda x: (len(x[1]), int(x[0]))
 
     entity = dict(
         doc_path = docs,
-        slots = ['John Smith'],
+        slots = ['John ur"^smith[a-z]*$"'],
         target_id = target_id,
         )
     output_labels['entities'].append(entity)
