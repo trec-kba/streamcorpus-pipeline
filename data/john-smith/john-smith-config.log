@@ -1,598 +1,596 @@
-2015-05-24 16:10:20,511 pid=8232  run.py:221        INFO     input path 'data/john-smith/john-smith-labels.yaml'
-2015-05-24 16:10:20,638 pid=8232  _yaml_files:289   INFO     opening './data/john-smith/original/16/970523.591'
-2015-05-24 16:10:20,638 pid=8232  _yaml_files:333   INFO     created StreamItem(num ratings=1, abs_url='https://raw.githubusercontent.com/trec-kba/streamcorpus-pipeline/master/data/john-smith/original/16/970523.591'
-2015-05-24 16:10:20,719 pid=8232  _yaml_files:289   INFO     opening './data/john-smith/original/0/960402.459'
-2015-05-24 16:10:20,720 pid=8232  _yaml_files:333   INFO     created StreamItem(num ratings=1, abs_url='https://raw.githubusercontent.com/trec-kba/streamcorpus-pipeline/master/data/john-smith/original/0/960402.459'
-2015-05-24 16:10:20,793 pid=8232  _yaml_files:289   INFO     opening './data/john-smith/original/16/960103.529'
-2015-05-24 16:10:20,794 pid=8232  _yaml_files:333   INFO     created StreamItem(num ratings=1, abs_url='https://raw.githubusercontent.com/trec-kba/streamcorpus-pipeline/master/data/john-smith/original/16/960103.529'
-2015-05-24 16:10:20,837 pid=8232  _yaml_files:289   INFO     opening './data/john-smith/original/16/970814.683'
-2015-05-24 16:10:20,837 pid=8232  _yaml_files:333   INFO     created StreamItem(num ratings=1, abs_url='https://raw.githubusercontent.com/trec-kba/streamcorpus-pipeline/master/data/john-smith/original/16/970814.683'
-2015-05-24 16:10:20,861 pid=8232  _yaml_files:289   INFO     opening './data/john-smith/original/16/971014.322'
-2015-05-24 16:10:20,861 pid=8232  _yaml_files:333   INFO     created StreamItem(num ratings=1, abs_url='https://raw.githubusercontent.com/trec-kba/streamcorpus-pipeline/master/data/john-smith/original/16/971014.322'
-2015-05-24 16:10:20,915 pid=8232  _yaml_files:289   INFO     opening './data/john-smith/original/16/970529.234'
-2015-05-24 16:10:20,915 pid=8232  _yaml_files:333   INFO     created StreamItem(num ratings=1, abs_url='https://raw.githubusercontent.com/trec-kba/streamcorpus-pipeline/master/data/john-smith/original/16/970529.234'
-2015-05-24 16:10:20,964 pid=8232  _yaml_files:289   INFO     opening './data/john-smith/original/16/971015.530'
-2015-05-24 16:10:20,964 pid=8232  _yaml_files:333   INFO     created StreamItem(num ratings=1, abs_url='https://raw.githubusercontent.com/trec-kba/streamcorpus-pipeline/master/data/john-smith/original/16/971015.530'
-2015-05-24 16:10:21,011 pid=8232  _yaml_files:289   INFO     opening './data/john-smith/original/28/970428.580'
-2015-05-24 16:10:21,011 pid=8232  _yaml_files:333   INFO     created StreamItem(num ratings=1, abs_url='https://raw.githubusercontent.com/trec-kba/streamcorpus-pipeline/master/data/john-smith/original/28/970428.580'
-2015-05-24 16:10:21,145 pid=8232  _yaml_files:289   INFO     opening './data/john-smith/original/16/960530.355'
-2015-05-24 16:10:21,145 pid=8232  _yaml_files:333   INFO     created StreamItem(num ratings=1, abs_url='https://raw.githubusercontent.com/trec-kba/streamcorpus-pipeline/master/data/john-smith/original/16/960530.355'
-2015-05-24 16:10:21,222 pid=8232  _yaml_files:289   INFO     opening './data/john-smith/original/23/970420.80'
-2015-05-24 16:10:21,222 pid=8232  _yaml_files:333   INFO     created StreamItem(num ratings=1, abs_url='https://raw.githubusercontent.com/trec-kba/streamcorpus-pipeline/master/data/john-smith/original/23/970420.80'
-2015-05-24 16:10:21,286 pid=8232  _yaml_files:289   INFO     opening './data/john-smith/original/1/961106.964'
-2015-05-24 16:10:21,286 pid=8232  _yaml_files:333   INFO     created StreamItem(num ratings=1, abs_url='https://raw.githubusercontent.com/trec-kba/streamcorpus-pipeline/master/data/john-smith/original/1/961106.964'
-2015-05-24 16:10:21,344 pid=8232  _yaml_files:289   INFO     opening './data/john-smith/original/30/960711.352'
-2015-05-24 16:10:21,345 pid=8232  _yaml_files:333   INFO     created StreamItem(num ratings=1, abs_url='https://raw.githubusercontent.com/trec-kba/streamcorpus-pipeline/master/data/john-smith/original/30/960711.352'
-2015-05-24 16:10:21,409 pid=8232  _yaml_files:289   INFO     opening './data/john-smith/original/16/960103.581'
-2015-05-24 16:10:21,409 pid=8232  _yaml_files:333   INFO     created StreamItem(num ratings=1, abs_url='https://raw.githubusercontent.com/trec-kba/streamcorpus-pipeline/master/data/john-smith/original/16/960103.581'
-2015-05-24 16:10:21,499 pid=8232  _yaml_files:289   INFO     opening './data/john-smith/original/0/960513.222'
-2015-05-24 16:10:21,500 pid=8232  _yaml_files:333   INFO     created StreamItem(num ratings=1, abs_url='https://raw.githubusercontent.com/trec-kba/streamcorpus-pipeline/master/data/john-smith/original/0/960513.222'
-2015-05-24 16:10:21,584 pid=8232  _yaml_files:289   INFO     opening './data/john-smith/original/16/970109.769'
-2015-05-24 16:10:21,584 pid=8232  _yaml_files:333   INFO     created StreamItem(num ratings=1, abs_url='https://raw.githubusercontent.com/trec-kba/streamcorpus-pipeline/master/data/john-smith/original/16/970109.769'
-2015-05-24 16:10:21,644 pid=8232  _yaml_files:289   INFO     opening './data/john-smith/original/16/960624.618'
-2015-05-24 16:10:21,644 pid=8232  _yaml_files:333   INFO     created StreamItem(num ratings=1, abs_url='https://raw.githubusercontent.com/trec-kba/streamcorpus-pipeline/master/data/john-smith/original/16/960624.618'
-2015-05-24 16:10:21,710 pid=8232  _yaml_files:289   INFO     opening './data/john-smith/original/0/970116.458'
-2015-05-24 16:10:21,710 pid=8232  _yaml_files:333   INFO     created StreamItem(num ratings=1, abs_url='https://raw.githubusercontent.com/trec-kba/streamcorpus-pipeline/master/data/john-smith/original/0/970116.458'
-2015-05-24 16:10:21,752 pid=8232  _yaml_files:289   INFO     opening './data/john-smith/original/24/970521.155'
-2015-05-24 16:10:21,752 pid=8232  _yaml_files:333   INFO     created StreamItem(num ratings=1, abs_url='https://raw.githubusercontent.com/trec-kba/streamcorpus-pipeline/master/data/john-smith/original/24/970521.155'
-2015-05-24 16:10:21,850 pid=8232  _yaml_files:289   INFO     opening './data/john-smith/original/15/970813.237'
-2015-05-24 16:10:21,850 pid=8232  _yaml_files:333   INFO     created StreamItem(num ratings=1, abs_url='https://raw.githubusercontent.com/trec-kba/streamcorpus-pipeline/master/data/john-smith/original/15/970813.237'
-2015-05-24 16:10:21,920 pid=8232  _yaml_files:289   INFO     opening './data/john-smith/original/20/970723.737'
-2015-05-24 16:10:21,920 pid=8232  _yaml_files:333   INFO     created StreamItem(num ratings=1, abs_url='https://raw.githubusercontent.com/trec-kba/streamcorpus-pipeline/master/data/john-smith/original/20/970723.737'
-2015-05-24 16:10:21,947 pid=8232  _yaml_files:289   INFO     opening './data/john-smith/original/32/961028.9'
-2015-05-24 16:10:21,947 pid=8232  _yaml_files:333   INFO     created StreamItem(num ratings=1, abs_url='https://raw.githubusercontent.com/trec-kba/streamcorpus-pipeline/master/data/john-smith/original/32/961028.9'
-2015-05-24 16:10:21,984 pid=8232  _yaml_files:289   INFO     opening './data/john-smith/original/16/960624.442'
-2015-05-24 16:10:21,984 pid=8232  _yaml_files:333   INFO     created StreamItem(num ratings=1, abs_url='https://raw.githubusercontent.com/trec-kba/streamcorpus-pipeline/master/data/john-smith/original/16/960624.442'
-2015-05-24 16:10:22,046 pid=8232  _yaml_files:289   INFO     opening './data/john-smith/original/24/970521.158'
-2015-05-24 16:10:22,046 pid=8232  _yaml_files:333   INFO     created StreamItem(num ratings=1, abs_url='https://raw.githubusercontent.com/trec-kba/streamcorpus-pipeline/master/data/john-smith/original/24/970521.158'
-2015-05-24 16:10:22,145 pid=8232  _yaml_files:289   INFO     opening './data/john-smith/original/16/970217.365'
-2015-05-24 16:10:22,145 pid=8232  _yaml_files:333   INFO     created StreamItem(num ratings=1, abs_url='https://raw.githubusercontent.com/trec-kba/streamcorpus-pipeline/master/data/john-smith/original/16/970217.365'
-2015-05-24 16:10:22,206 pid=8232  _yaml_files:289   INFO     opening './data/john-smith/original/30/960724.711'
-2015-05-24 16:10:22,206 pid=8232  _yaml_files:333   INFO     created StreamItem(num ratings=1, abs_url='https://raw.githubusercontent.com/trec-kba/streamcorpus-pipeline/master/data/john-smith/original/30/960724.711'
-2015-05-24 16:10:22,259 pid=8232  _yaml_files:289   INFO     opening './data/john-smith/original/31/970909.422'
-2015-05-24 16:10:22,259 pid=8232  _yaml_files:333   INFO     created StreamItem(num ratings=1, abs_url='https://raw.githubusercontent.com/trec-kba/streamcorpus-pipeline/master/data/john-smith/original/31/970909.422'
-2015-05-24 16:10:22,298 pid=8232  _yaml_files:289   INFO     opening './data/john-smith/original/16/961003.573'
-2015-05-24 16:10:22,298 pid=8232  _yaml_files:333   INFO     created StreamItem(num ratings=1, abs_url='https://raw.githubusercontent.com/trec-kba/streamcorpus-pipeline/master/data/john-smith/original/16/961003.573'
-2015-05-24 16:10:22,355 pid=8232  _yaml_files:289   INFO     opening './data/john-smith/original/16/970218.497'
-2015-05-24 16:10:22,355 pid=8232  _yaml_files:333   INFO     created StreamItem(num ratings=1, abs_url='https://raw.githubusercontent.com/trec-kba/streamcorpus-pipeline/master/data/john-smith/original/16/970218.497'
-2015-05-24 16:10:22,388 pid=8232  _yaml_files:289   INFO     opening './data/john-smith/original/16/970523.455'
-2015-05-24 16:10:22,388 pid=8232  _yaml_files:333   INFO     created StreamItem(num ratings=1, abs_url='https://raw.githubusercontent.com/trec-kba/streamcorpus-pipeline/master/data/john-smith/original/16/970523.455'
-2015-05-24 16:10:22,413 pid=8232  _yaml_files:289   INFO     opening './data/john-smith/original/30/960223.15'
-2015-05-24 16:10:22,413 pid=8232  _yaml_files:333   INFO     created StreamItem(num ratings=1, abs_url='https://raw.githubusercontent.com/trec-kba/streamcorpus-pipeline/master/data/john-smith/original/30/960223.15'
-2015-05-24 16:10:22,462 pid=8232  _yaml_files:289   INFO     opening './data/john-smith/original/24/970527.468'
-2015-05-24 16:10:22,463 pid=8232  _yaml_files:333   INFO     created StreamItem(num ratings=1, abs_url='https://raw.githubusercontent.com/trec-kba/streamcorpus-pipeline/master/data/john-smith/original/24/970527.468'
-2015-05-24 16:10:22,560 pid=8232  _yaml_files:289   INFO     opening './data/john-smith/original/33/960318.662'
-2015-05-24 16:10:22,560 pid=8232  _yaml_files:333   INFO     created StreamItem(num ratings=1, abs_url='https://raw.githubusercontent.com/trec-kba/streamcorpus-pipeline/master/data/john-smith/original/33/960318.662'
-2015-05-24 16:10:22,620 pid=8232  _yaml_files:289   INFO     opening './data/john-smith/original/16/970324.797'
-2015-05-24 16:10:22,620 pid=8232  _yaml_files:333   INFO     created StreamItem(num ratings=1, abs_url='https://raw.githubusercontent.com/trec-kba/streamcorpus-pipeline/master/data/john-smith/original/16/970324.797'
-2015-05-24 16:10:22,686 pid=8232  _yaml_files:289   INFO     opening './data/john-smith/original/16/970523.185'
-2015-05-24 16:10:22,687 pid=8232  _yaml_files:333   INFO     created StreamItem(num ratings=1, abs_url='https://raw.githubusercontent.com/trec-kba/streamcorpus-pipeline/master/data/john-smith/original/16/970523.185'
-2015-05-24 16:10:22,720 pid=8232  _yaml_files:289   INFO     opening './data/john-smith/original/16/960304.885'
-2015-05-24 16:10:22,721 pid=8232  _yaml_files:333   INFO     created StreamItem(num ratings=1, abs_url='https://raw.githubusercontent.com/trec-kba/streamcorpus-pipeline/master/data/john-smith/original/16/960304.885'
-2015-05-24 16:10:22,753 pid=8232  _yaml_files:289   INFO     opening './data/john-smith/original/5/970823.176'
-2015-05-24 16:10:22,753 pid=8232  _yaml_files:333   INFO     created StreamItem(num ratings=1, abs_url='https://raw.githubusercontent.com/trec-kba/streamcorpus-pipeline/master/data/john-smith/original/5/970823.176'
-2015-05-24 16:10:22,797 pid=8232  _yaml_files:289   INFO     opening './data/john-smith/original/16/960524.317'
-2015-05-24 16:10:22,797 pid=8232  _yaml_files:333   INFO     created StreamItem(num ratings=1, abs_url='https://raw.githubusercontent.com/trec-kba/streamcorpus-pipeline/master/data/john-smith/original/16/960524.317'
-2015-05-24 16:10:22,861 pid=8232  _yaml_files:289   INFO     opening './data/john-smith/original/16/960918.379'
-2015-05-24 16:10:22,861 pid=8232  _yaml_files:333   INFO     created StreamItem(num ratings=1, abs_url='https://raw.githubusercontent.com/trec-kba/streamcorpus-pipeline/master/data/john-smith/original/16/960918.379'
-2015-05-24 16:10:22,961 pid=8232  _yaml_files:289   INFO     opening './data/john-smith/original/28/960402.646'
-2015-05-24 16:10:22,962 pid=8232  _yaml_files:333   INFO     created StreamItem(num ratings=1, abs_url='https://raw.githubusercontent.com/trec-kba/streamcorpus-pipeline/master/data/john-smith/original/28/960402.646'
-2015-05-24 16:10:23,002 pid=8232  _yaml_files:289   INFO     opening './data/john-smith/original/13/960920.10'
-2015-05-24 16:10:23,002 pid=8232  _yaml_files:333   INFO     created StreamItem(num ratings=1, abs_url='https://raw.githubusercontent.com/trec-kba/streamcorpus-pipeline/master/data/john-smith/original/13/960920.10'
-2015-05-24 16:10:23,034 pid=8232  _yaml_files:289   INFO     opening './data/john-smith/original/16/960822.562'
-2015-05-24 16:10:23,034 pid=8232  _yaml_files:333   INFO     created StreamItem(num ratings=1, abs_url='https://raw.githubusercontent.com/trec-kba/streamcorpus-pipeline/master/data/john-smith/original/16/960822.562'
-2015-05-24 16:10:23,079 pid=8232  _yaml_files:289   INFO     opening './data/john-smith/original/30/970801.676'
-2015-05-24 16:10:23,079 pid=8232  _yaml_files:333   INFO     created StreamItem(num ratings=1, abs_url='https://raw.githubusercontent.com/trec-kba/streamcorpus-pipeline/master/data/john-smith/original/30/970801.676'
-2015-05-24 16:10:23,132 pid=8232  _yaml_files:289   INFO     opening './data/john-smith/original/13/960920.17'
-2015-05-24 16:10:23,132 pid=8232  _yaml_files:333   INFO     created StreamItem(num ratings=1, abs_url='https://raw.githubusercontent.com/trec-kba/streamcorpus-pipeline/master/data/john-smith/original/13/960920.17'
-2015-05-24 16:10:23,165 pid=8232  _yaml_files:289   INFO     opening './data/john-smith/original/16/970815.375'
-2015-05-24 16:10:23,165 pid=8232  _yaml_files:333   INFO     created StreamItem(num ratings=1, abs_url='https://raw.githubusercontent.com/trec-kba/streamcorpus-pipeline/master/data/john-smith/original/16/970815.375'
-2015-05-24 16:10:23,240 pid=8232  _yaml_files:289   INFO     opening './data/john-smith/original/16/970414.193'
-2015-05-24 16:10:23,240 pid=8232  _yaml_files:333   INFO     created StreamItem(num ratings=1, abs_url='https://raw.githubusercontent.com/trec-kba/streamcorpus-pipeline/master/data/john-smith/original/16/970414.193'
-2015-05-24 16:10:23,279 pid=8232  _yaml_files:289   INFO     opening './data/john-smith/original/16/961027.277'
-2015-05-24 16:10:23,279 pid=8232  _yaml_files:333   INFO     created StreamItem(num ratings=1, abs_url='https://raw.githubusercontent.com/trec-kba/streamcorpus-pipeline/master/data/john-smith/original/16/961027.277'
-2015-05-24 16:10:23,322 pid=8232  _yaml_files:289   INFO     opening './data/john-smith/original/16/970804.477'
-2015-05-24 16:10:23,322 pid=8232  _yaml_files:333   INFO     created StreamItem(num ratings=1, abs_url='https://raw.githubusercontent.com/trec-kba/streamcorpus-pipeline/master/data/john-smith/original/16/970804.477'
-2015-05-24 16:10:23,370 pid=8232  _yaml_files:289   INFO     opening './data/john-smith/original/16/960731.417'
-2015-05-24 16:10:23,370 pid=8232  _yaml_files:333   INFO     created StreamItem(num ratings=1, abs_url='https://raw.githubusercontent.com/trec-kba/streamcorpus-pipeline/master/data/john-smith/original/16/960731.417'
-2015-05-24 16:10:23,403 pid=8232  _yaml_files:289   INFO     opening './data/john-smith/original/16/960624.471'
-2015-05-24 16:10:23,403 pid=8232  _yaml_files:333   INFO     created StreamItem(num ratings=1, abs_url='https://raw.githubusercontent.com/trec-kba/streamcorpus-pipeline/master/data/john-smith/original/16/960624.471'
-2015-05-24 16:10:23,462 pid=8232  _yaml_files:289   INFO     opening './data/john-smith/original/0/970827.638'
-2015-05-24 16:10:23,463 pid=8232  _yaml_files:333   INFO     created StreamItem(num ratings=1, abs_url='https://raw.githubusercontent.com/trec-kba/streamcorpus-pipeline/master/data/john-smith/original/0/970827.638'
-2015-05-24 16:10:23,511 pid=8232  _yaml_files:289   INFO     opening './data/john-smith/original/0/970426.225'
-2015-05-24 16:10:23,511 pid=8232  _yaml_files:333   INFO     created StreamItem(num ratings=1, abs_url='https://raw.githubusercontent.com/trec-kba/streamcorpus-pipeline/master/data/john-smith/original/0/970426.225'
-2015-05-24 16:10:23,560 pid=8232  _yaml_files:289   INFO     opening './data/john-smith/original/28/970502.5'
-2015-05-24 16:10:23,561 pid=8232  _yaml_files:333   INFO     created StreamItem(num ratings=1, abs_url='https://raw.githubusercontent.com/trec-kba/streamcorpus-pipeline/master/data/john-smith/original/28/970502.5'
-2015-05-24 16:10:23,633 pid=8232  _yaml_files:289   INFO     opening './data/john-smith/original/13/960920.114'
-2015-05-24 16:10:23,634 pid=8232  _yaml_files:333   INFO     created StreamItem(num ratings=1, abs_url='https://raw.githubusercontent.com/trec-kba/streamcorpus-pipeline/master/data/john-smith/original/13/960920.114'
-2015-05-24 16:10:23,668 pid=8232  _yaml_files:289   INFO     opening './data/john-smith/original/0/960826.295'
-2015-05-24 16:10:23,668 pid=8232  _yaml_files:333   INFO     created StreamItem(num ratings=1, abs_url='https://raw.githubusercontent.com/trec-kba/streamcorpus-pipeline/master/data/john-smith/original/0/960826.295'
-2015-05-24 16:10:23,817 pid=8232  _yaml_files:289   INFO     opening './data/john-smith/original/28/970502.122'
-2015-05-24 16:10:23,817 pid=8232  _yaml_files:333   INFO     created StreamItem(num ratings=1, abs_url='https://raw.githubusercontent.com/trec-kba/streamcorpus-pipeline/master/data/john-smith/original/28/970502.122'
-2015-05-24 16:10:23,977 pid=8232  _yaml_files:289   INFO     opening './data/john-smith/original/16/970529.543'
-2015-05-24 16:10:23,977 pid=8232  _yaml_files:333   INFO     created StreamItem(num ratings=1, abs_url='https://raw.githubusercontent.com/trec-kba/streamcorpus-pipeline/master/data/john-smith/original/16/970529.543'
-2015-05-24 16:10:24,077 pid=8232  _yaml_files:289   INFO     opening './data/john-smith/original/30/960731.768'
-2015-05-24 16:10:24,077 pid=8232  _yaml_files:333   INFO     created StreamItem(num ratings=1, abs_url='https://raw.githubusercontent.com/trec-kba/streamcorpus-pipeline/master/data/john-smith/original/30/960731.768'
-2015-05-24 16:10:24,164 pid=8232  _yaml_files:289   INFO     opening './data/john-smith/original/1/970630.99'
-2015-05-24 16:10:24,164 pid=8232  _yaml_files:333   INFO     created StreamItem(num ratings=1, abs_url='https://raw.githubusercontent.com/trec-kba/streamcorpus-pipeline/master/data/john-smith/original/1/970630.99'
-2015-05-24 16:10:24,241 pid=8232  _yaml_files:289   INFO     opening './data/john-smith/original/16/970523.483'
-2015-05-24 16:10:24,242 pid=8232  _yaml_files:333   INFO     created StreamItem(num ratings=1, abs_url='https://raw.githubusercontent.com/trec-kba/streamcorpus-pipeline/master/data/john-smith/original/16/970523.483'
-2015-05-24 16:10:24,325 pid=8232  _yaml_files:289   INFO     opening './data/john-smith/original/30/960731.718'
-2015-05-24 16:10:24,325 pid=8232  _yaml_files:333   INFO     created StreamItem(num ratings=1, abs_url='https://raw.githubusercontent.com/trec-kba/streamcorpus-pipeline/master/data/john-smith/original/30/960731.718'
-2015-05-24 16:10:24,409 pid=8232  _yaml_files:289   INFO     opening './data/john-smith/original/2/970708.4'
-2015-05-24 16:10:24,409 pid=8232  _yaml_files:333   INFO     created StreamItem(num ratings=1, abs_url='https://raw.githubusercontent.com/trec-kba/streamcorpus-pipeline/master/data/john-smith/original/2/970708.4'
-2015-05-24 16:10:24,483 pid=8232  _yaml_files:289   INFO     opening './data/john-smith/original/28/970501.411'
-2015-05-24 16:10:24,483 pid=8232  _yaml_files:333   INFO     created StreamItem(num ratings=1, abs_url='https://raw.githubusercontent.com/trec-kba/streamcorpus-pipeline/master/data/john-smith/original/28/970501.411'
-2015-05-24 16:10:24,567 pid=8232  _yaml_files:289   INFO     opening './data/john-smith/original/16/971001.204'
-2015-05-24 16:10:24,567 pid=8232  _yaml_files:333   INFO     created StreamItem(num ratings=1, abs_url='https://raw.githubusercontent.com/trec-kba/streamcorpus-pipeline/master/data/john-smith/original/16/971001.204'
-2015-05-24 16:10:24,628 pid=8232  _yaml_files:289   INFO     opening './data/john-smith/original/25/971110.688'
-2015-05-24 16:10:24,628 pid=8232  _yaml_files:333   INFO     created StreamItem(num ratings=1, abs_url='https://raw.githubusercontent.com/trec-kba/streamcorpus-pipeline/master/data/john-smith/original/25/971110.688'
-2015-05-24 16:10:24,760 pid=8232  _yaml_files:289   INFO     opening './data/john-smith/original/17/970108.268'
-2015-05-24 16:10:24,761 pid=8232  _yaml_files:333   INFO     created StreamItem(num ratings=1, abs_url='https://raw.githubusercontent.com/trec-kba/streamcorpus-pipeline/master/data/john-smith/original/17/970108.268'
-2015-05-24 16:10:24,887 pid=8232  _yaml_files:289   INFO     opening './data/john-smith/original/30/960222.707'
-2015-05-24 16:10:24,887 pid=8232  _yaml_files:333   INFO     created StreamItem(num ratings=1, abs_url='https://raw.githubusercontent.com/trec-kba/streamcorpus-pipeline/master/data/john-smith/original/30/960222.707'
-2015-05-24 16:10:24,975 pid=8232  _yaml_files:289   INFO     opening './data/john-smith/original/0/961014.500'
-2015-05-24 16:10:24,975 pid=8232  _yaml_files:333   INFO     created StreamItem(num ratings=1, abs_url='https://raw.githubusercontent.com/trec-kba/streamcorpus-pipeline/master/data/john-smith/original/0/961014.500'
-2015-05-24 16:10:25,092 pid=8232  _yaml_files:289   INFO     opening './data/john-smith/original/9/970730.527'
-2015-05-24 16:10:25,093 pid=8232  _yaml_files:333   INFO     created StreamItem(num ratings=1, abs_url='https://raw.githubusercontent.com/trec-kba/streamcorpus-pipeline/master/data/john-smith/original/9/970730.527'
-2015-05-24 16:10:25,166 pid=8232  _yaml_files:289   INFO     opening './data/john-smith/original/16/960917.516'
-2015-05-24 16:10:25,166 pid=8232  _yaml_files:333   INFO     created StreamItem(num ratings=1, abs_url='https://raw.githubusercontent.com/trec-kba/streamcorpus-pipeline/master/data/john-smith/original/16/960917.516'
-2015-05-24 16:10:25,252 pid=8232  _yaml_files:289   INFO     opening './data/john-smith/original/16/971105.177'
-2015-05-24 16:10:25,252 pid=8232  _yaml_files:333   INFO     created StreamItem(num ratings=1, abs_url='https://raw.githubusercontent.com/trec-kba/streamcorpus-pipeline/master/data/john-smith/original/16/971105.177'
-2015-05-24 16:10:25,379 pid=8232  _yaml_files:289   INFO     opening './data/john-smith/original/4/970701.861'
-2015-05-24 16:10:25,379 pid=8232  _yaml_files:333   INFO     created StreamItem(num ratings=1, abs_url='https://raw.githubusercontent.com/trec-kba/streamcorpus-pipeline/master/data/john-smith/original/4/970701.861'
-2015-05-24 16:10:25,443 pid=8232  _yaml_files:289   INFO     opening './data/john-smith/original/15/971222.198'
-2015-05-24 16:10:25,443 pid=8232  _yaml_files:333   INFO     created StreamItem(num ratings=1, abs_url='https://raw.githubusercontent.com/trec-kba/streamcorpus-pipeline/master/data/john-smith/original/15/971222.198'
-2015-05-24 16:10:25,525 pid=8232  _yaml_files:289   INFO     opening './data/john-smith/original/34/970221.681'
-2015-05-24 16:10:25,526 pid=8232  _yaml_files:333   INFO     created StreamItem(num ratings=1, abs_url='https://raw.githubusercontent.com/trec-kba/streamcorpus-pipeline/master/data/john-smith/original/34/970221.681'
-2015-05-24 16:10:25,610 pid=8232  _yaml_files:289   INFO     opening './data/john-smith/original/28/970502.74'
-2015-05-24 16:10:25,610 pid=8232  _yaml_files:333   INFO     created StreamItem(num ratings=1, abs_url='https://raw.githubusercontent.com/trec-kba/streamcorpus-pipeline/master/data/john-smith/original/28/970502.74'
-2015-05-24 16:10:25,752 pid=8232  _yaml_files:289   INFO     opening './data/john-smith/original/16/970910.420'
-2015-05-24 16:10:25,752 pid=8232  _yaml_files:333   INFO     created StreamItem(num ratings=1, abs_url='https://raw.githubusercontent.com/trec-kba/streamcorpus-pipeline/master/data/john-smith/original/16/970910.420'
-2015-05-24 16:10:25,899 pid=8232  _yaml_files:289   INFO     opening './data/john-smith/original/28/970502.111'
-2015-05-24 16:10:25,899 pid=8232  _yaml_files:333   INFO     created StreamItem(num ratings=1, abs_url='https://raw.githubusercontent.com/trec-kba/streamcorpus-pipeline/master/data/john-smith/original/28/970502.111'
-2015-05-24 16:10:26,046 pid=8232  _yaml_files:289   INFO     opening './data/john-smith/original/16/960822.556'
-2015-05-24 16:10:26,046 pid=8232  _yaml_files:333   INFO     created StreamItem(num ratings=1, abs_url='https://raw.githubusercontent.com/trec-kba/streamcorpus-pipeline/master/data/john-smith/original/16/960822.556'
-2015-05-24 16:10:26,125 pid=8232  _yaml_files:289   INFO     opening './data/john-smith/original/30/970811.688'
-2015-05-24 16:10:26,126 pid=8232  _yaml_files:333   INFO     created StreamItem(num ratings=1, abs_url='https://raw.githubusercontent.com/trec-kba/streamcorpus-pipeline/master/data/john-smith/original/30/970811.688'
-2015-05-24 16:10:26,209 pid=8232  _yaml_files:289   INFO     opening './data/john-smith/original/16/970529.141'
-2015-05-24 16:10:26,209 pid=8232  _yaml_files:333   INFO     created StreamItem(num ratings=1, abs_url='https://raw.githubusercontent.com/trec-kba/streamcorpus-pipeline/master/data/john-smith/original/16/970529.141'
-2015-05-24 16:10:26,278 pid=8232  _yaml_files:289   INFO     opening './data/john-smith/original/0/960703.505'
-2015-05-24 16:10:26,279 pid=8232  _yaml_files:333   INFO     created StreamItem(num ratings=1, abs_url='https://raw.githubusercontent.com/trec-kba/streamcorpus-pipeline/master/data/john-smith/original/0/960703.505'
-2015-05-24 16:10:26,516 pid=8232  _yaml_files:289   INFO     opening './data/john-smith/original/16/970127.624'
-2015-05-24 16:10:26,517 pid=8232  _yaml_files:333   INFO     created StreamItem(num ratings=1, abs_url='https://raw.githubusercontent.com/trec-kba/streamcorpus-pipeline/master/data/john-smith/original/16/970127.624'
-2015-05-24 16:10:26,604 pid=8232  _yaml_files:289   INFO     opening './data/john-smith/original/1/960701.76'
-2015-05-24 16:10:26,605 pid=8232  _yaml_files:333   INFO     created StreamItem(num ratings=1, abs_url='https://raw.githubusercontent.com/trec-kba/streamcorpus-pipeline/master/data/john-smith/original/1/960701.76'
-2015-05-24 16:10:26,683 pid=8232  _yaml_files:289   INFO     opening './data/john-smith/original/16/970417.432'
-2015-05-24 16:10:26,683 pid=8232  _yaml_files:333   INFO     created StreamItem(num ratings=1, abs_url='https://raw.githubusercontent.com/trec-kba/streamcorpus-pipeline/master/data/john-smith/original/16/970417.432'
-2015-05-24 16:10:26,714 pid=8232  _yaml_files:289   INFO     opening './data/john-smith/original/0/970926.528'
-2015-05-24 16:10:26,715 pid=8232  _yaml_files:333   INFO     created StreamItem(num ratings=1, abs_url='https://raw.githubusercontent.com/trec-kba/streamcorpus-pipeline/master/data/john-smith/original/0/970926.528'
-2015-05-24 16:10:26,823 pid=8232  _yaml_files:289   INFO     opening './data/john-smith/original/27/961230.449'
-2015-05-24 16:10:26,823 pid=8232  _yaml_files:333   INFO     created StreamItem(num ratings=1, abs_url='https://raw.githubusercontent.com/trec-kba/streamcorpus-pipeline/master/data/john-smith/original/27/961230.449'
-2015-05-24 16:10:26,922 pid=8232  _yaml_files:289   INFO     opening './data/john-smith/original/28/960413.55'
-2015-05-24 16:10:26,923 pid=8232  _yaml_files:333   INFO     created StreamItem(num ratings=1, abs_url='https://raw.githubusercontent.com/trec-kba/streamcorpus-pipeline/master/data/john-smith/original/28/960413.55'
-2015-05-24 16:10:26,997 pid=8232  _yaml_files:289   INFO     opening './data/john-smith/original/16/970911.195'
-2015-05-24 16:10:26,997 pid=8232  _yaml_files:333   INFO     created StreamItem(num ratings=1, abs_url='https://raw.githubusercontent.com/trec-kba/streamcorpus-pipeline/master/data/john-smith/original/16/970911.195'
-2015-05-24 16:10:27,098 pid=8232  _yaml_files:289   INFO     opening './data/john-smith/original/16/961027.297'
-2015-05-24 16:10:27,098 pid=8232  _yaml_files:333   INFO     created StreamItem(num ratings=1, abs_url='https://raw.githubusercontent.com/trec-kba/streamcorpus-pipeline/master/data/john-smith/original/16/961027.297'
-2015-05-24 16:10:27,177 pid=8232  _yaml_files:289   INFO     opening './data/john-smith/original/3/960304.742'
-2015-05-24 16:10:27,177 pid=8232  _yaml_files:333   INFO     created StreamItem(num ratings=1, abs_url='https://raw.githubusercontent.com/trec-kba/streamcorpus-pipeline/master/data/john-smith/original/3/960304.742'
-2015-05-24 16:10:27,280 pid=8232  _yaml_files:289   INFO     opening './data/john-smith/original/16/971104.433'
-2015-05-24 16:10:27,280 pid=8232  _yaml_files:333   INFO     created StreamItem(num ratings=1, abs_url='https://raw.githubusercontent.com/trec-kba/streamcorpus-pipeline/master/data/john-smith/original/16/971104.433'
-2015-05-24 16:10:27,360 pid=8232  _yaml_files:289   INFO     opening './data/john-smith/original/28/970501.523'
-2015-05-24 16:10:27,361 pid=8232  _yaml_files:333   INFO     created StreamItem(num ratings=1, abs_url='https://raw.githubusercontent.com/trec-kba/streamcorpus-pipeline/master/data/john-smith/original/28/970501.523'
-2015-05-24 16:10:27,409 pid=8232  _yaml_files:289   INFO     opening './data/john-smith/original/16/971014.163'
-2015-05-24 16:10:27,409 pid=8232  _yaml_files:333   INFO     created StreamItem(num ratings=1, abs_url='https://raw.githubusercontent.com/trec-kba/streamcorpus-pipeline/master/data/john-smith/original/16/971014.163'
-2015-05-24 16:10:27,451 pid=8232  _yaml_files:289   INFO     opening './data/john-smith/original/16/971104.358'
-2015-05-24 16:10:27,451 pid=8232  _yaml_files:333   INFO     created StreamItem(num ratings=1, abs_url='https://raw.githubusercontent.com/trec-kba/streamcorpus-pipeline/master/data/john-smith/original/16/971104.358'
-2015-05-24 16:10:27,528 pid=8232  _yaml_files:289   INFO     opening './data/john-smith/original/0/960829.192'
-2015-05-24 16:10:27,529 pid=8232  _yaml_files:333   INFO     created StreamItem(num ratings=1, abs_url='https://raw.githubusercontent.com/trec-kba/streamcorpus-pipeline/master/data/john-smith/original/0/960829.192'
-2015-05-24 16:10:27,573 pid=8232  _yaml_files:289   INFO     opening './data/john-smith/original/16/960731.338'
-2015-05-24 16:10:27,573 pid=8232  _yaml_files:333   INFO     created StreamItem(num ratings=1, abs_url='https://raw.githubusercontent.com/trec-kba/streamcorpus-pipeline/master/data/john-smith/original/16/960731.338'
-2015-05-24 16:10:27,596 pid=8232  _yaml_files:289   INFO     opening './data/john-smith/original/24/970523.245'
-2015-05-24 16:10:27,597 pid=8232  _yaml_files:333   INFO     created StreamItem(num ratings=1, abs_url='https://raw.githubusercontent.com/trec-kba/streamcorpus-pipeline/master/data/john-smith/original/24/970523.245'
-2015-05-24 16:10:27,692 pid=8232  _yaml_files:289   INFO     opening './data/john-smith/original/16/971218.333'
-2015-05-24 16:10:27,692 pid=8232  _yaml_files:333   INFO     created StreamItem(num ratings=1, abs_url='https://raw.githubusercontent.com/trec-kba/streamcorpus-pipeline/master/data/john-smith/original/16/971218.333'
-2015-05-24 16:10:27,728 pid=8232  _yaml_files:289   INFO     opening './data/john-smith/original/16/970529.136'
-2015-05-24 16:10:27,728 pid=8232  _yaml_files:333   INFO     created StreamItem(num ratings=1, abs_url='https://raw.githubusercontent.com/trec-kba/streamcorpus-pipeline/master/data/john-smith/original/16/970529.136'
-2015-05-24 16:10:27,753 pid=8232  _yaml_files:289   INFO     opening './data/john-smith/original/0/970401.380'
-2015-05-24 16:10:27,753 pid=8232  _yaml_files:333   INFO     created StreamItem(num ratings=1, abs_url='https://raw.githubusercontent.com/trec-kba/streamcorpus-pipeline/master/data/john-smith/original/0/970401.380'
-2015-05-24 16:10:27,791 pid=8232  _yaml_files:289   INFO     opening './data/john-smith/original/16/970523.288'
-2015-05-24 16:10:27,791 pid=8232  _yaml_files:333   INFO     created StreamItem(num ratings=1, abs_url='https://raw.githubusercontent.com/trec-kba/streamcorpus-pipeline/master/data/john-smith/original/16/970523.288'
-2015-05-24 16:10:27,791 pid=8232  _pipeline.p:570   INFO     100 in 7.3 --> 13.7 per sec on (pre-partial_commit) data/john-smith/john-smith-labels.yaml
-2015-05-24 16:10:27,841 pid=8232  _yaml_files:289   INFO     opening './data/john-smith/original/16/970910.536'
-2015-05-24 16:10:27,841 pid=8232  _yaml_files:333   INFO     created StreamItem(num ratings=1, abs_url='https://raw.githubusercontent.com/trec-kba/streamcorpus-pipeline/master/data/john-smith/original/16/970910.536'
-2015-05-24 16:10:27,922 pid=8232  _yaml_files:289   INFO     opening './data/john-smith/original/16/970822.631'
-2015-05-24 16:10:27,922 pid=8232  _yaml_files:333   INFO     created StreamItem(num ratings=1, abs_url='https://raw.githubusercontent.com/trec-kba/streamcorpus-pipeline/master/data/john-smith/original/16/970822.631'
-2015-05-24 16:10:27,988 pid=8232  _yaml_files:289   INFO     opening './data/john-smith/original/24/970519.191'
-2015-05-24 16:10:27,988 pid=8232  _yaml_files:333   INFO     created StreamItem(num ratings=1, abs_url='https://raw.githubusercontent.com/trec-kba/streamcorpus-pipeline/master/data/john-smith/original/24/970519.191'
-2015-05-24 16:10:28,132 pid=8232  _yaml_files:289   INFO     opening './data/john-smith/original/16/970804.189'
-2015-05-24 16:10:28,132 pid=8232  _yaml_files:333   INFO     created StreamItem(num ratings=1, abs_url='https://raw.githubusercontent.com/trec-kba/streamcorpus-pipeline/master/data/john-smith/original/16/970804.189'
-2015-05-24 16:10:28,237 pid=8232  _yaml_files:289   INFO     opening './data/john-smith/original/0/960912.658'
-2015-05-24 16:10:28,237 pid=8232  _yaml_files:333   INFO     created StreamItem(num ratings=1, abs_url='https://raw.githubusercontent.com/trec-kba/streamcorpus-pipeline/master/data/john-smith/original/0/960912.658'
-2015-05-24 16:10:28,284 pid=8232  _yaml_files:289   INFO     opening './data/john-smith/original/0/970711.171'
-2015-05-24 16:10:28,284 pid=8232  _yaml_files:333   INFO     created StreamItem(num ratings=1, abs_url='https://raw.githubusercontent.com/trec-kba/streamcorpus-pipeline/master/data/john-smith/original/0/970711.171'
-2015-05-24 16:10:28,327 pid=8232  _yaml_files:289   INFO     opening './data/john-smith/original/21/970908.758'
-2015-05-24 16:10:28,328 pid=8232  _yaml_files:333   INFO     created StreamItem(num ratings=1, abs_url='https://raw.githubusercontent.com/trec-kba/streamcorpus-pipeline/master/data/john-smith/original/21/970908.758'
-2015-05-24 16:10:28,379 pid=8232  _yaml_files:289   INFO     opening './data/john-smith/original/24/970523.237'
-2015-05-24 16:10:28,379 pid=8232  _yaml_files:333   INFO     created StreamItem(num ratings=1, abs_url='https://raw.githubusercontent.com/trec-kba/streamcorpus-pipeline/master/data/john-smith/original/24/970523.237'
-2015-05-24 16:10:28,472 pid=8232  _yaml_files:289   INFO     opening './data/john-smith/original/16/970127.279'
-2015-05-24 16:10:28,472 pid=8232  _yaml_files:333   INFO     created StreamItem(num ratings=1, abs_url='https://raw.githubusercontent.com/trec-kba/streamcorpus-pipeline/master/data/john-smith/original/16/970127.279'
-2015-05-24 16:10:28,494 pid=8232  _yaml_files:289   INFO     opening './data/john-smith/original/16/960530.93'
-2015-05-24 16:10:28,494 pid=8232  _yaml_files:333   INFO     created StreamItem(num ratings=1, abs_url='https://raw.githubusercontent.com/trec-kba/streamcorpus-pipeline/master/data/john-smith/original/16/960530.93'
-2015-05-24 16:10:28,541 pid=8232  _yaml_files:289   INFO     opening './data/john-smith/original/26/960108.526'
-2015-05-24 16:10:28,541 pid=8232  _yaml_files:333   INFO     created StreamItem(num ratings=1, abs_url='https://raw.githubusercontent.com/trec-kba/streamcorpus-pipeline/master/data/john-smith/original/26/960108.526'
-2015-05-24 16:10:28,588 pid=8232  _yaml_files:289   INFO     opening './data/john-smith/original/30/960802.34'
-2015-05-24 16:10:28,588 pid=8232  _yaml_files:333   INFO     created StreamItem(num ratings=1, abs_url='https://raw.githubusercontent.com/trec-kba/streamcorpus-pipeline/master/data/john-smith/original/30/960802.34'
-2015-05-24 16:10:28,633 pid=8232  _yaml_files:289   INFO     opening './data/john-smith/original/30/970804.26'
-2015-05-24 16:10:28,633 pid=8232  _yaml_files:333   INFO     created StreamItem(num ratings=1, abs_url='https://raw.githubusercontent.com/trec-kba/streamcorpus-pipeline/master/data/john-smith/original/30/970804.26'
-2015-05-24 16:10:28,687 pid=8232  _yaml_files:289   INFO     opening './data/john-smith/original/28/970504.25'
-2015-05-24 16:10:28,687 pid=8232  _yaml_files:333   INFO     created StreamItem(num ratings=1, abs_url='https://raw.githubusercontent.com/trec-kba/streamcorpus-pipeline/master/data/john-smith/original/28/970504.25'
-2015-05-24 16:10:28,729 pid=8232  _yaml_files:289   INFO     opening './data/john-smith/original/30/970731.768'
-2015-05-24 16:10:28,729 pid=8232  _yaml_files:333   INFO     created StreamItem(num ratings=1, abs_url='https://raw.githubusercontent.com/trec-kba/streamcorpus-pipeline/master/data/john-smith/original/30/970731.768'
-2015-05-24 16:10:28,792 pid=8232  _yaml_files:289   INFO     opening './data/john-smith/original/0/960826.274'
-2015-05-24 16:10:28,792 pid=8232  _yaml_files:333   INFO     created StreamItem(num ratings=1, abs_url='https://raw.githubusercontent.com/trec-kba/streamcorpus-pipeline/master/data/john-smith/original/0/960826.274'
-2015-05-24 16:10:28,908 pid=8232  _yaml_files:289   INFO     opening './data/john-smith/original/8/970429.552'
-2015-05-24 16:10:28,908 pid=8232  _yaml_files:333   INFO     created StreamItem(num ratings=1, abs_url='https://raw.githubusercontent.com/trec-kba/streamcorpus-pipeline/master/data/john-smith/original/8/970429.552'
-2015-05-24 16:10:28,957 pid=8232  _yaml_files:289   INFO     opening './data/john-smith/original/16/961003.621'
-2015-05-24 16:10:28,957 pid=8232  _yaml_files:333   INFO     created StreamItem(num ratings=1, abs_url='https://raw.githubusercontent.com/trec-kba/streamcorpus-pipeline/master/data/john-smith/original/16/961003.621'
-2015-05-24 16:10:29,019 pid=8232  _yaml_files:289   INFO     opening './data/john-smith/original/30/970611.447'
-2015-05-24 16:10:29,019 pid=8232  _yaml_files:333   INFO     created StreamItem(num ratings=1, abs_url='https://raw.githubusercontent.com/trec-kba/streamcorpus-pipeline/master/data/john-smith/original/30/970611.447'
-2015-05-24 16:10:29,074 pid=8232  _yaml_files:289   INFO     opening './data/john-smith/original/16/960524.444'
-2015-05-24 16:10:29,074 pid=8232  _yaml_files:333   INFO     created StreamItem(num ratings=1, abs_url='https://raw.githubusercontent.com/trec-kba/streamcorpus-pipeline/master/data/john-smith/original/16/960524.444'
-2015-05-24 16:10:29,160 pid=8232  _yaml_files:289   INFO     opening './data/john-smith/original/16/970325.13'
-2015-05-24 16:10:29,160 pid=8232  _yaml_files:333   INFO     created StreamItem(num ratings=1, abs_url='https://raw.githubusercontent.com/trec-kba/streamcorpus-pipeline/master/data/john-smith/original/16/970325.13'
-2015-05-24 16:10:29,225 pid=8232  _yaml_files:289   INFO     opening './data/john-smith/original/28/970501.531'
-2015-05-24 16:10:29,226 pid=8232  _yaml_files:333   INFO     created StreamItem(num ratings=1, abs_url='https://raw.githubusercontent.com/trec-kba/streamcorpus-pipeline/master/data/john-smith/original/28/970501.531'
-2015-05-24 16:10:29,272 pid=8232  _yaml_files:289   INFO     opening './data/john-smith/original/16/970529.313'
-2015-05-24 16:10:29,273 pid=8232  _yaml_files:333   INFO     created StreamItem(num ratings=1, abs_url='https://raw.githubusercontent.com/trec-kba/streamcorpus-pipeline/master/data/john-smith/original/16/970529.313'
-2015-05-24 16:10:29,327 pid=8232  _yaml_files:289   INFO     opening './data/john-smith/original/16/970110.704'
-2015-05-24 16:10:29,328 pid=8232  _yaml_files:333   INFO     created StreamItem(num ratings=1, abs_url='https://raw.githubusercontent.com/trec-kba/streamcorpus-pipeline/master/data/john-smith/original/16/970110.704'
-2015-05-24 16:10:29,384 pid=8232  _yaml_files:289   INFO     opening './data/john-smith/original/29/960311.408'
-2015-05-24 16:10:29,384 pid=8232  _yaml_files:333   INFO     created StreamItem(num ratings=1, abs_url='https://raw.githubusercontent.com/trec-kba/streamcorpus-pipeline/master/data/john-smith/original/29/960311.408'
-2015-05-24 16:10:29,457 pid=8232  _yaml_files:289   INFO     opening './data/john-smith/original/11/960822.669'
-2015-05-24 16:10:29,457 pid=8232  _yaml_files:333   INFO     created StreamItem(num ratings=1, abs_url='https://raw.githubusercontent.com/trec-kba/streamcorpus-pipeline/master/data/john-smith/original/11/960822.669'
-2015-05-24 16:10:29,479 pid=8232  _yaml_files:289   INFO     opening './data/john-smith/original/16/970529.127'
-2015-05-24 16:10:29,480 pid=8232  _yaml_files:333   INFO     created StreamItem(num ratings=1, abs_url='https://raw.githubusercontent.com/trec-kba/streamcorpus-pipeline/master/data/john-smith/original/16/970529.127'
-2015-05-24 16:10:29,495 pid=8232  _yaml_files:289   INFO     opening './data/john-smith/original/31/970612.420'
-2015-05-24 16:10:29,495 pid=8232  _yaml_files:333   INFO     created StreamItem(num ratings=1, abs_url='https://raw.githubusercontent.com/trec-kba/streamcorpus-pipeline/master/data/john-smith/original/31/970612.420'
-2015-05-24 16:10:29,548 pid=8232  _yaml_files:289   INFO     opening './data/john-smith/original/15/971222.210'
-2015-05-24 16:10:29,548 pid=8232  _yaml_files:333   INFO     created StreamItem(num ratings=1, abs_url='https://raw.githubusercontent.com/trec-kba/streamcorpus-pipeline/master/data/john-smith/original/15/971222.210'
-2015-05-24 16:10:29,598 pid=8232  _yaml_files:289   INFO     opening './data/john-smith/original/16/970523.145'
-2015-05-24 16:10:29,598 pid=8232  _yaml_files:333   INFO     created StreamItem(num ratings=1, abs_url='https://raw.githubusercontent.com/trec-kba/streamcorpus-pipeline/master/data/john-smith/original/16/970523.145'
-2015-05-24 16:10:29,617 pid=8232  _yaml_files:289   INFO     opening './data/john-smith/original/0/960402.464'
-2015-05-24 16:10:29,617 pid=8232  _yaml_files:333   INFO     created StreamItem(num ratings=1, abs_url='https://raw.githubusercontent.com/trec-kba/streamcorpus-pipeline/master/data/john-smith/original/0/960402.464'
-2015-05-24 16:10:29,687 pid=8232  _yaml_files:289   INFO     opening './data/john-smith/original/16/970414.153'
-2015-05-24 16:10:29,687 pid=8232  _yaml_files:333   INFO     created StreamItem(num ratings=1, abs_url='https://raw.githubusercontent.com/trec-kba/streamcorpus-pipeline/master/data/john-smith/original/16/970414.153'
-2015-05-24 16:10:29,715 pid=8232  _yaml_files:289   INFO     opening './data/john-smith/original/16/970127.316'
-2015-05-24 16:10:29,715 pid=8232  _yaml_files:333   INFO     created StreamItem(num ratings=1, abs_url='https://raw.githubusercontent.com/trec-kba/streamcorpus-pipeline/master/data/john-smith/original/16/970127.316'
-2015-05-24 16:10:29,745 pid=8232  _yaml_files:289   INFO     opening './data/john-smith/original/18/970111.202'
-2015-05-24 16:10:29,745 pid=8232  _yaml_files:333   INFO     created StreamItem(num ratings=1, abs_url='https://raw.githubusercontent.com/trec-kba/streamcorpus-pipeline/master/data/john-smith/original/18/970111.202'
-2015-05-24 16:10:29,797 pid=8232  _yaml_files:289   INFO     opening './data/john-smith/original/16/971102.190'
-2015-05-24 16:10:29,797 pid=8232  _yaml_files:333   INFO     created StreamItem(num ratings=1, abs_url='https://raw.githubusercontent.com/trec-kba/streamcorpus-pipeline/master/data/john-smith/original/16/971102.190'
-2015-05-24 16:10:29,851 pid=8232  _yaml_files:289   INFO     opening './data/john-smith/original/16/960624.533'
-2015-05-24 16:10:29,851 pid=8232  _yaml_files:333   INFO     created StreamItem(num ratings=1, abs_url='https://raw.githubusercontent.com/trec-kba/streamcorpus-pipeline/master/data/john-smith/original/16/960624.533'
-2015-05-24 16:10:29,917 pid=8232  _yaml_files:289   INFO     opening './data/john-smith/original/28/970501.727'
-2015-05-24 16:10:29,917 pid=8232  _yaml_files:333   INFO     created StreamItem(num ratings=1, abs_url='https://raw.githubusercontent.com/trec-kba/streamcorpus-pipeline/master/data/john-smith/original/28/970501.727'
-2015-05-24 16:10:29,988 pid=8232  _yaml_files:289   INFO     opening './data/john-smith/original/30/970808.668'
-2015-05-24 16:10:29,988 pid=8232  _yaml_files:333   INFO     created StreamItem(num ratings=1, abs_url='https://raw.githubusercontent.com/trec-kba/streamcorpus-pipeline/master/data/john-smith/original/30/970808.668'
-2015-05-24 16:10:30,042 pid=8232  _yaml_files:289   INFO     opening './data/john-smith/original/0/960114.114'
-2015-05-24 16:10:30,043 pid=8232  _yaml_files:333   INFO     created StreamItem(num ratings=1, abs_url='https://raw.githubusercontent.com/trec-kba/streamcorpus-pipeline/master/data/john-smith/original/0/960114.114'
-2015-05-24 16:10:30,109 pid=8232  _yaml_files:289   INFO     opening './data/john-smith/original/0/970307.114'
-2015-05-24 16:10:30,109 pid=8232  _yaml_files:333   INFO     created StreamItem(num ratings=1, abs_url='https://raw.githubusercontent.com/trec-kba/streamcorpus-pipeline/master/data/john-smith/original/0/970307.114'
-2015-05-24 16:10:30,165 pid=8232  _yaml_files:289   INFO     opening './data/john-smith/original/30/970804.32'
-2015-05-24 16:10:30,165 pid=8232  _yaml_files:333   INFO     created StreamItem(num ratings=1, abs_url='https://raw.githubusercontent.com/trec-kba/streamcorpus-pipeline/master/data/john-smith/original/30/970804.32'
-2015-05-24 16:10:30,213 pid=8232  _yaml_files:289   INFO     opening './data/john-smith/original/16/971014.359'
-2015-05-24 16:10:30,213 pid=8232  _yaml_files:333   INFO     created StreamItem(num ratings=1, abs_url='https://raw.githubusercontent.com/trec-kba/streamcorpus-pipeline/master/data/john-smith/original/16/971014.359'
-2015-05-24 16:10:30,270 pid=8232  _yaml_files:289   INFO     opening './data/john-smith/original/16/971225.136'
-2015-05-24 16:10:30,271 pid=8232  _yaml_files:333   INFO     created StreamItem(num ratings=1, abs_url='https://raw.githubusercontent.com/trec-kba/streamcorpus-pipeline/master/data/john-smith/original/16/971225.136'
-2015-05-24 16:10:30,336 pid=8232  _yaml_files:289   INFO     opening './data/john-smith/original/16/960822.722'
-2015-05-24 16:10:30,337 pid=8232  _yaml_files:333   INFO     created StreamItem(num ratings=1, abs_url='https://raw.githubusercontent.com/trec-kba/streamcorpus-pipeline/master/data/john-smith/original/16/960822.722'
-2015-05-24 16:10:30,407 pid=8232  _yaml_files:289   INFO     opening './data/john-smith/original/19/970227.644'
-2015-05-24 16:10:30,407 pid=8232  _yaml_files:333   INFO     created StreamItem(num ratings=1, abs_url='https://raw.githubusercontent.com/trec-kba/streamcorpus-pipeline/master/data/john-smith/original/19/970227.644'
-2015-05-24 16:10:30,477 pid=8232  _yaml_files:289   INFO     opening './data/john-smith/original/16/960520.528'
-2015-05-24 16:10:30,477 pid=8232  _yaml_files:333   INFO     created StreamItem(num ratings=1, abs_url='https://raw.githubusercontent.com/trec-kba/streamcorpus-pipeline/master/data/john-smith/original/16/960520.528'
-2015-05-24 16:10:30,545 pid=8232  _yaml_files:289   INFO     opening './data/john-smith/original/16/960409.428'
-2015-05-24 16:10:30,545 pid=8232  _yaml_files:333   INFO     created StreamItem(num ratings=1, abs_url='https://raw.githubusercontent.com/trec-kba/streamcorpus-pipeline/master/data/john-smith/original/16/960409.428'
-2015-05-24 16:10:30,573 pid=8232  _yaml_files:289   INFO     opening './data/john-smith/original/28/970502.29'
-2015-05-24 16:10:30,573 pid=8232  _yaml_files:333   INFO     created StreamItem(num ratings=1, abs_url='https://raw.githubusercontent.com/trec-kba/streamcorpus-pipeline/master/data/john-smith/original/28/970502.29'
-2015-05-24 16:10:30,649 pid=8232  _yaml_files:289   INFO     opening './data/john-smith/original/14/970317.818'
-2015-05-24 16:10:30,649 pid=8232  _yaml_files:333   INFO     created StreamItem(num ratings=1, abs_url='https://raw.githubusercontent.com/trec-kba/streamcorpus-pipeline/master/data/john-smith/original/14/970317.818'
-2015-05-24 16:10:30,707 pid=8232  _yaml_files:289   INFO     opening './data/john-smith/original/30/960607.349'
-2015-05-24 16:10:30,707 pid=8232  _yaml_files:333   INFO     created StreamItem(num ratings=1, abs_url='https://raw.githubusercontent.com/trec-kba/streamcorpus-pipeline/master/data/john-smith/original/30/960607.349'
-2015-05-24 16:10:30,742 pid=8232  _yaml_files:289   INFO     opening './data/john-smith/original/16/960924.456'
-2015-05-24 16:10:30,742 pid=8232  _yaml_files:333   INFO     created StreamItem(num ratings=1, abs_url='https://raw.githubusercontent.com/trec-kba/streamcorpus-pipeline/master/data/john-smith/original/16/960924.456'
-2015-05-24 16:10:30,787 pid=8232  _yaml_files:289   INFO     opening './data/john-smith/original/0/970218.938'
-2015-05-24 16:10:30,787 pid=8232  _yaml_files:333   INFO     created StreamItem(num ratings=1, abs_url='https://raw.githubusercontent.com/trec-kba/streamcorpus-pipeline/master/data/john-smith/original/0/970218.938'
-2015-05-24 16:10:30,840 pid=8232  _yaml_files:289   INFO     opening './data/john-smith/original/13/960919.533'
-2015-05-24 16:10:30,840 pid=8232  _yaml_files:333   INFO     created StreamItem(num ratings=1, abs_url='https://raw.githubusercontent.com/trec-kba/streamcorpus-pipeline/master/data/john-smith/original/13/960919.533'
-2015-05-24 16:10:30,882 pid=8232  _yaml_files:289   INFO     opening './data/john-smith/original/27/961231.74'
-2015-05-24 16:10:30,882 pid=8232  _yaml_files:333   INFO     created StreamItem(num ratings=1, abs_url='https://raw.githubusercontent.com/trec-kba/streamcorpus-pipeline/master/data/john-smith/original/27/961231.74'
-2015-05-24 16:10:30,936 pid=8232  _yaml_files:289   INFO     opening './data/john-smith/original/0/970703.406'
-2015-05-24 16:10:30,936 pid=8232  _yaml_files:333   INFO     created StreamItem(num ratings=1, abs_url='https://raw.githubusercontent.com/trec-kba/streamcorpus-pipeline/master/data/john-smith/original/0/970703.406'
-2015-05-24 16:10:30,985 pid=8232  _yaml_files:289   INFO     opening './data/john-smith/original/30/970210.851'
-2015-05-24 16:10:30,985 pid=8232  _yaml_files:333   INFO     created StreamItem(num ratings=1, abs_url='https://raw.githubusercontent.com/trec-kba/streamcorpus-pipeline/master/data/john-smith/original/30/970210.851'
-2015-05-24 16:10:31,031 pid=8232  _yaml_files:289   INFO     opening './data/john-smith/original/15/971222.150'
-2015-05-24 16:10:31,031 pid=8232  _yaml_files:333   INFO     created StreamItem(num ratings=1, abs_url='https://raw.githubusercontent.com/trec-kba/streamcorpus-pipeline/master/data/john-smith/original/15/971222.150'
-2015-05-24 16:10:31,080 pid=8232  _yaml_files:289   INFO     opening './data/john-smith/original/16/970127.308'
-2015-05-24 16:10:31,080 pid=8232  _yaml_files:333   INFO     created StreamItem(num ratings=1, abs_url='https://raw.githubusercontent.com/trec-kba/streamcorpus-pipeline/master/data/john-smith/original/16/970127.308'
-2015-05-24 16:10:31,105 pid=8232  _yaml_files:289   INFO     opening './data/john-smith/original/30/960730.608'
-2015-05-24 16:10:31,105 pid=8232  _yaml_files:333   INFO     created StreamItem(num ratings=1, abs_url='https://raw.githubusercontent.com/trec-kba/streamcorpus-pipeline/master/data/john-smith/original/30/960730.608'
-2015-05-24 16:10:31,170 pid=8232  _yaml_files:289   INFO     opening './data/john-smith/original/6/961011.655'
-2015-05-24 16:10:31,171 pid=8232  _yaml_files:333   INFO     created StreamItem(num ratings=1, abs_url='https://raw.githubusercontent.com/trec-kba/streamcorpus-pipeline/master/data/john-smith/original/6/961011.655'
-2015-05-24 16:10:31,226 pid=8232  _yaml_files:289   INFO     opening './data/john-smith/original/16/971014.228'
-2015-05-24 16:10:31,226 pid=8232  _yaml_files:333   INFO     created StreamItem(num ratings=1, abs_url='https://raw.githubusercontent.com/trec-kba/streamcorpus-pipeline/master/data/john-smith/original/16/971014.228'
-2015-05-24 16:10:31,273 pid=8232  _yaml_files:289   INFO     opening './data/john-smith/original/16/970325.270'
-2015-05-24 16:10:31,274 pid=8232  _yaml_files:333   INFO     created StreamItem(num ratings=1, abs_url='https://raw.githubusercontent.com/trec-kba/streamcorpus-pipeline/master/data/john-smith/original/16/970325.270'
-2015-05-24 16:10:31,340 pid=8232  _yaml_files:289   INFO     opening './data/john-smith/original/30/960725.443'
-2015-05-24 16:10:31,340 pid=8232  _yaml_files:333   INFO     created StreamItem(num ratings=1, abs_url='https://raw.githubusercontent.com/trec-kba/streamcorpus-pipeline/master/data/john-smith/original/30/960725.443'
-2015-05-24 16:10:31,401 pid=8232  _yaml_files:289   INFO     opening './data/john-smith/original/30/970808.564'
-2015-05-24 16:10:31,401 pid=8232  _yaml_files:333   INFO     created StreamItem(num ratings=1, abs_url='https://raw.githubusercontent.com/trec-kba/streamcorpus-pipeline/master/data/john-smith/original/30/970808.564'
-2015-05-24 16:10:31,458 pid=8232  _yaml_files:289   INFO     opening './data/john-smith/original/16/961029.626'
-2015-05-24 16:10:31,458 pid=8232  _yaml_files:333   INFO     created StreamItem(num ratings=1, abs_url='https://raw.githubusercontent.com/trec-kba/streamcorpus-pipeline/master/data/john-smith/original/16/961029.626'
-2015-05-24 16:10:31,500 pid=8232  _yaml_files:289   INFO     opening './data/john-smith/original/16/970804.497'
-2015-05-24 16:10:31,500 pid=8232  _yaml_files:333   INFO     created StreamItem(num ratings=1, abs_url='https://raw.githubusercontent.com/trec-kba/streamcorpus-pipeline/master/data/john-smith/original/16/970804.497'
-2015-05-24 16:10:31,549 pid=8232  _yaml_files:289   INFO     opening './data/john-smith/original/30/960802.2'
-2015-05-24 16:10:31,549 pid=8232  _yaml_files:333   INFO     created StreamItem(num ratings=1, abs_url='https://raw.githubusercontent.com/trec-kba/streamcorpus-pipeline/master/data/john-smith/original/30/960802.2'
-2015-05-24 16:10:31,589 pid=8232  _yaml_files:289   INFO     opening './data/john-smith/original/16/970523.338'
-2015-05-24 16:10:31,589 pid=8232  _yaml_files:333   INFO     created StreamItem(num ratings=1, abs_url='https://raw.githubusercontent.com/trec-kba/streamcorpus-pipeline/master/data/john-smith/original/16/970523.338'
-2015-05-24 16:10:31,627 pid=8232  _yaml_files:289   INFO     opening './data/john-smith/original/28/970501.453'
-2015-05-24 16:10:31,628 pid=8232  _yaml_files:333   INFO     created StreamItem(num ratings=1, abs_url='https://raw.githubusercontent.com/trec-kba/streamcorpus-pipeline/master/data/john-smith/original/28/970501.453'
-2015-05-24 16:10:31,677 pid=8232  _yaml_files:289   INFO     opening './data/john-smith/original/16/970109.669'
-2015-05-24 16:10:31,677 pid=8232  _yaml_files:333   INFO     created StreamItem(num ratings=1, abs_url='https://raw.githubusercontent.com/trec-kba/streamcorpus-pipeline/master/data/john-smith/original/16/970109.669'
-2015-05-24 16:10:31,732 pid=8232  _yaml_files:289   INFO     opening './data/john-smith/original/0/960228.375'
-2015-05-24 16:10:31,732 pid=8232  _yaml_files:333   INFO     created StreamItem(num ratings=1, abs_url='https://raw.githubusercontent.com/trec-kba/streamcorpus-pipeline/master/data/john-smith/original/0/960228.375'
-2015-05-24 16:10:31,772 pid=8232  _yaml_files:289   INFO     opening './data/john-smith/original/24/970519.188'
-2015-05-24 16:10:31,772 pid=8232  _yaml_files:333   INFO     created StreamItem(num ratings=1, abs_url='https://raw.githubusercontent.com/trec-kba/streamcorpus-pipeline/master/data/john-smith/original/24/970519.188'
-2015-05-24 16:10:31,916 pid=8232  _yaml_files:289   INFO     opening './data/john-smith/original/16/970414.241'
-2015-05-24 16:10:31,916 pid=8232  _yaml_files:333   INFO     created StreamItem(num ratings=1, abs_url='https://raw.githubusercontent.com/trec-kba/streamcorpus-pipeline/master/data/john-smith/original/16/970414.241'
-2015-05-24 16:10:31,963 pid=8232  _yaml_files:289   INFO     opening './data/john-smith/original/12/960810.116'
-2015-05-24 16:10:31,963 pid=8232  _yaml_files:333   INFO     created StreamItem(num ratings=1, abs_url='https://raw.githubusercontent.com/trec-kba/streamcorpus-pipeline/master/data/john-smith/original/12/960810.116'
-2015-05-24 16:10:32,024 pid=8232  _yaml_files:289   INFO     opening './data/john-smith/original/7/971001.979'
-2015-05-24 16:10:32,024 pid=8232  _yaml_files:333   INFO     created StreamItem(num ratings=1, abs_url='https://raw.githubusercontent.com/trec-kba/streamcorpus-pipeline/master/data/john-smith/original/7/971001.979'
-2015-05-24 16:10:32,078 pid=8232  _yaml_files:289   INFO     opening './data/john-smith/original/22/960328.241'
-2015-05-24 16:10:32,078 pid=8232  _yaml_files:333   INFO     created StreamItem(num ratings=1, abs_url='https://raw.githubusercontent.com/trec-kba/streamcorpus-pipeline/master/data/john-smith/original/22/960328.241'
-2015-05-24 16:10:32,123 pid=8232  _yaml_files:289   INFO     opening './data/john-smith/original/10/970416.398'
-2015-05-24 16:10:32,123 pid=8232  _yaml_files:333   INFO     created StreamItem(num ratings=1, abs_url='https://raw.githubusercontent.com/trec-kba/streamcorpus-pipeline/master/data/john-smith/original/10/970416.398'
-2015-05-24 16:10:32,173 pid=8232  _yaml_files:289   INFO     opening './data/john-smith/original/16/970530.167'
-2015-05-24 16:10:32,173 pid=8232  _yaml_files:333   INFO     created StreamItem(num ratings=1, abs_url='https://raw.githubusercontent.com/trec-kba/streamcorpus-pipeline/master/data/john-smith/original/16/970530.167'
-2015-05-24 16:10:32,216 pid=8232  _yaml_files:289   INFO     opening './data/john-smith/original/16/970804.144'
-2015-05-24 16:10:32,217 pid=8232  _yaml_files:333   INFO     created StreamItem(num ratings=1, abs_url='https://raw.githubusercontent.com/trec-kba/streamcorpus-pipeline/master/data/john-smith/original/16/970804.144'
-2015-05-24 16:10:32,236 pid=8232  _yaml_files:289   INFO     opening './data/john-smith/original/30/970803.131'
-2015-05-24 16:10:32,236 pid=8232  _yaml_files:333   INFO     created StreamItem(num ratings=1, abs_url='https://raw.githubusercontent.com/trec-kba/streamcorpus-pipeline/master/data/john-smith/original/30/970803.131'
-2015-05-24 16:10:32,318 pid=8232  _yaml_files:289   INFO     opening './data/john-smith/original/16/971018.154'
-2015-05-24 16:10:32,318 pid=8232  _yaml_files:333   INFO     created StreamItem(num ratings=1, abs_url='https://raw.githubusercontent.com/trec-kba/streamcorpus-pipeline/master/data/john-smith/original/16/971018.154'
-2015-05-24 16:10:32,362 pid=8232  _yaml_files:289   INFO     opening './data/john-smith/original/24/970520.117'
-2015-05-24 16:10:32,362 pid=8232  _yaml_files:333   INFO     created StreamItem(num ratings=1, abs_url='https://raw.githubusercontent.com/trec-kba/streamcorpus-pipeline/master/data/john-smith/original/24/970520.117'
-2015-05-24 16:10:32,460 pid=8232  _yaml_files:289   INFO     opening './data/john-smith/original/24/970520.114'
-2015-05-24 16:10:32,460 pid=8232  _yaml_files:333   INFO     created StreamItem(num ratings=1, abs_url='https://raw.githubusercontent.com/trec-kba/streamcorpus-pipeline/master/data/john-smith/original/24/970520.114'
-2015-05-24 16:10:32,557 pid=8232  _yaml_files:289   INFO     opening './data/john-smith/original/16/970114.515'
-2015-05-24 16:10:32,557 pid=8232  _yaml_files:333   INFO     created StreamItem(num ratings=1, abs_url='https://raw.githubusercontent.com/trec-kba/streamcorpus-pipeline/master/data/john-smith/original/16/970114.515'
-2015-05-24 16:10:32,605 pid=8232  _yaml_files:289   INFO     opening './data/john-smith/original/1/960701.288'
-2015-05-24 16:10:32,605 pid=8232  _yaml_files:333   INFO     created StreamItem(num ratings=1, abs_url='https://raw.githubusercontent.com/trec-kba/streamcorpus-pipeline/master/data/john-smith/original/1/960701.288'
-2015-05-24 16:10:32,657 pid=8232  _yaml_files:289   INFO     opening './data/john-smith/original/30/970809.30'
-2015-05-24 16:10:32,658 pid=8232  _yaml_files:333   INFO     created StreamItem(num ratings=1, abs_url='https://raw.githubusercontent.com/trec-kba/streamcorpus-pipeline/master/data/john-smith/original/30/970809.30'
-2015-05-24 16:10:32,714 pid=8232  _yaml_files:289   INFO     opening './data/john-smith/original/28/970501.623'
-2015-05-24 16:10:32,714 pid=8232  _yaml_files:333   INFO     created StreamItem(num ratings=1, abs_url='https://raw.githubusercontent.com/trec-kba/streamcorpus-pipeline/master/data/john-smith/original/28/970501.623'
-2015-05-24 16:10:32,782 pid=8232  _yaml_files:289   INFO     opening './data/john-smith/original/16/970218.1640'
-2015-05-24 16:10:32,782 pid=8232  _yaml_files:333   INFO     created StreamItem(num ratings=1, abs_url='https://raw.githubusercontent.com/trec-kba/streamcorpus-pipeline/master/data/john-smith/original/16/970218.1640'
-2015-05-24 16:10:32,822 pid=8232  _yaml_files:289   INFO     opening './data/john-smith/original/4/970708.827'
-2015-05-24 16:10:32,822 pid=8232  _yaml_files:333   INFO     created StreamItem(num ratings=1, abs_url='https://raw.githubusercontent.com/trec-kba/streamcorpus-pipeline/master/data/john-smith/original/4/970708.827'
-2015-05-24 16:10:32,852 pid=8232  _yaml_files:289   INFO     opening './data/john-smith/original/16/971104.255'
-2015-05-24 16:10:32,852 pid=8232  _yaml_files:333   INFO     created StreamItem(num ratings=1, abs_url='https://raw.githubusercontent.com/trec-kba/streamcorpus-pipeline/master/data/john-smith/original/16/971104.255'
-2015-05-24 16:10:32,932 pid=8232  _yaml_files:289   INFO     opening './data/john-smith/original/16/971001.822'
-2015-05-24 16:10:32,932 pid=8232  _yaml_files:333   INFO     created StreamItem(num ratings=1, abs_url='https://raw.githubusercontent.com/trec-kba/streamcorpus-pipeline/master/data/john-smith/original/16/971001.822'
-2015-05-24 16:10:32,973 pid=8232  _yaml_files:289   INFO     opening './data/john-smith/original/16/970630.489'
-2015-05-24 16:10:32,973 pid=8232  _yaml_files:333   INFO     created StreamItem(num ratings=1, abs_url='https://raw.githubusercontent.com/trec-kba/streamcorpus-pipeline/master/data/john-smith/original/16/970630.489'
-2015-05-24 16:10:33,007 pid=8232  _yaml_files:289   INFO     opening './data/john-smith/original/16/960409.394'
-2015-05-24 16:10:33,007 pid=8232  _yaml_files:333   INFO     created StreamItem(num ratings=1, abs_url='https://raw.githubusercontent.com/trec-kba/streamcorpus-pipeline/master/data/john-smith/original/16/960409.394'
-2015-05-24 16:10:33,030 pid=8232  _yaml_files:289   INFO     opening './data/john-smith/original/16/970108.585'
-2015-05-24 16:10:33,030 pid=8232  _yaml_files:333   INFO     created StreamItem(num ratings=1, abs_url='https://raw.githubusercontent.com/trec-kba/streamcorpus-pipeline/master/data/john-smith/original/16/970108.585'
-2015-05-24 16:10:33,077 pid=8232  _yaml_files:289   INFO     opening './data/john-smith/original/1/970630.222'
-2015-05-24 16:10:33,077 pid=8232  _yaml_files:333   INFO     created StreamItem(num ratings=1, abs_url='https://raw.githubusercontent.com/trec-kba/streamcorpus-pipeline/master/data/john-smith/original/1/970630.222'
-2015-05-24 16:10:33,121 pid=8232  _yaml_files:289   INFO     opening './data/john-smith/original/16/961016.293'
-2015-05-24 16:10:33,121 pid=8232  _yaml_files:333   INFO     created StreamItem(num ratings=1, abs_url='https://raw.githubusercontent.com/trec-kba/streamcorpus-pipeline/master/data/john-smith/original/16/961016.293'
-2015-05-24 16:10:33,195 pid=8232  _yaml_files:289   INFO     opening './data/john-smith/original/16/970804.215'
-2015-05-24 16:10:33,196 pid=8232  _yaml_files:333   INFO     created StreamItem(num ratings=1, abs_url='https://raw.githubusercontent.com/trec-kba/streamcorpus-pipeline/master/data/john-smith/original/16/970804.215'
-2015-05-24 16:10:33,310 pid=8232  _pipeline.p:675   INFO     running batch transforms on 197 StreamItems
-2015-05-24 16:10:34,811 pid=8232  _taggers.py:428   WARNING  multi_token_match didn't actually match entity '8' in stream_id '1432397875-f4ef3780819f56aaaff3dd20d27b2279'
-2015-05-24 16:10:35,198 pid=8232  _taggers.py:428   WARNING  multi_token_match didn't actually match entity '14' in stream_id '1432397875-5ea6bfa48872392779971453e05ffe2f'
-2015-05-24 16:10:36,268 pid=8232  offsets.py:525    INFO     stream item 1432397875-3d22ac28d9c15e3c05cb89d47dc34965: 676/676 tokens with valid xpaths
-2015-05-24 16:10:37,082 pid=8232  offsets.py:525    INFO     stream item 1432397875-f32002e66c4b7d41a3dca41c7671c2a9: 1176/1176 tokens with valid xpaths
-2015-05-24 16:10:37,394 pid=8232  offsets.py:525    INFO     stream item 1432397875-035640312640d73dc7ed10e7ac5df0da: 667/667 tokens with valid xpaths
-2015-05-24 16:10:37,484 pid=8232  offsets.py:525    INFO     stream item 1432397875-59e0b2203e923f99b567aa57ece21aa3: 262/262 tokens with valid xpaths
-2015-05-24 16:10:37,841 pid=8232  offsets.py:525    INFO     stream item 1432397875-fe09f1a552df77a341d6997437a58d82: 740/740 tokens with valid xpaths
-2015-05-24 16:10:38,187 pid=8232  offsets.py:525    INFO     stream item 1432397875-78eeec714cdf3c5d37ec14b55588283a: 719/719 tokens with valid xpaths
-2015-05-24 16:10:38,478 pid=8232  offsets.py:525    INFO     stream item 1432397875-a3fb836b3d6124c27c78b943e146c25b: 639/639 tokens with valid xpaths
-2015-05-24 16:10:40,515 pid=8232  offsets.py:525    INFO     stream item 1432397875-61127b210e5d2e79f7a0f2b2014cb5fe: 2175/2175 tokens with valid xpaths
-2015-05-24 16:10:41,229 pid=8232  offsets.py:525    INFO     stream item 1432397875-76784cfc2708f51bbbe15600fd634b63: 1147/1147 tokens with valid xpaths
-2015-05-24 16:10:41,791 pid=8232  offsets.py:525    INFO     stream item 1432397875-b876d059e50fe48c106d7270513fef59: 992/992 tokens with valid xpaths
-2015-05-24 16:10:42,180 pid=8232  offsets.py:525    INFO     stream item 1432397875-9e5edb9f30ae5d79b69c8a28966722f5: 915/915 tokens with valid xpaths
-2015-05-24 16:10:42,491 pid=8232  offsets.py:525    INFO     stream item 1432397875-f1453197e62ebcb017e907811a26293e: 1032/1032 tokens with valid xpaths
-2015-05-24 16:10:42,966 pid=8232  offsets.py:525    INFO     stream item 1432397875-9e98e032a2342705e6cf526ec167ac34: 1346/1346 tokens with valid xpaths
-2015-05-24 16:10:43,447 pid=8232  offsets.py:525    INFO     stream item 1432397875-572dac4d8388e792265ddbad77012a84: 1354/1354 tokens with valid xpaths
-2015-05-24 16:10:43,707 pid=8232  offsets.py:525    INFO     stream item 1432397875-745c647f1a2cf0d3fe7369caaa24f1a3: 906/906 tokens with valid xpaths
-2015-05-24 16:10:44,014 pid=8232  offsets.py:525    INFO     stream item 1432397875-19f3cfe250f553cef5b33ae545d8e328: 1017/1017 tokens with valid xpaths
-2015-05-24 16:10:44,143 pid=8232  offsets.py:525    INFO     stream item 1432397875-ebf6c42dde3e4b9e3f02937b4fe77e12: 548/548 tokens with valid xpaths
-2015-05-24 16:10:44,768 pid=8232  offsets.py:525    INFO     stream item 1432397875-cffd7c06efc8e7794e1a5ee105c09ce6: 1614/1614 tokens with valid xpaths
-2015-05-24 16:10:45,131 pid=8232  offsets.py:525    INFO     stream item 1432397875-82f3f6ca22251bddb149c9e027b5ee90: 1130/1130 tokens with valid xpaths
-2015-05-24 16:10:45,196 pid=8232  offsets.py:525    INFO     stream item 1432397875-4ecc067f16bbc459f151902e9ddcc487: 320/320 tokens with valid xpaths
-2015-05-24 16:10:45,313 pid=8232  offsets.py:525    INFO     stream item 1432397875-fa7b43add00258ff4e6185fd087347bb: 522/522 tokens with valid xpaths
-2015-05-24 16:10:45,587 pid=8232  offsets.py:525    INFO     stream item 1432397875-8c5eadbd8f9118a2f7c4c1b94262366b: 947/947 tokens with valid xpaths
-2015-05-24 16:10:46,263 pid=8232  offsets.py:525    INFO     stream item 1432397875-1e047dd3e3ea7a42b44bcb7ae22f09fe: 1614/1614 tokens with valid xpaths
-2015-05-24 16:10:46,536 pid=8232  offsets.py:525    INFO     stream item 1432397875-89c71d6522b4fc374c3640f8203065f2: 932/932 tokens with valid xpaths
-2015-05-24 16:10:46,760 pid=8232  offsets.py:525    INFO     stream item 1432397875-5d69e96bc819e499da37361271f50bfc: 828/828 tokens with valid xpaths
-2015-05-24 16:10:46,878 pid=8232  offsets.py:525    INFO     stream item 1432397875-56b1be2ce3eb911e32bffe3b60cca8f0: 522/522 tokens with valid xpaths
-2015-05-24 16:10:47,131 pid=8232  offsets.py:525    INFO     stream item 1432397875-910b6dac7a18317dd2d92aac09ee13a1: 901/901 tokens with valid xpaths
-2015-05-24 16:10:47,230 pid=8232  offsets.py:525    INFO     stream item 1432397875-a9a6e35208d7bb4e2347ca612d07d11f: 454/454 tokens with valid xpaths
-2015-05-24 16:10:47,283 pid=8232  offsets.py:525    INFO     stream item 1432397875-767fe24c242ab9fea677b7f88ca69d0d: 279/279 tokens with valid xpaths
-2015-05-24 16:10:47,468 pid=8232  offsets.py:525    INFO     stream item 1432397875-e2baece2d50684bdd4ccb00b2267becd: 729/729 tokens with valid xpaths
-2015-05-24 16:10:48,096 pid=8232  offsets.py:525    INFO     stream item 1432397875-4b3eebc9235268e335aa9ff94a2c5ae9: 1614/1614 tokens with valid xpaths
-2015-05-24 16:10:48,376 pid=8232  offsets.py:525    INFO     stream item 1432397875-74ca830b5f22dc7cdbd860cbba82109e: 956/956 tokens with valid xpaths
-2015-05-24 16:10:48,680 pid=8232  offsets.py:525    INFO     stream item 1432397875-0e79414a3826ab2f8cad186fccbd9ca6: 1014/1014 tokens with valid xpaths
-2015-05-24 16:10:48,774 pid=8232  offsets.py:525    INFO     stream item 1432397875-7bdd12db8646f461cc458c26a05a1893: 425/425 tokens with valid xpaths
-2015-05-24 16:10:48,866 pid=8232  offsets.py:525    INFO     stream item 1432397875-c0fb9506c15c2bd0cbd22d91181fcce9: 435/435 tokens with valid xpaths
-2015-05-24 16:10:49,016 pid=8232  offsets.py:525    INFO     stream item 1432397875-fc28f2a0cf7215c252bf9456e4764bba: 625/625 tokens with valid xpaths
-2015-05-24 16:10:49,288 pid=8232  offsets.py:525    INFO     stream item 1432397875-a598a11209e30209a9f836bed119cad5: 942/942 tokens with valid xpaths
-2015-05-24 16:10:49,506 pid=8232  offsets.py:525    INFO     stream item 1432397875-64e46cd193a85b1783790fbf85ea4687: 809/809 tokens with valid xpaths
-2015-05-24 16:10:49,649 pid=8232  offsets.py:525    INFO     stream item 1432397875-390eec944fdbce595ed4e7c810d235f7: 600/600 tokens with valid xpaths
-2015-05-24 16:10:49,743 pid=8232  offsets.py:525    INFO     stream item 1432397875-38b481af21bf00fcb8ac46d58319457a: 441/441 tokens with valid xpaths
-2015-05-24 16:10:49,898 pid=8232  offsets.py:525    INFO     stream item 1432397875-be49700d1dfae9882427fd34c094d1cc: 642/642 tokens with valid xpaths
-2015-05-24 16:10:50,133 pid=8232  offsets.py:525    INFO     stream item 1432397875-c6a78ae951b9e8a7e66941e79da87170: 854/854 tokens with valid xpaths
-2015-05-24 16:10:50,228 pid=8232  offsets.py:525    INFO     stream item 1432397875-071398e14654c81de52c4fc6ff4b575d: 441/441 tokens with valid xpaths
-2015-05-24 16:10:50,569 pid=8232  offsets.py:525    INFO     stream item 1432397875-07636c27a3d885c1cb95058270a28413: 1093/1093 tokens with valid xpaths
-2015-05-24 16:10:50,698 pid=8232  offsets.py:525    INFO     stream item 1432397875-b47d70fd84b447bfa01689ca4a11fc1f: 551/551 tokens with valid xpaths
-2015-05-24 16:10:50,843 pid=8232  offsets.py:525    INFO     stream item 1432397875-b8ad1e9b79f1dec3e77b0cb222b11b13: 607/607 tokens with valid xpaths
-2015-05-24 16:10:51,038 pid=8232  offsets.py:525    INFO     stream item 1432397875-75e76306e97f6c136e6b611da6b56313: 752/752 tokens with valid xpaths
-2015-05-24 16:10:51,127 pid=8232  offsets.py:525    INFO     stream item 1432397875-9858a4d52953b6b98a3b8507a58d891e: 421/421 tokens with valid xpaths
-2015-05-24 16:10:51,393 pid=8232  offsets.py:525    INFO     stream item 1432397875-13582ed6d2bc74d3cf56165ffaf97e27: 931/931 tokens with valid xpaths
-2015-05-24 16:10:51,627 pid=8232  offsets.py:525    INFO     stream item 1432397875-7bcaff797a2134f900601b8894186a94: 722/722 tokens with valid xpaths
-2015-05-24 16:10:51,818 pid=8232  offsets.py:525    INFO     stream item 1432397875-fbfa87d21f1b9d7cd85d30e7f8fa7c4c: 742/742 tokens with valid xpaths
-2015-05-24 16:10:52,193 pid=8232  offsets.py:525    INFO     stream item 1432397875-9f429daec2790a240a8525b9f6217b13: 1161/1161 tokens with valid xpaths
-2015-05-24 16:10:52,288 pid=8232  offsets.py:525    INFO     stream item 1432397875-bda1bad223b8115bc605b5d53bfb1305: 440/440 tokens with valid xpaths
-2015-05-24 16:10:53,539 pid=8232  offsets.py:525    INFO     stream item 1432397875-f19f7d17200a821b7392580b9176cf26: 2422/2422 tokens with valid xpaths
-2015-05-24 16:10:54,028 pid=8232  offsets.py:525    INFO     stream item 1432397875-79ce15dd62072f3b6db739239d2928d9: 1364/1364 tokens with valid xpaths
-2015-05-24 16:10:54,254 pid=8232  offsets.py:525    INFO     stream item 1432397875-81e1f0ae629146b878d55c642fa5fea2: 819/819 tokens with valid xpaths
-2015-05-24 16:10:54,439 pid=8232  offsets.py:525    INFO     stream item 1432397875-5705455d3f19f79f3fe732809a9f4787: 725/725 tokens with valid xpaths
-2015-05-24 16:10:54,581 pid=8232  offsets.py:525    INFO     stream item 1432397875-666f4cc267f9d53e1c3e4267e012a5fa: 598/598 tokens with valid xpaths
-2015-05-24 16:10:54,745 pid=8232  offsets.py:525    INFO     stream item 1432397875-c9b1bef8084a021cca9f59bcb46e35ed: 661/661 tokens with valid xpaths
-2015-05-24 16:10:54,918 pid=8232  offsets.py:525    INFO     stream item 1432397875-cad24822304967ba4f5906819ced9cea: 692/692 tokens with valid xpaths
-2015-05-24 16:10:55,063 pid=8232  offsets.py:525    INFO     stream item 1432397875-361c032abca483ebe7d360f7e04ff04d: 609/609 tokens with valid xpaths
-2015-05-24 16:10:55,232 pid=8232  offsets.py:525    INFO     stream item 1432397875-66bed69534706a55925c39dd952df469: 679/679 tokens with valid xpaths
-2015-05-24 16:10:55,321 pid=8232  offsets.py:525    INFO     stream item 1432397875-44b4c32543cf04d207745239327717bd: 419/419 tokens with valid xpaths
-2015-05-24 16:10:55,686 pid=8232  offsets.py:525    INFO     stream item 1432397875-15d498e03579bbbed51cb5e8745099b1: 1140/1140 tokens with valid xpaths
-2015-05-24 16:10:56,038 pid=8232  offsets.py:525    INFO     stream item 1432397875-fbd92a89f6844ebc2f8b1d5baf4b20d0: 1111/1111 tokens with valid xpaths
-2015-05-24 16:10:56,228 pid=8232  offsets.py:525    INFO     stream item 1432397875-f1561128e9873f0602bc822d4d4a23cd: 728/728 tokens with valid xpaths
-2015-05-24 16:10:56,538 pid=8232  offsets.py:525    INFO     stream item 1432397875-c599a5cb5065fcb51facadc13bc3d75b: 1026/1026 tokens with valid xpaths
-2015-05-24 16:10:56,675 pid=8232  offsets.py:525    INFO     stream item 1432397875-2a9867311620ef2964fe089206d46444: 574/574 tokens with valid xpaths
-2015-05-24 16:10:56,852 pid=8232  offsets.py:525    INFO     stream item 1432397875-2b4e3a51af8512177334a20632167908: 696/696 tokens with valid xpaths
-2015-05-24 16:10:57,193 pid=8232  offsets.py:525    INFO     stream item 1432397875-8242eec3ffd867ef119d8e6665a6412a: 1092/1092 tokens with valid xpaths
-2015-05-24 16:10:57,303 pid=8232  offsets.py:525    INFO     stream item 1432397875-98f1b80c9f0c8fcb8934cfe7e21507d5: 491/491 tokens with valid xpaths
-2015-05-24 16:10:57,458 pid=8232  offsets.py:525    INFO     stream item 1432397875-338057f2155a5479a5d22e651934d724: 637/637 tokens with valid xpaths
-2015-05-24 16:10:57,623 pid=8232  offsets.py:525    INFO     stream item 1432397875-c809516427248fbdbe178bb3eb0a2484: 668/668 tokens with valid xpaths
-2015-05-24 16:10:58,075 pid=8232  offsets.py:525    INFO     stream item 1432397875-ec16000c215346ecd1244b2ef5bf41e1: 1217/1217 tokens with valid xpaths
-2015-05-24 16:10:58,496 pid=8232  offsets.py:525    INFO     stream item 1432397875-370053da93229cb199b46c121cfb9396: 1250/1250 tokens with valid xpaths
-2015-05-24 16:10:58,927 pid=8232  offsets.py:525    INFO     stream item 1432397875-fa056e572c2dcd8a78608ea02f3fe170: 1263/1263 tokens with valid xpaths
-2015-05-24 16:10:59,087 pid=8232  offsets.py:525    INFO     stream item 1432397875-8e6b1278dda26d6f6ee812b97be96bbb: 643/643 tokens with valid xpaths
-2015-05-24 16:10:59,271 pid=8232  offsets.py:525    INFO     stream item 1432397875-6cf5a65bff8d5369e7969682440b588c: 722/722 tokens with valid xpaths
-2015-05-24 16:10:59,369 pid=8232  offsets.py:525    INFO     stream item 1432397875-42df296a50ab3303d6e68f468728224f: 455/455 tokens with valid xpaths
-2015-05-24 16:11:00,432 pid=8232  offsets.py:525    INFO     stream item 1432397875-fde2e99787db6d5f5322fae25f28dc35: 2200/2200 tokens with valid xpaths
-2015-05-24 16:11:00,622 pid=8232  offsets.py:525    INFO     stream item 1432397875-1ae0a87081a506fdc0bf2842e576b1d8: 722/722 tokens with valid xpaths
-2015-05-24 16:11:00,777 pid=8232  offsets.py:525    INFO     stream item 1432397875-5c457458ac09e5dd4b93421a724b4eec: 636/636 tokens with valid xpaths
-2015-05-24 16:11:00,803 pid=8232  offsets.py:525    INFO     stream item 1432397875-e202a9df993dc69c6d794b76066cbd11: 143/143 tokens with valid xpaths
-2015-05-24 16:11:01,070 pid=8232  offsets.py:525    INFO     stream item 1432397875-4ac690693df8816d88c2038bca185e41: 937/937 tokens with valid xpaths
-2015-05-24 16:11:01,310 pid=8232  offsets.py:525    INFO     stream item 1432397875-80355250113cd49eecc0e5653c710eea: 862/862 tokens with valid xpaths
-2015-05-24 16:11:01,446 pid=8232  offsets.py:525    INFO     stream item 1432397875-c3463088b480841047cc20a27fc2dbf6: 574/574 tokens with valid xpaths
-2015-05-24 16:11:01,682 pid=8232  offsets.py:525    INFO     stream item 1432397875-81f973e9384e14fec7d0134f03e6d8d8: 854/854 tokens with valid xpaths
-2015-05-24 16:11:01,826 pid=8232  offsets.py:525    INFO     stream item 1432397875-60de3c9a6d51aabc37c6f2f348b93830: 600/600 tokens with valid xpaths
-2015-05-24 16:11:02,053 pid=8232  offsets.py:525    INFO     stream item 1432397875-0b1d5d4dd17f8c1df8ba4107568e5936: 833/833 tokens with valid xpaths
-2015-05-24 16:11:02,471 pid=8232  offsets.py:525    INFO     stream item 1432397875-d80f6c037f57c765920d8ee691687e5f: 1244/1244 tokens with valid xpaths
-2015-05-24 16:11:02,656 pid=8232  offsets.py:525    INFO     stream item 1432397875-cc05ae946fafb860480f8e81fe9033ea: 719/719 tokens with valid xpaths
-2015-05-24 16:11:02,787 pid=8232  offsets.py:525    INFO     stream item 1432397875-e570476f24f84e82770117e52b631d44: 561/561 tokens with valid xpaths
-2015-05-24 16:11:03,193 pid=8232  offsets.py:525    INFO     stream item 1432397875-ecb6f0183d921b98245da10e7bbcf5ce: 1221/1221 tokens with valid xpaths
-2015-05-24 16:11:03,379 pid=8232  offsets.py:525    INFO     stream item 1432397875-bd468137ec0b01903be36e3942826786: 722/722 tokens with valid xpaths
-2015-05-24 16:11:03,424 pid=8232  offsets.py:525    INFO     stream item 1432397875-66e2eebebf43d32aecc9754df9c33e03: 238/238 tokens with valid xpaths
-2015-05-24 16:11:04,101 pid=8232  offsets.py:525    INFO     stream item 1432397875-85d738bb1d1f8bbd8874f50dc0084137: 1614/1614 tokens with valid xpaths
-2015-05-24 16:11:04,218 pid=8232  offsets.py:525    INFO     stream item 1432397875-890ebd132c1a2eca4bd5bc67e41b4a54: 507/507 tokens with valid xpaths
-2015-05-24 16:11:04,280 pid=8232  offsets.py:525    INFO     stream item 1432397875-f59ec582663b6e2403ae6b65bf5c99cf: 314/314 tokens with valid xpaths
-2015-05-24 16:11:04,403 pid=8232  offsets.py:525    INFO     stream item 1432397875-b9ca848b927347eab56b5a802c20e707: 543/543 tokens with valid xpaths
-2015-05-24 16:11:04,562 pid=8232  offsets.py:525    INFO     stream item 1432397875-944548e3ee4b2e73c931c32c082ee29a: 647/647 tokens with valid xpaths
-2015-05-24 16:11:05,007 pid=8232  offsets.py:525    INFO     stream item 1432397875-7e4f408ae0178c9c3b6f425d8181e759: 1298/1298 tokens with valid xpaths
-2015-05-24 16:11:05,325 pid=8232  offsets.py:525    INFO     stream item 1432397875-c173b4100e9fed89314a9f3c17dd7594: 1041/1041 tokens with valid xpaths
-2015-05-24 16:11:05,956 pid=8232  offsets.py:525    INFO     stream item 1432397875-429ab6d374729634d075af37e5b46009: 1614/1614 tokens with valid xpaths
-2015-05-24 16:11:06,654 pid=8232  offsets.py:525    INFO     stream item 1432397875-9d443b45027b56bfd0e4c7d13b29ed2e: 1711/1711 tokens with valid xpaths
-2015-05-24 16:11:06,828 pid=8232  offsets.py:525    INFO     stream item 1432397875-3640c5df6afb470cf181a531d5e1aad8: 683/683 tokens with valid xpaths
-2015-05-24 16:11:06,993 pid=8232  offsets.py:525    INFO     stream item 1432397875-5ce915726facc73d2daecbebec1b8d70: 668/668 tokens with valid xpaths
-2015-05-24 16:11:07,194 pid=8232  offsets.py:525    INFO     stream item 1432397875-eb9860a509ef61d716b171d3d629fa50: 766/766 tokens with valid xpaths
-2015-05-24 16:11:07,821 pid=8232  offsets.py:525    INFO     stream item 1432397875-aec3e5915c24aa1d2c24feaad3b009ed: 1614/1614 tokens with valid xpaths
-2015-05-24 16:11:07,870 pid=8232  offsets.py:525    INFO     stream item 1432397875-d2de0d1b58975002e2193753bc6ba5e0: 241/241 tokens with valid xpaths
-2015-05-24 16:11:08,024 pid=8232  offsets.py:525    INFO     stream item 1432397875-ffbb9fd28164ab5371f4c0e33e738dc3: 636/636 tokens with valid xpaths
-2015-05-24 16:11:08,204 pid=8232  offsets.py:525    INFO     stream item 1432397875-dd325204c37a91bd6971eb4a014797e2: 712/712 tokens with valid xpaths
-2015-05-24 16:11:08,369 pid=8232  offsets.py:525    INFO     stream item 1432397875-1efce596c35b598a4c0d374920a1d07e: 669/669 tokens with valid xpaths
-2015-05-24 16:11:08,613 pid=8232  offsets.py:525    INFO     stream item 1432397875-771b1bba9be9eb966a124594a9f1345d: 878/878 tokens with valid xpaths
-2015-05-24 16:11:08,749 pid=8232  offsets.py:525    INFO     stream item 1432397875-2e044e3c0dacd70e8a03849fb5b56668: 577/577 tokens with valid xpaths
-2015-05-24 16:11:09,033 pid=8232  offsets.py:525    INFO     stream item 1432397875-cc28ceabc6eaf1c57919df78d28f2524: 972/972 tokens with valid xpaths
-2015-05-24 16:11:09,918 pid=8232  offsets.py:525    INFO     stream item 1432397875-24429ed4df565e27fe81d0d3f94be74b: 1975/1975 tokens with valid xpaths
-2015-05-24 16:11:10,088 pid=8232  offsets.py:525    INFO     stream item 1432397875-f4ef3780819f56aaaff3dd20d27b2279: 669/669 tokens with valid xpaths
-2015-05-24 16:11:10,421 pid=8232  offsets.py:525    INFO     stream item 1432397875-a101752aa91452eea3f7f1edc6c15e51: 968/968 tokens with valid xpaths
-2015-05-24 16:11:10,653 pid=8232  offsets.py:525    INFO     stream item 1432397875-0e934e56c0d809b5df4070c28bb081b1: 845/845 tokens with valid xpaths
-2015-05-24 16:11:11,148 pid=8232  offsets.py:525    INFO     stream item 1432397875-53af3e0ef4bf71ced1f14d469a0dedb7: 1382/1382 tokens with valid xpaths
-2015-05-24 16:11:11,442 pid=8232  offsets.py:525    INFO     stream item 1432397875-17ffeb304e957f4512d524e4fb49d667: 984/984 tokens with valid xpaths
-2015-05-24 16:11:11,612 pid=8232  offsets.py:525    INFO     stream item 1432397875-eaa66dcd3c7005e540f0b44ccb679202: 678/678 tokens with valid xpaths
-2015-05-24 16:11:11,836 pid=8232  offsets.py:525    INFO     stream item 1432397875-29f165a1d50fb2acd79809bbf72349b9: 825/825 tokens with valid xpaths
-2015-05-24 16:11:12,066 pid=8232  offsets.py:525    INFO     stream item 1432397875-117cd751267b1b21b83efa421884a642: 841/841 tokens with valid xpaths
-2015-05-24 16:11:12,462 pid=8232  offsets.py:525    INFO     stream item 1432397875-d2b18f4a3ee03ec428bec0a63c217c7e: 1202/1202 tokens with valid xpaths
-2015-05-24 16:11:12,521 pid=8232  offsets.py:525    INFO     stream item 1432397875-08a52ba33412dac8fe2b4cd7ba43372f: 292/292 tokens with valid xpaths
-2015-05-24 16:11:12,539 pid=8232  offsets.py:525    INFO     stream item 1432397875-53a3d108183df17b1e3fee94fc18ac33: 108/108 tokens with valid xpaths
-2015-05-24 16:11:12,829 pid=8232  offsets.py:525    INFO     stream item 1432397875-e71504d4210fae3976b9d2c667a3e9fd: 785/785 tokens with valid xpaths
-2015-05-24 16:11:13,221 pid=8232  offsets.py:525    INFO     stream item 1432397875-e94701ddf9d4bf60e8716d6598288ccf: 789/789 tokens with valid xpaths
-2015-05-24 16:11:13,270 pid=8232  offsets.py:525    INFO     stream item 1432397875-6f2fa97e49fc8f645a40a6d86944df3d: 138/138 tokens with valid xpaths
-2015-05-24 16:11:13,976 pid=8232  offsets.py:525    INFO     stream item 1432397875-ecb29e5c90e4560db2d0c62f7a49339f: 1176/1176 tokens with valid xpaths
-2015-05-24 16:11:14,122 pid=8232  offsets.py:525    INFO     stream item 1432397875-32e7f2fc020bcf8c9df400a1a8b75eb1: 388/388 tokens with valid xpaths
-2015-05-24 16:11:14,270 pid=8232  offsets.py:525    INFO     stream item 1432397875-af2616f7c4f5a0f0db90d4155662e44d: 382/382 tokens with valid xpaths
-2015-05-24 16:11:14,677 pid=8232  offsets.py:525    INFO     stream item 1432397875-2bd4bd0b1c67db2c363e40d042f0a471: 807/807 tokens with valid xpaths
-2015-05-24 16:11:15,084 pid=8232  offsets.py:525    INFO     stream item 1432397875-92d0097e0bbff21768bb83139d7adf91: 813/813 tokens with valid xpaths
-2015-05-24 16:11:15,657 pid=8232  offsets.py:525    INFO     stream item 1432397875-06fb230f4b42ea2b98cb92137ee80a8c: 1033/1033 tokens with valid xpaths
-2015-05-24 16:11:16,272 pid=8232  offsets.py:525    INFO     stream item 1432397875-fbe0b0c99bb8ffef885aecf0d3abd2e1: 1107/1107 tokens with valid xpaths
-2015-05-24 16:11:16,687 pid=8232  offsets.py:525    INFO     stream item 1432397875-d02962d2a3dcd53932697fe234d684fe: 863/863 tokens with valid xpaths
-2015-05-24 16:11:17,274 pid=8232  offsets.py:525    INFO     stream item 1432397875-0325dcc3a62a1963f11ca4bb68f07f2d: 1088/1088 tokens with valid xpaths
-2015-05-24 16:11:17,668 pid=8232  offsets.py:525    INFO     stream item 1432397875-1d28de57fc56753e0fc81780abbd7888: 828/828 tokens with valid xpaths
-2015-05-24 16:11:18,005 pid=8232  offsets.py:525    INFO     stream item 1432397875-3dd591543b2fb1ecf7e7c7e7acd3a876: 721/721 tokens with valid xpaths
-2015-05-24 16:11:18,399 pid=8232  offsets.py:525    INFO     stream item 1432397875-285e93d5362f12dd42d2b1d8e8f70e75: 835/835 tokens with valid xpaths
-2015-05-24 16:11:18,997 pid=8232  offsets.py:525    INFO     stream item 1432397875-d4b98550b00759dabfa884caa90baaed: 1008/1008 tokens with valid xpaths
-2015-05-24 16:11:19,580 pid=8232  offsets.py:525    INFO     stream item 1432397875-ac5dfa4d18eb09aff43b89d6e362d864: 1081/1081 tokens with valid xpaths
-2015-05-24 16:11:20,178 pid=8232  offsets.py:525    INFO     stream item 1432397875-4dac85ce2aaf0e083881c026eb0d042e: 1098/1098 tokens with valid xpaths
-2015-05-24 16:11:20,768 pid=8232  offsets.py:525    INFO     stream item 1432397875-a1fe5aff99f1664db9237ac1bc7498bb: 1085/1085 tokens with valid xpaths
-2015-05-24 16:11:20,878 pid=8232  offsets.py:525    INFO     stream item 1432397875-16c746edde2753b6aba66bed91004686: 316/316 tokens with valid xpaths
-2015-05-24 16:11:21,557 pid=8232  offsets.py:525    INFO     stream item 1432397875-a81da5d399fbc169359b589c57abc5b1: 1192/1192 tokens with valid xpaths
-2015-05-24 16:11:21,991 pid=8232  offsets.py:525    INFO     stream item 1432397875-5ea6bfa48872392779971453e05ffe2f: 885/885 tokens with valid xpaths
-2015-05-24 16:11:22,173 pid=8232  offsets.py:525    INFO     stream item 1432397875-cd0458b4548dd17b3c89448d8fd05a73: 477/477 tokens with valid xpaths
-2015-05-24 16:11:22,464 pid=8232  offsets.py:525    INFO     stream item 1432397875-700f28473e2c6d76dde424ad271462d2: 675/675 tokens with valid xpaths
-2015-05-24 16:11:22,866 pid=8232  offsets.py:525    INFO     stream item 1432397875-ca0f199ea23e6faef1d8fdac8ddd992e: 846/846 tokens with valid xpaths
-2015-05-24 16:11:23,110 pid=8232  offsets.py:525    INFO     stream item 1432397875-33620bf14640fd54051b343ceb52f182: 601/601 tokens with valid xpaths
-2015-05-24 16:11:23,521 pid=8232  offsets.py:525    INFO     stream item 1432397875-fbd216105436e3e00ff9182b55019b55: 864/864 tokens with valid xpaths
-2015-05-24 16:11:23,873 pid=8232  offsets.py:525    INFO     stream item 1432397875-1fd7ba55d34680d84c23878468ad7f27: 773/773 tokens with valid xpaths
-2015-05-24 16:11:24,182 pid=8232  offsets.py:525    INFO     stream item 1432397875-f5c01a950c09b4efde8eacd802b2cfbe: 708/708 tokens with valid xpaths
-2015-05-24 16:11:24,525 pid=8232  offsets.py:525    INFO     stream item 1432397875-9ca54a469f18afc85e9c92c91fadbac6: 756/756 tokens with valid xpaths
-2015-05-24 16:11:24,617 pid=8232  offsets.py:525    INFO     stream item 1432397875-5cb4b67e4bad8f315867e8850afbd4b7: 275/275 tokens with valid xpaths
-2015-05-24 16:11:25,191 pid=8232  offsets.py:525    INFO     stream item 1432397875-0b54f7b1fc1da39e6b80f7d300495628: 1082/1082 tokens with valid xpaths
-2015-05-24 16:11:25,593 pid=8232  offsets.py:525    INFO     stream item 1432397875-e0028a3c2a02c75c847690d70467b60e: 843/843 tokens with valid xpaths
-2015-05-24 16:11:25,880 pid=8232  offsets.py:525    INFO     stream item 1432397875-5d47fbaa025159ec98d8cbf6a70026cf: 669/669 tokens with valid xpaths
-2015-05-24 16:11:26,415 pid=8232  offsets.py:525    INFO     stream item 1432397875-9c0f95f652372b4ba2a034f98f37ffea: 1018/1018 tokens with valid xpaths
-2015-05-24 16:11:26,928 pid=8232  offsets.py:525    INFO     stream item 1432397875-f7a496a790994bf151bedd58c3716ac9: 998/998 tokens with valid xpaths
-2015-05-24 16:11:27,378 pid=8232  offsets.py:525    INFO     stream item 1432397875-615e5622636ab8e6d0505a6fdd18a474: 910/910 tokens with valid xpaths
-2015-05-24 16:11:27,626 pid=8232  offsets.py:525    INFO     stream item 1432397875-227babc33dad9aeba4f63d470fe6593c: 599/599 tokens with valid xpaths
-2015-05-24 16:11:27,963 pid=8232  offsets.py:525    INFO     stream item 1432397875-f3df7f3dfc0c9c08c6b5a56be3280f0f: 749/749 tokens with valid xpaths
-2015-05-24 16:11:28,226 pid=8232  offsets.py:525    INFO     stream item 1432397875-540bc639bec276a1b866a2a07f83c9c4: 633/633 tokens with valid xpaths
-2015-05-24 16:11:28,429 pid=8232  offsets.py:525    INFO     stream item 1432397875-eadf950234672d67aafba5652793ab85: 522/522 tokens with valid xpaths
-2015-05-24 16:11:28,813 pid=8232  offsets.py:525    INFO     stream item 1432397875-d8f244e891ef20cec1cfe6c96f4efa7c: 716/716 tokens with valid xpaths
-2015-05-24 16:11:29,242 pid=8232  offsets.py:525    INFO     stream item 1432397875-a9e63814daf4e271702c1e8298058101: 861/861 tokens with valid xpaths
-2015-05-24 16:11:29,465 pid=8232  offsets.py:525    INFO     stream item 1432397875-3c116c1b1826d7c1d32c929b49f54c79: 533/533 tokens with valid xpaths
-2015-05-24 16:11:30,427 pid=8232  offsets.py:525    INFO     stream item 1432397875-14f4cb96e696a97e897383bca2473d08: 1614/1614 tokens with valid xpaths
-2015-05-24 16:11:30,736 pid=8232  offsets.py:525    INFO     stream item 1432397875-5e6998d0844c3e7d695310b29f504218: 666/666 tokens with valid xpaths
-2015-05-24 16:11:31,264 pid=8232  offsets.py:525    INFO     stream item 1432397875-49906289918775e26b4222ea5b022c14: 989/989 tokens with valid xpaths
-2015-05-24 16:11:31,677 pid=8232  offsets.py:525    INFO     stream item 1432397875-8e7154e01132e885befbe7e8e4f99e19: 830/830 tokens with valid xpaths
-2015-05-24 16:11:31,982 pid=8232  offsets.py:525    INFO     stream item 1432397875-8f020279f6a311c1103c24155716b96c: 671/671 tokens with valid xpaths
-2015-05-24 16:11:32,320 pid=8232  offsets.py:525    INFO     stream item 1432397875-7fc538886fb82b48e72461c85c5f4636: 726/726 tokens with valid xpaths
-2015-05-24 16:11:32,611 pid=8232  offsets.py:525    INFO     stream item 1432397875-c660ec3e3dc8590c8cbe614fb568a37a: 648/648 tokens with valid xpaths
-2015-05-24 16:11:32,648 pid=8232  offsets.py:525    INFO     stream item 1432397875-95bd0c2cbb4fffd32e4795fbc6495aa9: 166/166 tokens with valid xpaths
-2015-05-24 16:11:33,517 pid=8232  offsets.py:525    INFO     stream item 1432397875-f35261f89c0413d1ab46bbe132c4e660: 1381/1381 tokens with valid xpaths
-2015-05-24 16:11:33,657 pid=8232  offsets.py:525    INFO     stream item 1432397875-a6eb8d33c85605065fbeb1cd0d5c8209: 580/580 tokens with valid xpaths
-2015-05-24 16:11:34,403 pid=8232  offsets.py:525    INFO     stream item 1432397875-23b5a68d49aee9dd28d93741d7662b63: 1614/1614 tokens with valid xpaths
-2015-05-24 16:11:35,229 pid=8232  offsets.py:525    INFO     stream item 1432397875-691678e8ccc4a7c18509600c9148e604: 1614/1614 tokens with valid xpaths
-2015-05-24 16:11:35,417 pid=8232  offsets.py:525    INFO     stream item 1432397875-f0ac652d8ee356554a6351d2ab5f40e6: 658/658 tokens with valid xpaths
-2015-05-24 16:11:35,758 pid=8232  offsets.py:525    INFO     stream item 1432397875-38dea894b0c02995ba9cd6df9d9fc6cc: 761/761 tokens with valid xpaths
-2015-05-24 16:11:36,167 pid=8232  offsets.py:525    INFO     stream item 1432397875-ab95731b72856fe9227cd43c40dd9932: 872/872 tokens with valid xpaths
-2015-05-24 16:11:36,602 pid=8232  offsets.py:525    INFO     stream item 1432397875-d323a6a322fb9b14390bd2d8f4190390: 1080/1080 tokens with valid xpaths
-2015-05-24 16:11:36,853 pid=8232  offsets.py:525    INFO     stream item 1432397875-c4fd8f1165dc355e9d6a1e292badace9: 584/584 tokens with valid xpaths
-2015-05-24 16:11:36,977 pid=8232  offsets.py:525    INFO     stream item 1432397875-649f2ccd8c9eb0a75304b89ea8959c87: 357/357 tokens with valid xpaths
-2015-05-24 16:11:37,745 pid=8232  offsets.py:525    INFO     stream item 1432397875-bd005f2cfb5f7b51870166f7e4631928: 1280/1280 tokens with valid xpaths
-2015-05-24 16:11:37,998 pid=8232  offsets.py:525    INFO     stream item 1432397875-53c8454fc6a2568c37b69adde54651b9: 586/586 tokens with valid xpaths
-2015-05-24 16:11:38,150 pid=8232  offsets.py:525    INFO     stream item 1432397875-d337898501fd512aeea2873bad615eea: 504/504 tokens with valid xpaths
-2015-05-24 16:11:38,249 pid=8232  offsets.py:525    INFO     stream item 1432397875-2e71da955bc0170be586e293c3e8dc60: 249/249 tokens with valid xpaths
-2015-05-24 16:11:38,433 pid=8232  offsets.py:525    INFO     stream item 1432397875-8db4f667530608098fd788184ef479c8: 723/723 tokens with valid xpaths
-2015-05-24 16:11:38,576 pid=8232  offsets.py:525    INFO     stream item 1432397875-5ec780f5707e76dddc9fe07cc59e50fa: 599/599 tokens with valid xpaths
-2015-05-24 16:11:39,115 pid=8232  offsets.py:525    INFO     stream item 1432397875-17316d0e3c1eb701a44d1929db273756: 1123/1123 tokens with valid xpaths
-2015-05-24 16:11:39,203 pid=8232  offsets.py:525    INFO     stream item 1432397875-513f06dee40b0d807c7658bdf9f887e7: 409/409 tokens with valid xpaths
-2015-05-24 16:11:42,203 pid=8232  _local_stor:327   INFO     writing chunk file to /ebs/home/jrf/streamcorpus-pipeline/data/john-smith/john-smith-nltk-2015-05-23-16-c07e75d7e0ea8286d629a0ce9193e1fa.sc.xz
-2015-05-24 16:11:42,203 pid=8232  _local_stor:338   INFO     compress_and_encrypt_path('/tmp/28676b78-e30c-4a5c-b2cb-305ea83d3b81/t_chunk-3a71474f8d4f48898242d5a9e29709d1', tmp_dir='/tmp/28676b78-e30c-4a5c-b2cb-305ea83d3b81')
+2015-05-25 00:42:24,200 pid=11363 run.py:221        INFO     input path 'data/john-smith/john-smith-labels.yaml'
+2015-05-25 00:42:24,329 pid=11363 _yaml_files:289   INFO     opening './data/john-smith/original/16/970523.591'
+2015-05-25 00:42:24,329 pid=11363 _yaml_files:333   INFO     created StreamItem(num ratings=1, abs_url='https://raw.githubusercontent.com/trec-kba/streamcorpus-pipeline/master/data/john-smith/original/16/970523.591'
+2015-05-25 00:42:24,409 pid=11363 _yaml_files:289   INFO     opening './data/john-smith/original/0/960402.459'
+2015-05-25 00:42:24,409 pid=11363 _yaml_files:333   INFO     created StreamItem(num ratings=1, abs_url='https://raw.githubusercontent.com/trec-kba/streamcorpus-pipeline/master/data/john-smith/original/0/960402.459'
+2015-05-25 00:42:24,482 pid=11363 _yaml_files:289   INFO     opening './data/john-smith/original/16/960103.529'
+2015-05-25 00:42:24,482 pid=11363 _yaml_files:333   INFO     created StreamItem(num ratings=1, abs_url='https://raw.githubusercontent.com/trec-kba/streamcorpus-pipeline/master/data/john-smith/original/16/960103.529'
+2015-05-25 00:42:24,527 pid=11363 _yaml_files:289   INFO     opening './data/john-smith/original/16/970814.683'
+2015-05-25 00:42:24,527 pid=11363 _yaml_files:333   INFO     created StreamItem(num ratings=1, abs_url='https://raw.githubusercontent.com/trec-kba/streamcorpus-pipeline/master/data/john-smith/original/16/970814.683'
+2015-05-25 00:42:24,551 pid=11363 _yaml_files:289   INFO     opening './data/john-smith/original/16/971014.322'
+2015-05-25 00:42:24,551 pid=11363 _yaml_files:333   INFO     created StreamItem(num ratings=1, abs_url='https://raw.githubusercontent.com/trec-kba/streamcorpus-pipeline/master/data/john-smith/original/16/971014.322'
+2015-05-25 00:42:24,602 pid=11363 _yaml_files:289   INFO     opening './data/john-smith/original/16/970529.234'
+2015-05-25 00:42:24,602 pid=11363 _yaml_files:333   INFO     created StreamItem(num ratings=1, abs_url='https://raw.githubusercontent.com/trec-kba/streamcorpus-pipeline/master/data/john-smith/original/16/970529.234'
+2015-05-25 00:42:24,651 pid=11363 _yaml_files:289   INFO     opening './data/john-smith/original/16/971015.530'
+2015-05-25 00:42:24,651 pid=11363 _yaml_files:333   INFO     created StreamItem(num ratings=1, abs_url='https://raw.githubusercontent.com/trec-kba/streamcorpus-pipeline/master/data/john-smith/original/16/971015.530'
+2015-05-25 00:42:24,698 pid=11363 _yaml_files:289   INFO     opening './data/john-smith/original/28/970428.580'
+2015-05-25 00:42:24,698 pid=11363 _yaml_files:333   INFO     created StreamItem(num ratings=1, abs_url='https://raw.githubusercontent.com/trec-kba/streamcorpus-pipeline/master/data/john-smith/original/28/970428.580'
+2015-05-25 00:42:24,831 pid=11363 _yaml_files:289   INFO     opening './data/john-smith/original/16/960530.355'
+2015-05-25 00:42:24,831 pid=11363 _yaml_files:333   INFO     created StreamItem(num ratings=1, abs_url='https://raw.githubusercontent.com/trec-kba/streamcorpus-pipeline/master/data/john-smith/original/16/960530.355'
+2015-05-25 00:42:24,908 pid=11363 _yaml_files:289   INFO     opening './data/john-smith/original/23/970420.80'
+2015-05-25 00:42:24,909 pid=11363 _yaml_files:333   INFO     created StreamItem(num ratings=1, abs_url='https://raw.githubusercontent.com/trec-kba/streamcorpus-pipeline/master/data/john-smith/original/23/970420.80'
+2015-05-25 00:42:24,972 pid=11363 _yaml_files:289   INFO     opening './data/john-smith/original/1/961106.964'
+2015-05-25 00:42:24,972 pid=11363 _yaml_files:333   INFO     created StreamItem(num ratings=1, abs_url='https://raw.githubusercontent.com/trec-kba/streamcorpus-pipeline/master/data/john-smith/original/1/961106.964'
+2015-05-25 00:42:25,032 pid=11363 _yaml_files:289   INFO     opening './data/john-smith/original/30/960711.352'
+2015-05-25 00:42:25,032 pid=11363 _yaml_files:333   INFO     created StreamItem(num ratings=1, abs_url='https://raw.githubusercontent.com/trec-kba/streamcorpus-pipeline/master/data/john-smith/original/30/960711.352'
+2015-05-25 00:42:25,097 pid=11363 _yaml_files:289   INFO     opening './data/john-smith/original/16/960103.581'
+2015-05-25 00:42:25,098 pid=11363 _yaml_files:333   INFO     created StreamItem(num ratings=1, abs_url='https://raw.githubusercontent.com/trec-kba/streamcorpus-pipeline/master/data/john-smith/original/16/960103.581'
+2015-05-25 00:42:25,188 pid=11363 _yaml_files:289   INFO     opening './data/john-smith/original/0/960513.222'
+2015-05-25 00:42:25,188 pid=11363 _yaml_files:333   INFO     created StreamItem(num ratings=1, abs_url='https://raw.githubusercontent.com/trec-kba/streamcorpus-pipeline/master/data/john-smith/original/0/960513.222'
+2015-05-25 00:42:25,273 pid=11363 _yaml_files:289   INFO     opening './data/john-smith/original/16/970109.769'
+2015-05-25 00:42:25,273 pid=11363 _yaml_files:333   INFO     created StreamItem(num ratings=1, abs_url='https://raw.githubusercontent.com/trec-kba/streamcorpus-pipeline/master/data/john-smith/original/16/970109.769'
+2015-05-25 00:42:25,333 pid=11363 _yaml_files:289   INFO     opening './data/john-smith/original/16/960624.618'
+2015-05-25 00:42:25,333 pid=11363 _yaml_files:333   INFO     created StreamItem(num ratings=1, abs_url='https://raw.githubusercontent.com/trec-kba/streamcorpus-pipeline/master/data/john-smith/original/16/960624.618'
+2015-05-25 00:42:25,398 pid=11363 _yaml_files:289   INFO     opening './data/john-smith/original/0/970116.458'
+2015-05-25 00:42:25,399 pid=11363 _yaml_files:333   INFO     created StreamItem(num ratings=1, abs_url='https://raw.githubusercontent.com/trec-kba/streamcorpus-pipeline/master/data/john-smith/original/0/970116.458'
+2015-05-25 00:42:25,441 pid=11363 _yaml_files:289   INFO     opening './data/john-smith/original/24/970521.155'
+2015-05-25 00:42:25,441 pid=11363 _yaml_files:333   INFO     created StreamItem(num ratings=1, abs_url='https://raw.githubusercontent.com/trec-kba/streamcorpus-pipeline/master/data/john-smith/original/24/970521.155'
+2015-05-25 00:42:25,541 pid=11363 _yaml_files:289   INFO     opening './data/john-smith/original/15/970813.237'
+2015-05-25 00:42:25,542 pid=11363 _yaml_files:333   INFO     created StreamItem(num ratings=1, abs_url='https://raw.githubusercontent.com/trec-kba/streamcorpus-pipeline/master/data/john-smith/original/15/970813.237'
+2015-05-25 00:42:25,612 pid=11363 _yaml_files:289   INFO     opening './data/john-smith/original/20/970723.737'
+2015-05-25 00:42:25,612 pid=11363 _yaml_files:333   INFO     created StreamItem(num ratings=1, abs_url='https://raw.githubusercontent.com/trec-kba/streamcorpus-pipeline/master/data/john-smith/original/20/970723.737'
+2015-05-25 00:42:25,638 pid=11363 _yaml_files:289   INFO     opening './data/john-smith/original/32/961028.9'
+2015-05-25 00:42:25,639 pid=11363 _yaml_files:333   INFO     created StreamItem(num ratings=1, abs_url='https://raw.githubusercontent.com/trec-kba/streamcorpus-pipeline/master/data/john-smith/original/32/961028.9'
+2015-05-25 00:42:25,676 pid=11363 _yaml_files:289   INFO     opening './data/john-smith/original/16/960624.442'
+2015-05-25 00:42:25,676 pid=11363 _yaml_files:333   INFO     created StreamItem(num ratings=1, abs_url='https://raw.githubusercontent.com/trec-kba/streamcorpus-pipeline/master/data/john-smith/original/16/960624.442'
+2015-05-25 00:42:25,738 pid=11363 _yaml_files:289   INFO     opening './data/john-smith/original/24/970521.158'
+2015-05-25 00:42:25,738 pid=11363 _yaml_files:333   INFO     created StreamItem(num ratings=1, abs_url='https://raw.githubusercontent.com/trec-kba/streamcorpus-pipeline/master/data/john-smith/original/24/970521.158'
+2015-05-25 00:42:25,835 pid=11363 _yaml_files:289   INFO     opening './data/john-smith/original/16/970217.365'
+2015-05-25 00:42:25,835 pid=11363 _yaml_files:333   INFO     created StreamItem(num ratings=1, abs_url='https://raw.githubusercontent.com/trec-kba/streamcorpus-pipeline/master/data/john-smith/original/16/970217.365'
+2015-05-25 00:42:25,897 pid=11363 _yaml_files:289   INFO     opening './data/john-smith/original/30/960724.711'
+2015-05-25 00:42:25,897 pid=11363 _yaml_files:333   INFO     created StreamItem(num ratings=1, abs_url='https://raw.githubusercontent.com/trec-kba/streamcorpus-pipeline/master/data/john-smith/original/30/960724.711'
+2015-05-25 00:42:25,950 pid=11363 _yaml_files:289   INFO     opening './data/john-smith/original/31/970909.422'
+2015-05-25 00:42:25,951 pid=11363 _yaml_files:333   INFO     created StreamItem(num ratings=1, abs_url='https://raw.githubusercontent.com/trec-kba/streamcorpus-pipeline/master/data/john-smith/original/31/970909.422'
+2015-05-25 00:42:25,989 pid=11363 _yaml_files:289   INFO     opening './data/john-smith/original/16/961003.573'
+2015-05-25 00:42:25,989 pid=11363 _yaml_files:333   INFO     created StreamItem(num ratings=1, abs_url='https://raw.githubusercontent.com/trec-kba/streamcorpus-pipeline/master/data/john-smith/original/16/961003.573'
+2015-05-25 00:42:26,046 pid=11363 _yaml_files:289   INFO     opening './data/john-smith/original/16/970218.497'
+2015-05-25 00:42:26,047 pid=11363 _yaml_files:333   INFO     created StreamItem(num ratings=1, abs_url='https://raw.githubusercontent.com/trec-kba/streamcorpus-pipeline/master/data/john-smith/original/16/970218.497'
+2015-05-25 00:42:26,080 pid=11363 _yaml_files:289   INFO     opening './data/john-smith/original/16/970523.455'
+2015-05-25 00:42:26,080 pid=11363 _yaml_files:333   INFO     created StreamItem(num ratings=1, abs_url='https://raw.githubusercontent.com/trec-kba/streamcorpus-pipeline/master/data/john-smith/original/16/970523.455'
+2015-05-25 00:42:26,105 pid=11363 _yaml_files:289   INFO     opening './data/john-smith/original/30/960223.15'
+2015-05-25 00:42:26,105 pid=11363 _yaml_files:333   INFO     created StreamItem(num ratings=1, abs_url='https://raw.githubusercontent.com/trec-kba/streamcorpus-pipeline/master/data/john-smith/original/30/960223.15'
+2015-05-25 00:42:26,154 pid=11363 _yaml_files:289   INFO     opening './data/john-smith/original/24/970527.468'
+2015-05-25 00:42:26,155 pid=11363 _yaml_files:333   INFO     created StreamItem(num ratings=1, abs_url='https://raw.githubusercontent.com/trec-kba/streamcorpus-pipeline/master/data/john-smith/original/24/970527.468'
+2015-05-25 00:42:26,251 pid=11363 _yaml_files:289   INFO     opening './data/john-smith/original/33/960318.662'
+2015-05-25 00:42:26,252 pid=11363 _yaml_files:333   INFO     created StreamItem(num ratings=1, abs_url='https://raw.githubusercontent.com/trec-kba/streamcorpus-pipeline/master/data/john-smith/original/33/960318.662'
+2015-05-25 00:42:26,312 pid=11363 _yaml_files:289   INFO     opening './data/john-smith/original/16/970324.797'
+2015-05-25 00:42:26,312 pid=11363 _yaml_files:333   INFO     created StreamItem(num ratings=1, abs_url='https://raw.githubusercontent.com/trec-kba/streamcorpus-pipeline/master/data/john-smith/original/16/970324.797'
+2015-05-25 00:42:26,378 pid=11363 _yaml_files:289   INFO     opening './data/john-smith/original/16/970523.185'
+2015-05-25 00:42:26,379 pid=11363 _yaml_files:333   INFO     created StreamItem(num ratings=1, abs_url='https://raw.githubusercontent.com/trec-kba/streamcorpus-pipeline/master/data/john-smith/original/16/970523.185'
+2015-05-25 00:42:26,412 pid=11363 _yaml_files:289   INFO     opening './data/john-smith/original/16/960304.885'
+2015-05-25 00:42:26,413 pid=11363 _yaml_files:333   INFO     created StreamItem(num ratings=1, abs_url='https://raw.githubusercontent.com/trec-kba/streamcorpus-pipeline/master/data/john-smith/original/16/960304.885'
+2015-05-25 00:42:26,445 pid=11363 _yaml_files:289   INFO     opening './data/john-smith/original/5/970823.176'
+2015-05-25 00:42:26,445 pid=11363 _yaml_files:333   INFO     created StreamItem(num ratings=1, abs_url='https://raw.githubusercontent.com/trec-kba/streamcorpus-pipeline/master/data/john-smith/original/5/970823.176'
+2015-05-25 00:42:26,489 pid=11363 _yaml_files:289   INFO     opening './data/john-smith/original/16/960524.317'
+2015-05-25 00:42:26,489 pid=11363 _yaml_files:333   INFO     created StreamItem(num ratings=1, abs_url='https://raw.githubusercontent.com/trec-kba/streamcorpus-pipeline/master/data/john-smith/original/16/960524.317'
+2015-05-25 00:42:26,555 pid=11363 _yaml_files:289   INFO     opening './data/john-smith/original/16/960918.379'
+2015-05-25 00:42:26,555 pid=11363 _yaml_files:333   INFO     created StreamItem(num ratings=1, abs_url='https://raw.githubusercontent.com/trec-kba/streamcorpus-pipeline/master/data/john-smith/original/16/960918.379'
+2015-05-25 00:42:26,654 pid=11363 _yaml_files:289   INFO     opening './data/john-smith/original/28/960402.646'
+2015-05-25 00:42:26,654 pid=11363 _yaml_files:333   INFO     created StreamItem(num ratings=1, abs_url='https://raw.githubusercontent.com/trec-kba/streamcorpus-pipeline/master/data/john-smith/original/28/960402.646'
+2015-05-25 00:42:26,695 pid=11363 _yaml_files:289   INFO     opening './data/john-smith/original/13/960920.10'
+2015-05-25 00:42:26,695 pid=11363 _yaml_files:333   INFO     created StreamItem(num ratings=1, abs_url='https://raw.githubusercontent.com/trec-kba/streamcorpus-pipeline/master/data/john-smith/original/13/960920.10'
+2015-05-25 00:42:26,727 pid=11363 _yaml_files:289   INFO     opening './data/john-smith/original/16/960822.562'
+2015-05-25 00:42:26,727 pid=11363 _yaml_files:333   INFO     created StreamItem(num ratings=1, abs_url='https://raw.githubusercontent.com/trec-kba/streamcorpus-pipeline/master/data/john-smith/original/16/960822.562'
+2015-05-25 00:42:26,771 pid=11363 _yaml_files:289   INFO     opening './data/john-smith/original/30/970801.676'
+2015-05-25 00:42:26,771 pid=11363 _yaml_files:333   INFO     created StreamItem(num ratings=1, abs_url='https://raw.githubusercontent.com/trec-kba/streamcorpus-pipeline/master/data/john-smith/original/30/970801.676'
+2015-05-25 00:42:26,823 pid=11363 _yaml_files:289   INFO     opening './data/john-smith/original/13/960920.17'
+2015-05-25 00:42:26,824 pid=11363 _yaml_files:333   INFO     created StreamItem(num ratings=1, abs_url='https://raw.githubusercontent.com/trec-kba/streamcorpus-pipeline/master/data/john-smith/original/13/960920.17'
+2015-05-25 00:42:26,856 pid=11363 _yaml_files:289   INFO     opening './data/john-smith/original/16/970815.375'
+2015-05-25 00:42:26,857 pid=11363 _yaml_files:333   INFO     created StreamItem(num ratings=1, abs_url='https://raw.githubusercontent.com/trec-kba/streamcorpus-pipeline/master/data/john-smith/original/16/970815.375'
+2015-05-25 00:42:26,932 pid=11363 _yaml_files:289   INFO     opening './data/john-smith/original/16/970414.193'
+2015-05-25 00:42:26,932 pid=11363 _yaml_files:333   INFO     created StreamItem(num ratings=1, abs_url='https://raw.githubusercontent.com/trec-kba/streamcorpus-pipeline/master/data/john-smith/original/16/970414.193'
+2015-05-25 00:42:26,971 pid=11363 _yaml_files:289   INFO     opening './data/john-smith/original/16/961027.277'
+2015-05-25 00:42:26,971 pid=11363 _yaml_files:333   INFO     created StreamItem(num ratings=1, abs_url='https://raw.githubusercontent.com/trec-kba/streamcorpus-pipeline/master/data/john-smith/original/16/961027.277'
+2015-05-25 00:42:27,014 pid=11363 _yaml_files:289   INFO     opening './data/john-smith/original/16/970804.477'
+2015-05-25 00:42:27,014 pid=11363 _yaml_files:333   INFO     created StreamItem(num ratings=1, abs_url='https://raw.githubusercontent.com/trec-kba/streamcorpus-pipeline/master/data/john-smith/original/16/970804.477'
+2015-05-25 00:42:27,063 pid=11363 _yaml_files:289   INFO     opening './data/john-smith/original/16/960731.417'
+2015-05-25 00:42:27,063 pid=11363 _yaml_files:333   INFO     created StreamItem(num ratings=1, abs_url='https://raw.githubusercontent.com/trec-kba/streamcorpus-pipeline/master/data/john-smith/original/16/960731.417'
+2015-05-25 00:42:27,095 pid=11363 _yaml_files:289   INFO     opening './data/john-smith/original/16/960624.471'
+2015-05-25 00:42:27,096 pid=11363 _yaml_files:333   INFO     created StreamItem(num ratings=1, abs_url='https://raw.githubusercontent.com/trec-kba/streamcorpus-pipeline/master/data/john-smith/original/16/960624.471'
+2015-05-25 00:42:27,155 pid=11363 _yaml_files:289   INFO     opening './data/john-smith/original/0/970827.638'
+2015-05-25 00:42:27,155 pid=11363 _yaml_files:333   INFO     created StreamItem(num ratings=1, abs_url='https://raw.githubusercontent.com/trec-kba/streamcorpus-pipeline/master/data/john-smith/original/0/970827.638'
+2015-05-25 00:42:27,204 pid=11363 _yaml_files:289   INFO     opening './data/john-smith/original/0/970426.225'
+2015-05-25 00:42:27,204 pid=11363 _yaml_files:333   INFO     created StreamItem(num ratings=1, abs_url='https://raw.githubusercontent.com/trec-kba/streamcorpus-pipeline/master/data/john-smith/original/0/970426.225'
+2015-05-25 00:42:27,253 pid=11363 _yaml_files:289   INFO     opening './data/john-smith/original/28/970502.5'
+2015-05-25 00:42:27,254 pid=11363 _yaml_files:333   INFO     created StreamItem(num ratings=1, abs_url='https://raw.githubusercontent.com/trec-kba/streamcorpus-pipeline/master/data/john-smith/original/28/970502.5'
+2015-05-25 00:42:27,327 pid=11363 _yaml_files:289   INFO     opening './data/john-smith/original/13/960920.114'
+2015-05-25 00:42:27,327 pid=11363 _yaml_files:333   INFO     created StreamItem(num ratings=1, abs_url='https://raw.githubusercontent.com/trec-kba/streamcorpus-pipeline/master/data/john-smith/original/13/960920.114'
+2015-05-25 00:42:27,362 pid=11363 _yaml_files:289   INFO     opening './data/john-smith/original/0/960826.295'
+2015-05-25 00:42:27,362 pid=11363 _yaml_files:333   INFO     created StreamItem(num ratings=1, abs_url='https://raw.githubusercontent.com/trec-kba/streamcorpus-pipeline/master/data/john-smith/original/0/960826.295'
+2015-05-25 00:42:27,511 pid=11363 _yaml_files:289   INFO     opening './data/john-smith/original/28/970502.122'
+2015-05-25 00:42:27,511 pid=11363 _yaml_files:333   INFO     created StreamItem(num ratings=1, abs_url='https://raw.githubusercontent.com/trec-kba/streamcorpus-pipeline/master/data/john-smith/original/28/970502.122'
+2015-05-25 00:42:27,601 pid=11363 _yaml_files:289   INFO     opening './data/john-smith/original/16/970529.543'
+2015-05-25 00:42:27,601 pid=11363 _yaml_files:333   INFO     created StreamItem(num ratings=1, abs_url='https://raw.githubusercontent.com/trec-kba/streamcorpus-pipeline/master/data/john-smith/original/16/970529.543'
+2015-05-25 00:42:27,656 pid=11363 _yaml_files:289   INFO     opening './data/john-smith/original/30/960731.768'
+2015-05-25 00:42:27,656 pid=11363 _yaml_files:333   INFO     created StreamItem(num ratings=1, abs_url='https://raw.githubusercontent.com/trec-kba/streamcorpus-pipeline/master/data/john-smith/original/30/960731.768'
+2015-05-25 00:42:27,704 pid=11363 _yaml_files:289   INFO     opening './data/john-smith/original/1/970630.99'
+2015-05-25 00:42:27,704 pid=11363 _yaml_files:333   INFO     created StreamItem(num ratings=1, abs_url='https://raw.githubusercontent.com/trec-kba/streamcorpus-pipeline/master/data/john-smith/original/1/970630.99'
+2015-05-25 00:42:27,747 pid=11363 _yaml_files:289   INFO     opening './data/john-smith/original/16/970523.483'
+2015-05-25 00:42:27,747 pid=11363 _yaml_files:333   INFO     created StreamItem(num ratings=1, abs_url='https://raw.githubusercontent.com/trec-kba/streamcorpus-pipeline/master/data/john-smith/original/16/970523.483'
+2015-05-25 00:42:27,793 pid=11363 _yaml_files:289   INFO     opening './data/john-smith/original/30/960731.718'
+2015-05-25 00:42:27,793 pid=11363 _yaml_files:333   INFO     created StreamItem(num ratings=1, abs_url='https://raw.githubusercontent.com/trec-kba/streamcorpus-pipeline/master/data/john-smith/original/30/960731.718'
+2015-05-25 00:42:27,839 pid=11363 _yaml_files:289   INFO     opening './data/john-smith/original/2/970708.4'
+2015-05-25 00:42:27,839 pid=11363 _yaml_files:333   INFO     created StreamItem(num ratings=1, abs_url='https://raw.githubusercontent.com/trec-kba/streamcorpus-pipeline/master/data/john-smith/original/2/970708.4'
+2015-05-25 00:42:27,880 pid=11363 _yaml_files:289   INFO     opening './data/john-smith/original/28/970501.411'
+2015-05-25 00:42:27,880 pid=11363 _yaml_files:333   INFO     created StreamItem(num ratings=1, abs_url='https://raw.githubusercontent.com/trec-kba/streamcorpus-pipeline/master/data/john-smith/original/28/970501.411'
+2015-05-25 00:42:27,926 pid=11363 _yaml_files:289   INFO     opening './data/john-smith/original/16/971001.204'
+2015-05-25 00:42:27,926 pid=11363 _yaml_files:333   INFO     created StreamItem(num ratings=1, abs_url='https://raw.githubusercontent.com/trec-kba/streamcorpus-pipeline/master/data/john-smith/original/16/971001.204'
+2015-05-25 00:42:27,960 pid=11363 _yaml_files:289   INFO     opening './data/john-smith/original/25/971110.688'
+2015-05-25 00:42:27,960 pid=11363 _yaml_files:333   INFO     created StreamItem(num ratings=1, abs_url='https://raw.githubusercontent.com/trec-kba/streamcorpus-pipeline/master/data/john-smith/original/25/971110.688'
+2015-05-25 00:42:28,032 pid=11363 _yaml_files:289   INFO     opening './data/john-smith/original/17/970108.268'
+2015-05-25 00:42:28,032 pid=11363 _yaml_files:333   INFO     created StreamItem(num ratings=1, abs_url='https://raw.githubusercontent.com/trec-kba/streamcorpus-pipeline/master/data/john-smith/original/17/970108.268'
+2015-05-25 00:42:28,101 pid=11363 _yaml_files:289   INFO     opening './data/john-smith/original/30/960222.707'
+2015-05-25 00:42:28,101 pid=11363 _yaml_files:333   INFO     created StreamItem(num ratings=1, abs_url='https://raw.githubusercontent.com/trec-kba/streamcorpus-pipeline/master/data/john-smith/original/30/960222.707'
+2015-05-25 00:42:28,150 pid=11363 _yaml_files:289   INFO     opening './data/john-smith/original/0/961014.500'
+2015-05-25 00:42:28,150 pid=11363 _yaml_files:333   INFO     created StreamItem(num ratings=1, abs_url='https://raw.githubusercontent.com/trec-kba/streamcorpus-pipeline/master/data/john-smith/original/0/961014.500'
+2015-05-25 00:42:28,214 pid=11363 _yaml_files:289   INFO     opening './data/john-smith/original/9/970730.527'
+2015-05-25 00:42:28,214 pid=11363 _yaml_files:333   INFO     created StreamItem(num ratings=1, abs_url='https://raw.githubusercontent.com/trec-kba/streamcorpus-pipeline/master/data/john-smith/original/9/970730.527'
+2015-05-25 00:42:28,255 pid=11363 _yaml_files:289   INFO     opening './data/john-smith/original/16/960917.516'
+2015-05-25 00:42:28,255 pid=11363 _yaml_files:333   INFO     created StreamItem(num ratings=1, abs_url='https://raw.githubusercontent.com/trec-kba/streamcorpus-pipeline/master/data/john-smith/original/16/960917.516'
+2015-05-25 00:42:28,303 pid=11363 _yaml_files:289   INFO     opening './data/john-smith/original/16/971105.177'
+2015-05-25 00:42:28,304 pid=11363 _yaml_files:333   INFO     created StreamItem(num ratings=1, abs_url='https://raw.githubusercontent.com/trec-kba/streamcorpus-pipeline/master/data/john-smith/original/16/971105.177'
+2015-05-25 00:42:28,374 pid=11363 _yaml_files:289   INFO     opening './data/john-smith/original/4/970701.861'
+2015-05-25 00:42:28,374 pid=11363 _yaml_files:333   INFO     created StreamItem(num ratings=1, abs_url='https://raw.githubusercontent.com/trec-kba/streamcorpus-pipeline/master/data/john-smith/original/4/970701.861'
+2015-05-25 00:42:28,409 pid=11363 _yaml_files:289   INFO     opening './data/john-smith/original/15/971222.198'
+2015-05-25 00:42:28,409 pid=11363 _yaml_files:333   INFO     created StreamItem(num ratings=1, abs_url='https://raw.githubusercontent.com/trec-kba/streamcorpus-pipeline/master/data/john-smith/original/15/971222.198'
+2015-05-25 00:42:28,455 pid=11363 _yaml_files:289   INFO     opening './data/john-smith/original/34/970221.681'
+2015-05-25 00:42:28,455 pid=11363 _yaml_files:333   INFO     created StreamItem(num ratings=1, abs_url='https://raw.githubusercontent.com/trec-kba/streamcorpus-pipeline/master/data/john-smith/original/34/970221.681'
+2015-05-25 00:42:28,502 pid=11363 _yaml_files:289   INFO     opening './data/john-smith/original/28/970502.74'
+2015-05-25 00:42:28,502 pid=11363 _yaml_files:333   INFO     created StreamItem(num ratings=1, abs_url='https://raw.githubusercontent.com/trec-kba/streamcorpus-pipeline/master/data/john-smith/original/28/970502.74'
+2015-05-25 00:42:28,582 pid=11363 _yaml_files:289   INFO     opening './data/john-smith/original/16/970910.420'
+2015-05-25 00:42:28,583 pid=11363 _yaml_files:333   INFO     created StreamItem(num ratings=1, abs_url='https://raw.githubusercontent.com/trec-kba/streamcorpus-pipeline/master/data/john-smith/original/16/970910.420'
+2015-05-25 00:42:28,663 pid=11363 _yaml_files:289   INFO     opening './data/john-smith/original/28/970502.111'
+2015-05-25 00:42:28,664 pid=11363 _yaml_files:333   INFO     created StreamItem(num ratings=1, abs_url='https://raw.githubusercontent.com/trec-kba/streamcorpus-pipeline/master/data/john-smith/original/28/970502.111'
+2015-05-25 00:42:28,744 pid=11363 _yaml_files:289   INFO     opening './data/john-smith/original/16/960822.556'
+2015-05-25 00:42:28,745 pid=11363 _yaml_files:333   INFO     created StreamItem(num ratings=1, abs_url='https://raw.githubusercontent.com/trec-kba/streamcorpus-pipeline/master/data/john-smith/original/16/960822.556'
+2015-05-25 00:42:28,789 pid=11363 _yaml_files:289   INFO     opening './data/john-smith/original/30/970811.688'
+2015-05-25 00:42:28,789 pid=11363 _yaml_files:333   INFO     created StreamItem(num ratings=1, abs_url='https://raw.githubusercontent.com/trec-kba/streamcorpus-pipeline/master/data/john-smith/original/30/970811.688'
+2015-05-25 00:42:28,835 pid=11363 _yaml_files:289   INFO     opening './data/john-smith/original/16/970529.141'
+2015-05-25 00:42:28,835 pid=11363 _yaml_files:333   INFO     created StreamItem(num ratings=1, abs_url='https://raw.githubusercontent.com/trec-kba/streamcorpus-pipeline/master/data/john-smith/original/16/970529.141'
+2015-05-25 00:42:28,874 pid=11363 _yaml_files:289   INFO     opening './data/john-smith/original/0/960703.505'
+2015-05-25 00:42:28,874 pid=11363 _yaml_files:333   INFO     created StreamItem(num ratings=1, abs_url='https://raw.githubusercontent.com/trec-kba/streamcorpus-pipeline/master/data/john-smith/original/0/960703.505'
+2015-05-25 00:42:29,005 pid=11363 _yaml_files:289   INFO     opening './data/john-smith/original/16/970127.624'
+2015-05-25 00:42:29,005 pid=11363 _yaml_files:333   INFO     created StreamItem(num ratings=1, abs_url='https://raw.githubusercontent.com/trec-kba/streamcorpus-pipeline/master/data/john-smith/original/16/970127.624'
+2015-05-25 00:42:29,054 pid=11363 _yaml_files:289   INFO     opening './data/john-smith/original/1/960701.76'
+2015-05-25 00:42:29,054 pid=11363 _yaml_files:333   INFO     created StreamItem(num ratings=1, abs_url='https://raw.githubusercontent.com/trec-kba/streamcorpus-pipeline/master/data/john-smith/original/1/960701.76'
+2015-05-25 00:42:29,098 pid=11363 _yaml_files:289   INFO     opening './data/john-smith/original/16/970417.432'
+2015-05-25 00:42:29,098 pid=11363 _yaml_files:333   INFO     created StreamItem(num ratings=1, abs_url='https://raw.githubusercontent.com/trec-kba/streamcorpus-pipeline/master/data/john-smith/original/16/970417.432'
+2015-05-25 00:42:29,116 pid=11363 _yaml_files:289   INFO     opening './data/john-smith/original/0/970926.528'
+2015-05-25 00:42:29,116 pid=11363 _yaml_files:333   INFO     created StreamItem(num ratings=1, abs_url='https://raw.githubusercontent.com/trec-kba/streamcorpus-pipeline/master/data/john-smith/original/0/970926.528'
+2015-05-25 00:42:29,175 pid=11363 _yaml_files:289   INFO     opening './data/john-smith/original/27/961230.449'
+2015-05-25 00:42:29,175 pid=11363 _yaml_files:333   INFO     created StreamItem(num ratings=1, abs_url='https://raw.githubusercontent.com/trec-kba/streamcorpus-pipeline/master/data/john-smith/original/27/961230.449'
+2015-05-25 00:42:29,230 pid=11363 _yaml_files:289   INFO     opening './data/john-smith/original/28/960413.55'
+2015-05-25 00:42:29,230 pid=11363 _yaml_files:333   INFO     created StreamItem(num ratings=1, abs_url='https://raw.githubusercontent.com/trec-kba/streamcorpus-pipeline/master/data/john-smith/original/28/960413.55'
+2015-05-25 00:42:29,271 pid=11363 _yaml_files:289   INFO     opening './data/john-smith/original/16/970911.195'
+2015-05-25 00:42:29,271 pid=11363 _yaml_files:333   INFO     created StreamItem(num ratings=1, abs_url='https://raw.githubusercontent.com/trec-kba/streamcorpus-pipeline/master/data/john-smith/original/16/970911.195'
+2015-05-25 00:42:29,326 pid=11363 _yaml_files:289   INFO     opening './data/john-smith/original/16/961027.297'
+2015-05-25 00:42:29,326 pid=11363 _yaml_files:333   INFO     created StreamItem(num ratings=1, abs_url='https://raw.githubusercontent.com/trec-kba/streamcorpus-pipeline/master/data/john-smith/original/16/961027.297'
+2015-05-25 00:42:29,369 pid=11363 _yaml_files:289   INFO     opening './data/john-smith/original/3/960304.742'
+2015-05-25 00:42:29,369 pid=11363 _yaml_files:333   INFO     created StreamItem(num ratings=1, abs_url='https://raw.githubusercontent.com/trec-kba/streamcorpus-pipeline/master/data/john-smith/original/3/960304.742'
+2015-05-25 00:42:29,425 pid=11363 _yaml_files:289   INFO     opening './data/john-smith/original/16/971104.433'
+2015-05-25 00:42:29,426 pid=11363 _yaml_files:333   INFO     created StreamItem(num ratings=1, abs_url='https://raw.githubusercontent.com/trec-kba/streamcorpus-pipeline/master/data/john-smith/original/16/971104.433'
+2015-05-25 00:42:29,505 pid=11363 _yaml_files:289   INFO     opening './data/john-smith/original/28/970501.523'
+2015-05-25 00:42:29,505 pid=11363 _yaml_files:333   INFO     created StreamItem(num ratings=1, abs_url='https://raw.githubusercontent.com/trec-kba/streamcorpus-pipeline/master/data/john-smith/original/28/970501.523'
+2015-05-25 00:42:29,556 pid=11363 _yaml_files:289   INFO     opening './data/john-smith/original/16/971014.163'
+2015-05-25 00:42:29,556 pid=11363 _yaml_files:333   INFO     created StreamItem(num ratings=1, abs_url='https://raw.githubusercontent.com/trec-kba/streamcorpus-pipeline/master/data/john-smith/original/16/971014.163'
+2015-05-25 00:42:29,598 pid=11363 _yaml_files:289   INFO     opening './data/john-smith/original/16/971104.358'
+2015-05-25 00:42:29,599 pid=11363 _yaml_files:333   INFO     created StreamItem(num ratings=1, abs_url='https://raw.githubusercontent.com/trec-kba/streamcorpus-pipeline/master/data/john-smith/original/16/971104.358'
+2015-05-25 00:42:29,676 pid=11363 _yaml_files:289   INFO     opening './data/john-smith/original/0/960829.192'
+2015-05-25 00:42:29,677 pid=11363 _yaml_files:333   INFO     created StreamItem(num ratings=1, abs_url='https://raw.githubusercontent.com/trec-kba/streamcorpus-pipeline/master/data/john-smith/original/0/960829.192'
+2015-05-25 00:42:29,721 pid=11363 _yaml_files:289   INFO     opening './data/john-smith/original/16/960731.338'
+2015-05-25 00:42:29,721 pid=11363 _yaml_files:333   INFO     created StreamItem(num ratings=1, abs_url='https://raw.githubusercontent.com/trec-kba/streamcorpus-pipeline/master/data/john-smith/original/16/960731.338'
+2015-05-25 00:42:29,745 pid=11363 _yaml_files:289   INFO     opening './data/john-smith/original/24/970523.245'
+2015-05-25 00:42:29,745 pid=11363 _yaml_files:333   INFO     created StreamItem(num ratings=1, abs_url='https://raw.githubusercontent.com/trec-kba/streamcorpus-pipeline/master/data/john-smith/original/24/970523.245'
+2015-05-25 00:42:29,841 pid=11363 _yaml_files:289   INFO     opening './data/john-smith/original/16/971218.333'
+2015-05-25 00:42:29,841 pid=11363 _yaml_files:333   INFO     created StreamItem(num ratings=1, abs_url='https://raw.githubusercontent.com/trec-kba/streamcorpus-pipeline/master/data/john-smith/original/16/971218.333'
+2015-05-25 00:42:29,877 pid=11363 _yaml_files:289   INFO     opening './data/john-smith/original/16/970529.136'
+2015-05-25 00:42:29,877 pid=11363 _yaml_files:333   INFO     created StreamItem(num ratings=1, abs_url='https://raw.githubusercontent.com/trec-kba/streamcorpus-pipeline/master/data/john-smith/original/16/970529.136'
+2015-05-25 00:42:29,903 pid=11363 _yaml_files:289   INFO     opening './data/john-smith/original/0/970401.380'
+2015-05-25 00:42:29,903 pid=11363 _yaml_files:333   INFO     created StreamItem(num ratings=1, abs_url='https://raw.githubusercontent.com/trec-kba/streamcorpus-pipeline/master/data/john-smith/original/0/970401.380'
+2015-05-25 00:42:29,941 pid=11363 _yaml_files:289   INFO     opening './data/john-smith/original/16/970523.288'
+2015-05-25 00:42:29,941 pid=11363 _yaml_files:333   INFO     created StreamItem(num ratings=1, abs_url='https://raw.githubusercontent.com/trec-kba/streamcorpus-pipeline/master/data/john-smith/original/16/970523.288'
+2015-05-25 00:42:29,941 pid=11363 _pipeline.p:570   INFO     100 in 5.7 --> 17.4 per sec on (pre-partial_commit) data/john-smith/john-smith-labels.yaml
+2015-05-25 00:42:29,991 pid=11363 _yaml_files:289   INFO     opening './data/john-smith/original/16/970910.536'
+2015-05-25 00:42:29,991 pid=11363 _yaml_files:333   INFO     created StreamItem(num ratings=1, abs_url='https://raw.githubusercontent.com/trec-kba/streamcorpus-pipeline/master/data/john-smith/original/16/970910.536'
+2015-05-25 00:42:30,073 pid=11363 _yaml_files:289   INFO     opening './data/john-smith/original/16/970822.631'
+2015-05-25 00:42:30,073 pid=11363 _yaml_files:333   INFO     created StreamItem(num ratings=1, abs_url='https://raw.githubusercontent.com/trec-kba/streamcorpus-pipeline/master/data/john-smith/original/16/970822.631'
+2015-05-25 00:42:30,139 pid=11363 _yaml_files:289   INFO     opening './data/john-smith/original/24/970519.191'
+2015-05-25 00:42:30,140 pid=11363 _yaml_files:333   INFO     created StreamItem(num ratings=1, abs_url='https://raw.githubusercontent.com/trec-kba/streamcorpus-pipeline/master/data/john-smith/original/24/970519.191'
+2015-05-25 00:42:30,291 pid=11363 _yaml_files:289   INFO     opening './data/john-smith/original/16/970804.189'
+2015-05-25 00:42:30,291 pid=11363 _yaml_files:333   INFO     created StreamItem(num ratings=1, abs_url='https://raw.githubusercontent.com/trec-kba/streamcorpus-pipeline/master/data/john-smith/original/16/970804.189'
+2015-05-25 00:42:30,398 pid=11363 _yaml_files:289   INFO     opening './data/john-smith/original/0/960912.658'
+2015-05-25 00:42:30,398 pid=11363 _yaml_files:333   INFO     created StreamItem(num ratings=1, abs_url='https://raw.githubusercontent.com/trec-kba/streamcorpus-pipeline/master/data/john-smith/original/0/960912.658'
+2015-05-25 00:42:30,446 pid=11363 _yaml_files:289   INFO     opening './data/john-smith/original/0/970711.171'
+2015-05-25 00:42:30,446 pid=11363 _yaml_files:333   INFO     created StreamItem(num ratings=1, abs_url='https://raw.githubusercontent.com/trec-kba/streamcorpus-pipeline/master/data/john-smith/original/0/970711.171'
+2015-05-25 00:42:30,490 pid=11363 _yaml_files:289   INFO     opening './data/john-smith/original/21/970908.758'
+2015-05-25 00:42:30,490 pid=11363 _yaml_files:333   INFO     created StreamItem(num ratings=1, abs_url='https://raw.githubusercontent.com/trec-kba/streamcorpus-pipeline/master/data/john-smith/original/21/970908.758'
+2015-05-25 00:42:30,542 pid=11363 _yaml_files:289   INFO     opening './data/john-smith/original/24/970523.237'
+2015-05-25 00:42:30,542 pid=11363 _yaml_files:333   INFO     created StreamItem(num ratings=1, abs_url='https://raw.githubusercontent.com/trec-kba/streamcorpus-pipeline/master/data/john-smith/original/24/970523.237'
+2015-05-25 00:42:30,638 pid=11363 _yaml_files:289   INFO     opening './data/john-smith/original/16/970127.279'
+2015-05-25 00:42:30,638 pid=11363 _yaml_files:333   INFO     created StreamItem(num ratings=1, abs_url='https://raw.githubusercontent.com/trec-kba/streamcorpus-pipeline/master/data/john-smith/original/16/970127.279'
+2015-05-25 00:42:30,660 pid=11363 _yaml_files:289   INFO     opening './data/john-smith/original/16/960530.93'
+2015-05-25 00:42:30,661 pid=11363 _yaml_files:333   INFO     created StreamItem(num ratings=1, abs_url='https://raw.githubusercontent.com/trec-kba/streamcorpus-pipeline/master/data/john-smith/original/16/960530.93'
+2015-05-25 00:42:30,708 pid=11363 _yaml_files:289   INFO     opening './data/john-smith/original/26/960108.526'
+2015-05-25 00:42:30,708 pid=11363 _yaml_files:333   INFO     created StreamItem(num ratings=1, abs_url='https://raw.githubusercontent.com/trec-kba/streamcorpus-pipeline/master/data/john-smith/original/26/960108.526'
+2015-05-25 00:42:30,755 pid=11363 _yaml_files:289   INFO     opening './data/john-smith/original/30/960802.34'
+2015-05-25 00:42:30,755 pid=11363 _yaml_files:333   INFO     created StreamItem(num ratings=1, abs_url='https://raw.githubusercontent.com/trec-kba/streamcorpus-pipeline/master/data/john-smith/original/30/960802.34'
+2015-05-25 00:42:30,800 pid=11363 _yaml_files:289   INFO     opening './data/john-smith/original/30/970804.26'
+2015-05-25 00:42:30,801 pid=11363 _yaml_files:333   INFO     created StreamItem(num ratings=1, abs_url='https://raw.githubusercontent.com/trec-kba/streamcorpus-pipeline/master/data/john-smith/original/30/970804.26'
+2015-05-25 00:42:30,855 pid=11363 _yaml_files:289   INFO     opening './data/john-smith/original/28/970504.25'
+2015-05-25 00:42:30,855 pid=11363 _yaml_files:333   INFO     created StreamItem(num ratings=1, abs_url='https://raw.githubusercontent.com/trec-kba/streamcorpus-pipeline/master/data/john-smith/original/28/970504.25'
+2015-05-25 00:42:30,898 pid=11363 _yaml_files:289   INFO     opening './data/john-smith/original/30/970731.768'
+2015-05-25 00:42:30,898 pid=11363 _yaml_files:333   INFO     created StreamItem(num ratings=1, abs_url='https://raw.githubusercontent.com/trec-kba/streamcorpus-pipeline/master/data/john-smith/original/30/970731.768'
+2015-05-25 00:42:30,961 pid=11363 _yaml_files:289   INFO     opening './data/john-smith/original/0/960826.274'
+2015-05-25 00:42:30,961 pid=11363 _yaml_files:333   INFO     created StreamItem(num ratings=1, abs_url='https://raw.githubusercontent.com/trec-kba/streamcorpus-pipeline/master/data/john-smith/original/0/960826.274'
+2015-05-25 00:42:31,077 pid=11363 _yaml_files:289   INFO     opening './data/john-smith/original/8/970429.552'
+2015-05-25 00:42:31,077 pid=11363 _yaml_files:333   INFO     created StreamItem(num ratings=1, abs_url='https://raw.githubusercontent.com/trec-kba/streamcorpus-pipeline/master/data/john-smith/original/8/970429.552'
+2015-05-25 00:42:31,126 pid=11363 _yaml_files:289   INFO     opening './data/john-smith/original/16/961003.621'
+2015-05-25 00:42:31,126 pid=11363 _yaml_files:333   INFO     created StreamItem(num ratings=1, abs_url='https://raw.githubusercontent.com/trec-kba/streamcorpus-pipeline/master/data/john-smith/original/16/961003.621'
+2015-05-25 00:42:31,188 pid=11363 _yaml_files:289   INFO     opening './data/john-smith/original/30/970611.447'
+2015-05-25 00:42:31,188 pid=11363 _yaml_files:333   INFO     created StreamItem(num ratings=1, abs_url='https://raw.githubusercontent.com/trec-kba/streamcorpus-pipeline/master/data/john-smith/original/30/970611.447'
+2015-05-25 00:42:31,243 pid=11363 _yaml_files:289   INFO     opening './data/john-smith/original/16/960524.444'
+2015-05-25 00:42:31,243 pid=11363 _yaml_files:333   INFO     created StreamItem(num ratings=1, abs_url='https://raw.githubusercontent.com/trec-kba/streamcorpus-pipeline/master/data/john-smith/original/16/960524.444'
+2015-05-25 00:42:31,331 pid=11363 _yaml_files:289   INFO     opening './data/john-smith/original/16/970325.13'
+2015-05-25 00:42:31,331 pid=11363 _yaml_files:333   INFO     created StreamItem(num ratings=1, abs_url='https://raw.githubusercontent.com/trec-kba/streamcorpus-pipeline/master/data/john-smith/original/16/970325.13'
+2015-05-25 00:42:31,397 pid=11363 _yaml_files:289   INFO     opening './data/john-smith/original/28/970501.531'
+2015-05-25 00:42:31,397 pid=11363 _yaml_files:333   INFO     created StreamItem(num ratings=1, abs_url='https://raw.githubusercontent.com/trec-kba/streamcorpus-pipeline/master/data/john-smith/original/28/970501.531'
+2015-05-25 00:42:31,444 pid=11363 _yaml_files:289   INFO     opening './data/john-smith/original/16/970529.313'
+2015-05-25 00:42:31,444 pid=11363 _yaml_files:333   INFO     created StreamItem(num ratings=1, abs_url='https://raw.githubusercontent.com/trec-kba/streamcorpus-pipeline/master/data/john-smith/original/16/970529.313'
+2015-05-25 00:42:31,499 pid=11363 _yaml_files:289   INFO     opening './data/john-smith/original/16/970110.704'
+2015-05-25 00:42:31,499 pid=11363 _yaml_files:333   INFO     created StreamItem(num ratings=1, abs_url='https://raw.githubusercontent.com/trec-kba/streamcorpus-pipeline/master/data/john-smith/original/16/970110.704'
+2015-05-25 00:42:31,557 pid=11363 _yaml_files:289   INFO     opening './data/john-smith/original/29/960311.408'
+2015-05-25 00:42:31,557 pid=11363 _yaml_files:333   INFO     created StreamItem(num ratings=1, abs_url='https://raw.githubusercontent.com/trec-kba/streamcorpus-pipeline/master/data/john-smith/original/29/960311.408'
+2015-05-25 00:42:31,631 pid=11363 _yaml_files:289   INFO     opening './data/john-smith/original/11/960822.669'
+2015-05-25 00:42:31,631 pid=11363 _yaml_files:333   INFO     created StreamItem(num ratings=1, abs_url='https://raw.githubusercontent.com/trec-kba/streamcorpus-pipeline/master/data/john-smith/original/11/960822.669'
+2015-05-25 00:42:31,653 pid=11363 _yaml_files:289   INFO     opening './data/john-smith/original/16/970529.127'
+2015-05-25 00:42:31,654 pid=11363 _yaml_files:333   INFO     created StreamItem(num ratings=1, abs_url='https://raw.githubusercontent.com/trec-kba/streamcorpus-pipeline/master/data/john-smith/original/16/970529.127'
+2015-05-25 00:42:31,669 pid=11363 _yaml_files:289   INFO     opening './data/john-smith/original/31/970612.420'
+2015-05-25 00:42:31,669 pid=11363 _yaml_files:333   INFO     created StreamItem(num ratings=1, abs_url='https://raw.githubusercontent.com/trec-kba/streamcorpus-pipeline/master/data/john-smith/original/31/970612.420'
+2015-05-25 00:42:31,722 pid=11363 _yaml_files:289   INFO     opening './data/john-smith/original/15/971222.210'
+2015-05-25 00:42:31,722 pid=11363 _yaml_files:333   INFO     created StreamItem(num ratings=1, abs_url='https://raw.githubusercontent.com/trec-kba/streamcorpus-pipeline/master/data/john-smith/original/15/971222.210'
+2015-05-25 00:42:31,773 pid=11363 _yaml_files:289   INFO     opening './data/john-smith/original/16/970523.145'
+2015-05-25 00:42:31,773 pid=11363 _yaml_files:333   INFO     created StreamItem(num ratings=1, abs_url='https://raw.githubusercontent.com/trec-kba/streamcorpus-pipeline/master/data/john-smith/original/16/970523.145'
+2015-05-25 00:42:31,791 pid=11363 _yaml_files:289   INFO     opening './data/john-smith/original/0/960402.464'
+2015-05-25 00:42:31,791 pid=11363 _yaml_files:333   INFO     created StreamItem(num ratings=1, abs_url='https://raw.githubusercontent.com/trec-kba/streamcorpus-pipeline/master/data/john-smith/original/0/960402.464'
+2015-05-25 00:42:31,862 pid=11363 _yaml_files:289   INFO     opening './data/john-smith/original/16/970414.153'
+2015-05-25 00:42:31,862 pid=11363 _yaml_files:333   INFO     created StreamItem(num ratings=1, abs_url='https://raw.githubusercontent.com/trec-kba/streamcorpus-pipeline/master/data/john-smith/original/16/970414.153'
+2015-05-25 00:42:31,890 pid=11363 _yaml_files:289   INFO     opening './data/john-smith/original/16/970127.316'
+2015-05-25 00:42:31,891 pid=11363 _yaml_files:333   INFO     created StreamItem(num ratings=1, abs_url='https://raw.githubusercontent.com/trec-kba/streamcorpus-pipeline/master/data/john-smith/original/16/970127.316'
+2015-05-25 00:42:31,920 pid=11363 _yaml_files:289   INFO     opening './data/john-smith/original/18/970111.202'
+2015-05-25 00:42:31,920 pid=11363 _yaml_files:333   INFO     created StreamItem(num ratings=1, abs_url='https://raw.githubusercontent.com/trec-kba/streamcorpus-pipeline/master/data/john-smith/original/18/970111.202'
+2015-05-25 00:42:31,973 pid=11363 _yaml_files:289   INFO     opening './data/john-smith/original/16/971102.190'
+2015-05-25 00:42:31,973 pid=11363 _yaml_files:333   INFO     created StreamItem(num ratings=1, abs_url='https://raw.githubusercontent.com/trec-kba/streamcorpus-pipeline/master/data/john-smith/original/16/971102.190'
+2015-05-25 00:42:32,028 pid=11363 _yaml_files:289   INFO     opening './data/john-smith/original/16/960624.533'
+2015-05-25 00:42:32,028 pid=11363 _yaml_files:333   INFO     created StreamItem(num ratings=1, abs_url='https://raw.githubusercontent.com/trec-kba/streamcorpus-pipeline/master/data/john-smith/original/16/960624.533'
+2015-05-25 00:42:32,094 pid=11363 _yaml_files:289   INFO     opening './data/john-smith/original/28/970501.727'
+2015-05-25 00:42:32,094 pid=11363 _yaml_files:333   INFO     created StreamItem(num ratings=1, abs_url='https://raw.githubusercontent.com/trec-kba/streamcorpus-pipeline/master/data/john-smith/original/28/970501.727'
+2015-05-25 00:42:32,166 pid=11363 _yaml_files:289   INFO     opening './data/john-smith/original/30/970808.668'
+2015-05-25 00:42:32,166 pid=11363 _yaml_files:333   INFO     created StreamItem(num ratings=1, abs_url='https://raw.githubusercontent.com/trec-kba/streamcorpus-pipeline/master/data/john-smith/original/30/970808.668'
+2015-05-25 00:42:32,221 pid=11363 _yaml_files:289   INFO     opening './data/john-smith/original/0/960114.114'
+2015-05-25 00:42:32,221 pid=11363 _yaml_files:333   INFO     created StreamItem(num ratings=1, abs_url='https://raw.githubusercontent.com/trec-kba/streamcorpus-pipeline/master/data/john-smith/original/0/960114.114'
+2015-05-25 00:42:32,288 pid=11363 _yaml_files:289   INFO     opening './data/john-smith/original/0/970307.114'
+2015-05-25 00:42:32,288 pid=11363 _yaml_files:333   INFO     created StreamItem(num ratings=1, abs_url='https://raw.githubusercontent.com/trec-kba/streamcorpus-pipeline/master/data/john-smith/original/0/970307.114'
+2015-05-25 00:42:32,345 pid=11363 _yaml_files:289   INFO     opening './data/john-smith/original/30/970804.32'
+2015-05-25 00:42:32,345 pid=11363 _yaml_files:333   INFO     created StreamItem(num ratings=1, abs_url='https://raw.githubusercontent.com/trec-kba/streamcorpus-pipeline/master/data/john-smith/original/30/970804.32'
+2015-05-25 00:42:32,393 pid=11363 _yaml_files:289   INFO     opening './data/john-smith/original/16/971014.359'
+2015-05-25 00:42:32,393 pid=11363 _yaml_files:333   INFO     created StreamItem(num ratings=1, abs_url='https://raw.githubusercontent.com/trec-kba/streamcorpus-pipeline/master/data/john-smith/original/16/971014.359'
+2015-05-25 00:42:32,451 pid=11363 _yaml_files:289   INFO     opening './data/john-smith/original/16/971225.136'
+2015-05-25 00:42:32,451 pid=11363 _yaml_files:333   INFO     created StreamItem(num ratings=1, abs_url='https://raw.githubusercontent.com/trec-kba/streamcorpus-pipeline/master/data/john-smith/original/16/971225.136'
+2015-05-25 00:42:32,516 pid=11363 _yaml_files:289   INFO     opening './data/john-smith/original/16/960822.722'
+2015-05-25 00:42:32,516 pid=11363 _yaml_files:333   INFO     created StreamItem(num ratings=1, abs_url='https://raw.githubusercontent.com/trec-kba/streamcorpus-pipeline/master/data/john-smith/original/16/960822.722'
+2015-05-25 00:42:32,588 pid=11363 _yaml_files:289   INFO     opening './data/john-smith/original/19/970227.644'
+2015-05-25 00:42:32,589 pid=11363 _yaml_files:333   INFO     created StreamItem(num ratings=1, abs_url='https://raw.githubusercontent.com/trec-kba/streamcorpus-pipeline/master/data/john-smith/original/19/970227.644'
+2015-05-25 00:42:32,659 pid=11363 _yaml_files:289   INFO     opening './data/john-smith/original/16/960520.528'
+2015-05-25 00:42:32,659 pid=11363 _yaml_files:333   INFO     created StreamItem(num ratings=1, abs_url='https://raw.githubusercontent.com/trec-kba/streamcorpus-pipeline/master/data/john-smith/original/16/960520.528'
+2015-05-25 00:42:32,728 pid=11363 _yaml_files:289   INFO     opening './data/john-smith/original/16/960409.428'
+2015-05-25 00:42:32,728 pid=11363 _yaml_files:333   INFO     created StreamItem(num ratings=1, abs_url='https://raw.githubusercontent.com/trec-kba/streamcorpus-pipeline/master/data/john-smith/original/16/960409.428'
+2015-05-25 00:42:32,756 pid=11363 _yaml_files:289   INFO     opening './data/john-smith/original/28/970502.29'
+2015-05-25 00:42:32,756 pid=11363 _yaml_files:333   INFO     created StreamItem(num ratings=1, abs_url='https://raw.githubusercontent.com/trec-kba/streamcorpus-pipeline/master/data/john-smith/original/28/970502.29'
+2015-05-25 00:42:32,833 pid=11363 _yaml_files:289   INFO     opening './data/john-smith/original/14/970317.818'
+2015-05-25 00:42:32,833 pid=11363 _yaml_files:333   INFO     created StreamItem(num ratings=1, abs_url='https://raw.githubusercontent.com/trec-kba/streamcorpus-pipeline/master/data/john-smith/original/14/970317.818'
+2015-05-25 00:42:32,891 pid=11363 _yaml_files:289   INFO     opening './data/john-smith/original/30/960607.349'
+2015-05-25 00:42:32,891 pid=11363 _yaml_files:333   INFO     created StreamItem(num ratings=1, abs_url='https://raw.githubusercontent.com/trec-kba/streamcorpus-pipeline/master/data/john-smith/original/30/960607.349'
+2015-05-25 00:42:32,926 pid=11363 _yaml_files:289   INFO     opening './data/john-smith/original/16/960924.456'
+2015-05-25 00:42:32,927 pid=11363 _yaml_files:333   INFO     created StreamItem(num ratings=1, abs_url='https://raw.githubusercontent.com/trec-kba/streamcorpus-pipeline/master/data/john-smith/original/16/960924.456'
+2015-05-25 00:42:32,972 pid=11363 _yaml_files:289   INFO     opening './data/john-smith/original/0/970218.938'
+2015-05-25 00:42:32,972 pid=11363 _yaml_files:333   INFO     created StreamItem(num ratings=1, abs_url='https://raw.githubusercontent.com/trec-kba/streamcorpus-pipeline/master/data/john-smith/original/0/970218.938'
+2015-05-25 00:42:33,025 pid=11363 _yaml_files:289   INFO     opening './data/john-smith/original/13/960919.533'
+2015-05-25 00:42:33,025 pid=11363 _yaml_files:333   INFO     created StreamItem(num ratings=1, abs_url='https://raw.githubusercontent.com/trec-kba/streamcorpus-pipeline/master/data/john-smith/original/13/960919.533'
+2015-05-25 00:42:33,068 pid=11363 _yaml_files:289   INFO     opening './data/john-smith/original/27/961231.74'
+2015-05-25 00:42:33,068 pid=11363 _yaml_files:333   INFO     created StreamItem(num ratings=1, abs_url='https://raw.githubusercontent.com/trec-kba/streamcorpus-pipeline/master/data/john-smith/original/27/961231.74'
+2015-05-25 00:42:33,123 pid=11363 _yaml_files:289   INFO     opening './data/john-smith/original/0/970703.406'
+2015-05-25 00:42:33,123 pid=11363 _yaml_files:333   INFO     created StreamItem(num ratings=1, abs_url='https://raw.githubusercontent.com/trec-kba/streamcorpus-pipeline/master/data/john-smith/original/0/970703.406'
+2015-05-25 00:42:33,172 pid=11363 _yaml_files:289   INFO     opening './data/john-smith/original/30/970210.851'
+2015-05-25 00:42:33,172 pid=11363 _yaml_files:333   INFO     created StreamItem(num ratings=1, abs_url='https://raw.githubusercontent.com/trec-kba/streamcorpus-pipeline/master/data/john-smith/original/30/970210.851'
+2015-05-25 00:42:33,219 pid=11363 _yaml_files:289   INFO     opening './data/john-smith/original/15/971222.150'
+2015-05-25 00:42:33,219 pid=11363 _yaml_files:333   INFO     created StreamItem(num ratings=1, abs_url='https://raw.githubusercontent.com/trec-kba/streamcorpus-pipeline/master/data/john-smith/original/15/971222.150'
+2015-05-25 00:42:33,268 pid=11363 _yaml_files:289   INFO     opening './data/john-smith/original/16/970127.308'
+2015-05-25 00:42:33,269 pid=11363 _yaml_files:333   INFO     created StreamItem(num ratings=1, abs_url='https://raw.githubusercontent.com/trec-kba/streamcorpus-pipeline/master/data/john-smith/original/16/970127.308'
+2015-05-25 00:42:33,293 pid=11363 _yaml_files:289   INFO     opening './data/john-smith/original/30/960730.608'
+2015-05-25 00:42:33,293 pid=11363 _yaml_files:333   INFO     created StreamItem(num ratings=1, abs_url='https://raw.githubusercontent.com/trec-kba/streamcorpus-pipeline/master/data/john-smith/original/30/960730.608'
+2015-05-25 00:42:33,359 pid=11363 _yaml_files:289   INFO     opening './data/john-smith/original/6/961011.655'
+2015-05-25 00:42:33,359 pid=11363 _yaml_files:333   INFO     created StreamItem(num ratings=1, abs_url='https://raw.githubusercontent.com/trec-kba/streamcorpus-pipeline/master/data/john-smith/original/6/961011.655'
+2015-05-25 00:42:33,415 pid=11363 _yaml_files:289   INFO     opening './data/john-smith/original/16/971014.228'
+2015-05-25 00:42:33,415 pid=11363 _yaml_files:333   INFO     created StreamItem(num ratings=1, abs_url='https://raw.githubusercontent.com/trec-kba/streamcorpus-pipeline/master/data/john-smith/original/16/971014.228'
+2015-05-25 00:42:33,463 pid=11363 _yaml_files:289   INFO     opening './data/john-smith/original/16/970325.270'
+2015-05-25 00:42:33,464 pid=11363 _yaml_files:333   INFO     created StreamItem(num ratings=1, abs_url='https://raw.githubusercontent.com/trec-kba/streamcorpus-pipeline/master/data/john-smith/original/16/970325.270'
+2015-05-25 00:42:33,530 pid=11363 _yaml_files:289   INFO     opening './data/john-smith/original/30/960725.443'
+2015-05-25 00:42:33,530 pid=11363 _yaml_files:333   INFO     created StreamItem(num ratings=1, abs_url='https://raw.githubusercontent.com/trec-kba/streamcorpus-pipeline/master/data/john-smith/original/30/960725.443'
+2015-05-25 00:42:33,593 pid=11363 _yaml_files:289   INFO     opening './data/john-smith/original/30/970808.564'
+2015-05-25 00:42:33,594 pid=11363 _yaml_files:333   INFO     created StreamItem(num ratings=1, abs_url='https://raw.githubusercontent.com/trec-kba/streamcorpus-pipeline/master/data/john-smith/original/30/970808.564'
+2015-05-25 00:42:33,651 pid=11363 _yaml_files:289   INFO     opening './data/john-smith/original/16/961029.626'
+2015-05-25 00:42:33,651 pid=11363 _yaml_files:333   INFO     created StreamItem(num ratings=1, abs_url='https://raw.githubusercontent.com/trec-kba/streamcorpus-pipeline/master/data/john-smith/original/16/961029.626'
+2015-05-25 00:42:33,693 pid=11363 _yaml_files:289   INFO     opening './data/john-smith/original/16/970804.497'
+2015-05-25 00:42:33,694 pid=11363 _yaml_files:333   INFO     created StreamItem(num ratings=1, abs_url='https://raw.githubusercontent.com/trec-kba/streamcorpus-pipeline/master/data/john-smith/original/16/970804.497'
+2015-05-25 00:42:33,743 pid=11363 _yaml_files:289   INFO     opening './data/john-smith/original/30/960802.2'
+2015-05-25 00:42:33,743 pid=11363 _yaml_files:333   INFO     created StreamItem(num ratings=1, abs_url='https://raw.githubusercontent.com/trec-kba/streamcorpus-pipeline/master/data/john-smith/original/30/960802.2'
+2015-05-25 00:42:33,783 pid=11363 _yaml_files:289   INFO     opening './data/john-smith/original/16/970523.338'
+2015-05-25 00:42:33,783 pid=11363 _yaml_files:333   INFO     created StreamItem(num ratings=1, abs_url='https://raw.githubusercontent.com/trec-kba/streamcorpus-pipeline/master/data/john-smith/original/16/970523.338'
+2015-05-25 00:42:33,822 pid=11363 _yaml_files:289   INFO     opening './data/john-smith/original/28/970501.453'
+2015-05-25 00:42:33,823 pid=11363 _yaml_files:333   INFO     created StreamItem(num ratings=1, abs_url='https://raw.githubusercontent.com/trec-kba/streamcorpus-pipeline/master/data/john-smith/original/28/970501.453'
+2015-05-25 00:42:33,872 pid=11363 _yaml_files:289   INFO     opening './data/john-smith/original/16/970109.669'
+2015-05-25 00:42:33,872 pid=11363 _yaml_files:333   INFO     created StreamItem(num ratings=1, abs_url='https://raw.githubusercontent.com/trec-kba/streamcorpus-pipeline/master/data/john-smith/original/16/970109.669'
+2015-05-25 00:42:33,928 pid=11363 _yaml_files:289   INFO     opening './data/john-smith/original/0/960228.375'
+2015-05-25 00:42:33,929 pid=11363 _yaml_files:333   INFO     created StreamItem(num ratings=1, abs_url='https://raw.githubusercontent.com/trec-kba/streamcorpus-pipeline/master/data/john-smith/original/0/960228.375'
+2015-05-25 00:42:33,969 pid=11363 _yaml_files:289   INFO     opening './data/john-smith/original/24/970519.188'
+2015-05-25 00:42:33,969 pid=11363 _yaml_files:333   INFO     created StreamItem(num ratings=1, abs_url='https://raw.githubusercontent.com/trec-kba/streamcorpus-pipeline/master/data/john-smith/original/24/970519.188'
+2015-05-25 00:42:34,114 pid=11363 _yaml_files:289   INFO     opening './data/john-smith/original/16/970414.241'
+2015-05-25 00:42:34,114 pid=11363 _yaml_files:333   INFO     created StreamItem(num ratings=1, abs_url='https://raw.githubusercontent.com/trec-kba/streamcorpus-pipeline/master/data/john-smith/original/16/970414.241'
+2015-05-25 00:42:34,161 pid=11363 _yaml_files:289   INFO     opening './data/john-smith/original/12/960810.116'
+2015-05-25 00:42:34,161 pid=11363 _yaml_files:333   INFO     created StreamItem(num ratings=1, abs_url='https://raw.githubusercontent.com/trec-kba/streamcorpus-pipeline/master/data/john-smith/original/12/960810.116'
+2015-05-25 00:42:34,222 pid=11363 _yaml_files:289   INFO     opening './data/john-smith/original/7/971001.979'
+2015-05-25 00:42:34,222 pid=11363 _yaml_files:333   INFO     created StreamItem(num ratings=1, abs_url='https://raw.githubusercontent.com/trec-kba/streamcorpus-pipeline/master/data/john-smith/original/7/971001.979'
+2015-05-25 00:42:34,277 pid=11363 _yaml_files:289   INFO     opening './data/john-smith/original/22/960328.241'
+2015-05-25 00:42:34,277 pid=11363 _yaml_files:333   INFO     created StreamItem(num ratings=1, abs_url='https://raw.githubusercontent.com/trec-kba/streamcorpus-pipeline/master/data/john-smith/original/22/960328.241'
+2015-05-25 00:42:34,322 pid=11363 _yaml_files:289   INFO     opening './data/john-smith/original/10/970416.398'
+2015-05-25 00:42:34,322 pid=11363 _yaml_files:333   INFO     created StreamItem(num ratings=1, abs_url='https://raw.githubusercontent.com/trec-kba/streamcorpus-pipeline/master/data/john-smith/original/10/970416.398'
+2015-05-25 00:42:34,372 pid=11363 _yaml_files:289   INFO     opening './data/john-smith/original/16/970530.167'
+2015-05-25 00:42:34,373 pid=11363 _yaml_files:333   INFO     created StreamItem(num ratings=1, abs_url='https://raw.githubusercontent.com/trec-kba/streamcorpus-pipeline/master/data/john-smith/original/16/970530.167'
+2015-05-25 00:42:34,416 pid=11363 _yaml_files:289   INFO     opening './data/john-smith/original/16/970804.144'
+2015-05-25 00:42:34,416 pid=11363 _yaml_files:333   INFO     created StreamItem(num ratings=1, abs_url='https://raw.githubusercontent.com/trec-kba/streamcorpus-pipeline/master/data/john-smith/original/16/970804.144'
+2015-05-25 00:42:34,435 pid=11363 _yaml_files:289   INFO     opening './data/john-smith/original/30/970803.131'
+2015-05-25 00:42:34,436 pid=11363 _yaml_files:333   INFO     created StreamItem(num ratings=1, abs_url='https://raw.githubusercontent.com/trec-kba/streamcorpus-pipeline/master/data/john-smith/original/30/970803.131'
+2015-05-25 00:42:34,518 pid=11363 _yaml_files:289   INFO     opening './data/john-smith/original/16/971018.154'
+2015-05-25 00:42:34,518 pid=11363 _yaml_files:333   INFO     created StreamItem(num ratings=1, abs_url='https://raw.githubusercontent.com/trec-kba/streamcorpus-pipeline/master/data/john-smith/original/16/971018.154'
+2015-05-25 00:42:34,564 pid=11363 _yaml_files:289   INFO     opening './data/john-smith/original/24/970520.117'
+2015-05-25 00:42:34,564 pid=11363 _yaml_files:333   INFO     created StreamItem(num ratings=1, abs_url='https://raw.githubusercontent.com/trec-kba/streamcorpus-pipeline/master/data/john-smith/original/24/970520.117'
+2015-05-25 00:42:34,662 pid=11363 _yaml_files:289   INFO     opening './data/john-smith/original/24/970520.114'
+2015-05-25 00:42:34,663 pid=11363 _yaml_files:333   INFO     created StreamItem(num ratings=1, abs_url='https://raw.githubusercontent.com/trec-kba/streamcorpus-pipeline/master/data/john-smith/original/24/970520.114'
+2015-05-25 00:42:34,760 pid=11363 _yaml_files:289   INFO     opening './data/john-smith/original/16/970114.515'
+2015-05-25 00:42:34,760 pid=11363 _yaml_files:333   INFO     created StreamItem(num ratings=1, abs_url='https://raw.githubusercontent.com/trec-kba/streamcorpus-pipeline/master/data/john-smith/original/16/970114.515'
+2015-05-25 00:42:34,807 pid=11363 _yaml_files:289   INFO     opening './data/john-smith/original/1/960701.288'
+2015-05-25 00:42:34,808 pid=11363 _yaml_files:333   INFO     created StreamItem(num ratings=1, abs_url='https://raw.githubusercontent.com/trec-kba/streamcorpus-pipeline/master/data/john-smith/original/1/960701.288'
+2015-05-25 00:42:34,861 pid=11363 _yaml_files:289   INFO     opening './data/john-smith/original/30/970809.30'
+2015-05-25 00:42:34,861 pid=11363 _yaml_files:333   INFO     created StreamItem(num ratings=1, abs_url='https://raw.githubusercontent.com/trec-kba/streamcorpus-pipeline/master/data/john-smith/original/30/970809.30'
+2015-05-25 00:42:34,917 pid=11363 _yaml_files:289   INFO     opening './data/john-smith/original/28/970501.623'
+2015-05-25 00:42:34,917 pid=11363 _yaml_files:333   INFO     created StreamItem(num ratings=1, abs_url='https://raw.githubusercontent.com/trec-kba/streamcorpus-pipeline/master/data/john-smith/original/28/970501.623'
+2015-05-25 00:42:34,985 pid=11363 _yaml_files:289   INFO     opening './data/john-smith/original/16/970218.1640'
+2015-05-25 00:42:34,986 pid=11363 _yaml_files:333   INFO     created StreamItem(num ratings=1, abs_url='https://raw.githubusercontent.com/trec-kba/streamcorpus-pipeline/master/data/john-smith/original/16/970218.1640'
+2015-05-25 00:42:35,026 pid=11363 _yaml_files:289   INFO     opening './data/john-smith/original/4/970708.827'
+2015-05-25 00:42:35,026 pid=11363 _yaml_files:333   INFO     created StreamItem(num ratings=1, abs_url='https://raw.githubusercontent.com/trec-kba/streamcorpus-pipeline/master/data/john-smith/original/4/970708.827'
+2015-05-25 00:42:35,056 pid=11363 _yaml_files:289   INFO     opening './data/john-smith/original/16/971104.255'
+2015-05-25 00:42:35,056 pid=11363 _yaml_files:333   INFO     created StreamItem(num ratings=1, abs_url='https://raw.githubusercontent.com/trec-kba/streamcorpus-pipeline/master/data/john-smith/original/16/971104.255'
+2015-05-25 00:42:35,137 pid=11363 _yaml_files:289   INFO     opening './data/john-smith/original/16/971001.822'
+2015-05-25 00:42:35,137 pid=11363 _yaml_files:333   INFO     created StreamItem(num ratings=1, abs_url='https://raw.githubusercontent.com/trec-kba/streamcorpus-pipeline/master/data/john-smith/original/16/971001.822'
+2015-05-25 00:42:35,178 pid=11363 _yaml_files:289   INFO     opening './data/john-smith/original/16/970630.489'
+2015-05-25 00:42:35,178 pid=11363 _yaml_files:333   INFO     created StreamItem(num ratings=1, abs_url='https://raw.githubusercontent.com/trec-kba/streamcorpus-pipeline/master/data/john-smith/original/16/970630.489'
+2015-05-25 00:42:35,212 pid=11363 _yaml_files:289   INFO     opening './data/john-smith/original/16/960409.394'
+2015-05-25 00:42:35,212 pid=11363 _yaml_files:333   INFO     created StreamItem(num ratings=1, abs_url='https://raw.githubusercontent.com/trec-kba/streamcorpus-pipeline/master/data/john-smith/original/16/960409.394'
+2015-05-25 00:42:35,235 pid=11363 _yaml_files:289   INFO     opening './data/john-smith/original/16/970108.585'
+2015-05-25 00:42:35,235 pid=11363 _yaml_files:333   INFO     created StreamItem(num ratings=1, abs_url='https://raw.githubusercontent.com/trec-kba/streamcorpus-pipeline/master/data/john-smith/original/16/970108.585'
+2015-05-25 00:42:35,283 pid=11363 _yaml_files:289   INFO     opening './data/john-smith/original/1/970630.222'
+2015-05-25 00:42:35,284 pid=11363 _yaml_files:333   INFO     created StreamItem(num ratings=1, abs_url='https://raw.githubusercontent.com/trec-kba/streamcorpus-pipeline/master/data/john-smith/original/1/970630.222'
+2015-05-25 00:42:35,327 pid=11363 _yaml_files:289   INFO     opening './data/john-smith/original/16/961016.293'
+2015-05-25 00:42:35,327 pid=11363 _yaml_files:333   INFO     created StreamItem(num ratings=1, abs_url='https://raw.githubusercontent.com/trec-kba/streamcorpus-pipeline/master/data/john-smith/original/16/961016.293'
+2015-05-25 00:42:35,403 pid=11363 _yaml_files:289   INFO     opening './data/john-smith/original/16/970804.215'
+2015-05-25 00:42:35,403 pid=11363 _yaml_files:333   INFO     created StreamItem(num ratings=1, abs_url='https://raw.githubusercontent.com/trec-kba/streamcorpus-pipeline/master/data/john-smith/original/16/970804.215'
+2015-05-25 00:42:35,492 pid=11363 _pipeline.p:675   INFO     running batch transforms on 197 StreamItems
+2015-05-25 00:42:38,677 pid=11363 offsets.py:525    INFO     stream item 1432397875-3d22ac28d9c15e3c05cb89d47dc34965: 676/676 tokens with valid xpaths
+2015-05-25 00:42:39,415 pid=11363 offsets.py:525    INFO     stream item 1432397875-f32002e66c4b7d41a3dca41c7671c2a9: 1176/1176 tokens with valid xpaths
+2015-05-25 00:42:39,728 pid=11363 offsets.py:525    INFO     stream item 1432397875-035640312640d73dc7ed10e7ac5df0da: 667/667 tokens with valid xpaths
+2015-05-25 00:42:39,820 pid=11363 offsets.py:525    INFO     stream item 1432397875-59e0b2203e923f99b567aa57ece21aa3: 262/262 tokens with valid xpaths
+2015-05-25 00:42:40,178 pid=11363 offsets.py:525    INFO     stream item 1432397875-fe09f1a552df77a341d6997437a58d82: 740/740 tokens with valid xpaths
+2015-05-25 00:42:40,451 pid=11363 offsets.py:525    INFO     stream item 1432397875-78eeec714cdf3c5d37ec14b55588283a: 719/719 tokens with valid xpaths
+2015-05-25 00:42:40,610 pid=11363 offsets.py:525    INFO     stream item 1432397875-a3fb836b3d6124c27c78b943e146c25b: 639/639 tokens with valid xpaths
+2015-05-25 00:42:41,663 pid=11363 offsets.py:525    INFO     stream item 1432397875-61127b210e5d2e79f7a0f2b2014cb5fe: 2175/2175 tokens with valid xpaths
+2015-05-25 00:42:42,039 pid=11363 offsets.py:525    INFO     stream item 1432397875-76784cfc2708f51bbbe15600fd634b63: 1147/1147 tokens with valid xpaths
+2015-05-25 00:42:42,334 pid=11363 offsets.py:525    INFO     stream item 1432397875-b876d059e50fe48c106d7270513fef59: 992/992 tokens with valid xpaths
+2015-05-25 00:42:42,598 pid=11363 offsets.py:525    INFO     stream item 1432397875-9e5edb9f30ae5d79b69c8a28966722f5: 915/915 tokens with valid xpaths
+2015-05-25 00:42:42,910 pid=11363 offsets.py:525    INFO     stream item 1432397875-f1453197e62ebcb017e907811a26293e: 1032/1032 tokens with valid xpaths
+2015-05-25 00:42:43,384 pid=11363 offsets.py:525    INFO     stream item 1432397875-9e98e032a2342705e6cf526ec167ac34: 1346/1346 tokens with valid xpaths
+2015-05-25 00:42:43,868 pid=11363 offsets.py:525    INFO     stream item 1432397875-572dac4d8388e792265ddbad77012a84: 1354/1354 tokens with valid xpaths
+2015-05-25 00:42:44,128 pid=11363 offsets.py:525    INFO     stream item 1432397875-745c647f1a2cf0d3fe7369caaa24f1a3: 906/906 tokens with valid xpaths
+2015-05-25 00:42:44,436 pid=11363 offsets.py:525    INFO     stream item 1432397875-19f3cfe250f553cef5b33ae545d8e328: 1017/1017 tokens with valid xpaths
+2015-05-25 00:42:44,564 pid=11363 offsets.py:525    INFO     stream item 1432397875-ebf6c42dde3e4b9e3f02937b4fe77e12: 548/548 tokens with valid xpaths
+2015-05-25 00:42:45,193 pid=11363 offsets.py:525    INFO     stream item 1432397875-cffd7c06efc8e7794e1a5ee105c09ce6: 1614/1614 tokens with valid xpaths
+2015-05-25 00:42:45,617 pid=11363 offsets.py:525    INFO     stream item 1432397875-82f3f6ca22251bddb149c9e027b5ee90: 1130/1130 tokens with valid xpaths
+2015-05-25 00:42:45,682 pid=11363 offsets.py:525    INFO     stream item 1432397875-4ecc067f16bbc459f151902e9ddcc487: 320/320 tokens with valid xpaths
+2015-05-25 00:42:45,800 pid=11363 offsets.py:525    INFO     stream item 1432397875-fa7b43add00258ff4e6185fd087347bb: 522/522 tokens with valid xpaths
+2015-05-25 00:42:46,077 pid=11363 offsets.py:525    INFO     stream item 1432397875-8c5eadbd8f9118a2f7c4c1b94262366b: 947/947 tokens with valid xpaths
+2015-05-25 00:42:46,716 pid=11363 offsets.py:525    INFO     stream item 1432397875-1e047dd3e3ea7a42b44bcb7ae22f09fe: 1614/1614 tokens with valid xpaths
+2015-05-25 00:42:46,990 pid=11363 offsets.py:525    INFO     stream item 1432397875-89c71d6522b4fc374c3640f8203065f2: 932/932 tokens with valid xpaths
+2015-05-25 00:42:47,215 pid=11363 offsets.py:525    INFO     stream item 1432397875-5d69e96bc819e499da37361271f50bfc: 828/828 tokens with valid xpaths
+2015-05-25 00:42:47,334 pid=11363 offsets.py:525    INFO     stream item 1432397875-56b1be2ce3eb911e32bffe3b60cca8f0: 522/522 tokens with valid xpaths
+2015-05-25 00:42:47,588 pid=11363 offsets.py:525    INFO     stream item 1432397875-910b6dac7a18317dd2d92aac09ee13a1: 901/901 tokens with valid xpaths
+2015-05-25 00:42:47,690 pid=11363 offsets.py:525    INFO     stream item 1432397875-a9a6e35208d7bb4e2347ca612d07d11f: 454/454 tokens with valid xpaths
+2015-05-25 00:42:47,745 pid=11363 offsets.py:525    INFO     stream item 1432397875-767fe24c242ab9fea677b7f88ca69d0d: 279/279 tokens with valid xpaths
+2015-05-25 00:42:47,933 pid=11363 offsets.py:525    INFO     stream item 1432397875-e2baece2d50684bdd4ccb00b2267becd: 729/729 tokens with valid xpaths
+2015-05-25 00:42:48,567 pid=11363 offsets.py:525    INFO     stream item 1432397875-4b3eebc9235268e335aa9ff94a2c5ae9: 1614/1614 tokens with valid xpaths
+2015-05-25 00:42:48,854 pid=11363 offsets.py:525    INFO     stream item 1432397875-74ca830b5f22dc7cdbd860cbba82109e: 956/956 tokens with valid xpaths
+2015-05-25 00:42:49,164 pid=11363 offsets.py:525    INFO     stream item 1432397875-0e79414a3826ab2f8cad186fccbd9ca6: 1014/1014 tokens with valid xpaths
+2015-05-25 00:42:49,257 pid=11363 offsets.py:525    INFO     stream item 1432397875-7bdd12db8646f461cc458c26a05a1893: 425/425 tokens with valid xpaths
+2015-05-25 00:42:49,350 pid=11363 offsets.py:525    INFO     stream item 1432397875-c0fb9506c15c2bd0cbd22d91181fcce9: 435/435 tokens with valid xpaths
+2015-05-25 00:42:49,503 pid=11363 offsets.py:525    INFO     stream item 1432397875-fc28f2a0cf7215c252bf9456e4764bba: 625/625 tokens with valid xpaths
+2015-05-25 00:42:49,781 pid=11363 offsets.py:525    INFO     stream item 1432397875-a598a11209e30209a9f836bed119cad5: 942/942 tokens with valid xpaths
+2015-05-25 00:42:50,003 pid=11363 offsets.py:525    INFO     stream item 1432397875-64e46cd193a85b1783790fbf85ea4687: 809/809 tokens with valid xpaths
+2015-05-25 00:42:50,147 pid=11363 offsets.py:525    INFO     stream item 1432397875-390eec944fdbce595ed4e7c810d235f7: 600/600 tokens with valid xpaths
+2015-05-25 00:42:50,243 pid=11363 offsets.py:525    INFO     stream item 1432397875-38b481af21bf00fcb8ac46d58319457a: 441/441 tokens with valid xpaths
+2015-05-25 00:42:50,401 pid=11363 offsets.py:525    INFO     stream item 1432397875-be49700d1dfae9882427fd34c094d1cc: 642/642 tokens with valid xpaths
+2015-05-25 00:42:50,640 pid=11363 offsets.py:525    INFO     stream item 1432397875-c6a78ae951b9e8a7e66941e79da87170: 854/854 tokens with valid xpaths
+2015-05-25 00:42:50,737 pid=11363 offsets.py:525    INFO     stream item 1432397875-071398e14654c81de52c4fc6ff4b575d: 441/441 tokens with valid xpaths
+2015-05-25 00:42:51,084 pid=11363 offsets.py:525    INFO     stream item 1432397875-07636c27a3d885c1cb95058270a28413: 1093/1093 tokens with valid xpaths
+2015-05-25 00:42:51,214 pid=11363 offsets.py:525    INFO     stream item 1432397875-b47d70fd84b447bfa01689ca4a11fc1f: 551/551 tokens with valid xpaths
+2015-05-25 00:42:51,362 pid=11363 offsets.py:525    INFO     stream item 1432397875-b8ad1e9b79f1dec3e77b0cb222b11b13: 607/607 tokens with valid xpaths
+2015-05-25 00:42:51,560 pid=11363 offsets.py:525    INFO     stream item 1432397875-75e76306e97f6c136e6b611da6b56313: 752/752 tokens with valid xpaths
+2015-05-25 00:42:51,654 pid=11363 offsets.py:525    INFO     stream item 1432397875-9858a4d52953b6b98a3b8507a58d891e: 421/421 tokens with valid xpaths
+2015-05-25 00:42:51,982 pid=11363 offsets.py:525    INFO     stream item 1432397875-13582ed6d2bc74d3cf56165ffaf97e27: 931/931 tokens with valid xpaths
+2015-05-25 00:42:52,168 pid=11363 offsets.py:525    INFO     stream item 1432397875-7bcaff797a2134f900601b8894186a94: 722/722 tokens with valid xpaths
+2015-05-25 00:42:52,363 pid=11363 offsets.py:525    INFO     stream item 1432397875-fbfa87d21f1b9d7cd85d30e7f8fa7c4c: 742/742 tokens with valid xpaths
+2015-05-25 00:42:52,744 pid=11363 offsets.py:525    INFO     stream item 1432397875-9f429daec2790a240a8525b9f6217b13: 1161/1161 tokens with valid xpaths
+2015-05-25 00:42:52,841 pid=11363 offsets.py:525    INFO     stream item 1432397875-bda1bad223b8115bc605b5d53bfb1305: 440/440 tokens with valid xpaths
+2015-05-25 00:42:54,113 pid=11363 offsets.py:525    INFO     stream item 1432397875-f19f7d17200a821b7392580b9176cf26: 2422/2422 tokens with valid xpaths
+2015-05-25 00:42:54,605 pid=11363 offsets.py:525    INFO     stream item 1432397875-79ce15dd62072f3b6db739239d2928d9: 1364/1364 tokens with valid xpaths
+2015-05-25 00:42:54,832 pid=11363 offsets.py:525    INFO     stream item 1432397875-81e1f0ae629146b878d55c642fa5fea2: 819/819 tokens with valid xpaths
+2015-05-25 00:42:55,020 pid=11363 offsets.py:525    INFO     stream item 1432397875-5705455d3f19f79f3fe732809a9f4787: 725/725 tokens with valid xpaths
+2015-05-25 00:42:55,163 pid=11363 offsets.py:525    INFO     stream item 1432397875-666f4cc267f9d53e1c3e4267e012a5fa: 598/598 tokens with valid xpaths
+2015-05-25 00:42:55,327 pid=11363 offsets.py:525    INFO     stream item 1432397875-c9b1bef8084a021cca9f59bcb46e35ed: 661/661 tokens with valid xpaths
+2015-05-25 00:42:55,502 pid=11363 offsets.py:525    INFO     stream item 1432397875-cad24822304967ba4f5906819ced9cea: 692/692 tokens with valid xpaths
+2015-05-25 00:42:55,650 pid=11363 offsets.py:525    INFO     stream item 1432397875-361c032abca483ebe7d360f7e04ff04d: 609/609 tokens with valid xpaths
+2015-05-25 00:42:55,823 pid=11363 offsets.py:525    INFO     stream item 1432397875-66bed69534706a55925c39dd952df469: 679/679 tokens with valid xpaths
+2015-05-25 00:42:55,915 pid=11363 offsets.py:525    INFO     stream item 1432397875-44b4c32543cf04d207745239327717bd: 419/419 tokens with valid xpaths
+2015-05-25 00:42:56,283 pid=11363 offsets.py:525    INFO     stream item 1432397875-15d498e03579bbbed51cb5e8745099b1: 1140/1140 tokens with valid xpaths
+2015-05-25 00:42:56,639 pid=11363 offsets.py:525    INFO     stream item 1432397875-fbd92a89f6844ebc2f8b1d5baf4b20d0: 1111/1111 tokens with valid xpaths
+2015-05-25 00:42:56,831 pid=11363 offsets.py:525    INFO     stream item 1432397875-f1561128e9873f0602bc822d4d4a23cd: 728/728 tokens with valid xpaths
+2015-05-25 00:42:57,146 pid=11363 offsets.py:525    INFO     stream item 1432397875-c599a5cb5065fcb51facadc13bc3d75b: 1026/1026 tokens with valid xpaths
+2015-05-25 00:42:57,282 pid=11363 offsets.py:525    INFO     stream item 1432397875-2a9867311620ef2964fe089206d46444: 574/574 tokens with valid xpaths
+2015-05-25 00:42:57,460 pid=11363 offsets.py:525    INFO     stream item 1432397875-2b4e3a51af8512177334a20632167908: 696/696 tokens with valid xpaths
+2015-05-25 00:42:57,808 pid=11363 offsets.py:525    INFO     stream item 1432397875-8242eec3ffd867ef119d8e6665a6412a: 1092/1092 tokens with valid xpaths
+2015-05-25 00:42:57,920 pid=11363 offsets.py:525    INFO     stream item 1432397875-98f1b80c9f0c8fcb8934cfe7e21507d5: 491/491 tokens with valid xpaths
+2015-05-25 00:42:58,125 pid=11363 offsets.py:525    INFO     stream item 1432397875-338057f2155a5479a5d22e651934d724: 637/637 tokens with valid xpaths
+2015-05-25 00:42:58,291 pid=11363 offsets.py:525    INFO     stream item 1432397875-c809516427248fbdbe178bb3eb0a2484: 668/668 tokens with valid xpaths
+2015-05-25 00:42:58,699 pid=11363 offsets.py:525    INFO     stream item 1432397875-ec16000c215346ecd1244b2ef5bf41e1: 1217/1217 tokens with valid xpaths
+2015-05-25 00:42:59,120 pid=11363 offsets.py:525    INFO     stream item 1432397875-370053da93229cb199b46c121cfb9396: 1250/1250 tokens with valid xpaths
+2015-05-25 00:42:59,554 pid=11363 offsets.py:525    INFO     stream item 1432397875-fa056e572c2dcd8a78608ea02f3fe170: 1263/1263 tokens with valid xpaths
+2015-05-25 00:42:59,715 pid=11363 offsets.py:525    INFO     stream item 1432397875-8e6b1278dda26d6f6ee812b97be96bbb: 643/643 tokens with valid xpaths
+2015-05-25 00:42:59,901 pid=11363 offsets.py:525    INFO     stream item 1432397875-6cf5a65bff8d5369e7969682440b588c: 722/722 tokens with valid xpaths
+2015-05-25 00:43:00,001 pid=11363 offsets.py:525    INFO     stream item 1432397875-42df296a50ab3303d6e68f468728224f: 455/455 tokens with valid xpaths
+2015-05-25 00:43:01,068 pid=11363 offsets.py:525    INFO     stream item 1432397875-fde2e99787db6d5f5322fae25f28dc35: 2200/2200 tokens with valid xpaths
+2015-05-25 00:43:01,260 pid=11363 offsets.py:525    INFO     stream item 1432397875-1ae0a87081a506fdc0bf2842e576b1d8: 722/722 tokens with valid xpaths
+2015-05-25 00:43:01,417 pid=11363 offsets.py:525    INFO     stream item 1432397875-5c457458ac09e5dd4b93421a724b4eec: 636/636 tokens with valid xpaths
+2015-05-25 00:43:01,444 pid=11363 offsets.py:525    INFO     stream item 1432397875-e202a9df993dc69c6d794b76066cbd11: 143/143 tokens with valid xpaths
+2015-05-25 00:43:01,715 pid=11363 offsets.py:525    INFO     stream item 1432397875-4ac690693df8816d88c2038bca185e41: 937/937 tokens with valid xpaths
+2015-05-25 00:43:01,954 pid=11363 offsets.py:525    INFO     stream item 1432397875-80355250113cd49eecc0e5653c710eea: 862/862 tokens with valid xpaths
+2015-05-25 00:43:02,090 pid=11363 offsets.py:525    INFO     stream item 1432397875-c3463088b480841047cc20a27fc2dbf6: 574/574 tokens with valid xpaths
+2015-05-25 00:43:02,326 pid=11363 offsets.py:525    INFO     stream item 1432397875-81f973e9384e14fec7d0134f03e6d8d8: 854/854 tokens with valid xpaths
+2015-05-25 00:43:02,470 pid=11363 offsets.py:525    INFO     stream item 1432397875-60de3c9a6d51aabc37c6f2f348b93830: 600/600 tokens with valid xpaths
+2015-05-25 00:43:02,699 pid=11363 offsets.py:525    INFO     stream item 1432397875-0b1d5d4dd17f8c1df8ba4107568e5936: 833/833 tokens with valid xpaths
+2015-05-25 00:43:03,119 pid=11363 offsets.py:525    INFO     stream item 1432397875-d80f6c037f57c765920d8ee691687e5f: 1244/1244 tokens with valid xpaths
+2015-05-25 00:43:03,308 pid=11363 offsets.py:525    INFO     stream item 1432397875-cc05ae946fafb860480f8e81fe9033ea: 719/719 tokens with valid xpaths
+2015-05-25 00:43:03,439 pid=11363 offsets.py:525    INFO     stream item 1432397875-e570476f24f84e82770117e52b631d44: 561/561 tokens with valid xpaths
+2015-05-25 00:43:03,847 pid=11363 offsets.py:525    INFO     stream item 1432397875-ecb6f0183d921b98245da10e7bbcf5ce: 1221/1221 tokens with valid xpaths
+2015-05-25 00:43:04,034 pid=11363 offsets.py:525    INFO     stream item 1432397875-bd468137ec0b01903be36e3942826786: 722/722 tokens with valid xpaths
+2015-05-25 00:43:04,084 pid=11363 offsets.py:525    INFO     stream item 1432397875-66e2eebebf43d32aecc9754df9c33e03: 238/238 tokens with valid xpaths
+2015-05-25 00:43:04,763 pid=11363 offsets.py:525    INFO     stream item 1432397875-85d738bb1d1f8bbd8874f50dc0084137: 1614/1614 tokens with valid xpaths
+2015-05-25 00:43:04,880 pid=11363 offsets.py:525    INFO     stream item 1432397875-890ebd132c1a2eca4bd5bc67e41b4a54: 507/507 tokens with valid xpaths
+2015-05-25 00:43:04,942 pid=11363 offsets.py:525    INFO     stream item 1432397875-f59ec582663b6e2403ae6b65bf5c99cf: 314/314 tokens with valid xpaths
+2015-05-25 00:43:05,065 pid=11363 offsets.py:525    INFO     stream item 1432397875-b9ca848b927347eab56b5a802c20e707: 543/543 tokens with valid xpaths
+2015-05-25 00:43:05,226 pid=11363 offsets.py:525    INFO     stream item 1432397875-944548e3ee4b2e73c931c32c082ee29a: 647/647 tokens with valid xpaths
+2015-05-25 00:43:05,675 pid=11363 offsets.py:525    INFO     stream item 1432397875-7e4f408ae0178c9c3b6f425d8181e759: 1298/1298 tokens with valid xpaths
+2015-05-25 00:43:05,997 pid=11363 offsets.py:525    INFO     stream item 1432397875-c173b4100e9fed89314a9f3c17dd7594: 1041/1041 tokens with valid xpaths
+2015-05-25 00:43:06,630 pid=11363 offsets.py:525    INFO     stream item 1432397875-429ab6d374729634d075af37e5b46009: 1614/1614 tokens with valid xpaths
+2015-05-25 00:43:07,333 pid=11363 offsets.py:525    INFO     stream item 1432397875-9d443b45027b56bfd0e4c7d13b29ed2e: 1711/1711 tokens with valid xpaths
+2015-05-25 00:43:07,511 pid=11363 offsets.py:525    INFO     stream item 1432397875-3640c5df6afb470cf181a531d5e1aad8: 683/683 tokens with valid xpaths
+2015-05-25 00:43:07,676 pid=11363 offsets.py:525    INFO     stream item 1432397875-5ce915726facc73d2daecbebec1b8d70: 668/668 tokens with valid xpaths
+2015-05-25 00:43:07,879 pid=11363 offsets.py:525    INFO     stream item 1432397875-eb9860a509ef61d716b171d3d629fa50: 766/766 tokens with valid xpaths
+2015-05-25 00:43:08,513 pid=11363 offsets.py:525    INFO     stream item 1432397875-aec3e5915c24aa1d2c24feaad3b009ed: 1614/1614 tokens with valid xpaths
+2015-05-25 00:43:08,562 pid=11363 offsets.py:525    INFO     stream item 1432397875-d2de0d1b58975002e2193753bc6ba5e0: 241/241 tokens with valid xpaths
+2015-05-25 00:43:08,720 pid=11363 offsets.py:525    INFO     stream item 1432397875-ffbb9fd28164ab5371f4c0e33e738dc3: 636/636 tokens with valid xpaths
+2015-05-25 00:43:08,901 pid=11363 offsets.py:525    INFO     stream item 1432397875-dd325204c37a91bd6971eb4a014797e2: 712/712 tokens with valid xpaths
+2015-05-25 00:43:09,069 pid=11363 offsets.py:525    INFO     stream item 1432397875-1efce596c35b598a4c0d374920a1d07e: 669/669 tokens with valid xpaths
+2015-05-25 00:43:09,318 pid=11363 offsets.py:525    INFO     stream item 1432397875-771b1bba9be9eb966a124594a9f1345d: 878/878 tokens with valid xpaths
+2015-05-25 00:43:09,456 pid=11363 offsets.py:525    INFO     stream item 1432397875-2e044e3c0dacd70e8a03849fb5b56668: 577/577 tokens with valid xpaths
+2015-05-25 00:43:09,744 pid=11363 offsets.py:525    INFO     stream item 1432397875-cc28ceabc6eaf1c57919df78d28f2524: 972/972 tokens with valid xpaths
+2015-05-25 00:43:10,632 pid=11363 offsets.py:525    INFO     stream item 1432397875-24429ed4df565e27fe81d0d3f94be74b: 1975/1975 tokens with valid xpaths
+2015-05-25 00:43:10,858 pid=11363 offsets.py:525    INFO     stream item 1432397875-f4ef3780819f56aaaff3dd20d27b2279: 669/669 tokens with valid xpaths
+2015-05-25 00:43:11,143 pid=11363 offsets.py:525    INFO     stream item 1432397875-a101752aa91452eea3f7f1edc6c15e51: 968/968 tokens with valid xpaths
+2015-05-25 00:43:11,378 pid=11363 offsets.py:525    INFO     stream item 1432397875-0e934e56c0d809b5df4070c28bb081b1: 845/845 tokens with valid xpaths
+2015-05-25 00:43:11,874 pid=11363 offsets.py:525    INFO     stream item 1432397875-53af3e0ef4bf71ced1f14d469a0dedb7: 1382/1382 tokens with valid xpaths
+2015-05-25 00:43:12,172 pid=11363 offsets.py:525    INFO     stream item 1432397875-17ffeb304e957f4512d524e4fb49d667: 984/984 tokens with valid xpaths
+2015-05-25 00:43:12,343 pid=11363 offsets.py:525    INFO     stream item 1432397875-eaa66dcd3c7005e540f0b44ccb679202: 678/678 tokens with valid xpaths
+2015-05-25 00:43:12,567 pid=11363 offsets.py:525    INFO     stream item 1432397875-29f165a1d50fb2acd79809bbf72349b9: 825/825 tokens with valid xpaths
+2015-05-25 00:43:12,799 pid=11363 offsets.py:525    INFO     stream item 1432397875-117cd751267b1b21b83efa421884a642: 841/841 tokens with valid xpaths
+2015-05-25 00:43:13,195 pid=11363 offsets.py:525    INFO     stream item 1432397875-d2b18f4a3ee03ec428bec0a63c217c7e: 1202/1202 tokens with valid xpaths
+2015-05-25 00:43:13,254 pid=11363 offsets.py:525    INFO     stream item 1432397875-08a52ba33412dac8fe2b4cd7ba43372f: 292/292 tokens with valid xpaths
+2015-05-25 00:43:13,272 pid=11363 offsets.py:525    INFO     stream item 1432397875-53a3d108183df17b1e3fee94fc18ac33: 108/108 tokens with valid xpaths
+2015-05-25 00:43:13,481 pid=11363 offsets.py:525    INFO     stream item 1432397875-e71504d4210fae3976b9d2c667a3e9fd: 785/785 tokens with valid xpaths
+2015-05-25 00:43:13,691 pid=11363 offsets.py:525    INFO     stream item 1432397875-e94701ddf9d4bf60e8716d6598288ccf: 789/789 tokens with valid xpaths
+2015-05-25 00:43:13,716 pid=11363 offsets.py:525    INFO     stream item 1432397875-6f2fa97e49fc8f645a40a6d86944df3d: 138/138 tokens with valid xpaths
+2015-05-25 00:43:14,101 pid=11363 offsets.py:525    INFO     stream item 1432397875-ecb29e5c90e4560db2d0c62f7a49339f: 1176/1176 tokens with valid xpaths
+2015-05-25 00:43:14,185 pid=11363 offsets.py:525    INFO     stream item 1432397875-32e7f2fc020bcf8c9df400a1a8b75eb1: 388/388 tokens with valid xpaths
+2015-05-25 00:43:14,263 pid=11363 offsets.py:525    INFO     stream item 1432397875-af2616f7c4f5a0f0db90d4155662e44d: 382/382 tokens with valid xpaths
+2015-05-25 00:43:14,479 pid=11363 offsets.py:525    INFO     stream item 1432397875-2bd4bd0b1c67db2c363e40d042f0a471: 807/807 tokens with valid xpaths
+2015-05-25 00:43:14,698 pid=11363 offsets.py:525    INFO     stream item 1432397875-92d0097e0bbff21768bb83139d7adf91: 813/813 tokens with valid xpaths
+2015-05-25 00:43:15,018 pid=11363 offsets.py:525    INFO     stream item 1432397875-06fb230f4b42ea2b98cb92137ee80a8c: 1033/1033 tokens with valid xpaths
+2015-05-25 00:43:15,373 pid=11363 offsets.py:525    INFO     stream item 1432397875-fbe0b0c99bb8ffef885aecf0d3abd2e1: 1107/1107 tokens with valid xpaths
+2015-05-25 00:43:15,614 pid=11363 offsets.py:525    INFO     stream item 1432397875-d02962d2a3dcd53932697fe234d684fe: 863/863 tokens with valid xpaths
+2015-05-25 00:43:15,957 pid=11363 offsets.py:525    INFO     stream item 1432397875-0325dcc3a62a1963f11ca4bb68f07f2d: 1088/1088 tokens with valid xpaths
+2015-05-25 00:43:16,205 pid=11363 offsets.py:525    INFO     stream item 1432397875-1d28de57fc56753e0fc81780abbd7888: 828/828 tokens with valid xpaths
+2015-05-25 00:43:16,407 pid=11363 offsets.py:525    INFO     stream item 1432397875-3dd591543b2fb1ecf7e7c7e7acd3a876: 721/721 tokens with valid xpaths
+2015-05-25 00:43:16,639 pid=11363 offsets.py:525    INFO     stream item 1432397875-285e93d5362f12dd42d2b1d8e8f70e75: 835/835 tokens with valid xpaths
+2015-05-25 00:43:16,998 pid=11363 offsets.py:525    INFO     stream item 1432397875-d4b98550b00759dabfa884caa90baaed: 1008/1008 tokens with valid xpaths
+2015-05-25 00:43:17,343 pid=11363 offsets.py:525    INFO     stream item 1432397875-ac5dfa4d18eb09aff43b89d6e362d864: 1081/1081 tokens with valid xpaths
+2015-05-25 00:43:17,692 pid=11363 offsets.py:525    INFO     stream item 1432397875-4dac85ce2aaf0e083881c026eb0d042e: 1098/1098 tokens with valid xpaths
+2015-05-25 00:43:18,042 pid=11363 offsets.py:525    INFO     stream item 1432397875-a1fe5aff99f1664db9237ac1bc7498bb: 1085/1085 tokens with valid xpaths
+2015-05-25 00:43:18,107 pid=11363 offsets.py:525    INFO     stream item 1432397875-16c746edde2753b6aba66bed91004686: 316/316 tokens with valid xpaths
+2015-05-25 00:43:18,506 pid=11363 offsets.py:525    INFO     stream item 1432397875-a81da5d399fbc169359b589c57abc5b1: 1192/1192 tokens with valid xpaths
+2015-05-25 00:43:18,758 pid=11363 offsets.py:525    INFO     stream item 1432397875-5ea6bfa48872392779971453e05ffe2f: 885/885 tokens with valid xpaths
+2015-05-25 00:43:18,864 pid=11363 offsets.py:525    INFO     stream item 1432397875-cd0458b4548dd17b3c89448d8fd05a73: 477/477 tokens with valid xpaths
+2015-05-25 00:43:19,032 pid=11363 offsets.py:525    INFO     stream item 1432397875-700f28473e2c6d76dde424ad271462d2: 675/675 tokens with valid xpaths
+2015-05-25 00:43:19,266 pid=11363 offsets.py:525    INFO     stream item 1432397875-ca0f199ea23e6faef1d8fdac8ddd992e: 846/846 tokens with valid xpaths
+2015-05-25 00:43:19,410 pid=11363 offsets.py:525    INFO     stream item 1432397875-33620bf14640fd54051b343ceb52f182: 601/601 tokens with valid xpaths
+2015-05-25 00:43:19,647 pid=11363 offsets.py:525    INFO     stream item 1432397875-fbd216105436e3e00ff9182b55019b55: 864/864 tokens with valid xpaths
+2015-05-25 00:43:19,859 pid=11363 offsets.py:525    INFO     stream item 1432397875-1fd7ba55d34680d84c23878468ad7f27: 773/773 tokens with valid xpaths
+2015-05-25 00:43:20,038 pid=11363 offsets.py:525    INFO     stream item 1432397875-f5c01a950c09b4efde8eacd802b2cfbe: 708/708 tokens with valid xpaths
+2015-05-25 00:43:20,237 pid=11363 offsets.py:525    INFO     stream item 1432397875-9ca54a469f18afc85e9c92c91fadbac6: 756/756 tokens with valid xpaths
+2015-05-25 00:43:20,290 pid=11363 offsets.py:525    INFO     stream item 1432397875-5cb4b67e4bad8f315867e8850afbd4b7: 275/275 tokens with valid xpaths
+2015-05-25 00:43:20,621 pid=11363 offsets.py:525    INFO     stream item 1432397875-0b54f7b1fc1da39e6b80f7d300495628: 1082/1082 tokens with valid xpaths
+2015-05-25 00:43:20,855 pid=11363 offsets.py:525    INFO     stream item 1432397875-e0028a3c2a02c75c847690d70467b60e: 843/843 tokens with valid xpaths
+2015-05-25 00:43:21,023 pid=11363 offsets.py:525    INFO     stream item 1432397875-5d47fbaa025159ec98d8cbf6a70026cf: 669/669 tokens with valid xpaths
+2015-05-25 00:43:21,333 pid=11363 offsets.py:525    INFO     stream item 1432397875-9c0f95f652372b4ba2a034f98f37ffea: 1018/1018 tokens with valid xpaths
+2015-05-25 00:43:21,632 pid=11363 offsets.py:525    INFO     stream item 1432397875-f7a496a790994bf151bedd58c3716ac9: 998/998 tokens with valid xpaths
+2015-05-25 00:43:21,892 pid=11363 offsets.py:525    INFO     stream item 1432397875-615e5622636ab8e6d0505a6fdd18a474: 910/910 tokens with valid xpaths
+2015-05-25 00:43:22,037 pid=11363 offsets.py:525    INFO     stream item 1432397875-227babc33dad9aeba4f63d470fe6593c: 599/599 tokens with valid xpaths
+2015-05-25 00:43:22,234 pid=11363 offsets.py:525    INFO     stream item 1432397875-f3df7f3dfc0c9c08c6b5a56be3280f0f: 749/749 tokens with valid xpaths
+2015-05-25 00:43:22,386 pid=11363 offsets.py:525    INFO     stream item 1432397875-540bc639bec276a1b866a2a07f83c9c4: 633/633 tokens with valid xpaths
+2015-05-25 00:43:22,554 pid=11363 offsets.py:525    INFO     stream item 1432397875-eadf950234672d67aafba5652793ab85: 522/522 tokens with valid xpaths
+2015-05-25 00:43:22,737 pid=11363 offsets.py:525    INFO     stream item 1432397875-d8f244e891ef20cec1cfe6c96f4efa7c: 716/716 tokens with valid xpaths
+2015-05-25 00:43:22,977 pid=11363 offsets.py:525    INFO     stream item 1432397875-a9e63814daf4e271702c1e8298058101: 861/861 tokens with valid xpaths
+2015-05-25 00:43:23,100 pid=11363 offsets.py:525    INFO     stream item 1432397875-3c116c1b1826d7c1d32c929b49f54c79: 533/533 tokens with valid xpaths
+2015-05-25 00:43:23,728 pid=11363 offsets.py:525    INFO     stream item 1432397875-14f4cb96e696a97e897383bca2473d08: 1614/1614 tokens with valid xpaths
+2015-05-25 00:43:23,899 pid=11363 offsets.py:525    INFO     stream item 1432397875-5e6998d0844c3e7d695310b29f504218: 666/666 tokens with valid xpaths
+2015-05-25 00:43:24,191 pid=11363 offsets.py:525    INFO     stream item 1432397875-49906289918775e26b4222ea5b022c14: 989/989 tokens with valid xpaths
+2015-05-25 00:43:24,419 pid=11363 offsets.py:525    INFO     stream item 1432397875-8e7154e01132e885befbe7e8e4f99e19: 830/830 tokens with valid xpaths
+2015-05-25 00:43:24,587 pid=11363 offsets.py:525    INFO     stream item 1432397875-8f020279f6a311c1103c24155716b96c: 671/671 tokens with valid xpaths
+2015-05-25 00:43:24,774 pid=11363 offsets.py:525    INFO     stream item 1432397875-7fc538886fb82b48e72461c85c5f4636: 726/726 tokens with valid xpaths
+2015-05-25 00:43:24,936 pid=11363 offsets.py:525    INFO     stream item 1432397875-c660ec3e3dc8590c8cbe614fb568a37a: 648/648 tokens with valid xpaths
+2015-05-25 00:43:24,966 pid=11363 offsets.py:525    INFO     stream item 1432397875-95bd0c2cbb4fffd32e4795fbc6495aa9: 166/166 tokens with valid xpaths
+2015-05-25 00:43:25,463 pid=11363 offsets.py:525    INFO     stream item 1432397875-f35261f89c0413d1ab46bbe132c4e660: 1381/1381 tokens with valid xpaths
+2015-05-25 00:43:25,603 pid=11363 offsets.py:525    INFO     stream item 1432397875-a6eb8d33c85605065fbeb1cd0d5c8209: 580/580 tokens with valid xpaths
+2015-05-25 00:43:26,233 pid=11363 offsets.py:525    INFO     stream item 1432397875-23b5a68d49aee9dd28d93741d7662b63: 1614/1614 tokens with valid xpaths
+2015-05-25 00:43:26,869 pid=11363 offsets.py:525    INFO     stream item 1432397875-691678e8ccc4a7c18509600c9148e604: 1614/1614 tokens with valid xpaths
+2015-05-25 00:43:27,036 pid=11363 offsets.py:525    INFO     stream item 1432397875-f0ac652d8ee356554a6351d2ab5f40e6: 658/658 tokens with valid xpaths
+2015-05-25 00:43:27,236 pid=11363 offsets.py:525    INFO     stream item 1432397875-38dea894b0c02995ba9cd6df9d9fc6cc: 761/761 tokens with valid xpaths
+2015-05-25 00:43:27,480 pid=11363 offsets.py:525    INFO     stream item 1432397875-ab95731b72856fe9227cd43c40dd9932: 872/872 tokens with valid xpaths
+2015-05-25 00:43:27,818 pid=11363 offsets.py:525    INFO     stream item 1432397875-d323a6a322fb9b14390bd2d8f4190390: 1080/1080 tokens with valid xpaths
+2015-05-25 00:43:27,958 pid=11363 offsets.py:525    INFO     stream item 1432397875-c4fd8f1165dc355e9d6a1e292badace9: 584/584 tokens with valid xpaths
+2015-05-25 00:43:28,030 pid=11363 offsets.py:525    INFO     stream item 1432397875-649f2ccd8c9eb0a75304b89ea8959c87: 357/357 tokens with valid xpaths
+2015-05-25 00:43:28,466 pid=11363 offsets.py:525    INFO     stream item 1432397875-bd005f2cfb5f7b51870166f7e4631928: 1280/1280 tokens with valid xpaths
+2015-05-25 00:43:28,657 pid=11363 offsets.py:525    INFO     stream item 1432397875-53c8454fc6a2568c37b69adde54651b9: 586/586 tokens with valid xpaths
+2015-05-25 00:43:28,770 pid=11363 offsets.py:525    INFO     stream item 1432397875-d337898501fd512aeea2873bad615eea: 504/504 tokens with valid xpaths
+2015-05-25 00:43:28,819 pid=11363 offsets.py:525    INFO     stream item 1432397875-2e71da955bc0170be586e293c3e8dc60: 249/249 tokens with valid xpaths
+2015-05-25 00:43:29,004 pid=11363 offsets.py:525    INFO     stream item 1432397875-8db4f667530608098fd788184ef479c8: 723/723 tokens with valid xpaths
+2015-05-25 00:43:29,146 pid=11363 offsets.py:525    INFO     stream item 1432397875-5ec780f5707e76dddc9fe07cc59e50fa: 599/599 tokens with valid xpaths
+2015-05-25 00:43:29,506 pid=11363 offsets.py:525    INFO     stream item 1432397875-17316d0e3c1eb701a44d1929db273756: 1123/1123 tokens with valid xpaths
+2015-05-25 00:43:29,593 pid=11363 offsets.py:525    INFO     stream item 1432397875-513f06dee40b0d807c7658bdf9f887e7: 409/409 tokens with valid xpaths
+2015-05-25 00:43:32,857 pid=11363 _local_stor:327   INFO     writing chunk file to /ebs/home/jrf/streamcorpus-pipeline/data/john-smith/john-smith-nltk-2015-05-23-16-a13e9e7c80864b0e0adc12adb735cd9a.sc.xz
+2015-05-25 00:43:32,857 pid=11363 _local_stor:338   INFO     compress_and_encrypt_path('/tmp/87b23a79-3a34-4315-9cb2-afe27a22f0bb/t_chunk-a5b61ac0ac404cf9a84155cb1d769b6e', tmp_dir='/tmp/87b23a79-3a34-4315-9cb2-afe27a22f0bb')
