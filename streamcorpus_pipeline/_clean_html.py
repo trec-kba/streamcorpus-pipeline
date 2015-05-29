@@ -80,6 +80,10 @@ def make_clean_html(raw, stream_item=None):
     really is, and attempt to get a properly formatted HTML document
     with all HTML-escaped characters converted to their unicode.
 
+    This is called below by the `clean_html` transform stage, which
+    interprets MIME-type.  This function uses the `stream_item`
+    metadata to deal with character encodings.
+
     :param str raw: raw text to clean up
     :param stream_item: optional stream item with encoding metadata
     :type stream_item: :class:`streamcorpus.StreamItem`
@@ -205,11 +209,17 @@ class clean_html(Configured):
              for s in self.config.get('include_mime_types', ['text/html'])]
 
     def is_matching_mime_type(self, mime_type):
+        '''This implements the MIME-type matching logic for deciding whether
+        to run `make_clean_html`
+
+        '''
         if len(self.include_mime_types) == 0:
             return True
         if mime_type is None:
             return False
         mime_type = mime_type.lower()
+        # NB: startswith is necessary here, because encodings are
+        # often appended to HTTP header Content-Type
         return any(mime_type.startswith(mt) for mt in self.include_mime_types)
 
     def __call__(self, stream_item, context):
