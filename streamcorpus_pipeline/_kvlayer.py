@@ -212,6 +212,15 @@ def get_kvlayer_stream_item(client, stream_id):
     raise KeyError(stream_id)
 
 
+def delete_kvlayer_stream_item(client, stream_id):
+    if client is None:
+        client = kvlayer.client()
+        client.setup_namespace(STREAM_ITEM_TABLE_DEFS,
+                               STREAM_ITEM_VALUE_DEFS)
+    key = stream_id_to_kvlayer_key(stream_id)
+    client.delete(STREAM_ITEMS_TABLE, key)
+
+
 class to_kvlayer(Configured):
     '''Writer that puts stream items in :mod:`kvlayer`.
 
