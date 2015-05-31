@@ -3,6 +3,7 @@ import logging
 from cStringIO import StringIO
 
 from docx import Document
+from zipfile import BadZipfile
 
 from streamcorpus_pipeline.stages import Configured
 
@@ -33,6 +34,9 @@ class docx_to_text(Configured):
             try:
                 stream_item.body.clean_html = \
                     extract_text(stream_item.body.raw)
+            except BadZipfile:
+                logger.info('BadZipfile: broken docx file: %r',
+                            stream_item.abs_url)
             except Exception as exc:
                 logger.exception('failed to convert %s from docx',
                                  stream_item.stream_id)
