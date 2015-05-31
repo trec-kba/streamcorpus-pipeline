@@ -417,7 +417,9 @@ class PipelineStages(StageRegistry):
                 name = entry_point.name
                 stage_constructor = entry_point.load()
                 self[name] = stage_constructor
-            except:
+            except Exception, exc:
+                import traceback
+                print(traceback.format_exc(exc))
                 logger.error('failure loading plugin entry point: %r', entry_point and entry_point.name, exc_info=True)
                 logger.error('IGNORING plug loading failure and continuing on...')
 
