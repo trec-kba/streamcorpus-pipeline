@@ -76,6 +76,14 @@ def test_clean_html_simple_unicode():
     assert u'☃' in cleaned.decode('utf-8')
 
 
+def test_clean_html_other_encoding():
+    encoding = 'CP932'
+    html = u'<html><body>1\uff76</body></html>'.encode(encoding)
+    cleaned = make_clean_html(html, encoding=encoding)
+    assert u'1' in cleaned.decode('utf-8')
+    assert u'\uff76' in cleaned.decode('utf-8')
+
+
 def test_clean_html_attr_strip():
     html = '<html><body><span class="foo" id="bar">foobar</span></body></html>'
     si = StreamItem(body=ContentItem(raw=html, encoding='utf-8'))

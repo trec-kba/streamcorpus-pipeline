@@ -73,7 +73,7 @@ def force_unicode(raw):
     return converted.unicode
 
 
-def make_clean_html(raw, stream_item=None):
+def make_clean_html(raw, stream_item=None, encoding=None):
     '''Get a clean text representation of presumed HTML.
 
     Treat `raw` as though it is HTML, even if we have no idea what it
@@ -81,8 +81,9 @@ def make_clean_html(raw, stream_item=None):
     with all HTML-escaped characters converted to their unicode.
 
     This is called below by the `clean_html` transform stage, which
-    interprets MIME-type.  This function uses the `stream_item`
-    metadata to deal with character encodings.
+    interprets MIME-type.  If `character_encoding` is not provided,
+    and `stream_item` is provided, then this falles back to
+    :attr:`streamcorpus.StreamItem.body.encoding`.
 
     :param str raw: raw text to clean up
     :param stream_item: optional stream item with encoding metadata
@@ -93,14 +94,28 @@ def make_clean_html(raw, stream_item=None):
     '''
     # Fix emails by protecting the <,> from HTML
     raw = fix_emails(raw)
+    raw_decoded = None
 
-    if stream_item and stream_item.body and stream_item.body.encoding:
-        # if we know an encoding, then attempt to use it
+    if encoding is not None:
         try:
-            raw_decoded = raw.decode(stream_item.body.encoding)
+            raw_decoded = raw.decode(encoding)
         except:
-            raw_decoded = raw
-    else:
+            logger.warn('encoding=%r provided, but failed', 
+                        encoding, exc_info=True)
+            raw_decoded = None
+
+    if raw_decoded is None and stream_item is not None:
+        if stream_item.body and stream_item.body.encoding:
+            encoding = stream_item.body.encoding
+            try:
+                raw_decoded = raw.decode(encoding)
+            except:
+                logger.warn('stream_item.body.encoding=%r provided, but failed', 
+                            encoding, exc_info=True)
+                raw_decoded = None
+
+    if raw_decoded is None:
+        # give up on decoding it
         raw_decoded = raw
 
     # default attempt uses vanilla lxml.html
