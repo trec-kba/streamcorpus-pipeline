@@ -24,7 +24,8 @@ class force_clean_html(Configured):
     '''
     config_name = 'force_clean_html'
     def __call__(self, stream_item, context):
-        if stream_item.body.clean_html is not None:
+        if stream_item.body.clean_html is not None and \
+           len(stream_item.body.clean_html) > 0:
             return stream_item
         if stream_item.body.clean_visible is None:
             logger.warning('stream item %s has neither clean_visible nor '
@@ -39,4 +40,9 @@ class force_clean_html(Configured):
         # Since `clean_visible` has several invariants coupled with
         # `clean_html`, we need to regenerate it. It's a bit circuitous, but
         # less likely to fail.
-        return clean_visible({})(stream_item, context)
+        stream_item = clean_visible({})(stream_item, context)
+
+        # check again to make sure we got something
+        if stream_item.body.clean_html is not None and \
+           len(stream_item.body.clean_html) > 0:
+            return stream_item
