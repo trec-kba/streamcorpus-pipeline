@@ -34,9 +34,10 @@ class docx_to_text(Configured):
             try:
                 stream_item.body.clean_html = \
                     extract_text(stream_item.body.raw)
-            except BadZipfile:
-                logger.info('BadZipfile: broken docx file: %r',
-                            stream_item.abs_url)
+            except BadZipfile, exc:
+                logger.info('dropping broken docx file %s: %r',
+                            exc, stream_item.abs_url)
+                return None
             except Exception as exc:
                 logger.exception('failed to convert %s from docx',
                                  stream_item.stream_id)

@@ -6,6 +6,7 @@ from pdfminer.pdfinterp import PDFResourceManager, PDFPageInterpreter
 from pdfminer.converter import TextConverter
 from pdfminer.layout import LAParams
 from pdfminer.pdfpage import PDFPage
+from pdfminer.pdftypes import PDFException
 
 from streamcorpus_pipeline.stages import Configured
 
@@ -51,6 +52,10 @@ class pdf_to_text(Configured):
             try:
                 stream_item.body.clean_html = \
                     convert_pdf_to_text(stream_item.body.raw)
+            except PDFException, exc:
+                logger.info('dropping broken pdf file %s: %r',
+                            exc, stream_item.abs_url)
+                return None
             except Exception as exc:
                 logger.exception('failed to convert %s from pdf',
                                  stream_item.stream_id)
