@@ -10,16 +10,16 @@ Copyright 2012-2014 Diffeo, Inc.
 '''
 from __future__ import absolute_import
 import logging
-import re
+import regex as re
 
 from streamcorpus import ContentItem
 from streamcorpus_pipeline.stages import Configured
 
 logger = logging.getLogger(__name__)
 
-title_re = re.compile('(\n|.)*?\<title\>(?P<title>((\n|.)*?))\</title\>', re.I)
-first_non_blank_re = re.compile('(\n|.)*?(?P<title>((\n|.){,200}))')
-whitespace_re = re.compile('(\s|\n)+')
+title_re = re.compile(ur'(\n|.)*?\<title\>(?P<title>((\n|.)*?))\</title\>', re.IGNORECASE | re.UNICODE)
+first_non_blank_re = re.compile(ur'(\n|.)*?(?P<title>((\n|.){,200}))', re.UNICODE)
+whitespace_re = re.compile(ur'(\s|\n)+', re.UNICODE)
 
 
 def add_content_item(stream_item, title_m):
@@ -59,11 +59,13 @@ class title(Configured):
                 return stream_item
 
         if stream_item.body.clean_html:
-            title_m = title_re.match(stream_item.body.clean_html)
+            chu = stream_item.body.clean_html.decode('utf-8')
+            title_m = title_re.match(chu)
             if title_m:
                 add_content_item(stream_item, title_m)
                 return stream_item
 
-        title_m = first_non_blank_re.match(stream_item.body.clean_visible)
+        cvu = stream_item.body.clean_visible.decode('utf-8')
+        title_m = first_non_blank_re.match(cvu)
         add_content_item(stream_item, title_m)
         return stream_item
