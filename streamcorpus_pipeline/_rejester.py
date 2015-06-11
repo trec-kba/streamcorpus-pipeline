@@ -44,15 +44,25 @@ import dblogger
 import kvlayer
 import streamcorpus_pipeline
 from streamcorpus_pipeline._pipeline import PipelineFactory
-from streamcorpus_pipeline.stages import PipelineStages
+from streamcorpus_pipeline.stages import PipelineStages, Configured
 import yakonfig
 
 
+static_stages = None
+
+
 def rejester_run_function(work_unit):
+    global static_stages
+    # we can get away with one 'global' stages object. We don't
+    # actually have substantially different config from work_unit to
+    # work_unit, especially not within streamcoprus_pipeline wokr.
+    if static_stages is None:
+        static_stages = PipelineStages()
+    stages = static_stages
+
     with yakonfig.defaulted_config([dblogger, kvlayer, streamcorpus_pipeline],
                                    config=work_unit.spec.get('config', {})):
         scp_config = yakonfig.get_global_config('streamcorpus_pipeline')
-        stages = PipelineStages()
         if 'external_stages_path' in scp_config:
             stages.load_external_stages(scp_config['external_stages_path'])
         if 'external_stages_modules' in scp_config:
@@ -68,3 +78,21 @@ def rejester_run_function(work_unit):
 
 def rejester_terminate_function(work_unit):
     pass
+
+
+class to_work_units(Configured):
+    '''Writer that puts references into rejester'''
+    config_name = 'to_work_units'
+    default_config = {}
+
+    def __init__(self, *args, **kwargs):
+        super(to_kvlayer, self).__init__(*args, **kwargs)
+
+    def __call__(self, t_path, name_info, i_str):
+        work_unit_specs = []
+
+        for si in streamcorpus.Chunk(t_path):
+            si_key = key_for_stream_item(si)
+            work_unit_specs.append( (si_key, {}, {}) )
+
+        return work_unit_specs

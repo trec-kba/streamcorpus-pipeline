@@ -57,6 +57,8 @@ runtime_keys = {
 sub_modules = set()
 
 
+static_stages = None
+
 def replace_config(config, name):
     '''Replace the top-level pipeline configurable object.
 
@@ -67,21 +69,27 @@ def replace_config(config, name):
     :mod:`streamcorpus_pipeline`.
 
     '''
-    stages = PipelineStages()
-    if 'external_stages_path' in config:
-        path = config['external_stages_path']
-        if not os.path.isabs(path) and config.get('root_path'):
-            path = os.path.join(config['root_path'], path)
-        try:
-            stages.load_external_stages(config['external_stages_path'])
-        except IOError:
-            return streamcorpus_pipeline  # let check_config re-raise this
-    if 'external_stages_modules' in config:
-        for mod in config['external_stages_modules']:
+    global static_stages
+    if static_stages is None:
+        static_stages = PipelineStages()
+        stages = static_stages
+        if 'external_stages_path' in config:
+            path = config['external_stages_path']
+            if not os.path.isabs(path) and config.get('root_path'):
+                path = os.path.join(config['root_path'], path)
             try:
-                stages.load_module_stages(mod)
-            except ImportError:
+                stages.load_external_stages(config['external_stages_path'])
+            except IOError:
                 return streamcorpus_pipeline  # let check_config re-raise this
+        if 'external_stages_modules' in config:
+            for mod in config['external_stages_modules']:
+                try:
+                    stages.load_module_stages(mod)
+                except ImportError:
+                    return streamcorpus_pipeline  # let check_config re-raise this
+    else:
+        stages = static_stages
+
     new_sub_modules = set(stage
                           for stage in stages.itervalues()
                           if hasattr(stage, 'config_name'))
@@ -94,7 +102,10 @@ def check_config(config, name):
                                  .format(name))
 
     # Checking stages:
-    stages = PipelineStages()
+    global static_stages
+    if static_stages is None:
+        static_stages = PipelineStages()
+    stages = static_stages
 
     # (1) Push in the external stages;
     if 'external_stages_path' in config:
