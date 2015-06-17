@@ -35,7 +35,14 @@ register:
 check:
 	pylint -i y --output-format=parseable src/`git remote -v | grep origin | head -1 | cut -d':' -f 2 | cut -d'.' -f 1`
 
+
+
+BUP_DIR:=streamcorpus-org-backup-`date -u +%s`
 streamcorpus.org: install
+	pip install docutils Sphinx sphinxcontrib-httpdomain
+	pip install -e . --upgrade
+	mkdir -p $(BUP_DIR)
+	s3cmd -c ../streamcorpus-website-builder-dot-s3cfg get --recursive  s3://streamcorpus.org/ $(BUP_DIR)/
 	python setup.py build_sphinx
 	s3cmd -c ../streamcorpus-website-builder-dot-s3cfg del --recursive --force  s3://streamcorpus.org/
 	s3cmd -c ../streamcorpus-website-builder-dot-s3cfg  put --recursive --acl-public build/sphinx/html/ s3://streamcorpus.org/
