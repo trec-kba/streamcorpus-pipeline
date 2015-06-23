@@ -125,7 +125,7 @@ setup(
         'thrift',
         'ftfy',
         'kvlayer >= 0.4.10',
-        'rejester',
+        'coordinate',
         'protobuf < 3',
         'requests',
         'streamcorpus>=0.3.48',

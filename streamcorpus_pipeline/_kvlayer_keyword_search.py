@@ -206,7 +206,7 @@ class keyword_indexer(object):
 
         This yields strings that can be retrieved using
         :func:`streamcorpus_pipeline._kvlayer.get_kvlayer_stream_item`,
-        or fed back into :mod:`rejester` or other job queue systems.
+        or fed back into :mod:`coordinate` or other job queue systems.
 
         Note that for common terms this can return a large number of
         stream IDs!  This is a scan over a dense region of a

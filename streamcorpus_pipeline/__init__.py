@@ -73,14 +73,14 @@ Pipeline stages
 
 .. automodule:: streamcorpus_pipeline.stages
 
-:mod:`rejester` integration
+:mod:`coordinate` integration
 ===========================
 
-.. automodule:: streamcorpus_pipeline._rejester
+.. automodule:: streamcorpus_pipeline._coordinate
 
 '''
 from config import config_name, default_config, runtime_keys, sub_modules, \
     replace_config, check_config, normalize_config
 from _pipeline import Pipeline, PipelineFactory
-from _rejester import rejester_run_function, rejester_terminate_function
+from _coordinate import coordinate_run_function, coordinate_terminate_function
 from streamcorpus_pipeline._clean_visible import cleanse

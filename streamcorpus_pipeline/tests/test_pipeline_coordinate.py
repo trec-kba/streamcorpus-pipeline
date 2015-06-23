@@ -7,25 +7,26 @@ import yaml
 import pytest
 
 import streamcorpus
-from rejester.workers import run_worker, MultiWorker
+from coordinate.workers import run_worker, MultiWorker
 
 logger = logging.getLogger(__name__)
-pytest_plugins = 'rejester.tests.fixtures'
+from coordinate.tests.test_job_client import task_master, job_queue
 
 def job_status(master, name):
     """Get a quick summary of the status of 'name' as a (printable)
     string."""
     parts = []
-    a = master.num_available(name)
+    st = master.status(name)
+    a = st['num_available']
     if a > 0:
         parts.append("{0} available".format(a))
-    p = master.num_pending(name)
+    p = st['num_pending']
     if p > 0:
         parts.append("{0} pending".format(p))
-    f = master.num_finished(name)
+    f = st['num_finished']
     if f > 0:
         parts.append("{0} finished".format(f))
-    z = master.num_failed(name)
+    z = st['num_failed']
     if z > 0:
         parts.append("{0} failed".format(z))
     if len(parts) == 0:
@@ -38,9 +39,9 @@ def jobs_status(master, jobs):
     return '; '.join(['{0}: {1}'.format(j, job_status(master, j))
                       for j in jobs])
 
-@pytest.mark.xfail
-def test_rejester_john_smith_simple(task_master, test_data_dir, tmpdir):
-
+#@pytest.mark.xfail
+def test_coordinate_john_smith_simple(task_master, test_data_dir, tmpdir):
+    pytest.skip('test is subtly broken, but could maybe yet be fixed')
     configs = [ 'john-smith']
     inputs = [ 'john-smith/original' ]
 
@@ -63,12 +64,12 @@ def test_rejester_john_smith_simple(task_master, test_data_dir, tmpdir):
         tlc['output_path'] = str(tmpdir)
         work_specs[c] = {
             'name': c,
-            'desc': 'test_pipeline_rejester for {0}'.format(c),
+            'desc': 'test_pipeline_coordinate for {0}'.format(c),
             'min_gb': 0,
             'config': config,
-            'module': 'streamcorpus_pipeline._rejester',
-            'run_function': 'rejester_run_function',
-            'terminate_function': 'rejester_terminate_function'
+            'module': 'streamcorpus_pipeline._coordinate',
+            'run_function': 'coordinate_run_function',
+            'terminate_function': 'coordinate_terminate_function'
         }
         units[c] = dict([
             (os.path.join(test_data_dir, i), dict(start_chunk_time=0))
@@ -78,7 +79,7 @@ def test_rejester_john_smith_simple(task_master, test_data_dir, tmpdir):
     # kick everything off
     task_master.set_mode(task_master.RUN)
     p = multiprocessing.Process(target=run_worker,
-                                args=(MultiWorker, task_master.registry.config))
+                                args=(MultiWorker, task_master.config))
     p.start()
     try:
         start_time = time.time()
@@ -92,8 +93,9 @@ def test_rejester_john_smith_simple(task_master, test_data_dir, tmpdir):
                 last_status = status
 
             # stop if we've finished all of the jobs
-            done = all([task_master.num_available(c) == 0 and
-                        task_master.num_pending(c) == 0
+            st = task_master.status(c)
+            done = all([st['num_available'] == 0 and
+                        st['num_pending'] == 0
                         for c in configs])
             if done:
                 logger.info("all jobs done, stopping")
@@ -103,7 +105,7 @@ def test_rejester_john_smith_simple(task_master, test_data_dir, tmpdir):
             # and there's no point in continuing this loop
             # (we expect the workers to go back to "idle" state)
             if not p.is_alive():
-                raise Exception("rejester workers stopped")
+                raise Exception("coordinate workers stopped")
 
             # otherwise wait for a short bit and reloop
             time.sleep(0.1)
@@ -130,8 +132,9 @@ def test_rejester_john_smith_simple(task_master, test_data_dir, tmpdir):
         for i in inputs:
             ii = os.path.join(test_data_dir, i)
             assert task_master.inspect_work_unit(c, ii).get('traceback') is None
-        assert task_master.num_failed(c) == 0
-        assert task_master.num_finished(c) == len(inputs)
+        st = task_master.status(c)
+        assert st['num_failed'] == 0
+        assert st['num_finished'] == len(inputs)
 
     # if we've gotten *this* far then we should be able to compare
     # that the tests produced sufficiently similar outputs...

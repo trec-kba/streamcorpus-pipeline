@@ -494,14 +494,14 @@ class Pipeline(object):
         self.work_unit = None
 
     def _process_task(self, work_unit):
-        '''Process a :class:`rejester.WorkUnit`.
+        '''Process a :class:`coordinate.WorkUnit`.
 
         The work unit's key is taken as the input file name.  The
         data should have ``start_count`` and ``start_chunk_time``
         values, which are passed on to :meth:`run`.
 
         :param work_unit: work unit to process
-        :paramtype work_unit: :class:`rejester.WorkUnit`
+        :paramtype work_unit: :class:`coordinate.WorkUnit`
         :return: number of stream items processed
 
         '''

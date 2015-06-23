@@ -283,7 +283,8 @@ class to_local_chunks(Configured):
         if name_info['num'] == 0:
             return None
 
-        if 'input' in self.config['output_name']:
+        output_name = self.config.get('output_name')
+        if output_name and ('input' in output_name):
             i_fname = i_str.split('/')[-1]
             if i_fname.endswith('.gpg'):
                 i_fname = i_fname[:-4]
@@ -323,6 +324,14 @@ class to_local_chunks(Configured):
             o_path = os.path.join(o_dir, o_fname + '.sc')
             if compress:
                 o_path += '.xz'
+        elif o_type == 'pathfmt':
+            # uses output_name, but in a totally different way, to
+            # make 'input' checking above work.
+            fmt = self.config['output_name']
+            o_path = fmt % name_info
+            o_dir = os.path.dirname(o_path)
+            if not os.path.exists(o_dir):
+                os.makedirs(o_dir)
 
         logger.info('writing chunk file to {0}'.format(o_path))
         logger.debug('temporary chunk in {0}'.format(t_path))

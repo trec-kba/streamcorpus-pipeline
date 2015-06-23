@@ -1,40 +1,40 @@
-'''Support for running pipeline  tasks under :mod:`rejester`.
+'''Support for running pipeline  tasks under :mod:`coordinate`.
 
 .. This software is released under an MIT/X11 open source license.
    Copyright 2012-2014 Diffeo, Inc.
 
 Since running pipeline stages can be expensive, particularly if busy
 third-party stages are run, it can be desirable to run the pipeline
-under the :mod:`rejester` distributed-computing framework.  This
-module provides rejester "run" and "terminate" functions that run
-the pipeline.  A typical rejester work spec will look like::
+under the :mod:`coordinate` distributed-computing framework.  This
+module provides coordinate "run" and "terminate" functions that run
+the pipeline.  A typical coordinate work spec will look like::
 
     work_spec = {
         'name': 'pipeline',
         'desc': 'run streamcorpus_pipeline',
         'min_gb': 8,
         'config': yakonfig.get_global_config(),
-        'module': 'streamcorpus_pipeline._rejester',
-        'run_function': 'rejester_run_function',
-        'terminate_function': 'rejester_terminate_function',
+        'module': 'streamcorpus_pipeline._coordinate',
+        'run_function': 'coordinate_run_function',
+        'terminate_function': 'coordinate_terminate_function',
     }
 
 Work units have an input filename or other description as a key, and
 any non-empty dictionary as their data.  They are processed using
 :meth:`streamcorpus_pipeline.Pipeline._process_task`.  Pass the work
 spec and work unit dictionaries to
-:meth:`rejester.TaskMaster.update_bundle` to inject the work
+:meth:`coordinate.TaskMaster.update_bundle` to inject the work
 definitions.
 
 Note that this framework makes no effort to actually distribute the
-data around.  Either only run rejester jobs on one system, or ensure
-that all systems running rejester workers have a shared filesystem
+data around.  Either only run coordinate jobs on one system, or ensure
+that all systems running coordinate workers have a shared filesystem
 such as NFS, or use network-based reader and writer stages such as
 :class:`~streamcorpus_pipeline._s3_storage.from_s3_chunks` and
 :class:`~streamcorpus_pipeline._kvlayer.to_kvlayer`.
 
-.. autofunction:: rejester_run_function
-.. autofunction:: rejester_terminate_function
+.. autofunction:: coordinate_run_function
+.. autofunction:: coordinate_terminate_function
 
 '''
 from __future__ import absolute_import
@@ -51,7 +51,7 @@ import yakonfig
 static_stages = None
 
 
-def rejester_run_function(work_unit):
+def coordinate_run_function(work_unit):
     global static_stages
     # we can get away with one 'global' stages object. We don't
     # actually have substantially different config from work_unit to
@@ -76,12 +76,12 @@ def rejester_run_function(work_unit):
         pipeline._process_task(work_unit)
 
 
-def rejester_terminate_function(work_unit):
+def coordinate_terminate_function(work_unit):
     pass
 
 
 class to_work_units(Configured):
-    '''Writer that puts references into rejester'''
+    '''Writer that puts references into coordinate'''
     config_name = 'to_work_units'
     default_config = {}
 

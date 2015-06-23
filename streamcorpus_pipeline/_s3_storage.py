@@ -407,7 +407,7 @@ class to_s3_chunks(Configured):
           verify: true
 
           # If verification fails `tries` times, then the default
-          # behavior is to exit, which can cause a rejester
+          # behavior is to exit, which can cause a coordinate
           # fork_worker parent to retry the whole job.
           #
           # Default: false
@@ -622,7 +622,7 @@ class to_s3_chunks(Configured):
             return False
 
         ### Let's not use both belt and suspenders.  md5 is enough.
-        ### Of note, if this gets killed by something, e.g. rejester
+        ### Of note, if this gets killed by something, e.g. coordinate
         ### fork_worker parent, then since this is one of the slowest
         ### parts, you might see cbor getting killed, which can look
         ### like this:

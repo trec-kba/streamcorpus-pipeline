@@ -225,7 +225,7 @@ def main():
         pipeline._process_task(work_unit)
 
 class SimpleWorkUnit(object):
-    '''partially duck-typed rejester.WorkUnit that wraps strings from
+    '''partially duck-typed coordinate.WorkUnit that wraps strings from
     stdin and provides only the methods used by the Pipeline
 
     '''

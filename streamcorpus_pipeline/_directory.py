@@ -5,18 +5,18 @@
 
 :command:`streamcorpus_directory` reads an entire directory through
 the streamcorpus pipeline.  This allows work to be distributed using
-the :mod:`rejester` distributed work system, with an implied
-assumption that all systems running a rejester worker for the given
+the :mod:`coordinate` distributed work system, with an implied
+assumption that all systems running a coordinate worker for the given
 namespace have access to the local file storage space, either because
 the only worker is on the local system or because the named directory
 is on a shared networked filesystem.
 
 The command is followed by a list of directory names, or other inputs.
 By default each named directory is scanned, and each file in each
-directory is submitted as an input to the pipeline.  A :mod:`rejester`
+directory is submitted as an input to the pipeline.  A :mod:`coordinate`
 job is created for each file.
 
-Note that :mod:`rejester` is typically used to distribute jobs acress
+Note that :mod:`coordinate` is typically used to distribute jobs acress
 a cluster of systems.  This program only submits the file names as
 jobs; it does not submit actual file contents.  If the pipeline is
 configured with a reader such as
@@ -61,22 +61,22 @@ following additional options:
 
    Process all of the files in the directory, sequentially, then exit.
    This may be more convenient for debugging the pipeline configuration.
-   Does not require rejester configuration.
+   Does not require coordinate configuration.
 
-.. option:: --rejester
+.. option:: --coordinate
 
-   Create :mod:`rejester` work units, then exit.  The configuration
-   must contain complete :mod:`rejester` configuration.  This is the
+   Create :mod:`coordinate` work units, then exit.  The configuration
+   must contain complete :mod:`coordinate` configuration.  This is the
    default mode.
 
 .. option:: --work-spec <name>
 
-   Use `name` as the name of the :mod:`rejester` work spec.  Defaults
+   Use `name` as the name of the :mod:`coordinate` work spec.  Defaults
    to ``streamcorpus_directory``.
 
 .. option:: --nice <n>
 
-   Deprioritize the submitted jobs in :mod:`rejester`.  `n` can be
+   Deprioritize the submitted jobs in :mod:`coordinate`.  `n` can be
    a relative score between 0 and 20.
 
 '''
@@ -89,9 +89,9 @@ import os
 
 import dblogger
 import kvlayer
-import rejester
+import coordinate
 import streamcorpus_pipeline
-from streamcorpus_pipeline._rejester import rejester_run_function
+from streamcorpus_pipeline._coordinate import coordinate_run_function
 from streamcorpus_pipeline.run import SimpleWorkUnit
 import yakonfig
 
@@ -103,7 +103,7 @@ class DirectoryConfig(object):
     '''Configuration metadata for the directory scanner.'''
     config_name = 'streamcorpus_directory'
     default_config = {
-        'engine': 'rejester',
+        'engine': 'coordinate',
         'mode': 'directories',
         'name': 'streamcorpus_directory',
     }
@@ -115,9 +115,9 @@ class DirectoryConfig(object):
             action='store_const', dest='engine', const='standalone',
             help='process directory locally in one batch')
         parser.add_argument(
-            '--rejester',
-            action='store_const', dest='engine', const='rejester',
-            help='distribute processing using rejester (default)')
+            '--coordinate',
+            action='store_const', dest='engine', const='coordinate',
+            help='distribute processing using coordinate (default)')
         parser.add_argument(
             '--directories',
             action='store_const', dest='mode', const='directories',
@@ -131,7 +131,7 @@ class DirectoryConfig(object):
             action='store_const', dest='mode', const='file-lists',
             help='arguments are files containing lists of files')
         parser.add_argument(
-            '--work-spec', help='name of rejester work spec')
+            '--work-spec', help='name of coordinate work spec')
 
     runtime_keys = {
         'engine': 'engine',
@@ -142,7 +142,7 @@ class DirectoryConfig(object):
     @staticmethod
     def check_config(config, name):
         if (('engine' not in config or
-             config['engine'] not in ['rejester', 'standalone'])):
+             config['engine'] not in ['coordinate', 'standalone'])):
             raise yakonfig.ConfigurationError(
                 'invalid {0} engine type {1!r}'
                 .format(name, config.get('engine')))
@@ -150,8 +150,8 @@ class DirectoryConfig(object):
              config['mode'] not in ['directories', 'files', 'file-lists'])):
             raise yakonfig.ConfigurationError(
                 'invalid {0} mode {1!r}'.format(name, config.get('mode')))
-        if config['engine'] == 'rejester':
-            yakonfig.check_toplevel_config(rejester, name)
+        if config['engine'] == 'coordinate':
+            yakonfig.check_toplevel_config(coordinate, name)
         yakonfig.check_toplevel_config(streamcorpus_pipeline, name)
 
 
@@ -164,7 +164,7 @@ def main():
     parser.add_argument('-n', '--nice', default=0, type=int,
                         help='specify a nice level for these jobs')
     args = yakonfig.parse_args(
-        parser, [yakonfig, rejester, kvlayer, dblogger,
+        parser, [yakonfig, coordinate, kvlayer, dblogger,
                  streamcorpus_pipeline, DirectoryConfig])
     gconfig = yakonfig.get_global_config()
     scdconfig = gconfig['streamcorpus_directory']
@@ -174,9 +174,9 @@ def main():
         'desc': 'read files from a directory',
         'min_gb': 1,
         'config': gconfig,
-        'module': 'streamcorpus_pipeline._rejester',
-        'run_function': 'rejester_run_function',
-        'terminate_function': 'rejester_terminate_function',
+        'module': 'streamcorpus_pipeline._coordinate',
+        'run_function': 'coordinate_run_function',
+        'terminate_function': 'coordinate_terminate_function',
     }
 
     def get_filenames():
@@ -194,9 +194,9 @@ def main():
 
     v = {'start_count': 0}
 
-    if scdconfig['engine'] == 'rejester':
-        print('creating rejester TaskMaster:\n%s' % json.dumps(gconfig['rejester'], indent=4, sort_keys=True))
-        tm = rejester.build_task_master(gconfig['rejester'])
+    if scdconfig['engine'] == 'coordinate':
+        print('creating coordinate TaskMaster:\n%s' % json.dumps(gconfig['coordinate'], indent=4, sort_keys=True))
+        tm = coordinate.TaskMaster(gconfig['coordinate'])
         fnames = list(get_filenames())
         it = iter(fnames)
         count = 0
@@ -211,7 +211,7 @@ def main():
             u = SimpleWorkUnit(filename)
             u.spec = work_spec
             u.data = v
-            rejester_run_function(u)
+            coordinate_run_function(u)
 
 if __name__ == '__main__':
     main()
