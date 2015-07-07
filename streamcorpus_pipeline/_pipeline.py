@@ -700,7 +700,7 @@ class Pipeline(object):
 
     def _maybe_run_post_batch_incremental_transforms(self, t_path):
         ## Run post batch incremental (pbi) transform stages.
-        ## These exist because certain batch transforms have 
+        ## These exist because certain batch transforms have
         ## to run before certain incremental stages.
         if self.pbi_stages:
             t_path2 = os.path.join(self.tmp_dir_path, 'trec-kba-pipeline-tmp-%s' % str(uuid.uuid1()))
@@ -755,12 +755,13 @@ class Pipeline(object):
         for transform in transforms:
             try:
                 stream_id = si.stream_id
-                si = transform(si, context=self.context)
+                si_new = transform(si, context=self.context)
 
-                if si is None:
-                    logger.warn('transform %r deleted %s',
-                                 transform, stream_id)
+                if si_new is None:
+                    logger.warn('transform %r deleted %s abs_url=%r',
+                                 transform, stream_id, si and si.abs_url)
                     return None
+                si = si_new
 
             except TransformGivingUp:
                 ## do nothing
@@ -768,9 +769,10 @@ class Pipeline(object):
                             transform, si.stream_id)
 
             except Exception, exc:
-                logger.critical('transform %r failed on %r from i_str=%r', 
-                                transform, si and si.stream_id, self.context.get('i_str'),
-                                exc_info=True)
+                logger.critical(
+                    'transform %r failed on %r from i_str=%r abs_url=%r',
+                    transform, si and si.stream_id, self.context.get('i_str'),
+                    si and si.abs_url, exc_info=True)
 
         assert si is not None
 

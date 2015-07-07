@@ -100,7 +100,7 @@ def make_clean_html(raw, stream_item=None, encoding=None):
         try:
             raw_decoded = raw.decode(encoding)
         except:
-            logger.warn('encoding=%r provided, but failed', 
+            logger.warn('encoding=%r provided, but failed',
                         encoding, exc_info=True)
             raw_decoded = None
 
@@ -110,7 +110,7 @@ def make_clean_html(raw, stream_item=None, encoding=None):
             try:
                 raw_decoded = raw.decode(encoding)
             except:
-                logger.warn('stream_item.body.encoding=%r provided, but failed', 
+                logger.warn('stream_item.body.encoding=%r provided, but failed',
                             encoding, exc_info=True)
                 raw_decoded = None
 
@@ -251,25 +251,25 @@ class clean_html(Configured):
             return stream_item
 
         if self.require_code and self.require_code != lang.code:
-            logger.debug('skipping stream_item %s with language %r, '
-                         'not required language %r',
-                         stream_item.stream_id,
-                         stream_item.body.language.code,
-                         self.require_code)
+            logger.info('skipping stream_item %s with language %r, '
+                        'not required language %r',
+                        stream_item.stream_id,
+                        stream_item.body.language.code,
+                        self.require_code)
             return stream_item
 
         if self.codes and lang.code not in self.codes:
-            logger.debug('skipping stream_item %s with language %r, '
-                         'not one of included codes %r',
-                         stream_item.stream_id, lang.code, self.codes)
+            logger.info('skipping stream_item %s with language %r, '
+                        'not one of included codes %r',
+                        stream_item.stream_id, lang.code, self.codes)
 
         if self.is_matching_mime_type(stream_item.body.media_type):
             stream_item.body.clean_html = make_clean_html(
                 stream_item.body.raw,
                 stream_item=stream_item)
         else:
-            logger.debug('skipping stream_item %s with unrecognized '
-                         'media_type %r (allowed mime types: %r)',
-                         stream_item.stream_id, stream_item.body.media_type,
-                         self.include_mime_types or 'EVERYTHING')
+            logger.info('skipping stream_item %s with unrecognized '
+                        'media_type %r (allowed mime types: %r)',
+                        stream_item.stream_id, stream_item.body.media_type,
+                        self.include_mime_types or 'EVERYTHING')
         return stream_item
