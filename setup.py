@@ -107,7 +107,7 @@ setup(
         'pytest-xdist',
         'pytest-timeout',
         'pytest-capturelog',
-        
+
         ## this does not work in python2.6
         'pytest-incremental',
 
@@ -157,6 +157,7 @@ setup(
             'streamcorpus_directory = streamcorpus_pipeline._directory:main',
             'streamcorpus_pipeline_test = streamcorpus_pipeline.tests.run:main',
             'streamcorpus_pipeline_keywords = streamcorpus_pipeline.keywords:main',
+            'scp-xpaths = streamcorpus_pipeline.run_xpaths:main',
         ]
     },
     data_files = [

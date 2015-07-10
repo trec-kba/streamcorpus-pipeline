@@ -137,6 +137,25 @@ def test_index_dog(corpus, indexer, kvlclient):
         ((mmh3.hash('eat'), 'eat'), 1)]
 
 
+def test_index_limit(corpus, indexer, kvlclient):
+    si = corpus['lazy programmer']
+    indexer.keyword_size_limit = 8
+    indexer.index(si)
+    (k1, k2) = stream_id_to_kvlayer_key(si.stream_id)
+
+    # This should only capture "lazy", "programmer" is too long
+    assert list(kvlclient.scan(HASH_TF_INDEX_TABLE)) == [
+        ((mmh3.hash('lazy'), k1, k2), 1),
+    ]
+    assert list(kvlclient.scan(HASH_FREQUENCY_TABLE)) == [
+        ((mmh3.hash('lazy'),), 1),
+        ((DOCUMENT_HASH_KEY,), 1),
+    ]
+    assert list(kvlclient.scan(HASH_KEYWORD_INDEX_TABLE)) == [
+        ((mmh3.hash('lazy'), 'lazy'), 1),
+    ]
+
+
 def test_invert(corpus, indexer):
     si = corpus['lazy dog']
     indexer.index(si)

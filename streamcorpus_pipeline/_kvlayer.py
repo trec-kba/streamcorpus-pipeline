@@ -247,11 +247,13 @@ class to_kvlayer(Configured):
     be set to a list of tagger IDs; if it is set, only the tokens
     from those tagger IDs will be indexed.  If it is set to ``null``
     or left unset, all taggers' tokens will be indexed as distinct
-    words.
+    words.  Any tokens whose size is greater than `keyword_size_limit`
+    (default 128) will not be indexed.
 
     '''
     config_name = 'to_kvlayer'
-    default_config = {'indexes': []}
+    default_config = {'indexes': [],
+                      'keyword_size_limit': 128}
 
     @staticmethod
     def check_config(config, name):
@@ -286,11 +288,15 @@ class to_kvlayer(Configured):
         hash_docs = HASH_TF_SID in self.config['indexes']
         hash_frequencies = HASH_FREQUENCY in self.config['indexes']
         hash_keywords = HASH_KEYWORD in self.config['indexes']
+        keyword_tagger_ids = self.config.get('keyword_tagger_ids', None)
+        keyword_size_limit = self.config['keyword_size_limit']
         if hash_docs or hash_frequencies or hash_keywords:
             self.keyword_indexer = keyword_indexer(
                 self.client, hash_docs=hash_docs,
                 hash_frequencies=hash_frequencies,
-                hash_keywords=hash_keywords)
+                hash_keywords=hash_keywords,
+                keyword_tagger_ids=keyword_tagger_ids,
+                keyword_size_limit=keyword_size_limit)
 
     def __call__(self, t_path, name_info, i_str):
         si_keys = []

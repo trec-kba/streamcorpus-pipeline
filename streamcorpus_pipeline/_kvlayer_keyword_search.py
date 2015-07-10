@@ -34,7 +34,8 @@ class keyword_indexer(object):
     '''
 
     def __init__(self, kvl, hash_docs=True, hash_frequencies=True,
-                 hash_keywords=True, keyword_tagger_ids=None):
+                 hash_keywords=True, keyword_tagger_ids=None,
+                 keyword_size_limit=128):
         '''Create a new keyword indexer.
 
         `kvl` should be preconfigured to handle the
@@ -48,6 +49,9 @@ class keyword_indexer(object):
         :param hash_docs: if true, record hash to document ID index
         :param hash_frequencies: if true, record hash document frequencies
         :param hash_keywords: if true, record hash to keyword reverse index
+        :param keyword_tagger_ids: if not :const:`None`, only consider
+          these tagger IDs
+        :param int keyword_size_limit: largest token to consider
 
         '''
         self.client = kvl
@@ -55,6 +59,7 @@ class keyword_indexer(object):
         self.hash_frequencies = hash_frequencies
         self.hash_keywords = hash_keywords
         self.keyword_tagger_ids = keyword_tagger_ids
+        self.keyword_size_limit = keyword_size_limit
 
     # Class static, initialized on first use
     _stop_words = None
@@ -120,6 +125,9 @@ class keyword_indexer(object):
                     term = token.token  # always a UTF-8 byte string
                     term = term.decode('utf-8')
                     term = cleanse(term)
+                    if ((self.keyword_size_limit is not None and
+                         len(term) > self.keyword_size_limit)):
+                        continue
                     if term not in self.stop_words:
                         counter[term] += 1
         return counter
