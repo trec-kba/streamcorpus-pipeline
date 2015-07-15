@@ -74,7 +74,7 @@ Pipeline stages
 .. automodule:: streamcorpus_pipeline.stages
 
 :mod:`coordinate` integration
-===========================
+=============================
 
 .. automodule:: streamcorpus_pipeline._coordinate
 
