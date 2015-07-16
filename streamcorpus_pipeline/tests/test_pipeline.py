@@ -6,6 +6,7 @@ import pytest
 
 from streamcorpus import make_stream_item
 import streamcorpus_pipeline
+import streamcorpus_pipeline.config
 from streamcorpus_pipeline.stages import PipelineStages
 from streamcorpus_pipeline._local_storage import to_local_chunks
 from streamcorpus_pipeline._pipeline import PipelineFactory, Pipeline
@@ -54,6 +55,7 @@ Stages = {'external_stage': ExternalStage}
 
 
 def test_external_stage_unregistered(tmpdir):
+    streamcorpus_pipeline.config.static_stages = None
     with yakonfig.defaulted_config([streamcorpus_pipeline], config={
             'streamcorpus_pipeline': {
                 'tmp_dir_path': str(tmpdir),
@@ -69,6 +71,7 @@ def test_external_stage_unregistered(tmpdir):
 
 
 def test_external_stage_registered(tmpdir):
+    streamcorpus_pipeline.config.static_stages = None
     with yakonfig.defaulted_config([streamcorpus_pipeline], config={
             'streamcorpus_pipeline': {
                 'external_stages_path': __file__,
@@ -87,6 +90,7 @@ def test_external_stage_registered(tmpdir):
 
 
 def test_external_stage_default(tmpdir):
+    streamcorpus_pipeline.config.static_stages = None
     with yakonfig.defaulted_config([streamcorpus_pipeline], config={
             'streamcorpus_pipeline': {
                 'external_stages_path': __file__,
@@ -102,6 +106,7 @@ def test_external_stage_default(tmpdir):
 
 
 def test_external_module_registered(tmpdir):
+    streamcorpus_pipeline.config.static_stages = None
     with yakonfig.defaulted_config([streamcorpus_pipeline], config={
             'streamcorpus_pipeline': {
                 'external_stages_modules':
@@ -121,6 +126,7 @@ def test_external_module_registered(tmpdir):
 
 
 def test_external_module_default(tmpdir):
+    streamcorpus_pipeline.config.static_stages = None
     with yakonfig.defaulted_config([streamcorpus_pipeline], config={
             'streamcorpus_pipeline': {
                 'external_stages_modules':
