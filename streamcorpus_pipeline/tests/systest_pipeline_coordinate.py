@@ -1,3 +1,9 @@
+# This is really a system test, not a unit test.  Still, it looks like
+# a pretty good system test...except that (a) it lightly assumes the
+# removed coordinate.workers.MultiWorker implementation, and (b) it
+# documents itself as being subtly broken.  This should at some point get
+# resurrected.
+
 import logging
 import multiprocessing
 import os
