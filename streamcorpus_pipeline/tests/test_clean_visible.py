@@ -1,5 +1,7 @@
 from __future__ import absolute_import
-from streamcorpus_pipeline._clean_visible import cleanse, make_clean_visible
+from streamcorpus_pipeline._clean_visible import cleanse, \
+    make_clean_visible_from_raw, \
+    make_clean_visible
 
 
 def test_cleanse():
@@ -52,4 +54,88 @@ def test_make_clean_visible_script_2():
     s = 'The <script>crafty</script> fox jumped.'
     t = 'The         crafty          fox jumped.'
     u = make_clean_visible(s)
+    assert t == u
+
+
+def test_make_clean_visible_from_raw_link():
+    s = 'The <link></link> fox jumped.'
+    t = 'The               fox jumped.'
+    u = make_clean_visible_from_raw(s)
+    assert t == u
+
+
+def test_make_clean_visible_from_raw_link_2():
+    s = 'The <link/> fox jumped.'
+    t = 'The         fox jumped.'
+    u = make_clean_visible_from_raw(s)
+    assert t == u
+
+
+def test_make_clean_visible_from_raw_script():
+    s = 'The <script></script> fox jumped.'
+    t = 'The                   fox jumped.'
+    u = make_clean_visible_from_raw(s)
+    assert t == u
+
+
+def test_make_clean_visible_from_raw_script_2():
+    s = 'The <script>crafty</script> fox jumped.'
+    t = 'The                         fox jumped.'
+    u = make_clean_visible_from_raw(s)
+    assert t == u
+
+
+def test_make_clean_visible_from_raw_script_3():
+    s = 'The <script>crafty\n\n<more tags>\nand crazy stuff</ and other> stuff </style</script> fox jumped.'
+    t = 'The               \n\n           \n                                                    fox jumped.'
+    u = make_clean_visible_from_raw(s)
+    assert t == u
+
+
+def test_make_clean_visible_from_raw_script_4():
+    s = 'The <script>crafty\n\n<style>\nand crazy\n</style> stuff</ and other> stuff </style</script> fox jumped.'
+    t = 'The               \n\n       \n         \n                                                   fox jumped.'
+    u = make_clean_visible_from_raw(s)
+    assert t == u
+
+
+def test_make_clean_visible_from_raw_script_5():
+    s = 'The <script language="JavaScript">crafty\n\n<style>\nand crazy\n</style> stuff</ and other> stuff </style</script> fox jumped.'
+    t = 'The                                     \n\n       \n         \n                                                   fox jumped.'
+    u = make_clean_visible_from_raw(s)
+    assert t == u
+
+
+def test_make_clean_visible_from_raw_script_6():
+    s = 'The <script\n language="JavaScript">crafty\n\n<style>\nand crazy\n</style> stuff</ and other> stuff </style</script> fox jumped.'
+    t = 'The        \n                             \n\n       \n         \n                                                   fox jumped.'
+    u = make_clean_visible_from_raw(s)
+    assert t == u
+
+
+def test_make_clean_visible_from_raw_style():
+    s = 'The <style>crafty\n\n<style>\nand crazy\n</notstyle> stuff</ and other> stuff </style</style> fox jumped.'
+    t = 'The              \n\n       \n         \n                                                     fox jumped.'
+    u = make_clean_visible_from_raw(s)
+    assert t == u
+
+
+def test_make_clean_visible_from_raw_comment_1():
+    s = 'The <!---->a<!-- --> hi <!--\n crafty\n\n<style>\nand crazy\n</notstyle> st-->uff</ and other> stuff<!-- </style</style> fox--> jumped.'
+    t = 'The        a         hi     \n       \n\n       \n         \n                 uff              stuff                            jumped.'
+    u = make_clean_visible_from_raw(s)
+    assert t == u
+
+
+def test_make_clean_visible_from_raw_comment_2():
+    s = 'The <script language="JS"> \n <!a<!-- --> hi <!--\n</script> fox--> jumped.'
+    t = 'The                        \n                    \n          fox--> jumped.'
+    u = make_clean_visible_from_raw(s)
+    assert t == u
+
+
+def test_make_clean_visible_from_raw_ending_newlines():
+    s = '<html>The\n <tags> galor </so much> jumped.</html>\n\n'
+    t = '      The\n        galor            jumped.       \n\n'
+    u = make_clean_visible_from_raw(s)
     assert t == u
