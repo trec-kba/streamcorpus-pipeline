@@ -73,6 +73,41 @@ def force_unicode(raw):
     return converted.unicode
 
 
+def nice_decode(raw, stream_item=None, encoding=None):
+    raw_decoded = None
+    if encoding is not None:
+        try:
+            raw_decoded = raw.decode(encoding)
+        except:
+            logger.warn('encoding=%r provided, but failed',
+                        encoding, exc_info=True)
+            raw_decoded = None
+
+    if raw_decoded is None and stream_item is not None:
+        if stream_item.body and stream_item.body.encoding:
+            encoding = stream_item.body.encoding
+            try:
+                raw_decoded = raw.decode(encoding)
+            except:
+                logger.warn('stream_item.body.encoding=%r provided, but failed',
+                            encoding, exc_info=True)
+                raw_decoded = None
+
+        if raw_decoded and stream_item.body and stream_item.body.media_type:
+            #text/html; charset=windows-1251
+            parts = stream_item.body.media_type.split('=')
+            if len(parts) >= 2:
+                encoding = parts[1].strip()
+                try:
+                    raw_decoded = raw.decode(encoding)
+                except:
+                    logger.warn('stream_item.body.content_type=%r provided, but failed',
+                                stream_item.body.content_type, exc_info=True)
+                    raw_decoded = None
+
+    return raw_decoded
+
+
 def make_clean_html(raw, stream_item=None, encoding=None):
     '''Get a clean text representation of presumed HTML.
 
@@ -94,28 +129,9 @@ def make_clean_html(raw, stream_item=None, encoding=None):
     '''
     # Fix emails by protecting the <,> from HTML
     raw = fix_emails(raw)
-    raw_decoded = None
-
-    if encoding is not None:
-        try:
-            raw_decoded = raw.decode(encoding)
-        except:
-            logger.warn('encoding=%r provided, but failed',
-                        encoding, exc_info=True)
-            raw_decoded = None
-
-    if raw_decoded is None and stream_item is not None:
-        if stream_item.body and stream_item.body.encoding:
-            encoding = stream_item.body.encoding
-            try:
-                raw_decoded = raw.decode(encoding)
-            except:
-                logger.warn('stream_item.body.encoding=%r provided, but failed',
-                            encoding, exc_info=True)
-                raw_decoded = None
-
+    raw_decoded = nice_decode(raw, stream_item=stream_item, encoding=encoding)
     if raw_decoded is None:
-        # give up on decoding it
+        # give up on decoding it... maybe this should use force_unicode
         raw_decoded = raw
 
     # default attempt uses vanilla lxml.html
