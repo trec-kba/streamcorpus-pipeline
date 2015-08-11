@@ -24,11 +24,28 @@ VOID_ELEMENTS = set(['area', 'base', 'br', 'col', 'embed', 'hr', 'img',
 
 # To be written transform.
 class xpath_offsets(object):
+    '''Add XPath offsets to all tokens.
+
+    This is needed for specific display flows that try to present the
+    document in a browser and need to highlight tokens.
+
+    This stage has one configuration option, `validate`.  Computing
+    the XPath expressions involves parsing HTML and this may encounter
+    issues.  If `validate` is set to :const:`True`, after the XPath
+    expressions are generated, this stage runs an additional check
+    that the XPath expression range selects the original token text.
+    A failure generates a log message and drops the stream item from
+    the pipeline.  Validation is disabled by default.
+
+    '''
     config_name = 'xpath_offsets'
-    default_config = {}
+    default_config = {
+        'validate': False,
+    }
 
     def __init__(self, config):
-        self.config = config
+        self.validate = config.get('validate',
+                                   self.default_config['validate'])
 
     def __call__(self, si, context=None):
         if not si.body or not si.body.clean_html or not si.body.clean_visible:
@@ -37,12 +54,13 @@ class xpath_offsets(object):
                            si.stream_id)
             return si
         add_xpaths_to_stream_item(si)
-        try:
-            stream_item_roundtrip_xpaths(si, quick=False)
-        except XpathMismatchError:
-            logger.warning('stream item %s: Failed xpath roundtrip test, '
-                           'dropping', si.stream_id, exc_info=True)
-            return None
+        if self.validate:
+            try:
+                stream_item_roundtrip_xpaths(si, quick=False)
+            except XpathMismatchError:
+                logger.warning('stream item %s: Failed xpath roundtrip test, '
+                               'dropping', si.stream_id, exc_info=True)
+                return None
         return si
 
 
