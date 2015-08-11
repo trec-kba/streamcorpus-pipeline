@@ -46,6 +46,61 @@ class xpath_offsets(object):
         return si
 
 
+class TextElement(object):
+    '''Marker that the most recent element is a text node.'''
+
+
+class DepthStackEntry(object):
+    __slots__ = ['last_tag', 'tags']
+
+    def __init__(self):
+        #: Most recent element seen at this depth.  Can be :const:`None`
+        #: on startup, or :class:`TextElement` (as in the class object
+        #: itself) if the most recent element was a text node.
+        self.last_tag = None
+        #: Dictionary mapping element name to number of preceding elements
+        #: with that name, plus one.
+        self.tags = {}
+
+    def add_element(self, tag):
+        '''Record that `tag` has been seen at this depth.
+
+        If `tag` is :class:`TextElement`, it records a text node.
+
+        '''
+        # Collapse adjacent text nodes
+        if tag is TextElement and self.last_tag is TextElement:
+            return
+        self.last_tag = tag
+        if tag not in self.tags:
+            self.tags[tag] = 1
+        else:
+            self.tags[tag] += 1
+
+    def xpath_piece(self):
+        '''Get an XPath fragment for this location.
+
+        It is of the form ``tag[n]`` where `tag` is the most recent
+        element added and n is its position.
+
+        '''
+        if self.last_tag is TextElement:
+            return 'text()[{count}]'.format(count=self.text_index())
+        else:
+            return '{tag}[{count}]'.format(tag=self.last_tag,
+                                           count=self.tags[self.last_tag])
+
+    def text_index(self):
+        '''Returns the one-based index of the current text node.'''
+        # This is the number of text nodes we've seen so far.
+        # If we are currently in a text node, great; if not then add
+        # one for the text node that's about to begin.
+        i = self.tags.get(TextElement, 0)
+        if self.last_tag is not TextElement:
+            i += 1
+        return i
+
+
 class XpathTextCollector(HTMLParser):
     '''Collects an HTML parse into an xpath.
 
@@ -81,36 +136,14 @@ class XpathTextCollector(HTMLParser):
     def __init__(self):
         HTMLParser.__init__(self)  # old-style class :-/
 
-        # The current depth. Incremented when a tag is entered and decremented
-        # when a tag is exited.
-        self.depth = 0
-        # The index at which the most recent data node ends. The index is
-        # relative to the data node. (It is reset on every start tag.)
+        #: The index at which the most recent data node ends. The index is
+        #: relative to the data node. (It is reset on every start tag.)
         self.data_start = 0
-        # depth |--> {'path': [tag | data], 'tags': tag |--> count}
-        #   where `data` is represented via `None`.
-        #
-        # This is used to build the indices of each element in the xpath.
-        # Note that data nodes are also tracked, which are used to compute
-        # the data node indices.
-        #
-        # e.g., `[None, None, p, None]` means that `handle_data` was fired
-        # twice, then `handle_starttag` and then `handle_data` again. The
-        # last `handle_data` corresponds to the start of the *second* text
-        # node in the context's parent node. (See `self.text_index`.)
-        #
-        # This is all tracked *per depth*. When the parser leaves a depth,
-        # that depth's stack is popped until it's empty.
-        #
-        # Finally, this representation enables us to pick out the current
-        # xpath by peeking at the top of each stack from the smallest to
-        # largest depth.
-        #
-        # (We could compute the indices from just `path` by counting elements,
-        # but this is a perf problem. So we track the counts explicitly in
-        # a `tags` dict.)
-        self.depth_stack = {}
-        self.init_depth(0)
+        #: XPath state stack.  This is a list of :class:`DepthStackEntry`.
+        #: This is guaranteed to be non-empty, where the first item of
+        #: the list is the document root and the last is the current
+        #: location in the parse.
+        self.depth_stack = [DepthStackEntry()]
 
     # This is the one public method!
     def xpath_offset(self):
@@ -121,35 +154,12 @@ class XpathTextCollector(HTMLParser):
         indicates where the text inside the node ends. (When the text
         node is empty, the offset returned is `0`.)
         '''
-        datai = self.text_index()
-        xpath = '/' + '/'.join(self.xpath_pieces()) + ('/text()[%d]' % datai)
-        return (uni(xpath), self.data_start)
-
-    # These help with xpath generation.
-    def xpath_pieces(self):
-        '''A generator for a canonical xpath to the current node.
-
-        This does not include the text node.
-
-        The generator yields strings, where each string is a component
-        in the xpath. Joining them with ``/`` is valid, but it will not
-        be rooted.
-        '''
-        for d in xrange(self.depth):
-            tag = self.depth_stack[d]['path'][-1]
-            yield '%s[%d]' % (tag, self.depth_stack[d]['tags'][tag])
-
-    def text_index(self):
-        '''Returns the one-based index of the current text node.'''
-        i = 1
-        last_is_data = False
-        for v in self.depth_stack[self.depth]['path']:
-            if v is None and not last_is_data:
-                last_is_data = True
-            elif v is not None and last_is_data:
-                i += 1
-                last_is_data = False
-        return i
+        datai = self.depth_stack[-1].text_index()
+        xpath = (u'/' +
+                 u'/'.join(dse.xpath_piece()
+                           for dse in self.depth_stack[:-1]) +
+                 (u'/text()[%d]' % datai))
+        return (xpath, self.data_start)
 
     # Some hacks to track whether the parser moved to the next state.
     def feed(self, s):
@@ -165,54 +175,34 @@ class XpathTextCollector(HTMLParser):
             return meth(self, *args, **kwargs)
         return _
 
-    # Helpers.
-    def add_element(self, depth, tag):
-        d = self.depth_stack[depth]
-        d['path'].append(tag)
-        if tag not in d['tags']:
-            d['tags'][tag] = 1
-        else:
-            d['tags'][tag] += 1
-
-    def remove_element(self, depth, tag):
-        self.depth_stack[depth]['path'].pop()
-        self.depth_stack[depth]['tags'][tag] -= 1
-
-    def init_depth(self, depth):
-        self.depth_stack[depth] = {'path': [], 'tags': {}}
-
     # Satisfy the `HTMLParser` interface.
     @progressor
     def handle_starttag(self, tag, attrs):
         self.data_start = 0
-        self.add_element(self.depth, tag)
+        self.depth_stack[-1].add_element(tag)
         if tag in VOID_ELEMENTS:
             # Void elements are special. We effectively want to ignore them
             # completely, although we do need to make sure they affect node
             # indexing.
             return
-
-        self.depth += 1
-        self.init_depth(self.depth)
+        self.depth_stack.append(DepthStackEntry())
 
     @progressor
     def handle_endtag(self, tag):
-        d = self.depth_stack
         if tag in VOID_ELEMENTS:
             # We don't "descend" into void elements, so we can just ignore
             # them completely.
             return
-        d.pop(self.depth)
+        self.depth_stack.pop()
         self.data_start = 0
-        self.depth -= 1
-        assert d[self.depth]['path'][-1] == tag, \
+        assert self.depth_stack[-1].last_tag == tag, \
                 '%s not at end of %r' % (tag, d[self.depth]['path'])
 
     @progressor
     def handle_startendtag(self, tag, attrs):
         # This is *only* called for self-closing elements, e.g., `<br />`.
         # It is NOT called for void elements, e.g., `<br>`.
-        self.add_element(self.depth, tag)
+        self.depth_stack[-1].add_element(tag)
         self.data_start = 0
 
     # The following methods handle data. They are responsible for recording
@@ -235,18 +225,18 @@ class XpathTextCollector(HTMLParser):
         # hard-coded in certain state transitions. This means it could yield
         # data that is `bytes` even though we gave it a Unicode string. ---AG
         data = uni(data)
-        self.add_element(self.depth, None)
+        self.depth_stack[-1].add_element(TextElement)
         self.data_start += len(data)
 
     @progressor
     def handle_entityref(self, name):
-        self.add_element(self.depth, None)
+        self.depth_stack[-1].add_element(TextElement)
         # The `2` is for the `&` and `;` in, e.g., `&amp;`.
         self.data_start += 2 + len(name)
 
     @progressor
     def handle_charref(self, name):
-        self.add_element(self.depth, None)
+        self.depth_stack[-1].add_element(TextElement)
         # The `3` is for the `&`, `#` and `;` in, e.g., `&#36;`.
         # This also applies to hex codes as `name` will contain the
         # preceding `x`.
