@@ -139,3 +139,61 @@ def test_make_clean_visible_from_raw_ending_newlines():
     t = '      The\n        galor            jumped.       \n\n'
     u = make_clean_visible_from_raw(s)
     assert t == u
+
+
+def test_make_clean_visible_from_raw_comment_in_quote():
+    s = '<html><meta foo="The big<!-- you know where comment <script haha> -->">The fox jumped.</html>\n\n'
+    t = '                                                                       The fox jumped.       \n\n'
+    u = make_clean_visible_from_raw(s)
+    assert t == u
+
+
+example1_1 = '''				<!-- ENLACES_120x90_2015_EI -->
+				<ins class="adsbygoogle"
+				     style="display:inline-block;width:120px;height:90px"
+				     data-ad-client="ca-pub-8118159680005837"
+				     data-ad-slot="8414446812"></ins>
+				<script>
+				(adsbygoogle = window.adsbygoogle || []).push({});
+				</script>
+				<script async src="//pagead2.googlesyndication.com/pagead/js/adsbygoogle.js"></script>
+				<!-- ENLACES_120x90_2015_EI -->
+				<ins class="adsbygoogle"
+				     style="display:inline-block;width:120px;height:90px"
+				     data-ad-client="ca-pub-8118159680005837"
+				     data-ad-slot="8414446812"></ins>
+				<script>
+				(adsbygoogle = window.adsbygoogle || []).push({});
+				</script>
+			</div> 	 
+
+			
+
+			<p style="margin-top:10px;padding-right:10px" align="justify"><div id="HOTWordsTxt" name="HOTWordsTxt" style="text-align:justify;"><!--AUGURE_NOTICIA_INICIO--><b>'''
+example1_2 = '''River supo caer para despues levantarse y ganar la Libertadores</b> / <b>El Tiempo</b> / Jonathan Maidana, '''
+
+truth1_1 = ' ' * len(example1_1)
+truth1_2   = '''River supo caer para despues levantarse y ganar la Libertadores     /    El Tiempo     / Jonathan Maidana, '''
+
+truth1 = truth1_1 + truth1_2
+
+def test_make_clean_visible_from_raw_example1_1():
+    u = make_clean_visible_from_raw(example1_1)
+    assert truth1_1 == u.replace('\t', ' ').replace('\n', ' ')
+
+def test_make_clean_visible_from_raw_example1_2():
+    u = make_clean_visible_from_raw(example1_2)
+    assert truth1_2 == u
+
+def test_make_clean_visible_from_raw_example1():
+    u = make_clean_visible_from_raw(example1_1 + example1_2)
+    assert truth1 == u.replace('\t', ' ').replace('\n', ' ')
+
+
+example2 = '''<link href='http://fonts.googleapis.com/css?family=Jura' rel='stylesheet' type='text/css'>
+				<li>Principal
+'''
+
+def test_make_clean_visible_from_raw_example2():
+    u = make_clean_visible_from_raw(example2)
+    assert 'Principal' == u.strip().replace('\t', ' ').replace('\n', ' ')

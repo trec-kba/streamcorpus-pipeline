@@ -128,6 +128,127 @@ def make_clean_visible(_html, tag_replacement_char=' '):
     return non_tag.encode('utf-8')
 
 
+extended_tags = set(['!--', 'script', 'style'])
+longest_extended_tag = max(map(len, extended_tags))
+def non_tag_chars_from_raw(html):
+    '''generator that yields clean visible as it transitions through
+    states in the raw `html`
+
+    '''
+    n = 0
+    while n < len(html):
+        # find start of tag
+        angle = html.find('<', n)
+        if angle == -1:
+            yield html[n:]
+            n = len(html)
+            break
+        yield html[n:angle]
+        n = angle
+
+        # find the end of the tag string
+        space = html.find(' ',  n, n + longest_extended_tag + 2)
+        angle = html.find('>',  n, n + longest_extended_tag + 2)
+        nl    = html.find('\n', n, n + longest_extended_tag + 2)
+        tab   = html.find('\t', n, n + longest_extended_tag + 2)
+        ends = filter(lambda end: end > -1, [tab, nl, space, angle])
+        if ends:
+            tag = html[n + 1 : min(ends)]
+            if tag == '!--':
+                # whiteout comment except newlines
+                end = html.find('-->', n)
+                while n < end:
+                    nl = html.find('\n', n, end)
+                    if nl != -1:
+                        yield ' ' * (nl - n) + '\n'
+                        n = nl + 1
+                    else:
+                        yield ' ' * (end - n + 3)
+                        break
+                n = end + 3
+                continue
+            is_extended = tag.lower() in extended_tags
+        else:
+            is_extended = False
+
+        # find end of tag even if on a lower line
+        while n < len(html):
+            squote = html.find("'", n)
+            dquote = html.find('"', n)
+            nl = html.find('\n', n)
+            angle = html.find('>', n)
+            if angle == -1:
+                # hits end of doc before end of tag
+                yield ' ' * (len(html) - n)
+                n = len(html)
+                break
+            elif -1 < squote < angle or -1 < dquote < angle:
+                if squote != -1 and dquote != -1:
+                    if squote < dquote: 
+                        open_quote = squote
+                        quote = "'"
+                    else:
+                        open_quote = dquote
+                        quote = '"'
+                elif dquote != -1:
+                    open_quote = dquote
+                    quote = '"'
+                else:
+                    open_quote = squote
+                    quote = "'"
+                close_quote = html.find(quote, open_quote + 1)
+                while n < close_quote:
+                    nl = html.find('\n', n, close_quote)
+                    if nl == -1: break
+                    yield ' ' * (nl - n) + '\n'
+                    n = nl + 1
+                yield ' ' * (close_quote + 1 - n)
+                n = close_quote + 1
+                continue
+
+            elif nl == -1 or angle < nl:
+                # found close before either newline or end of doc
+                yield ' ' * (angle + 1 - n)
+                n = angle + 1
+                if is_extended and html[angle - 1] != '/':
+                    # find matching closing tag. JavaScript can
+                    # include HTML *strings* within it, and in
+                    # principle, that HTML could contain a closing
+                    # script tag in it; ignoring for now.
+                    while n < len(html):
+                        nl = html.find('\n', n)
+                        close = html.find('</', n)
+                        close2 = html.find('</', close + 2)
+                        angle = html.find('>', close + 2)
+                        if nl != -1 and nl < close:
+                            yield ' ' * (nl - n) + '\n'
+                            n = nl + 1
+                        elif close == -1 or angle == -1:
+                            # end of doc before matching close tag
+                            yield ' ' * (len(html) - n)
+                            n = len(html)
+                            break
+                        elif close2 != -1 and close2 < angle:
+                            # broken tag inside current tag
+                            yield ' ' * (close + 2 - n)
+                            n = close + 2
+                        elif html[close + 2:angle].lower() == tag.lower():
+                            yield ' ' * (angle + 1 - n)
+                            n = angle + 1
+                            break
+                        else:
+                            yield ' ' * (angle + 1 - n)
+                            n = angle + 1
+                            # do not break
+                # finished with tag
+                break
+            else:
+                # found a newline within the current tag
+                yield ' ' * (nl - n) + '\n'
+                n = nl + 1
+                # do not break
+
+
 def make_clean_visible_from_raw(_html, tag_replacement_char=' '):
     '''Takes an HTML-like Unicode (or UTF-8 encoded) string as input and
     returns a Unicode string with all tags replaced by whitespace. In
@@ -148,101 +269,11 @@ def make_clean_visible_from_raw(_html, tag_replacement_char=' '):
     This is a simple state machine iterator without regexes
 
     '''
-    extended_tags = set(['!--', 'script', 'style', 'link'])
-    longest_extended_tag = max(map(len, extended_tags))
-    def non_tag_chars(html):
-        n = 0
-        while n < len(html):
-            # find start of tag
-            angle = html.find('<', n)
-            if angle == -1:
-                yield html[n:]
-                n = len(html)
-                break
-            yield html[n:angle]
-            n = angle
-
-            # find the end of the tag string
-            space = html.find(' ',  n, n + longest_extended_tag + 2)
-            angle = html.find('>',  n, n + longest_extended_tag + 2)
-            nl    = html.find('\n', n, n + longest_extended_tag + 2)
-            tab   = html.find('\t', n, n + longest_extended_tag + 2)
-            ends = filter(lambda end: end > -1, [tab, nl, space, angle])
-            if ends:
-                tag = html[n + 1 : min(ends)]
-                if tag == '!--':
-                    # whiteout comment except newlines
-                    end = html.find('-->', n)
-                    while n < end:
-                        nl = html.find('\n', n, end)
-                        if nl != -1:
-                            yield ' ' * (nl - n) + '\n'
-                            n = nl + 1
-                        else:
-                            yield ' ' * (end - n + 3)
-                            break
-                    n = end + 3
-                    continue
-                is_extended = tag.lower() in extended_tags
-            else:
-                is_extended = False
-
-            # find end of tag even if on a lower line
-            while n < len(html):
-                nl = html.find('\n', n)
-                angle = html.find('>', n)
-                if angle == -1:
-                    # hits end of doc before end of tag
-                    yield ' ' * (len(html) - n)
-                    n = len(html)
-                    break
-                elif nl == -1 or angle < nl:
-                    # found close before either newline or end of doc
-                    yield ' ' * (angle + 1 - n)
-                    n = angle + 1
-                    if is_extended and html[angle - 1] != '/':
-                        # find matching closing tag. JavaScript can
-                        # include HTML *strings* within it, and in
-                        # principle, that HTML could contain a closing
-                        # script tag in it; ignoring for now.
-                        while n < len(html):
-                            nl = html.find('\n', n)
-                            close = html.find('</', n)
-                            close2 = html.find('</', close + 2)
-                            angle = html.find('>', close + 2)
-                            if nl != -1 and nl < close:
-                                yield ' ' * (nl - n) + '\n'
-                                n = nl + 1
-                            elif close == -1 or angle == -1:
-                                # end of doc before matching close tag
-                                yield ' ' * (len(html) - n)
-                                n = len(html)
-                                break
-                            elif close2 != -1 and close2 < angle:
-                                # broken tag inside current tag
-                                yield ' ' * (close + 2 - n)
-                                n = close + 2
-                            elif html[close + 2:angle].lower() == tag.lower():
-                                yield ' ' * (angle + 1 - n)
-                                n = angle + 1
-                                break
-                            else:
-                                yield ' ' * (angle + 1 - n)
-                                n = angle + 1
-                                # do not break
-                    # finished with tag
-                    break
-                else:
-                    # found a newline within the current tag
-                    yield ' ' * (nl - n) + '\n'
-                    n = nl + 1
-                    # do not break
-
     if not isinstance(_html, unicode):
         _html = unicode(_html, 'utf-8')
 
     #Strip tags with logic above
-    non_tag = ''.join(non_tag_chars(_html))
+    non_tag = ''.join(non_tag_chars_from_raw(_html))
 
     return non_tag.encode('utf-8')
 
@@ -384,3 +415,29 @@ http://www.cis.upenn.edu/~treebank/tokenization.html
     span = whitespace.sub(' ', span)
     # trim any leading or trailing whitespace
     return span.strip()
+
+
+def main():
+    '''manual test loop for make_clean_visible_from_raw
+    '''
+    import argparse
+    import sys
+    parser = argparse.ArgumentParser()
+    parser.add_argument('path')
+    args = parser.parse_args()
+    
+    html = open(args.path).read()
+    html = html.decode('utf8')
+
+    cursor = 0
+    for s in non_tag_chars_from_raw(html):
+        for c in s:
+            if c != ' ' and c != html[cursor]:
+                import pdb; pdb.set_trace()
+            sys.stdout.write(c.encode('utf8'))
+            sys.stdout.flush()
+            cursor += 1
+            
+
+if __name__ == '__main__':
+    main()
