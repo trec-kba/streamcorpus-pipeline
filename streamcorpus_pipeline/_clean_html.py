@@ -185,6 +185,14 @@ def make_clean_html(raw, stream_item=None, encoding=None):
 
 
 def uniform_html(html):
+    '''Takes a utf-8-encoded string of HTML as input and returns a new
+    HTML string with fixed quoting and close tags, which generally
+    should not break any of the offsets and makes it easier for
+    functions like
+    :func:`streamcorpus_pipeline.offsets.char_offsets_to_xpaths` to
+    operate without failures.
+
+    '''
     doc = html5lib.parse(html.decode('utf-8'))
     config = {
         'omit_optional_tags': False,
