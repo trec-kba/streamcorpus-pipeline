@@ -214,7 +214,7 @@ class XpathTextCollector(HTMLParser):
         self.depth_stack.pop()
         self.data_start = 0
         assert self.depth_stack[-1].last_tag == tag, \
-                '%s not at end of %r' % (tag, d[self.depth]['path'])
+                '%s not at end of %r' % (tag, self.depth_stack)
 
     @progressor
     def handle_startendtag(self, tag, attrs):
