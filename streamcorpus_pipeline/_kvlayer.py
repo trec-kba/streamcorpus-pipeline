@@ -8,6 +8,7 @@
 
 '''
 from __future__ import absolute_import
+import base64
 import logging
 import re
 import struct
@@ -18,7 +19,7 @@ from streamcorpus_pipeline.stages import Configured
 from streamcorpus_pipeline._kvlayer_table_names import \
     BY_TIME, WITH_SOURCE, KEYWORDS, HASH_TF_SID, HASH_FREQUENCY, \
     HASH_KEYWORD, \
-    stream_id_to_kvlayer_key, key_for_stream_item, \
+    stream_id_to_kvlayer_key, kvlayer_key_to_stream_id, key_for_stream_item, \
     STREAM_ITEM_TABLE_DEFS, STREAM_ITEM_VALUE_DEFS, INDEX_TABLE_NAMES, \
     STREAM_ITEMS_TABLE, STREAM_ITEMS_SOURCE_INDEX, STREAM_ITEMS_TIME_INDEX
 import yakonfig
@@ -210,6 +211,50 @@ def get_kvlayer_stream_item(client, stream_id):
             errors, bytestr = streamcorpus.decrypt_and_uncompress(v)
             return streamcorpus.deserialize(bytestr)
     raise KeyError(stream_id)
+
+
+def get_kvlayer_stream_item_by_doc_id(client, doc_id):
+    '''Retrieve :class:`streamcorpus.StreamItem`s from :mod:`kvlayer`.
+
+    Namely, it returns an iterator over all documents with the given
+    docid. The docid should be an md5 hash of the document's abs_url.
+
+    :param client: kvlayer client object
+    :type client: :class:`kvlayer.AbstractStorage`
+    :param str doc_id: doc id of documents to retrieve
+    :return: generator of :class:`streamcorpus.StreamItem`
+    '''
+    if client is None:
+        client = kvlayer.client()
+        client.setup_namespace(STREAM_ITEM_TABLE_DEFS,
+                               STREAM_ITEM_VALUE_DEFS)
+    start = (base64.b16decode(doc_id.upper()), 0)
+    end = (base64.b16decode(doc_id.upper()), 0xff)
+    for k, v in client.scan(STREAM_ITEMS_TABLE, (start, end)):
+        if v is not None:
+            errors, bytestr = streamcorpus.decrypt_and_uncompress(v)
+            yield streamcorpus.deserialize(bytestr)
+
+
+def get_kvlayer_stream_ids_by_doc_id(client, doc_id):
+    '''Retrieve stream ids from :mod:`kvlayer`.
+
+    Namely, it returns an iterator over all stream ids with the given
+    docid. The docid should be an md5 hash of the document's abs_url.
+
+    :param client: kvlayer client object
+    :type client: :class:`kvlayer.AbstractStorage`
+    :param str doc_id: doc id of documents to retrieve
+    :return: generator of str
+    '''
+    if client is None:
+        client = kvlayer.client()
+        client.setup_namespace(STREAM_ITEM_TABLE_DEFS,
+                               STREAM_ITEM_VALUE_DEFS)
+    start = (base64.b16decode(doc_id.upper()), 0)
+    end = (base64.b16decode(doc_id.upper()), 0xff)
+    for k in client.scan_keys(STREAM_ITEMS_TABLE, (start, end)):
+        yield kvlayer_key_to_stream_id(k)
 
 
 def delete_kvlayer_stream_item(client, stream_id):
