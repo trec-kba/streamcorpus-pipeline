@@ -219,9 +219,10 @@ def make_doc_id_range(doc_id):
 
     '''
     assert len(doc_id) == 32, 'expecting 32 hex string, not: %r' % doc_id
-    begin = (base64.b16decode(doc_id.upper()),)
-    end   = (base64.b16decode(doc_id.upper()) + '\xff',)
-    return (begin, end)
+    bin_docid = base64.b16decode(doc_id.upper())
+    doc_id_range = ((bin_docid,), (bin_docid,))
+    return doc_id_range
+
 
 def get_kvlayer_stream_item_by_doc_id(client, doc_id):
     '''Retrieve :class:`streamcorpus.StreamItem`s from :mod:`kvlayer`.
