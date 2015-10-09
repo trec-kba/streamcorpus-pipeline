@@ -213,6 +213,16 @@ def get_kvlayer_stream_item(client, stream_id):
     raise KeyError(stream_id)
 
 
+def make_doc_id_range(doc_id):
+    '''Construct a tuple(begin, end) of one-tuple kvlayer keys from a
+    hexdigest doc_id.
+
+    '''
+    assert len(doc_id) == 32, 'expecting 32 hex string, not: %r' % doc_id
+    begin = (base64.b16decode(doc_id.upper()),)
+    end   = (base64.b16decode(doc_id.upper()) + '\xff',)
+    return (begin, end)
+
 def get_kvlayer_stream_item_by_doc_id(client, doc_id):
     '''Retrieve :class:`streamcorpus.StreamItem`s from :mod:`kvlayer`.
 
@@ -228,9 +238,8 @@ def get_kvlayer_stream_item_by_doc_id(client, doc_id):
         client = kvlayer.client()
         client.setup_namespace(STREAM_ITEM_TABLE_DEFS,
                                STREAM_ITEM_VALUE_DEFS)
-    start = (base64.b16decode(doc_id.upper()), 0)
-    end = (base64.b16decode(doc_id.upper()), 0xff)
-    for k, v in client.scan(STREAM_ITEMS_TABLE, (start, end)):
+    doc_id_range = make_doc_id_range(doc_id)
+    for k, v in client.scan(STREAM_ITEMS_TABLE, doc_id_range):
         if v is not None:
             errors, bytestr = streamcorpus.decrypt_and_uncompress(v)
             yield streamcorpus.deserialize(bytestr)
@@ -251,9 +260,8 @@ def get_kvlayer_stream_ids_by_doc_id(client, doc_id):
         client = kvlayer.client()
         client.setup_namespace(STREAM_ITEM_TABLE_DEFS,
                                STREAM_ITEM_VALUE_DEFS)
-    start = (base64.b16decode(doc_id.upper()), 0)
-    end = (base64.b16decode(doc_id.upper()), 0xff)
-    for k in client.scan_keys(STREAM_ITEMS_TABLE, (start, end)):
+    doc_id_range = make_doc_id_range(doc_id)
+    for k in client.scan_keys(STREAM_ITEMS_TABLE, doc_id_range):
         yield kvlayer_key_to_stream_id(k)
 
 
