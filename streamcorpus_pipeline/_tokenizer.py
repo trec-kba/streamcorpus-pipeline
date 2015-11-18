@@ -13,8 +13,8 @@ from nltk.tokenize import WhitespaceTokenizer
 from nltk.tokenize.punkt import PunktSentenceTokenizer
 
 from sortedcollection import SortedCollection
-import streamcorpus
-from streamcorpus import Token, Sentence, Offset, OffsetType
+import streamcorpus.old as streamcorpus
+from streamcorpus.old import Token, Sentence, Offset, OffsetType
 from streamcorpus_pipeline.stages import IncrementalTransform
 
 logger = logging.getLogger(__name__)

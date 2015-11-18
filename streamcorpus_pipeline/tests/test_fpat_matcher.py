@@ -2,7 +2,7 @@
 import os
 import uuid
 import pytest
-from streamcorpus import Chunk, make_stream_item, ContentItem
+from streamcorpus.old import Chunk, make_stream_item, ContentItem
 #from _fpat_matcher import fpat_matcher # TODO: this fails before we can even fail the test
 # TODO: probably delete this file
 

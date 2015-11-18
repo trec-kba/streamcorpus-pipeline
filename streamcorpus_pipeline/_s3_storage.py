@@ -24,8 +24,8 @@ try:
 except ImportError:
     FCChunk = None
 
-import streamcorpus
-from streamcorpus import decrypt_and_uncompress, \
+import streamcorpus.old as streamcorpus
+from streamcorpus.old import decrypt_and_uncompress, \
     parse_file_extensions, known_compression_schemes, \
     compress_and_encrypt_path, Chunk
 from streamcorpus_pipeline._exceptions import FailedExtraction, \

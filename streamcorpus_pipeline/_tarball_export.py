@@ -5,7 +5,7 @@ Copyright 2012-2013 Diffeo, Inc.
 '''
 import tarfile
 import logging
-import streamcorpus
+import streamcorpus.old as streamcorpus
 from cStringIO import StringIO
 
 from yakonfig import ConfigurationError

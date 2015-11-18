@@ -9,7 +9,7 @@ Copyright 2012-2014 Diffeo, Inc.
 from __future__ import absolute_import
 import logging
 
-from streamcorpus import make_stream_item, make_stream_time, ContentItem, Tagging, Rating, Target, Annotator
+from streamcorpus.old import make_stream_item, make_stream_time, ContentItem, Tagging, Rating, Target, Annotator
 from streamcorpus_pipeline.stages import Configured
 
 logger = logging.getLogger(__name__)

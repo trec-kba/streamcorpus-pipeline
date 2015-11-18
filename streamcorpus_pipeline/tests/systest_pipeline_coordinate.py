@@ -12,7 +12,7 @@ import yaml
 
 import pytest
 
-import streamcorpus
+import streamcorpus.old as streamcorpus
 from coordinate.workers import run_worker, MultiWorker
 
 logger = logging.getLogger(__name__)

@@ -12,7 +12,7 @@ import re
 import sys
 import logging
 
-from streamcorpus import add_annotation, Offset, OffsetType, Annotator, Target, Label
+from streamcorpus.old import add_annotation, Offset, OffsetType, Annotator, Target, Label
 from streamcorpus_pipeline._clean_visible import make_clean_visible
 from streamcorpus_pipeline.stages import Configured
 

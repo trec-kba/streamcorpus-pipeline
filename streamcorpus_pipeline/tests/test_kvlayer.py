@@ -10,7 +10,7 @@ import logging
 
 import kvlayer
 import pytest
-import streamcorpus
+import streamcorpus.old as streamcorpus
 
 from streamcorpus_pipeline._kvlayer import from_kvlayer, to_kvlayer, \
     serialize_si_key

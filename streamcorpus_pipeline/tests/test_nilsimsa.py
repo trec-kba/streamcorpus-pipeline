@@ -7,7 +7,7 @@ from __future__ import absolute_import
 import os
 
 from nilsimsa import Nilsimsa
-from streamcorpus import make_stream_item, ContentItem, Chunk
+from streamcorpus.old import make_stream_item, ContentItem, Chunk
 
 from streamcorpus_pipeline._clean_html import clean_html
 from streamcorpus_pipeline._clean_visible import cleanse, clean_visible

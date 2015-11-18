@@ -12,7 +12,7 @@ from __future__ import absolute_import
 import logging
 import regex as re
 
-from streamcorpus import ContentItem
+from streamcorpus.old import ContentItem
 from streamcorpus_pipeline.stages import Configured
 
 logger = logging.getLogger(__name__)

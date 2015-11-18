@@ -7,7 +7,7 @@ import urlparse
 from google.protobuf.message import DecodeError
 import pytest
 
-from streamcorpus import Chunk
+from streamcorpus.old import Chunk
 import streamcorpus_pipeline
 from streamcorpus_pipeline._exceptions import ConfigurationError
 from streamcorpus_pipeline._pipeline import Pipeline, PipelineFactory

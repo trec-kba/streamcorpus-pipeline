@@ -10,7 +10,7 @@ Copyright 2012-2014 Diffeo, Inc.
 from __future__ import absolute_import
 import cld
 import logging
-from streamcorpus import Language
+from streamcorpus.old import Language
 from streamcorpus_pipeline.stages import Configured
 
 logger = logging.getLogger(__name__)

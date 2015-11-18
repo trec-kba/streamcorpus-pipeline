@@ -13,7 +13,7 @@ import os
 import shutil
 import time
 
-import streamcorpus
+import streamcorpus.old as streamcorpus
 from streamcorpus_pipeline._get_name_info import get_name_info
 from streamcorpus_pipeline.stages import Configured
 from streamcorpus_pipeline._tarball_export import tarball_export

@@ -169,7 +169,7 @@ try:
 except ImportError:
     gevent = None
 
-import streamcorpus
+import streamcorpus.old as streamcorpus
 from streamcorpus_pipeline._exceptions import TransformGivingUp, \
     InvalidStreamItem
 from streamcorpus_pipeline.util import rmtree

@@ -22,7 +22,7 @@ Copyright 2012-2014 Diffeo, Inc.
 '''
 
 ## this assumes that streamcorpus has been installed
-import streamcorpus
+import streamcorpus.old as streamcorpus
 
 import os
 import hashlib

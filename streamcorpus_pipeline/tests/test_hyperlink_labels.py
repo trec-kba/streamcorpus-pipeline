@@ -6,8 +6,8 @@ import uuid
 
 import pytest
 
-import streamcorpus
-from streamcorpus import make_stream_item, StreamItem, ContentItem, OffsetType, Chunk
+import streamcorpus.old as streamcorpus
+from streamcorpus.old import make_stream_item, StreamItem, ContentItem, OffsetType, Chunk
 import streamcorpus_pipeline
 from streamcorpus_pipeline._clean_visible import clean_visible
 from streamcorpus_pipeline._hyperlink_labels import anchors_re, hyperlink_labels

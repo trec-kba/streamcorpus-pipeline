@@ -1,6 +1,6 @@
 from __future__ import absolute_import
 import pytest
-from streamcorpus import Chunk, make_stream_item, add_annotation, \
+from streamcorpus.old import Chunk, make_stream_item, add_annotation, \
     Sentence, Token, Annotator, Target, Rating
 
 import streamcorpus_pipeline.stages

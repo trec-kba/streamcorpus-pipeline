@@ -7,7 +7,7 @@ from __future__ import absolute_import
 import copy
 import logging
 
-import streamcorpus
+import streamcorpus.old as streamcorpus
 from streamcorpus_pipeline.stages import Configured
 
 logger = logging.getLogger(__name__)

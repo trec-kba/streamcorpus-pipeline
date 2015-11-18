@@ -9,7 +9,7 @@ import pytest
 import streamcorpus_pipeline
 from streamcorpus_pipeline._clean_html import clean_html
 from streamcorpus_pipeline._language import language
-from streamcorpus import make_stream_item, ContentItem
+from streamcorpus.old import make_stream_item, ContentItem
 
 def test_langauge(test_data_dir):
     path = os.path.join(test_data_dir, 'test/raw-unicode-issues.html')

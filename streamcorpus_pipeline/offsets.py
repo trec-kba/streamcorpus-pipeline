@@ -4,7 +4,7 @@ from HTMLParser import HTMLParser
 from itertools import izip
 import logging
 
-from streamcorpus import InvalidXpathError, Offset, OffsetType, XpathRange
+from streamcorpus.old import InvalidXpathError, Offset, OffsetType, XpathRange
 
 
 logger = logging.getLogger(__name__)

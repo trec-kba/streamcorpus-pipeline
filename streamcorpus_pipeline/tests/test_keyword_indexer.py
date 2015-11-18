@@ -10,7 +10,7 @@ import pytest
 
 import kvlayer
 from kvlayer._local_memory import LocalStorage
-from streamcorpus import Chunk, make_stream_item, Sentence, Token
+from streamcorpus.old import Chunk, make_stream_item, Sentence, Token
 import streamcorpus_pipeline
 from streamcorpus_pipeline._kvlayer import to_kvlayer
 from streamcorpus_pipeline._kvlayer_table_names import STREAM_ITEM_TABLE_DEFS, \

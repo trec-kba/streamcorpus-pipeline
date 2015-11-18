@@ -1,5 +1,5 @@
 
-from streamcorpus import make_stream_item
+from streamcorpus.old import make_stream_item
 from streamcorpus_pipeline._set_source import set_source
 
 def test_set_source():

@@ -11,7 +11,7 @@ import json
 import logging
 import os
 import re
-from streamcorpus import Chunk
+from streamcorpus.old import Chunk
 from subprocess import Popen, PIPE
 import sys
 import time

@@ -1,7 +1,7 @@
 
 
 from streamcorpus_pipeline._get_name_info import get_name_info
-from streamcorpus import Chunk, make_stream_item
+from streamcorpus.old import Chunk, make_stream_item
 
 def test_get_name_info(tmpdir):
 

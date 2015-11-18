@@ -27,7 +27,7 @@ except ImportError:
 
 import yakonfig
 
-import streamcorpus
+import streamcorpus.old as streamcorpus
 from streamcorpus_pipeline._exceptions import FailedExtraction, \
     ConfigurationError, FailedVerification
 import streamcorpus_pipeline._s3_storage as s3stage

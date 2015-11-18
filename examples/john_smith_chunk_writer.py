@@ -13,7 +13,7 @@ import logging
 import os
 
 ## this assumes that streamcorpus has been installed; it is in pypi
-import streamcorpus
+import streamcorpus.old as streamcorpus
 
 logger = logging.getLogger(__name__)
 

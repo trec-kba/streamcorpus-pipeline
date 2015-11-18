@@ -24,7 +24,7 @@ Copyright 2012-2013 Diffeo, Inc.
 '''
 
 ## this assumes that streamcorpus has been installed
-import streamcorpus
+import streamcorpus.old as streamcorpus
 from streamcorpus_pipeline._exceptions import PipelineBaseException
 from streamcorpus_pipeline.stages import Configured
 

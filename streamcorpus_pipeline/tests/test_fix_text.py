@@ -1,7 +1,7 @@
 from __future__ import absolute_import, division, print_function
 import os.path as path
 
-from streamcorpus import make_stream_item, ContentItem
+from streamcorpus.old import make_stream_item, ContentItem
 from streamcorpus_pipeline._fix_text import fix_text
 
 def test_fix_text(test_data_dir):

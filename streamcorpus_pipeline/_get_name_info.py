@@ -9,7 +9,7 @@ import random
 import datetime
 import hashlib
 import logging
-from streamcorpus import Chunk
+from streamcorpus.old import Chunk
 import re
 
 logger = logging.getLogger(__name__)

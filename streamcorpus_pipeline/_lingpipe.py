@@ -19,7 +19,7 @@ import uuid
 
 from nltk.tokenize import WhitespaceTokenizer
 
-from streamcorpus import Token, Sentence, EntityType, Chunk, Offset, \
+from streamcorpus.old import Token, Sentence, EntityType, Chunk, Offset, \
     OffsetType, Gender, MentionType, Attribute, AttributeType
 from streamcorpus_pipeline.stages import Configured
 from streamcorpus_pipeline._taggers import TaggerBatchTransform

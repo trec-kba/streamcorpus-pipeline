@@ -48,7 +48,7 @@ import zlib
 
 from google.protobuf.internal.decoder import _DecodeVarint
 
-import streamcorpus
+import streamcorpus.old as streamcorpus
 from streamcorpus_pipeline._exceptions import ConfigurationError
 from streamcorpus_pipeline._spinn3r.protoStream_pb2 \
     import ProtoStreamDelimiter, ProtoStreamHeader

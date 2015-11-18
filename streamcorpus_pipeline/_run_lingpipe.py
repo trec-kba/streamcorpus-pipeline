@@ -17,8 +17,8 @@ This software is released under an MIT/X11 open source license.
 Copyright 2012-2013 Diffeo, Inc.
 '''
 
-import streamcorpus
-from streamcorpus import Chunk, Label, Tagging
+import streamcorpus.old as streamcorpus
+from streamcorpus.old import Chunk, Label, Tagging
 #import lingpipe
 lingpipe = None
 

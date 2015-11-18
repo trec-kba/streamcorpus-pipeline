@@ -4,7 +4,7 @@ import time
 
 import pytest
 
-from streamcorpus import make_stream_item
+from streamcorpus.old import make_stream_item
 import streamcorpus_pipeline
 import streamcorpus_pipeline.config
 from streamcorpus_pipeline.stages import PipelineStages

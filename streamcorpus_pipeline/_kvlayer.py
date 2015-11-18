@@ -14,7 +14,7 @@ import re
 import struct
 
 import kvlayer
-import streamcorpus
+import streamcorpus.old as streamcorpus
 from streamcorpus_pipeline.stages import Configured
 from streamcorpus_pipeline._kvlayer_table_names import \
     BY_TIME, WITH_SOURCE, KEYWORDS, HASH_TF_SID, HASH_FREQUENCY, \

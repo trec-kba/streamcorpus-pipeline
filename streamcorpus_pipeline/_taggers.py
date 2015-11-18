@@ -23,8 +23,8 @@ import regex as re
 
 import xml.dom.minidom
 
-import streamcorpus
-from streamcorpus import Chunk, Tagging, Label, OffsetType, add_annotation
+import streamcorpus.old as streamcorpus
+from streamcorpus.old import Chunk, Tagging, Label, OffsetType, add_annotation
 from streamcorpus_pipeline._clean_visible import make_clean_visible_file, \
     cleanse
 from sortedcollection import SortedCollection

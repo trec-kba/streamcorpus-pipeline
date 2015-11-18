@@ -13,7 +13,7 @@ import os
 
 import json
 
-from streamcorpus import make_stream_item, ContentItem
+from streamcorpus.old import make_stream_item, ContentItem
 from streamcorpus_pipeline.stages import Configured
 
 class convert_kba_json(Configured):

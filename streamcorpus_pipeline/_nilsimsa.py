@@ -10,7 +10,7 @@ from nilsimsa import Nilsimsa
 
 from streamcorpus_pipeline.stages import Configured
 from streamcorpus_pipeline._clean_visible import cleanse
-from streamcorpus import ContentItem
+from streamcorpus.old import ContentItem
 
 
 class nilsimsa(Configured):

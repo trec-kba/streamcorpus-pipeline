@@ -5,7 +5,7 @@ import pytest
 import sys
 import time
 
-from streamcorpus import StreamItem, ContentItem
+from streamcorpus.old import StreamItem, ContentItem
 from streamcorpus_pipeline.force_clean_html import force_clean_html
 from streamcorpus_pipeline._clean_html import make_clean_html, clean_html
 from streamcorpus_pipeline._clean_visible import make_clean_visible

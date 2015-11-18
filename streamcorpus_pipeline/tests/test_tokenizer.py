@@ -1,6 +1,6 @@
 
 from __future__ import absolute_import
-from streamcorpus import Annotator, Label, make_stream_item, Offset, \
+from streamcorpus.old import Annotator, Label, make_stream_item, Offset, \
     OffsetType, Target
 from streamcorpus_pipeline._tokenizer import nltk_tokenizer
 

@@ -3,7 +3,7 @@ import os
 
 import pytest
 
-import streamcorpus
+import streamcorpus.old as streamcorpus
 from streamcorpus_pipeline._upgrade_streamcorpus_v0_3_0 import \
     upgrade_streamcorpus_v0_3_0
 from streamcorpus_pipeline.tests._test_data import get_test_chunk_path

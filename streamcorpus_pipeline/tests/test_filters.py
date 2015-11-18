@@ -1,5 +1,5 @@
 
-from streamcorpus import make_stream_item
+from streamcorpus.old import make_stream_item
 from streamcorpus_pipeline._filters import filter_domains, \
     filter_domains_substrings, \
     replace_raw, \

@@ -12,7 +12,7 @@ import time
 
 from lxml import etree
 
-import streamcorpus
+import streamcorpus.old as streamcorpus
 from streamcorpus_pipeline.stages import Configured
 
 logger = logging.getLogger(__name__)

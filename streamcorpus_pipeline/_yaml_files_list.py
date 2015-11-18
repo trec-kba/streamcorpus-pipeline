@@ -36,7 +36,7 @@ import urllib
 import magic
 import yaml
 
-import streamcorpus
+import streamcorpus.old as streamcorpus
 from collections import defaultdict
 from streamcorpus_pipeline._clean_visible import cleanse
 from streamcorpus_pipeline.stages import Configured

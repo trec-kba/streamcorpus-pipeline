@@ -9,7 +9,7 @@ from __future__ import absolute_import
 import os
 import uuid
 
-from streamcorpus import OffsetType
+from streamcorpus.old import OffsetType
 from streamcorpus_pipeline.stages import Configured
 
 class dump_label_stats(Configured):

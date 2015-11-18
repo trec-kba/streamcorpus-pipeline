@@ -1,6 +1,6 @@
 
 import os
-from streamcorpus import Chunk, StreamItem_v0_2_0, add_annotation
+from streamcorpus.old import Chunk, StreamItem_v0_2_0, add_annotation
 from StringIO import StringIO
 
 

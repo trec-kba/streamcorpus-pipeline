@@ -2,7 +2,7 @@
 
 from __future__ import absolute_import, division, print_function
 
-from streamcorpus import make_stream_item
+from streamcorpus.old import make_stream_item
 from streamcorpus_pipeline._title import title
 from streamcorpus_pipeline._clean_visible import clean_visible
 

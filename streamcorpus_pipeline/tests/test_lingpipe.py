@@ -7,9 +7,9 @@ import shutil
 
 import pytest
 
-import streamcorpus
+import streamcorpus.old as streamcorpus
 import streamcorpus_pipeline
-from streamcorpus import OffsetType
+from streamcorpus.old import OffsetType
 from streamcorpus_pipeline._lingpipe import lingpipe, only_whitespace
 from streamcorpus_pipeline._taggers import byte_offset_align_labels
 from streamcorpus_pipeline.tests.test_hyperlink_labels import \

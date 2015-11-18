@@ -8,7 +8,7 @@ Copyright 2012-2013 Diffeo, Inc.
 '''
 
 import os
-from streamcorpus import Chunk
+from streamcorpus.old import Chunk
 
 class truncate(object):
     '''
