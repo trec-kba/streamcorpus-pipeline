@@ -4,7 +4,7 @@ Provides classes for loading chunk files from local storage and
 putting them out into local storage.
 
 .. This software is released under an MIT/X11 open source license.
-   Copyright 2012-2014 Diffeo, Inc.
+   Copyright 2012-2016 Diffeo, Inc.
 '''
 from __future__ import absolute_import, division, print_function
 from cStringIO import StringIO
@@ -129,7 +129,10 @@ def get_bucket(config, bucket_name=None):
     AWS credentials come first from config keys
     aws_access_key_id_path, aws_secret_access_key_path (paths to one
     line files); secondly from environment variables
-    AWS_ACCESS_KEY_ID, AWS_SECRET_ACCESS_KEY.
+    AWS_ACCESS_KEY_ID, AWS_SECRET_ACCESS_KEY; also from $HOME/.aws/credentials
+    or the magic Amazon http://169.254.169.254/ service.  If credentials
+    are not set in the config then behavior is the same as other AWS-based
+    command-line tools.
 
     '''
     if not bucket_name:
@@ -139,26 +142,21 @@ def get_bucket(config, bucket_name=None):
         bucket_name = config['bucket']
 
     # get AWS credentials. first, from config; else, from env vars.
+    # (boto will read environment variables and other normal places.)
     aws_access_key_id_path = config.get('aws_access_key_id_path')
     aws_secret_access_key_path = config.get('aws_secret_access_key_path')
 
-    if (not aws_access_key_id_path) and (not aws_secret_access_key_path):
-        logger.debug('using aws credentials from environment')
-        access = os.getenv('AWS_ACCESS_KEY_ID')
-        secret = os.getenv('AWS_SECRET_ACCESS_KEY')
-        if (not access) or (not secret):
-            msg = 'aws credentials not configured in aws_access_key_id_path+aws_secret_access_key_path, and not available in environment AWS_ACCESS_KEY_ID+AWS_SECRET_ACCESS_KEY'
-            logger.error(msg)
-            raise Exception(msg)
-    else:
+    params = ()
+    if aws_access_key_id_path and aws_secret_access_key_path:
         try:
             access = open(aws_access_key_id_path).read().strip()
             secret = open(aws_secret_access_key_path).read().strip()
+            params = (access, secret)
         except:
             logger.error('failed reading aws credentials from configured file', exc_info=True)
             raise
 
-    conn = S3Connection(access, secret)
+    conn = S3Connection(*params)
     bucket = conn.get_bucket(bucket_name)
     return bucket
 
@@ -180,8 +178,9 @@ class from_s3_chunks(Configured):
     ``bucket`` is the s3 bucket to use if input paths are not full
     s3://{bucket}{path} URIs. ``aws_access_key_id_path`` and
     ``aws_secret_access_key_path`` should point to files containing
-    your s3 credentials. Alternatley credentials can be in environment
-    variables ```AWS_ACCESS_KEY_ID`` and ``AWS_SECRET_ACCESS_KEY``
+    your s3 credentials.  Alternately credentials can be in environment
+    variables ``AWS_ACCESS_KEY_ID`` and ``AWS_SECRET_ACCESS_KEY`` or
+    provided by other standard means.
 
     The rest of the configuration options are optional and are described
     in the following example:
