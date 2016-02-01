@@ -1,7 +1,7 @@
 '''tests for {to,from}_kvlayer reader/writer stages
 
 .. This software is released under an MIT/X11 open source license.
-   Copyright 2012-2015 Diffeo, Inc.
+   Copyright 2012-2016 Diffeo, Inc.
 '''
 from __future__ import absolute_import
 import contextlib
@@ -29,7 +29,7 @@ class MiniScp(object):
 
 
 @pytest.fixture(scope='function')
-def configurator(request, namespace_string, redis_address):
+def configurator(request, namespace_string):
     base_config = {
         'kvlayer': {
             'storage_type': 'local',
