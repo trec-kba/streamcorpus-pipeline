@@ -122,7 +122,6 @@ setup(
         'importlib',
         'python-magic',
         'python-docx',
-        'thrift',
         'ftfy',
         'kvlayer >= 0.4.10',
         'coordinate',
