@@ -3,6 +3,7 @@
 *.pyo
 .*.swp
 RELEASE-VERSION
+.cache/
 .tox/
 build/
 dist/

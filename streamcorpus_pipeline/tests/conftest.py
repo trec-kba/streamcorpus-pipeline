@@ -3,6 +3,11 @@ from __future__ import absolute_import
 import os
 import sys
 
+try:
+    import sysconfig
+except ImportError:
+    sysconfig = None
+
 import pytest
 
 
@@ -16,11 +21,11 @@ def test_data_dir(request):
     if cur_directory_path.startswith(os.path.abspath(sys.prefix)):
         # Running from an installed location
         data_path = None
-        try:
-            import sysconfig
+        if sysconfig is not None:
             data_path = sysconfig.get_path('data')
-        except:
-            ## support python2.6
+            if not os.path.exists(os.path.join(data_path, 'data')):
+                data_path = sysconfig.get_path('data', scheme='posix_prefix')
+        if data_path is None:
             data_path = sys.prefix
 
         path = os.path.join(data_path,
