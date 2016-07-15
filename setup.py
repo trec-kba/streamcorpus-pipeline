@@ -132,7 +132,7 @@ setup(
         'nltk',
         'lxml',
         'BeautifulSoup',
-        'html5lib',
+        'html5lib<99999999',
         'boto',
         'jellyfish',
         'nilsimsa >= 0.3',
