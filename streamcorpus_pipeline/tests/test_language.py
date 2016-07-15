@@ -11,6 +11,8 @@ from streamcorpus_pipeline._clean_html import clean_html
 from streamcorpus_pipeline._language import language
 from streamcorpus import make_stream_item, ContentItem
 
+
+@pytest.mark.skipif(True, reason='no longer used')
 def test_langauge(test_data_dir):
     path = os.path.join(test_data_dir, 'test/raw-unicode-issues.html')
     si = make_stream_item(None, 'test')
@@ -23,6 +25,7 @@ def test_langauge(test_data_dir):
     assert si.body.language.code == 'ja'
 
 
+@pytest.mark.skipif(True, reason='no longer used')
 @pytest.mark.parametrize('with_clean_html', [(True,), (False,)])
 def test_language_unreliable_on_raw(test_data_dir, with_clean_html):
     path = os.path.join(test_data_dir, 'test/unreliable-language-detect-on-raw.html')

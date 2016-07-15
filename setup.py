@@ -137,7 +137,6 @@ setup(
         'jellyfish',
         'nilsimsa >= 0.3',
         'regex != 2014.08.28',
-        'chromium_compact_language_detector',
         'sortedcollection',
         'python-docx',
         'pdfminer',

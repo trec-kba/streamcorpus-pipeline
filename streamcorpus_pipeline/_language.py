@@ -8,12 +8,18 @@ Copyright 2012-2014 Diffeo, Inc.
 '''
 
 from __future__ import absolute_import
-import cld
 import logging
 from streamcorpus import Language
 from streamcorpus_pipeline.stages import Configured
 
 logger = logging.getLogger(__name__)
+
+
+class cld(object):
+    @staticmethod
+    def detect(_):
+        return None, None, False, None, None
+
 
 class language(Configured):
     '''Guess at a language from ``body``.
