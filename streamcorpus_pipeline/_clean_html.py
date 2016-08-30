@@ -197,7 +197,7 @@ def uniform_html(html):
     config = {
         'omit_optional_tags': False,
         'encoding': 'utf-8',
-        'quote_attr_values': True,
+        'quote_attr_values': 'always',
     }
     return html5lib.serializer.serialize(doc, **config)
 
