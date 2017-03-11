@@ -122,7 +122,7 @@ setup(
         'importlib',
         'python-magic',
         'python-docx',
-        'ftfy',
+        'ftfy==4.4.1',  # the highest version that supports Python 2
         'kvlayer >= 0.4.10',
         'coordinate',
         'protobuf < 3',
